@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+import CollectionCard from './CollectionCard.astro';
+import { collections, type Locale } from '../data/catalog';
+import { copy } from '../data/copy';
+type Props = { locale: Locale };
+const { locale } = Astro.props;
+const ui = copy[locale];
+---
+<Base locale={locale} title={ui.allCollections} description={ui.allCollectionsText} path="/collections/">
+  <div class="shell page-head"><h1>{ui.allCollections}</h1><p>{ui.allCollectionsText}</p></div>
+  <div class="shell collection-grid">{collections.map((collection) => <CollectionCard collection={collection} locale={locale} />)}</div>
+</Base>

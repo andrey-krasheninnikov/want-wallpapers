@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import WallpaperCard from './WallpaperCard.astro';
+import { categoryLabels, collections, tagLabels, wallpapers, type Locale } from '../data/catalog';
+import { copy } from '../data/copy';
+type Props = { locale: Locale };
+const { locale } = Astro.props;
+const ui = copy[locale];
+---
+<Base locale={locale} title={ui.searchTitle} description={ui.searchText} path="/search/">
+  <div class="shell page-head"><h1>{ui.searchTitle}</h1><p>{ui.searchText}</p></div>
+  <section class="shell" id="search-page" data-locale={locale}>
+    <div class="search-form">
+      <div class="field"><label for="search-query">{ui.search}</label><input id="search-query" type="search" placeholder={ui.searchPlaceholder} autocomplete="off" /></div>
+      <div class="field"><label for="search-category">{ui.category}</label><select id="search-category"><option value="">{ui.all}</option>{Object.entries(categoryLabels).map(([key, labels]) => <option value={key}>{labels[locale]}</option>)}</select></div>
+      <div class="field"><label for="search-collection">{ui.collection}</label><select id="search-collection"><option value="">{ui.all}</option>{collections.map((item) => <option value={item.slug}>{item.title[locale]}</option>)}</select></div>
+    </div>
+    <div class="search-meta"><span id="search-count">{wallpapers.length} {ui.results}</span></div>
+    <div class="wallpaper-grid" id="search-results">
+      {wallpapers.map((wallpaper) => {
+        const collection = collections.find((item) => item.slug === wallpaper.collection);
+        const searchText = [wallpaper.title[locale], wallpaper.description[locale], collection?.title[locale], categoryLabels[wallpaper.category][locale], ...wallpaper.tags.map((tag) => tagLabels[tag][locale])].join(' ');
+        return <div data-search-item data-id={wallpaper.id} data-category={wallpaper.category} data-collection={wallpaper.collection} data-text={searchText}><WallpaperCard wallpaper={wallpaper} locale={locale} /></div>;
+      })}
+    </div>
+    <p id="search-empty" class="section-intro" hidden>{ui.noResults}</p>
+  </section>
+  <script>import '../lib/search-client';</script>
+</Base>

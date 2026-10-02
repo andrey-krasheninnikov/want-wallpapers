@@ -1,0 +1,97 @@
+---
+import '@fontsource-variable/manrope';
+import '../styles/global.css';
+import logoUrl from '../../assets/logo.svg?url';
+import { copy, languageLabels, localPath } from '../data/copy';
+import { locales, type Locale } from '../data/catalog';
+
+type Props = { locale: Locale; title: string; description: string; path: string; image?: string; schema?: object; noindex?: boolean };
+const { locale, title, description, path, image, schema, noindex = false } = Astro.props;
+const ui = copy[locale];
+const canonical = new URL(localPath(locale, path), Astro.site);
+const fullTitle = `${title} | Want Wallpapers`;
+const imageUrl = image ? new URL(image, Astro.site) : undefined;
+const languageTag = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
+const analyticsAvailable = Boolean(import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID);
+---
+<!doctype html>
+<html lang={languageTag}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090911" />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical.href} />
+    {locales.map((lang) => <link rel="alternate" hreflang={lang === 'zh-cn' ? 'zh-CN' : lang === 'pt-br' ? 'pt-BR' : lang} href={new URL(localPath(lang, path), Astro.site).href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(localPath('en', path), Astro.site).href} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Want Wallpapers" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:locale" content={languageTag.replace('-', '_')} />
+    {imageUrl && <meta property="og:image" content={imageUrl.href} />}
+    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href={logoUrl} />
+    {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href={localPath(locale)} aria-label="Want Wallpapers">
+          <img src={logoUrl} alt="" width="36" height="36" />
+          <span>Want<span class="brand-light">Wallpapers</span></span>
+        </a>
+        <nav class="desktop-nav" aria-label={ui.menu}>
+          <a href={localPath(locale, '/collections/')} aria-current={path.startsWith('/collections/') ? 'page' : undefined}>{ui.collections}</a>
+          <a href={localPath(locale, '/search/')} aria-current={path === '/search/' ? 'page' : undefined}>{ui.search}</a>
+          <a href={localPath(locale, '/feedback/')} aria-current={path === '/feedback/' ? 'page' : undefined}>{ui.feedback}</a>
+        </nav>
+        <div class="header-tools">
+          <label class="language-picker">
+            <span class="sr-only">Language</span>
+            <select id="language-switch" aria-label="Language">
+              {locales.map((lang) => <option value={localPath(lang, path)} selected={lang === locale}>{languageLabels[lang]}</option>)}
+            </select>
+          </label>
+          <details class="mobile-menu">
+            <summary aria-label={ui.menu}><span></span><span></span></summary>
+            <nav aria-label={ui.menu}>
+              <a href={localPath(locale, '/collections/')}>{ui.collections}</a>
+              <a href={localPath(locale, '/search/')}>{ui.search}</a>
+              <a href={localPath(locale, '/feedback/')}>{ui.feedback}</a>
+            </nav>
+          </details>
+        </div>
+      </div>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <div class="footer-brand"><img src={logoUrl} alt="" width="32" height="32" /><span>Want Wallpapers</span></div>
+        <nav aria-label="Legal">
+          <a href={localPath(locale, '/privacy/')}>{ui.privacy}</a>
+          <a href={localPath(locale, '/terms/')}>{ui.terms}</a>
+          <a href={localPath(locale, '/cookies/')}>{ui.cookies}</a>
+          <a href={localPath(locale, '/license/')}>{ui.license}</a>
+          <a href={localPath(locale, '/contact/')}>{ui.contact}</a>
+          <button type="button" id="cookie-settings">{ui.cookieSettings}</button>
+        </nav>
+        <p>© {new Date().getFullYear()} Want</p>
+      </div>
+    </footer>
+    <section class="cookie-banner" id="cookie-banner" aria-label={ui.cookieSettings} hidden>
+      <div class="cookie-copy"><h2>{ui.cookieTitle}</h2><p>{ui.cookieText} <a href={localPath(locale, '/cookies/')}>{ui.cookies}</a></p></div>
+      <div class="cookie-actions"><button type="button" class="button button-secondary" id="cookie-essential">{ui.essentialOnly}</button>{analyticsAvailable && <button type="button" class="button button-primary" id="cookie-analytics">{ui.acceptAnalytics}</button>}</div>
+    </section>
+    <script>import '../lib/privacy';</script>
+    <script>
+      document.querySelector<HTMLSelectElement>('#language-switch')?.addEventListener('change', (event) => {
+        window.location.href = (event.target as HTMLSelectElement).value;
+      });
+    </script>
+  </body>
+</html>

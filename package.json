@@ -1,0 +1,33 @@
+{
+  "name": "want-wallpapers",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "sync:previews": "bun scripts/sync-previews.ts",
+    "build": "bun run sync:previews && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test:rules": "bun test tests/firestore.rules.test.ts",
+    "catalog:seed": "bun scripts/catalog-seed.ts",
+    "catalog:pull": "bun scripts/catalog-pull.ts"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.6.0",
+    "@fontsource-variable/manrope": "^5.2.8",
+    "astro": "^5.16.0",
+    "firebase": "^12.4.0",
+    "lunr": "^2.3.9",
+    "lunr-languages": "^1.14.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.5",
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@types/bun": "^1.2.0",
+    "@types/lunr": "^2.3.7",
+    "firebase-admin": "^13.5.0",
+    "sharp": "^0.34.4",
+    "typescript": "^5.9.3"
+  }
+}

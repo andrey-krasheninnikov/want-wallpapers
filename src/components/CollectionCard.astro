@@ -1,0 +1,15 @@
+---
+import { getCollectionWallpapers, previewUrl, type Collection, type Locale } from '../data/catalog';
+import { copy, localPath } from '../data/copy';
+type Props = { collection: Collection; locale: Locale };
+const { collection, locale } = Astro.props;
+const cover = getCollectionWallpapers(collection.slug)[0];
+const ui = copy[locale];
+---
+<a class="collection-card" href={localPath(locale, `/collections/${collection.slug}/`)}>
+  {cover && <img src={previewUrl(cover, 'desktop')} alt={collection.description[locale]} width="1280" height="800" loading="lazy" />}
+  <div class="collection-card-body">
+    <div><h3>{collection.title[locale]}</h3><p>{collection.description[locale]}</p></div>
+    <span class="meta">{collection.count} {ui.wallpapers}</span>
+  </div>
+</a>

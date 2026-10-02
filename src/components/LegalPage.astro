@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+import { legalPage, type LegalKey } from '../data/legal';
+import type { Locale } from '../data/catalog';
+type Props = { locale: Locale; page: LegalKey };
+const { locale, page } = Astro.props;
+const legal = legalPage(locale, page);
+---
+<Base locale={locale} title={legal.title} description={legal.intro} path={`/${page}/`}>
+  <article class="shell legal-page"><h1>{legal.title}</h1><p>{legal.intro}</p>
+    {legal.sections.map((section) => <section><h2>{section.heading}</h2>{section.paragraphs.map((paragraph) => <p>{paragraph === 'wallpapers@want.foundation' ? <a href="mailto:wallpapers@want.foundation">{paragraph}</a> : paragraph}</p>)}</section>)}
+  </article>
+</Base>

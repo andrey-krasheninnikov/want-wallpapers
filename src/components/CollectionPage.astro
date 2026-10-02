@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import WallpaperCard from './WallpaperCard.astro';
+import { getCollectionWallpapers, previewUrl, type Collection, type Locale } from '../data/catalog';
+import { copy, localPath } from '../data/copy';
+type Props = { locale: Locale; collection: Collection };
+const { locale, collection } = Astro.props;
+const ui = copy[locale];
+const items = getCollectionWallpapers(collection.slug);
+const cover = items[0];
+const path = `/collections/${collection.slug}/`;
+const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: collection.title[locale], description: collection.description[locale], url: new URL(localPath(locale, path), Astro.site).href,
+  mainEntity: { '@type': 'ItemList', itemListElement: items.map((wallpaper, index) => ({ '@type': 'ListItem', position: index + 1, name: wallpaper.title[locale], url: new URL(localPath(locale, `/wallpapers/${wallpaper.slug}/`), Astro.site).href })) } };
+---
+<Base locale={locale} title={collection.title[locale]} description={collection.description[locale]} path={path} image={cover ? previewUrl(cover, 'desktop') : undefined} schema={schema}>
+  <div class="shell page-head"><div class="breadcrumbs"><a href={localPath(locale, '/collections/')}>{ui.collections}</a><span>/</span><span>{collection.title[locale]}</span></div><h1>{collection.title[locale]}</h1><p>{collection.description[locale]}</p></div>
+  {cover && <div class="shell collection-cover"><img src={previewUrl(cover, 'desktop')} alt={cover.description[locale]} width="1280" height="800" fetchpriority="high" /></div>}
+  <section class="shell"><div class="gallery-toolbar"><h2>{ui.inCollection}</h2><span>{items.length} {ui.wallpapers}</span></div><div class="wallpaper-grid">{items.map((wallpaper) => <WallpaperCard wallpaper={wallpaper} locale={locale} />)}</div></section>
+</Base>

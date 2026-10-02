@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+import WallpaperCard from './WallpaperCard.astro';
+import { downloadUrl, getCollection, getCollectionWallpapers, previewUrl, s3Url, type Locale, type Wallpaper } from '../data/catalog';
+import { categoryLabels, tagLabels } from '../data/catalog';
+import { copy, localPath } from '../data/copy';
+type Props = { locale: Locale; wallpaper: Wallpaper };
+const { locale, wallpaper } = Astro.props;
+const ui = copy[locale];
+const collection = getCollection(wallpaper.collection)!;
+const path = `/wallpapers/${wallpaper.slug}/`;
+const related = getCollectionWallpapers(collection.slug).filter((item) => item.id !== wallpaper.id).slice(0, 3);
+const schema = { '@context': 'https://schema.org', '@type': 'ImageObject', name: wallpaper.title[locale], description: wallpaper.description[locale],
+  contentUrl: new URL(downloadUrl(wallpaper, 'desktop'), Astro.site).href, thumbnailUrl: new URL(previewUrl(wallpaper, 'desktop'), Astro.site).href,
+  url: new URL(localPath(locale, path), Astro.site).href, license: new URL(localPath(locale, '/license/'), Astro.site).href,
+  creditText: 'Want Wallpapers', isPartOf: { '@type': 'CollectionPage', name: collection.title[locale], url: new URL(localPath(locale, `/collections/${collection.slug}/`), Astro.site).href } };
+---
+<Base locale={locale} title={wallpaper.title[locale]} description={wallpaper.description[locale]} path={path} image={previewUrl(wallpaper, 'desktop')} schema={schema}>
+  <div class="shell page-head"><div class="breadcrumbs"><a href={localPath(locale, '/collections/')}>{ui.collections}</a><span>/</span><a href={localPath(locale, `/collections/${collection.slug}/`)}>{collection.title[locale]}</a></div></div>
+  <div class="shell detail-layout" id="wallpaper-detail" data-wallpaper={wallpaper.id} data-locale={locale}>
+    <div class="detail-preview" id="detail-preview"><img id="detail-image" src={previewUrl(wallpaper, 'desktop')} data-desktop={previewUrl(wallpaper, 'desktop')} data-mobile={previewUrl(wallpaper, 'mobile')} alt={wallpaper.description[locale]} width="1280" height="800" fetchpriority="high" /></div>
+    <aside class="detail-sidebar"><span class="eyebrow">{collection.title[locale]}</span><h1>{wallpaper.title[locale]}</h1><p class="description">{wallpaper.description[locale]}</p>
+      <div class="variant-picker" role="group" aria-label={ui.download}><button type="button" data-variant="desktop" aria-pressed="true">{ui.desktop}</button><button type="button" data-variant="mobile" aria-pressed="false">{ui.mobile}</button></div>
+      <div class="download-row"><a class="button button-primary" id="download-link" href={downloadUrl(wallpaper, 'desktop')} data-desktop={downloadUrl(wallpaper, 'desktop')} data-mobile={downloadUrl(wallpaper, 'mobile')} download>{ui.download}</a><a class="button button-secondary" id="original-link" href={s3Url(wallpaper, 'desktop')} data-desktop={s3Url(wallpaper, 'desktop')} data-mobile={s3Url(wallpaper, 'mobile')} target="_blank" rel="noopener">{ui.viewOriginal}</a></div>
+      <p class="fineprint">{ui.formatHint} · <a href={localPath(locale, '/license/')} style="color:var(--link)">{ui.license}</a></p>
+      <div class="tags"><a href={localPath(locale, `/search/?category=${wallpaper.category}`)}>{categoryLabels[wallpaper.category][locale]}</a>{wallpaper.tags.map((tag) => <a href={localPath(locale, `/search/?q=${encodeURIComponent(tagLabels[tag][locale])}`)}>{tagLabels[tag][locale]}</a>)}</div>
+    </aside>
+  </div>
+  <div class="shell"><p class="region-note">{ui.regionUnavailable}</p></div>
+  <section class="shell social-section regional-only" id="social" data-wallpaper={wallpaper.id} data-locale={locale}>
+    <h2>{ui.ratings}</h2><p class="hint">{ui.ratingHint}</p>
+    <div class="rating-grid" role="group" aria-label={ui.ratings}>
+      <button type="button" data-rating="cringe" aria-pressed="false">{ui.cringe}<span data-count="cringe">0</span></button>
+      <button type="button" data-rating="minus" aria-pressed="false">{ui.minus}<span data-count="minus">0</span></button>
+      <button type="button" data-rating="plus" aria-pressed="false">{ui.plus}<span data-count="plus">0</span></button>
+      <button type="button" data-rating="imba" aria-pressed="false">{ui.imba}<span data-count="imba">0</span></button>
+    </div>
+    <h2>{ui.comments}</h2><div class="comment-list" id="comment-list" aria-live="polite"><p class="hint">{ui.loading}</p></div>
+    <form id="comment-form"><div class="field"><label for="comment-text" class="sr-only">{ui.comments}</label><textarea id="comment-text" name="comment" minlength="2" maxlength="1000" placeholder={ui.commentPlaceholder} required></textarea></div><button type="submit" class="button button-primary">{ui.commentSubmit}</button><p class="status" id="comment-status" role="status"></p></form>
+  </section>
+  <section class="shell section"><h2 class="section-title">{ui.inCollection}</h2><div class="wallpaper-grid">{related.map((item) => <WallpaperCard wallpaper={item} locale={locale} />)}</div><div class="section-end"><a class="text-link" href={localPath(locale, `/collections/${collection.slug}/`)}>{ui.viewCollection} <span aria-hidden="true">↗</span></a></div></section>
+  <script>
+    if (document.documentElement.dataset.region === 'open') void import('../lib/wallpaper-client');
+    else window.addEventListener('want:region', ((event: CustomEvent<{ allowed: boolean }>) => {
+      if (event.detail.allowed) void import('../lib/wallpaper-client');
+    }) as EventListener, { once: true });
+  </script>
+</Base>

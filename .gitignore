@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.firebase/
+.astro/
+public/previews/
+public/downloads/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.tsbuildinfo
+firestore-debug.log
+firebase-debug.log
