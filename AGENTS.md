@@ -11,3 +11,7 @@ Use the five default triage labels. See `docs/agents/triage-labels.md`.
 ### Domain docs
 
 Use a single-context glossary and ADR layout. See `docs/agents/domain.md`.
+
+### Feature releases
+
+Use the project [release-feature skill](.agents/skills/release-feature/SKILL.md) for Gitflow feature releases.
