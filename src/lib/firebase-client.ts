@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 const config = {
@@ -19,6 +19,10 @@ if (typeof window !== 'undefined' && import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY) 
   });
 }
 export const db = getFirestore(app);
+if (typeof window !== 'undefined' && import.meta.env.PUBLIC_USE_FIREBASE_EMULATORS === 'true' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectAuthEmulator(getAuth(app), 'http://127.0.0.1:9099', { disableWarnings: true });
+}
 
 export async function currentUser() {
   const auth = getAuth(app);

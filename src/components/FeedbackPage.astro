@@ -1,21 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
+import FeedbackForm from './FeedbackForm';
 import { copy } from '../data/copy';
+import { interfaceCopy } from '../data/interface-copy';
 import type { Locale } from '../data/catalog';
 type Props = { locale: Locale };
 const { locale } = Astro.props;
 const ui = copy[locale];
 ---
 <Base locale={locale} title={ui.feedbackTitle} description={ui.feedbackText} path="/feedback/">
-  <div class="shell page-head"><h1>{ui.feedbackTitle}</h1><p>{ui.feedbackText}</p></div>
-  <div class="shell" id="feedback-page" data-locale={locale}>
-    <p class="region-note">{ui.regionUnavailable}</p>
-    <form class="feedback-panel regional-only" id="feedback-form">
-      <div class="field"><label for="feedback-topic">{ui.topic}</label><input id="feedback-topic" name="topic" maxlength="100" required /></div>
-      <div class="field"><label for="feedback-message">{ui.message}</label><textarea id="feedback-message" name="message" minlength="5" maxlength="2000" required></textarea></div>
-      <div class="field"><label for="feedback-email">{ui.emailOptional}</label><input id="feedback-email" name="email" type="email" maxlength="254" autocomplete="email" /></div>
-      <button class="button button-primary" type="submit">{ui.feedbackSubmit}</button><p class="status" id="feedback-status" role="status"></p>
-    </form>
-  </div>
-  <script>import '../lib/feedback-client';</script>
+  <div class="shell page-heading"><h1 class="display-title max-w-4xl">{ui.feedbackTitle}</h1><p class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">{ui.feedbackText}</p></div>
+  <section class="shell" aria-label={ui.feedback}><FeedbackForm locale={locale} client:load /><noscript><p class="max-w-2xl rounded-lg border p-6 text-muted-foreground">{interfaceCopy[locale].javascriptRequired} <a class="text-link underline" href="mailto:wallpapers@want.foundation">wallpapers@want.foundation</a></p></noscript></section>
 </Base>

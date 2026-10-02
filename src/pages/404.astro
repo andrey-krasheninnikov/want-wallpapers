@@ -1,6 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
+import { ActionLink } from '../components/Gallery';
+import { interfaceCopy } from '../data/interface-copy';
+const text = interfaceCopy.en;
 ---
-<Base locale="en" title="Page not found" description="This page is not in the collection." path="/404/" noindex>
-  <div class="shell page-head"><h1>Nothing here yet.</h1><p>This page is not in the collection. <a class="text-link" href="/">Back to Want Wallpapers</a></p></div>
+<Base locale="en" title="Page not found" description={text.notFoundText} path="/404/" noindex>
+  <div class="shell page-heading"><p class="eyebrow">404</p><h1 class="display-title mt-4">{text.notFoundTitle}</h1><p class="my-6 text-base leading-relaxed text-muted-foreground">{text.notFoundText}</p><ActionLink href="/" label={text.back} /></div>
 </Base>

@@ -19,5 +19,5 @@
   },
   "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
   "auth": { "providers": { "anonymous": true } },
-  "emulators": { "firestore": { "port": 8080 } }
+  "emulators": { "auth": { "port": 9099 }, "firestore": { "port": 8080 } }
 }

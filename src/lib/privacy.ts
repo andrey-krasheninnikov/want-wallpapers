@@ -1,14 +1,25 @@
+export type CookieChoice = 'essential' | 'analytics';
+export type Region = 'pending' | 'open' | 'restricted';
 const cookieKey = 'want-cookie-choice-v1';
 const regionKey = 'want-region-v1';
-type Choice = 'essential' | 'analytics';
+let choice: CookieChoice | null | undefined;
+let regionCheck: Promise<void> | undefined;
 let analyticsStarted = false;
 let disableAnalytics: (() => void) | undefined;
 
-function readChoice(): Choice | null {
+export function readCookieChoice(): CookieChoice | null {
+  if (typeof window === 'undefined') return null;
   try {
     const value = localStorage.getItem(cookieKey);
-    return value === 'essential' || value === 'analytics' ? value : null;
-  } catch { return null; }
+    choice = value === 'essential' || value === 'analytics' ? value : null;
+  } catch { choice ??= null; }
+  return choice;
+}
+
+export function getRegion(): Region {
+  if (typeof document === 'undefined') return 'pending';
+  const value = document.documentElement.dataset.region;
+  return value === 'open' || value === 'restricted' ? value : 'pending';
 }
 
 async function regionAllowed(): Promise<boolean> {
@@ -28,41 +39,40 @@ async function regionAllowed(): Promise<boolean> {
 }
 
 async function startAnalytics() {
-  if (analyticsStarted || readChoice() !== 'analytics' || document.documentElement.dataset.region !== 'open') return;
-  if (!import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID) return;
+  if (analyticsStarted || readCookieChoice() !== 'analytics' || getRegion() !== 'open' || !import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID) return;
   try {
     const [{ app }, { getAnalytics, isSupported, logEvent, setAnalyticsCollectionEnabled }] = await Promise.all([
       import('./firebase-client'), import('firebase/analytics'),
     ]);
-    if (readChoice() !== 'analytics' || document.documentElement.dataset.region !== 'open') return;
-    if (!await isSupported() || readChoice() !== 'analytics' || document.documentElement.dataset.region !== 'open') return;
+    if (!await isSupported() || analyticsStarted || readCookieChoice() !== 'analytics' || getRegion() !== 'open') return;
     const analytics = getAnalytics(app);
     setAnalyticsCollectionEnabled(analytics, true);
     disableAnalytics = () => setAnalyticsCollectionEnabled(analytics, false);
     analyticsStarted = true;
     window.addEventListener('want:download', ((event: CustomEvent<{ wallpaper: string; variant: string }>) => {
-      logEvent(analytics, 'wallpaper_download', event.detail);
+      if (readCookieChoice() === 'analytics' && getRegion() === 'open') logEvent(analytics, 'wallpaper_download', event.detail);
     }) as EventListener);
   } catch { /* Browsing and downloads stay available. */ }
 }
 
-const banner = document.querySelector<HTMLElement>('#cookie-banner');
-if (banner && !readChoice()) banner.hidden = false;
-document.querySelector('#cookie-settings')?.addEventListener('click', () => { if (banner) banner.hidden = false; });
-for (const [id, choice] of [['#cookie-essential', 'essential'], ['#cookie-analytics', 'analytics']] as const) {
-  document.querySelector(id)?.addEventListener('click', () => {
-    try { localStorage.setItem(cookieKey, choice); } catch { /* Choice applies to this page only. */ }
-    if (banner) banner.hidden = true;
-    if (choice === 'analytics') void startAnalytics();
-    else if (analyticsStarted) {
-      disableAnalytics?.();
-      window.location.reload();
-    }
-  });
+export function saveCookieChoice(value: CookieChoice) {
+  choice = value;
+  try { localStorage.setItem(cookieKey, value); } catch { /* The choice remains active for this page. */ }
+  window.dispatchEvent(new CustomEvent('want:cookie-choice', { detail: { choice: value } }));
+  if (value === 'analytics') {
+    if (analyticsStarted) void import('firebase/analytics').then(async ({ getAnalytics, setAnalyticsCollectionEnabled }) => {
+      const { app } = await import('./firebase-client');
+      if (readCookieChoice() === 'analytics' && getRegion() === 'open') setAnalyticsCollectionEnabled(getAnalytics(app), true);
+    }).catch(() => {});
+    else void startAnalytics();
+  } else disableAnalytics?.();
 }
 
-void regionAllowed().then((allowed) => {
-  document.documentElement.dataset.region = allowed ? 'open' : 'restricted';
-  window.dispatchEvent(new CustomEvent('want:region', { detail: { allowed } }));
-  if (allowed) void startAnalytics();
-});
+export function initializePrivacy() {
+  if (typeof window === 'undefined') return Promise.resolve();
+  return regionCheck ??= regionAllowed().then((allowed) => {
+    document.documentElement.dataset.region = allowed ? 'open' : 'restricted';
+    window.dispatchEvent(new CustomEvent('want:region', { detail: { allowed } }));
+    if (allowed) void startAnalytics();
+  });
+}

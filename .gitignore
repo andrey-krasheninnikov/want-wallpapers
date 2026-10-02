@@ -11,3 +11,4 @@ public/downloads/
 *.tsbuildinfo
 firestore-debug.log
 firebase-debug.log
+ui-debug.log

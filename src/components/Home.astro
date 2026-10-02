@@ -1,31 +1,41 @@
 ---
 import Base from '../layouts/Base.astro';
-import CollectionCard from './CollectionCard.astro';
-import WallpaperCard from './WallpaperCard.astro';
-import { collections, previewUrl, wallpapers, type Locale } from '../data/catalog';
+import { CollectionGrid, WallpaperGrid, ActionLink } from './Gallery';
+import FAQ from './FAQ';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { collections, wallpapers, type Locale } from '../data/catalog';
+import { previewData } from '../data/previews';
 import { copy, localPath } from '../data/copy';
+import { interfaceCopy } from '../data/interface-copy';
+import { collectionCard, wallpaperCard } from '../lib/view-models';
 type Props = { locale: Locale };
 const { locale } = Astro.props;
 const ui = copy[locale];
+const text = interfaceCopy[locale];
+// Want: editorial gallery, Manrope, dark surfaces, violet actions, short CSS motion.
 const hero = wallpapers.find((item) => item.collection === 'contours-of-silence' && item.number === 1)!;
+const image = await previewData(hero, 'desktop');
 const highlights = [wallpapers[0], wallpapers[4], wallpapers[15], wallpapers[18], wallpapers[20], wallpapers[22]].filter(Boolean);
+const collectionCards = await Promise.all(collections.map((item) => collectionCard(item, locale)));
+const wallpaperCards = await Promise.all(highlights.map((item) => wallpaperCard(item, locale)));
 const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Want Wallpapers', url: new URL(localPath(locale), Astro.site).href,
   potentialAction: { '@type': 'SearchAction', target: new URL(localPath(locale, '/search/') + '?q={search_term_string}', Astro.site).href, 'query-input': 'required name=search_term_string' } };
 ---
-<Base locale={locale} title={ui.heroTitle} description={ui.heroText} path="/" image={previewUrl(hero, 'desktop')} schema={schema}>
-  <section class="hero shell">
-    <div class="hero-layout">
-      <div class="hero-copy"><span class="eyebrow">{ui.heroEyebrow}</span><h1>{ui.heroTitle}</h1><p>{ui.heroText}</p><a class="button button-primary" href="#collections">{ui.explore}</a></div>
-      <a class="hero-art" href={localPath(locale, `/wallpapers/${hero.slug}/`)} aria-label={hero.title[locale]}>
-        <img src={previewUrl(hero, 'desktop')} alt={hero.description[locale]} width="1280" height="800" fetchpriority="high" />
-        <span class="hero-caption">{ui.featured}: {hero.title[locale]}</span>
-      </a>
+<Base locale={locale} title={ui.heroTitle} description={ui.heroText} path="/" image={image.src} schema={schema}>
+  <section class="shell grid items-center gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:gap-12 lg:py-20">
+    <div class="want-enter"><p class="eyebrow">{ui.heroEyebrow}</p><h1 class="display-title mt-4 max-w-2xl">{ui.heroTitle}</h1><p class="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{ui.heroText}</p>
+      <div class="mt-8 flex flex-wrap gap-3"><ActionLink href="#collections" label={ui.explore} /><ActionLink href={localPath(locale, '/search/')} label={ui.search} variant="outline" /></div>
+      <div class="mt-8 flex flex-wrap gap-3 text-sm text-muted-foreground"><Badge variant="secondary">{`${collections.length} ${ui.collections.toLocaleLowerCase(locale)}`}</Badge><Badge variant="secondary">{`${wallpapers.length} ${ui.wallpapers}`}</Badge><Badge variant="outline" className="whitespace-normal">{`${ui.desktop} + ${ui.mobile}`}</Badge></div>
     </div>
+    <figure class="min-w-0 overflow-hidden rounded-xl border bg-card">
+      <a href={localPath(locale, `/wallpapers/${hero.slug}/`)} class="block" aria-label={hero.title[locale]}><img src={image.src} width={image.width} height={image.height} alt={hero.description[locale]} fetchpriority="high" class="gallery-image" /></a>
+      <figcaption class="flex flex-wrap items-center justify-between gap-2 border-t px-5 py-4 text-sm"><span>{hero.title[locale]}</span><span class="text-muted-foreground">{ui.featured}</span></figcaption>
+    </figure>
   </section>
-  <section class="section shell" id="collections"><h2 class="section-title">{ui.allCollections}</h2><p class="section-intro">{ui.allCollectionsText}</p>
-    <div class="collection-grid">{collections.map((collection) => <CollectionCard collection={collection} locale={locale} />)}</div>
-  </section>
-  <section class="section shell"><h2 class="section-title">{ui.latest}</h2><div class="wallpaper-grid">{highlights.map((wallpaper) => <WallpaperCard wallpaper={wallpaper} locale={locale} />)}</div>
-    <div class="section-end"><a class="text-link" href={localPath(locale, '/search/')}>{ui.viewAll} <span aria-hidden="true">↗</span></a></div>
-  </section>
+  <section class="shell section-space" id="collections"><div class="mb-8 flex flex-wrap items-end justify-between gap-6"><div><h2 class="section-title">{ui.allCollections}</h2><p class="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">{ui.allCollectionsText}</p></div><ActionLink href={localPath(locale, '/collections/')} label={ui.explore} variant="ghost" /></div><CollectionGrid items={collectionCards} /></section>
+  <section class="shell section-space"><div class="mb-8 flex flex-wrap items-end justify-between gap-6"><h2 class="section-title">{ui.latest}</h2><ActionLink href={localPath(locale, '/search/')} label={ui.viewAll} variant="ghost" /></div><WallpaperGrid items={wallpaperCards} /></section>
+  <section class="shell section-space"><Separator /><div class="grid gap-8 py-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16 lg:py-12"><h2 class="section-title max-w-lg">{text.benefitsTitle}</h2><ol class="grid gap-6">{text.benefits.map(([title, description], index) => <li class="grid grid-cols-[2rem_1fr] gap-4"><span class="pt-1 text-sm text-link">{String(index + 1).padStart(2, '0')}</span><div><h3 class="text-lg font-semibold">{title}</h3><p class="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p></div></li>)}</ol></div><Separator /></section>
+  <section class="shell section-space"><div class="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-16"><h2 class="section-title max-w-lg">{text.faqTitle}</h2><FAQ items={text.faq} client:load /></div></section>
+  <section class="shell section-space"><div class="grid gap-6 rounded-xl border bg-card p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center lg:p-12"><div><h2 class="section-title max-w-2xl">{text.finalTitle}</h2><p class="mt-4 text-base leading-relaxed text-muted-foreground">{text.finalText}</p></div><div><ActionLink href={localPath(locale, '/search/')} label={ui.viewAll} /></div></div></section>
 </Base>
