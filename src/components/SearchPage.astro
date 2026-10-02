@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import CatalogSearch from './CatalogSearch';
+import { categoryLabels, collections, wallpapers, type Locale } from '../data/catalog';
+import { copy } from '../data/copy';
+import { wallpaperCard } from '../lib/view-models';
+type Props = { locale: Locale };
+const { locale } = Astro.props;
+const ui = copy[locale];
+const items = await Promise.all(wallpapers.map((item) => wallpaperCard(item, locale)));
+const categories = Object.entries(categoryLabels).map(([value, labels]) => ({ value, title: labels[locale] }));
+const collectionOptions = collections.map((item) => ({ value: item.slug, title: item.title[locale] }));
+---
+<Base locale={locale} title={ui.searchTitle} description={ui.searchText} path="/search/">
+  <div class="shell page-heading"><h1 class="display-title">{ui.searchTitle}</h1><p class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">{ui.searchText}</p></div>
+  <section class="shell" aria-label={ui.search}><CatalogSearch locale={locale} items={items} categories={categories} collections={collectionOptions} client:load /></section>
+</Base>

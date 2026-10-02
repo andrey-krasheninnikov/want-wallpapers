@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import { CollectionGrid } from './Gallery';
+import { collections, type Locale } from '../data/catalog';
+import { copy } from '../data/copy';
+import { collectionCard } from '../lib/view-models';
+type Props = { locale: Locale };
+const { locale } = Astro.props;
+const ui = copy[locale];
+const items = await Promise.all(collections.map((item) => collectionCard(item, locale)));
+---
+<Base locale={locale} title={ui.allCollections} description={ui.allCollectionsText} path="/collections/">
+  <div class="shell page-heading"><h1 class="display-title">{ui.allCollections}</h1><p class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">{ui.allCollectionsText}</p></div>
+  <section class="shell" aria-label={ui.collections}><CollectionGrid items={items} headingLevel={2} /></section>
+</Base>

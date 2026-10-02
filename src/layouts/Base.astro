@@ -1,0 +1,51 @@
+---
+import '@fontsource-variable/manrope';
+import '../styles/global.css';
+import logoUrl from '../../assets/logo.svg?url';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import CookieConsent from '../components/CookieConsent';
+import { localPath } from '../data/copy';
+import { interfaceCopy } from '../data/interface-copy';
+import { locales, type Locale } from '../data/catalog';
+
+type Props = { locale: Locale; title: string; description: string; path: string; image?: string; schema?: object; noindex?: boolean };
+const { locale, title, description, path, image, schema, noindex = false } = Astro.props;
+const canonical = new URL(localPath(locale, path), Astro.site);
+const fullTitle = `${title} | Want Wallpapers`;
+const imageUrl = image ? new URL(image, Astro.site) : undefined;
+const languageTag = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
+const analyticsAvailable = Boolean(import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID);
+---
+<!doctype html>
+<html lang={languageTag} class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090911" />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical.href} />
+    {locales.map((lang) => <link rel="alternate" hreflang={lang === 'zh-cn' ? 'zh-CN' : lang === 'pt-br' ? 'pt-BR' : lang} href={new URL(localPath(lang, path), Astro.site).href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(localPath('en', path), Astro.site).href} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Want Wallpapers" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:locale" content={languageTag.replace('-', '_')} />
+    {imageUrl && <meta property="og:image" content={imageUrl.href} />}
+    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href={logoUrl} />
+    <noscript><style is:inline>[data-region-pending] { display: none; } [data-slot="accordion-content"] { display: block !important; }</style></noscript>
+    {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
+    <Header locale={locale} path={path} logo={logoUrl} client:load />
+    <main id="main" tabindex="-1"><slot /></main>
+    <Footer locale={locale} logo={logoUrl} />
+    <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
+  </body>
+</html>

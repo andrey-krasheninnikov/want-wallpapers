@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import { WallpaperGrid, Crumbs } from './Gallery';
+import { getCollectionWallpapers, type Collection, type Locale } from '../data/catalog';
+import { previewData } from '../data/previews';
+import { copy, localPath } from '../data/copy';
+import { wallpaperCard } from '../lib/view-models';
+type Props = { locale: Locale; collection: Collection };
+const { locale, collection } = Astro.props;
+const ui = copy[locale];
+const items = getCollectionWallpapers(collection.slug);
+const cards = await Promise.all(items.map((item) => wallpaperCard(item, locale)));
+const cover = items[0] ? await previewData(items[0], 'desktop') : undefined;
+const path = `/collections/${collection.slug}/`;
+const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: collection.title[locale], description: collection.description[locale], url: new URL(localPath(locale, path), Astro.site).href,
+  mainEntity: { '@type': 'ItemList', itemListElement: items.map((wallpaper, index) => ({ '@type': 'ListItem', position: index + 1, name: wallpaper.title[locale], url: new URL(localPath(locale, `/wallpapers/${wallpaper.slug}/`), Astro.site).href })) } };
+---
+<Base locale={locale} title={collection.title[locale]} description={collection.description[locale]} path={path} image={cover?.src} schema={schema}>
+  <div class="shell page-heading"><Crumbs label={ui.collections} items={[{ href: localPath(locale, '/collections/'), title: ui.collections }, { title: collection.title[locale] }]} /><h1 class="display-title mt-6">{collection.title[locale]}</h1><p class="mt-6 max-w-3xl text-base leading-relaxed text-muted-foreground">{collection.description[locale]}</p></div>
+  {cover && <div class="shell"><figure class="overflow-hidden rounded-xl border bg-card"><img src={cover.src} width={cover.width} height={cover.height} alt={items[0].description[locale]} fetchpriority="high" class="gallery-image" /></figure></div>}
+  <section class="shell mt-8 sm:mt-10"><div class="mb-6 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-semibold tracking-tight">{ui.inCollection}</h2><p class="text-sm text-muted-foreground">{items.length} {ui.wallpapers}</p></div><WallpaperGrid items={cards} /></section>
+</Base>

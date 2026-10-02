@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { WallpaperGrid, Crumbs, ActionLink } from './Gallery';
+import WallpaperView from './WallpaperView';
+import SocialPanel from './SocialPanel';
+import { getCollection, getCollectionWallpapers, categoryLabels, tagLabels, type Locale, type Wallpaper } from '../data/catalog';
+import { previewData } from '../data/previews';
+import { copy, localPath } from '../data/copy';
+import { interfaceCopy } from '../data/interface-copy';
+import { wallpaperCard } from '../lib/view-models';
+type Props = { locale: Locale; wallpaper: Wallpaper };
+const { locale, wallpaper } = Astro.props;
+const ui = copy[locale];
+const collection = getCollection(wallpaper.collection)!;
+const path = `/wallpapers/${wallpaper.slug}/`;
+const variants = { desktop: await previewData(wallpaper, 'desktop'), mobile: await previewData(wallpaper, 'mobile') };
+const related = await Promise.all(getCollectionWallpapers(collection.slug).filter((item) => item.id !== wallpaper.id).slice(0, 3).map((item) => wallpaperCard(item, locale)));
+const tags = [{ title: categoryLabels[wallpaper.category][locale], href: localPath(locale, `/search/?category=${wallpaper.category}`) },
+  ...wallpaper.tags.map((tag) => ({ title: tagLabels[tag][locale], href: localPath(locale, `/search/?q=${encodeURIComponent(tagLabels[tag][locale])}`) }))];
+const schema = { '@context': 'https://schema.org', '@type': 'ImageObject', name: wallpaper.title[locale], description: wallpaper.description[locale],
+  contentUrl: new URL(variants.desktop.download, Astro.site).href, thumbnailUrl: new URL(variants.desktop.src, Astro.site).href,
+  url: new URL(localPath(locale, path), Astro.site).href, license: new URL(localPath(locale, '/license/'), Astro.site).href,
+  creditText: 'Want Wallpapers', isPartOf: { '@type': 'CollectionPage', name: collection.title[locale], url: new URL(localPath(locale, `/collections/${collection.slug}/`), Astro.site).href } };
+---
+<Base locale={locale} title={wallpaper.title[locale]} description={wallpaper.description[locale]} path={path} image={variants.desktop.src} schema={schema}>
+  <div class="shell page-heading"><Crumbs label={ui.collections} items={[{ href: localPath(locale, '/collections/'), title: ui.collections }, { href: localPath(locale, `/collections/${collection.slug}/`), title: collection.title[locale] }, { title: wallpaper.title[locale] }]} /><h1 class="display-title mt-6">{wallpaper.title[locale]}</h1></div>
+  <section class="shell" aria-label={wallpaper.title[locale]}><WallpaperView locale={locale} id={wallpaper.id} description={wallpaper.description[locale]} variants={variants} tags={tags} client:load /></section>
+  <div class="shell section-space"><div class="max-w-4xl"><SocialPanel id={wallpaper.id} locale={locale} client:load /><noscript><p class="rounded-lg border p-6 text-muted-foreground">{interfaceCopy[locale].javascriptRequired}</p></noscript></div></div>
+  <section class="shell section-space"><div class="mb-8 flex flex-wrap items-end justify-between gap-6"><h2 class="section-title">{ui.inCollection}</h2><ActionLink href={localPath(locale, `/collections/${collection.slug}/`)} label={ui.viewCollection} variant="ghost" /></div><WallpaperGrid items={related} /></section>
+</Base>
