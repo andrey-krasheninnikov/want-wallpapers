@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import { Crumbs } from './Gallery';
+import OwnerContact from './OwnerContact';
+import { legalPage, type LegalKey } from '../data/legal';
+import { copy, localPath } from '../data/copy';
+import type { Locale } from '../data/catalog';
+type Props = { locale: Locale; page: LegalKey };
+const { locale, page } = Astro.props;
+const legal = legalPage(locale, page);
+---
+<Base locale={locale} title={legal.title} description={legal.intro} path={`/${page}/`}>
+  <article class="shell prose py-10 sm:py-14"><Crumbs label={legal.title} items={[{ href: localPath(locale), title: copy[locale].home }, { title: legal.title }]} /><h1 class="mt-6">{legal.title}</h1><p>{legal.intro}</p>
+    {legal.sections.map((section) => <section><h2>{section.heading}</h2>{section.owner && <OwnerContact locale={locale} />}{section.paragraphs.map((paragraph) => <p>{paragraph === 'wallpapers@want.foundation' ? <a href="mailto:wallpapers@want.foundation">{paragraph}</a> : paragraph}</p>)}</section>)}
+  </article>
+</Base>

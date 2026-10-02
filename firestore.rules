@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function wallpaperPath(wallpaperId) {
+      return /databases/$(database)/documents/wallpapers/$(wallpaperId);
+    }
+    function authorPath(wallpaperId, uid) {
+      return /databases/$(database)/documents/wallpapers/$(wallpaperId)/commentAuthors/$(uid);
+    }
+    function commentPath(wallpaperId, commentId) {
+      return /databases/$(database)/documents/wallpapers/$(wallpaperId)/comments/$(commentId);
+    }
+    function validRating(uid) {
+      return signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['uid', 'value', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'value', 'updatedAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.value in ['cringe', 'minus', 'plus', 'imba']
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /collections/{collectionId} {
+      allow get, list: if true;
+      allow write: if false;
+    }
+    match /wallpapers/{wallpaperId} {
+      allow get, list: if true;
+      allow write: if false;
+
+      match /ratings/{uid} {
+        allow get, list: if true;
+        allow create: if exists(wallpaperPath(wallpaperId)) && validRating(uid);
+        allow update: if validRating(uid) && resource.data.uid == uid;
+        allow delete: if false;
+      }
+
+      match /comments/{commentId} {
+        allow get, list: if true;
+        allow create: if signedIn()
+          && exists(wallpaperPath(wallpaperId))
+          && request.resource.data.keys().hasAll(['uid', 'text', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['uid', 'text', 'createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() >= 2
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt == request.time
+          && (!exists(authorPath(wallpaperId, request.auth.uid))
+            || get(authorPath(wallpaperId, request.auth.uid)).data.lastAt <= request.time - duration.value(24, 'h'))
+          && getAfter(authorPath(wallpaperId, request.auth.uid)).data.lastCommentId == commentId
+          && getAfter(authorPath(wallpaperId, request.auth.uid)).data.lastAt == request.time;
+        allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+        allow update: if false;
+      }
+
+      match /commentAuthors/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list, delete: if false;
+        allow create: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasAll(['uid', 'lastCommentId', 'lastAt'])
+          && request.resource.data.keys().hasOnly(['uid', 'lastCommentId', 'lastAt'])
+          && request.resource.data.uid == uid
+          && request.resource.data.lastAt == request.time
+          && getAfter(commentPath(wallpaperId, request.resource.data.lastCommentId)).data.uid == uid
+          && getAfter(commentPath(wallpaperId, request.resource.data.lastCommentId)).data.createdAt == request.time;
+        allow update: if signedIn()
+          && request.auth.uid == uid
+          && resource.data.uid == uid
+          && resource.data.lastAt <= request.time - duration.value(24, 'h')
+          && request.resource.data.keys().hasOnly(['uid', 'lastCommentId', 'lastAt'])
+          && request.resource.data.uid == uid
+          && request.resource.data.lastAt == request.time
+          && getAfter(commentPath(wallpaperId, request.resource.data.lastCommentId)).data.uid == uid
+          && getAfter(commentPath(wallpaperId, request.resource.data.lastCommentId)).data.createdAt == request.time;
+      }
+    }
+
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll(['uid', 'wallpaperId', 'commentId', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'wallpaperId', 'commentId', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && reportId == request.resource.data.wallpaperId + '_' + request.resource.data.commentId + '_' + request.auth.uid
+        && exists(commentPath(request.resource.data.wallpaperId, request.resource.data.commentId))
+        && request.resource.data.createdAt == request.time;
+      allow get, list, update, delete: if false;
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll(['uid', 'topic', 'message', 'email', 'status', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'topic', 'message', 'email', 'status', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.topic is string
+        && request.resource.data.topic.size() >= 1
+        && request.resource.data.topic.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 5
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time;
+      allow get, list, update, delete: if false;
+    }
+  }
+}

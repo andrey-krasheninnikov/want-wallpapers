@@ -1,0 +1,36 @@
+---
+import Home from '../components/Home.astro';
+import CollectionsPage from '../components/CollectionsPage.astro';
+import CollectionPage from '../components/CollectionPage.astro';
+import WallpaperPage from '../components/WallpaperPage.astro';
+import SearchPage from '../components/SearchPage.astro';
+import FeedbackPage from '../components/FeedbackPage.astro';
+import LegalPage from '../components/LegalPage.astro';
+import { collections, locales, wallpapers, type Collection, type Locale, type Wallpaper } from '../data/catalog';
+import type { LegalKey } from '../data/legal';
+
+type PageProps = { locale: Locale; page: 'home' | 'collections' | 'collection' | 'wallpaper' | 'search' | 'feedback' | 'legal'; collection?: Collection; wallpaper?: Wallpaper; legal?: LegalKey };
+export function getStaticPaths() {
+  const paths: { params: { slug: string }; props: PageProps }[] = [];
+  const legalPages: LegalKey[] = ['privacy', 'terms', 'cookies', 'license', 'contact'];
+  for (const locale of locales) {
+    const prefix = locale === 'en' ? '' : `${locale}/`;
+    if (locale !== 'en') paths.push({ params: { slug: locale }, props: { locale, page: 'home' } });
+    paths.push({ params: { slug: `${prefix}collections` }, props: { locale, page: 'collections' } });
+    paths.push({ params: { slug: `${prefix}search` }, props: { locale, page: 'search' } });
+    paths.push({ params: { slug: `${prefix}feedback` }, props: { locale, page: 'feedback' } });
+    for (const legal of legalPages) paths.push({ params: { slug: `${prefix}${legal}` }, props: { locale, page: 'legal', legal } });
+    for (const collection of collections) paths.push({ params: { slug: `${prefix}collections/${collection.slug}` }, props: { locale, page: 'collection', collection } });
+    for (const wallpaper of wallpapers) paths.push({ params: { slug: `${prefix}wallpapers/${wallpaper.slug}` }, props: { locale, page: 'wallpaper', wallpaper } });
+  }
+  return paths;
+}
+const props = Astro.props as PageProps;
+---
+{props.page === 'home' && <Home locale={props.locale} />}
+{props.page === 'collections' && <CollectionsPage locale={props.locale} />}
+{props.page === 'collection' && props.collection && <CollectionPage locale={props.locale} collection={props.collection} />}
+{props.page === 'wallpaper' && props.wallpaper && <WallpaperPage locale={props.locale} wallpaper={props.wallpaper} />}
+{props.page === 'search' && <SearchPage locale={props.locale} />}
+{props.page === 'feedback' && <FeedbackPage locale={props.locale} />}
+{props.page === 'legal' && props.legal && <LegalPage locale={props.locale} page={props.legal} />}
