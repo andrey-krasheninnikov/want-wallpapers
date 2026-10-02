@@ -45,7 +45,7 @@ const analyticsAvailable = Boolean(import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_I
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
     <Header locale={locale} path={path} logo={logoUrl} client:load />
     <main id="main" tabindex="-1"><slot /></main>
-    <Footer locale={locale} logo={logoUrl} year={new Date().getFullYear()} />
+    <Footer locale={locale} logo={logoUrl} />
     <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
   </body>
 </html>

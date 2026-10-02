@@ -34,6 +34,27 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://want-wallpapers.web.app${localPath(locale, path)}`);
         await expect(page.locator('link[rel="alternate"]')).toHaveCount(5);
+        if (path === '/') {
+          await expect(page.locator('main .eyebrow')).toHaveCount(0);
+          await expect(page.locator('main figure a').first()).toHaveAttribute('href', localPath(locale, '/wallpapers/contours-of-silence-11/'));
+          await expect(page.locator('main figure img').first()).toHaveAttribute('src', '/previews/contours-of-silence-11-desktop.webp');
+          await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://want-wallpapers.web.app/previews/contours-of-silence-11-desktop.webp');
+          await expect(page.locator('footer')).toContainText('© 2026 Want Foundation');
+          await expect(page.locator('footer a[href="https://t.me/want_wallpapers"]')).toBeVisible();
+          const buttons = await page.locator('footer nav a').evaluateAll((links) => links.map((link) => {
+            const style = getComputedStyle(link);
+            return { left: style.paddingLeft, right: style.paddingRight, top: style.paddingTop, bottom: style.paddingBottom, height: link.getBoundingClientRect().height };
+          }));
+          for (const button of buttons) {
+            expect(button).toMatchObject({ left: '16px', right: '16px', top: '8px', bottom: '8px' });
+            expect(button.height).toBeGreaterThanOrEqual(44);
+          }
+        }
+        if (['/privacy/', '/terms/', '/contact/'].includes(path)) {
+          const owner = page.locator('[data-owner-contact]');
+          await expect(owner).toContainText('Andrey Krasheninnikov');
+          for (const href of ['https://t.me/andrey_krasheninnikov', 'https://t.me/want_foundation', 'https://github.com/andrey-krasheninnikov']) await expect(owner.locator(`a[href="${href}"]`)).toBeVisible();
+        }
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         await expect(page.locator('astro-error-overlay')).toHaveCount(0);
         const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
@@ -105,24 +126,51 @@ test('mobile menu and cookie dialog support keyboard focus and persistence', asy
   await expect(page.getByRole('link', { name: interfaceCopy.ru.skip })).toBeFocused();
 });
 
-test('ratings, comments, deletion, reporting and feedback use the local emulators', async ({ page }) => {
+test('ratings, comments, deletion, reporting and feedback use the local emulators', async ({ page }, testInfo) => {
   await page.goto(`/ru/wallpapers/${wallpaper}/`);
   await dismissCookies(page, 'ru');
-  await page.getByRole('radio', { name: copy.ru.plus }).click();
-  await expect(page.getByText(interfaceCopy.ru.ratingSaved)).toBeVisible();
+  for (const [label, emoji, value] of [[copy.ru.cringe, '👎', 'cringe'], [copy.ru.minus, '👍', 'minus'], [copy.ru.plus, '💖', 'plus'], [copy.ru.imba, '🚀', 'imba']]) {
+    await expect(page.getByText(emoji, { exact: true })).toBeVisible();
+    await page.getByRole('radio', { name: label, exact: true }).click();
+    await expect(page.getByText(interfaceCopy.ru.ratingSaved)).toBeVisible();
+    await expect(page.getByRole('radio', { name: label, exact: true })).toBeChecked();
+    expect((await db.collection(`wallpapers/${wallpaper}/ratings`).where('value', '==', value).get()).size).toBe(1);
+  }
   await page.reload();
-  await expect(page.getByRole('radio', { name: copy.ru.plus })).toBeChecked();
-  await page.getByRole('textbox', { name: copy.ru.comments, exact: true }).fill('Мне нравится этот горизонт.');
+  await expect(page.getByRole('radio', { name: copy.ru.imba, exact: true })).toBeChecked();
+  await page.getByRole('radio', { name: copy.ru.plus, exact: true }).focus();
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('radio', { name: copy.ru.plus, exact: true })).toBeChecked();
+  await page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true }).fill('Мне нравится этот горизонт.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toBeVisible();
-  await page.getByRole('textbox', { name: copy.ru.comments, exact: true }).fill('Ещё один комментарий.');
+  await page.setViewportSize({ width: 320, height: 900 });
+  const commentFits = await page.locator('[data-comment]').evaluate((card) => {
+    const bounds = card.getBoundingClientRect();
+    return [...card.querySelectorAll('button, [data-slot="badge"]')].every((child) => {
+      const box = child.getBoundingClientRect();
+      return box.left >= bounds.left && box.right <= bounds.right && box.top >= bounds.top && box.bottom <= bounds.bottom;
+    });
+  });
+  expect(commentFits).toBe(true);
+  await page.locator('[data-comment]').screenshot({ path: testInfo.outputPath('own-comment-mobile.png') });
+  await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-populated-mobile.png') });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-populated-desktop.png') });
+  await page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true }).fill('Ещё один комментарий.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText(copy.ru.commentWait)).toBeVisible();
-  await expect(page.getByRole('textbox', { name: copy.ru.comments, exact: true })).toHaveValue('Ещё один комментарий.');
+  await expect(page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true })).toHaveValue('Ещё один комментарий.');
   await page.getByRole('button', { name: copy.ru.delete, exact: true }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toHaveCount(0);
-  await db.doc(`wallpapers/${wallpaper}/comments/other-comment`).set({ uid: 'another-visitor', text: 'Другая работа с цветом.', createdAt: Timestamp.now() });
+  await db.doc(`wallpapers/${wallpaper}/comments/other-comment`).set({ uid: 'another-visitor', text: `Другая работа с цветом.\n${'Оченьдлинноесловобезпробелов'.repeat(20)}`, createdAt: Timestamp.now() });
   await page.reload();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await expect(page.locator('[data-comment="other-comment"]')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
+  await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-long-mobile.png') });
   await page.getByRole('button', { name: copy.ru.report, exact: true }).click();
   await expect(page.getByText(copy.ru.reportThanks)).toBeVisible();
   await page.goto('/ru/feedback/');

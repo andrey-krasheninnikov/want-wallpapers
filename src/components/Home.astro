@@ -14,7 +14,7 @@ const { locale } = Astro.props;
 const ui = copy[locale];
 const text = interfaceCopy[locale];
 // Want: editorial gallery, Manrope, dark surfaces, violet actions, short CSS motion.
-const hero = wallpapers.find((item) => item.collection === 'contours-of-silence' && item.number === 1)!;
+const hero = wallpapers.find((item) => item.slug === 'contours-of-silence-11')!;
 const image = await previewData(hero, 'desktop');
 const highlights = [wallpapers[0], wallpapers[4], wallpapers[15], wallpapers[18], wallpapers[20], wallpapers[22]].filter(Boolean);
 const collectionCards = await Promise.all(collections.map((item) => collectionCard(item, locale)));
@@ -24,7 +24,7 @@ const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Wa
 ---
 <Base locale={locale} title={ui.heroTitle} description={ui.heroText} path="/" image={image.src} schema={schema}>
   <section class="shell grid items-center gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:gap-12 lg:py-20">
-    <div class="want-enter"><p class="eyebrow">{ui.heroEyebrow}</p><h1 class="display-title mt-4 max-w-2xl">{ui.heroTitle}</h1><p class="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{ui.heroText}</p>
+    <div class="want-enter"><h1 class="display-title max-w-2xl">{ui.heroTitle}</h1><p class="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{ui.heroText}</p>
       <div class="mt-8 flex flex-wrap gap-3"><ActionLink href="#collections" label={ui.explore} /><ActionLink href={localPath(locale, '/search/')} label={ui.search} variant="outline" /></div>
       <div class="mt-8 flex flex-wrap gap-3 text-sm text-muted-foreground"><Badge variant="secondary">{`${collections.length} ${ui.collections.toLocaleLowerCase(locale)}`}</Badge><Badge variant="secondary">{`${wallpapers.length} ${ui.wallpapers}`}</Badge><Badge variant="outline" className="whitespace-normal">{`${ui.desktop} + ${ui.mobile}`}</Badge></div>
     </div>

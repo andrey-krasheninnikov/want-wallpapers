@@ -9,6 +9,10 @@ const { locale } = Astro.props;
 const ui = copy[locale];
 ---
 <Base locale={locale} title={ui.feedbackTitle} description={ui.feedbackText} path="/feedback/">
-  <div class="shell page-heading"><h1 class="display-title max-w-4xl">{ui.feedbackTitle}</h1><p class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">{ui.feedbackText}</p></div>
-  <section class="shell" aria-label={ui.feedback}><FeedbackForm locale={locale} client:load /><noscript><p class="max-w-2xl rounded-lg border p-6 text-muted-foreground">{interfaceCopy[locale].javascriptRequired} <a class="text-link underline" href="mailto:wallpapers@want.foundation">wallpapers@want.foundation</a></p></noscript></section>
+  <section class="shell grid items-start gap-8 py-10 sm:gap-12 sm:py-14 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)] lg:py-16" aria-label={ui.feedback}>
+    <div><h1 class="max-w-xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{ui.feedbackTitle}</h1><p class="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">{ui.feedbackText}</p>
+      <div class="mt-8 border-t pt-8"><h2 class="text-lg font-semibold">{interfaceCopy[locale].feedbackDirect}</h2><p class="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">{interfaceCopy[locale].feedbackDirectHint}</p><a class="mt-3 inline-flex min-h-11 items-center py-2 text-sm text-link underline wrap-anywhere" href="mailto:wallpapers@want.foundation">wallpapers@want.foundation</a></div>
+    </div>
+    <div class="min-w-0"><FeedbackForm locale={locale} client:load /><noscript><p class="rounded-lg border p-6 text-muted-foreground">{interfaceCopy[locale].javascriptRequired} <a class="text-link underline" href="mailto:wallpapers@want.foundation">wallpapers@want.foundation</a></p></noscript></div>
+  </section>
 </Base>
