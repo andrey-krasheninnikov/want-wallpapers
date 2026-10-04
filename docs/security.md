@@ -15,6 +15,8 @@ Production образ содержит только Rust binary, системн�
 
 Cookie production имеют префикс `__Host-`, Secure, HttpOnly, SameSite=Strict, Path=/ и не задают Domain. Изменения требуют точного Origin и CSRF. Пароль Argon2id с TOTP, persistent replay/rate protection, отзыв сессий, лимиты тела/таймаутов и optimistic versions защищают административный API. Bearer secret ограничен каталогом. Runtime PostgreSQL роль не имеет DDL и доступа к изменению истории миграций. TLS verify-full проверяет сертификат и hostname PostgreSQL 18. CSP использует hashes inline scripts и не разрешает unsafe-inline scripts. Inline styles остаются разрешены для Radix; HTML-текст и значения атрибутов экранируются. JSON-LD отдельно экранирует `<`.
 
+reCAPTCHA Enterprise обязательна для публичных изменений и admin login. Сервер проверяет valid/action/hostname/score; timeout или сбой провайдера блокирует запись. Credentials доступны только runtime app из внешнего read-only файла. Миграция, frontend и CI их не получают. Токены, тексты форм, пароль и TOTP не включаются в журналы assessment. Origin, CSRF, ownership и лимиты сохраняются независимо от CAPTCHA.
+
 ## Оставшиеся Bun advisory
 
 Astro 5 сохранён ради совместимости текущего frontend. Полное устранение metadata findings требует отдельной миграции major Astro и React integration. До следующей проверки действуют следующие ограничения:
@@ -39,4 +41,4 @@ grpc-js 1.14.5 и http-cache-semantics 4.3.0 закреплены overrides дл
 
 ## Проверки
 
-Build проверяет canonical/hreflang/OG, robots/sitemap, JSON-LD и CSP hashes всех HTML. Браузерные проверки используют Rust API, четыре языка, мобильные/desktop размеры, accessibility и административные операции. Production image отдельно проверяется на PostgreSQL 18 с CA/hostname verification и непривилегированной ролью: `make docker-build`, затем `make test-container`. Это локальные проверки, не подтверждение VPS или HTTPS Traefik.
+Build проверяет canonical/hreflang/OG, robots/sitemap, JSON-LD и CSP hashes всех HTML. Браузерные проверки используют Rust API, четыре языка, мобильные/desktop размеры, accessibility и административные операции. Production image отдельно проверяется на PostgreSQL 18 с CA/hostname verification и непривилегированной ролью: `make docker-build`, затем `make test-container`. Native CI повторяет container проверки на linux/amd64 и linux/arm64 и публикует те же образы через artifacts. Тесты Google используют SDK stubs и synthetic credentials, поэтому не подтверждают настоящий assessment. Это локальные/CI проверки, не подтверждение VPS или HTTPS Traefik.
