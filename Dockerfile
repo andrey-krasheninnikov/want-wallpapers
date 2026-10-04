@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.3.14 AS frontend
+FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS frontend
 WORKDIR /app
 ENV ASTRO_TELEMETRY_DISABLED=1
 COPY package.json bun.lock ./
@@ -16,7 +16,7 @@ ENV PUBLIC_FIREBASE_API_KEY=$PUBLIC_FIREBASE_API_KEY \
     PUBLIC_FIREBASE_MEASUREMENT_ID=$PUBLIC_FIREBASE_MEASUREMENT_ID
 RUN bun run build
 
-FROM rust:1.93.0-bookworm AS backend
+FROM rust:1.93.0-bookworm@sha256:d0a4aa3ca2e1088ac0c81690914a0d810f2eee188197034edf366ed010a2b382 AS backend
 WORKDIR /app
 ENV RUSTUP_TOOLCHAIN=1.93.0
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
@@ -26,7 +26,10 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     cargo build --locked --release -p want-wallpapers-server \
     && cp /app/target/release/want-wallpapers-server /app/want-wallpapers-server
 
-FROM debian:bookworm-slim AS runtime
+FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251 AS runtime
+ARG VCS_REF="unknown"
+LABEL org.opencontainers.image.source="https://github.com/andrey-krasheninnikov/want-wallpapers" \
+      org.opencontainers.image.revision=${VCS_REF}
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 wallpapers && useradd --uid 10001 --gid wallpapers --no-create-home wallpapers
 WORKDIR /app

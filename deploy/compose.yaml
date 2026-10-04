@@ -7,6 +7,17 @@ x-runtime: &runtime
     - /tmp:size=32m,mode=1777
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
+  mem_limit: 512m
+  memswap_limit: 512m
+  cpus: 2
+  pids_limit: 64
+  logging:
+    driver: local
+    options:
+      max-size: '5m'
+      max-file: '3'
+  labels:
+    traefik.enable: 'false'
   networks: [traefik]
   environment: &environment
     APP_ENV: production
@@ -19,22 +30,15 @@ x-runtime: &runtime
     ADMIN_PASSWORD_HASH_FILE: /run/secrets/admin_password_hash
     ADMIN_TOTP_SECRET_FILE: /run/secrets/admin_totp_secret
     CATALOG_API_TOKEN_FILE: /run/secrets/catalog_api_token
-    TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:?Set only the actual Traefik proxy CIDRs}
+    TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:?Set only the actual trusted proxy CIDRs}
   secrets: [database_url, postgres_ca, admin_password_hash, admin_totp_secret, catalog_api_token]
 services:
   app:
     <<: *runtime
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 2
-    labels:
-      traefik.enable: 'true'
-      traefik.docker.network: ${TRAEFIK_NETWORK:?Set existing external Traefik network}
-      traefik.http.routers.wallpapers.rule: Host(`wallpapers.want.foundation`)
-      traefik.http.routers.wallpapers.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
-      traefik.http.routers.wallpapers.tls: 'true'
-      traefik.http.routers.wallpapers.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:?Set existing certificate resolver}
-      traefik.http.services.wallpapers.loadbalancer.server.port: '8080'
+    networks:
+      traefik:
+        aliases: [wallpapers]
   migrate:
     <<: *runtime
     profiles: [operations]
@@ -44,12 +48,10 @@ services:
       <<: *environment
       DATABASE_URL_FILE: /run/secrets/migration_database_url
     secrets: [migration_database_url, postgres_ca]
-    labels:
-      traefik.enable: 'false'
 networks:
   traefik:
     external: true
-    name: ${TRAEFIK_NETWORK}
+    name: ${TRAEFIK_NETWORK:?Set existing external Traefik network}
 secrets:
   database_url:
     file: ${SECRETS_DIR:?Set external secret directory}/database_url

@@ -708,6 +708,31 @@ async fn archive_preserves_social_data_and_abuse_limits_cannot_trust_client_forw
         auth::client_ip(&state, &headers, "10.0.0.3:123".parse().unwrap()),
         "192.0.2.1".parse::<std::net::IpAddr>().unwrap()
     );
+    let mut edge_state = self::state(pool.clone());
+    Arc::get_mut(&mut edge_state.config)
+        .unwrap()
+        .trusted_proxies
+        .push("198.51.100.0/24".parse().unwrap());
+    headers.insert(
+        "x-forwarded-for",
+        "203.0.113.99, 192.0.2.1, 198.51.100.20, 10.0.0.2"
+            .parse()
+            .unwrap(),
+    );
+    headers.insert("cf-connecting-ip", "203.0.113.99".parse().unwrap());
+    assert_eq!(
+        auth::client_ip(&edge_state, &headers, "10.0.0.3:123".parse().unwrap()),
+        "192.0.2.1".parse::<std::net::IpAddr>().unwrap()
+    );
+    assert_eq!(
+        auth::client_ip(&edge_state, &headers, "127.0.0.1:123".parse().unwrap()),
+        "127.0.0.1".parse::<std::net::IpAddr>().unwrap()
+    );
+    headers.insert("x-forwarded-for", "192.0.2.1, invalid-ip".parse().unwrap());
+    assert_eq!(
+        auth::client_ip(&edge_state, &headers, "10.0.0.3:123".parse().unwrap()),
+        "10.0.0.3".parse::<std::net::IpAddr>().unwrap()
+    );
     for _ in 0..5 {
         auth::limit(&state, "attempt", 5, 900).await.unwrap();
     }

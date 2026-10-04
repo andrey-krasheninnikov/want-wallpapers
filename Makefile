@@ -33,7 +33,7 @@ catalog-pull:
 catalog-add:
 	bun run catalog:add "$(MANIFEST)" $(ARGS)
 docker-build:
-	docker build --tag want-wallpapers:local .
+	docker build --build-arg VCS_REF="$$(git rev-parse HEAD)" --tag want-wallpapers:local .
 deploy-config:
 	docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 migrate:

@@ -4,7 +4,7 @@
 
 Поддерживается публичный HTTPS URL с host `want-foundation.s3.twcstorage.ru`, bucket `want-foundation` и папкой `wallpapers/assets/collections/<number-and-name>/`. Не используйте URL с credentials, другой bucket или host с текущим `s3Url`. Из другого адреса нельзя молча вывести адрес текущего CDN.
 
-Получите S3 ListObjectsV2 через `https://want-foundation.s3.twcstorage.ru/?list-type=2&prefix=<encoded-folder-prefix>`. Разберите XML стандартной библиотекой; проходите страницы через `NextContinuationToken` до `IsTruncated=false`. Ограничьте список точным prefix коллекции. Пропустите маркеры папок и вспомогательные файлы; ни один PNG не должен остаться без разбора.
+Получите S3 ListObjectsV2 через `https://want-foundation.s3.twcstorage.ru/?list-type=2&prefix=<encoded-folder-prefix>`, где prefix начинается с `wallpapers/assets/collections/`. Разберите XML стандартной библиотекой; проходите страницы через `NextContinuationToken` до `IsTruncated=false`. Ограничьте список точным prefix коллекции. Пропустите маркеры папок и вспомогательные файлы; ни один PNG не должен остаться без разбора.
 
 Папка задаёт `collection.id` с ведущими нулями и `collection.slug` без цифрового префикса. Для каждого положительного уникального номера ожидаются ровно `<number>-desktop.png` и `<number>-mobile.png`. Нумерация может иметь пропуски. Нестандартное имя, дубликат варианта или неполная пара требуют выяснения; не пропускайте такой дизайн. `count` — число пар, а не файлов.
 

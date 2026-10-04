@@ -68,6 +68,8 @@ for name, value in values.items():
     (work / name).write_text(value); (work / name).chmod(0o444)
 (work / 'ca.crt').chmod(0o444)
 common = ['docker', 'run', '--rm', '--network', network, '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--tmpfs', '/tmp:size=32m',
+    '--memory', '512m', '--memory-swap', '512m', '--cpus', '2', '--pids-limit', '64',
+    '--log-driver', 'local', '--log-opt', 'max-size=5m', '--log-opt', 'max-file=3',
     '-e', 'APP_ENV=production', '-e', 'PGSSLROOTCERT=/run/secrets/ca.crt']
 def mounts(names):
     result = []

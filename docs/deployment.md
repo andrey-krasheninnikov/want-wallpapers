@@ -1,6 +1,6 @@
 # Деплой на VPS: Docker, Traefik, внешний PostgreSQL 18
 
-Сайт: `https://wallpapers.want.foundation/`. Развёртывание выполняется оператором отдельно от Git release. В production нет контейнера PostgreSQL и Docker socket приложения. Нужны DNS домена на VPS, уже работающий Traefik с HTTPS entrypoint/resolver, его внешняя Docker network и внешний PostgreSQL 18 с сертификатом, соответствующим DNS/IP соединения. Укажите точные значения вашей установки, а не пример subnet.
+Сайт: `https://wallpapers.want.foundation/`. Развёртывание выполняется оператором отдельно от Git release. В production нет контейнера PostgreSQL и Docker socket приложения. Нужны DNS домена на VPS, уже работающий Traefik с HTTPS origin-сертификатом и готовым маршрутом к `http://wallpapers:8080`, внешняя Docker network `wallpapers-proxy` и внешний PostgreSQL 18 с сертификатом, соответствующим DNS/IP соединения. Укажите точные значения вашей установки, а не пример subnet.
 
 ## 1. База и роли
 
@@ -43,14 +43,22 @@ sudo chmod 400 /etc/want-wallpapers/secrets/*
 
 ## 3. Образ и Traefik
 
-Соберите из проверенного release checkout при доступном CDN. Backend и frontend входят в один образ. Analytics public settings передаются только при сборке; без measurement ID она выключена.
+Backend и frontend входят в один Rust-образ. Базовые образы закреплены digest, OCI labels содержат repository URL и revision. Checks выполняет audit, static/unit/API/UI/container проверки; после успеха main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`. PR, development и Rust-ветка только проверяются. Сборки выполняются в CI или на машине с достаточной памятью; малоресурсный VPS получает готовый образ. Workflow не подключается по SSH и не развёртывает сайт.
+
+Для ручной сборки используйте проверенный checkout с доступным CDN:
 
 ```bash
-docker build -t want-wallpapers:<release> .
-cp deploy/.env.example deploy/.env
+make docker-build
+cp -n deploy/.env.example deploy/.env
 ```
 
-Задайте APP_IMAGE с точным тегом или digest, SECRETS_DIR, ADMIN_USERNAME, TRAEFIK_NETWORK, TRAEFIK_ENTRYPOINT, TRAEFIK_CERT_RESOLVER и TRUSTED_PROXY_CIDRS. Последний содержит только фактические адреса доверенных Traefik proxy; не используйте 0.0.0.0/0. Проверьте subnet через `docker network inspect <network>` и фиксируйте адрес proxy либо контролируемую изолированную сеть. Внешние клиенты не должны иметь прямого доступа к app :8080. Traefik должен заменять недоверенный X-Forwarded-For; не включайте forwardedHeaders.insecure. Встроенная защита рассматривает цепочку справа налево только при доверенном socket peer.
+Перед первым GHCR pull сделайте пакет публичным либо настройте отдельный доступ только на чтение пакета. Права Git сами по себе не дают pull-доступ. В APP_IMAGE укажите `ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:<verified-digest>` из результата успешной публикации; локальная сборка использует `want-wallpapers:local`. Analytics включается только после согласия и разрешённого региона. При сборке передавайте публичные PUBLIC_FIREBASE_API_KEY, PUBLIC_FIREBASE_PROJECT_ID, PUBLIC_FIREBASE_APP_ID и PUBLIC_FIREBASE_MEASUREMENT_ID; CI берёт их из repository variables. Без measurement ID Analytics выключена. Приватные ключи, DB URL и токены в build args не передаются.
+
+Задайте SECRETS_DIR, ADMIN_USERNAME, TRAEFIK_NETWORK и TRUSTED_PROXY_CIDRS. Compose добавляет alias `wallpapers` только сервису app в существующей сети `wallpapers-proxy`; route и origin-сертификат принадлежат установленному Traefik. Docker discovery выключен для app/migrate, labels не создают второй route. Если существующий route использует healthcheck, укажите `/health/ready` вместо прежнего Nginx `/healthz`. Перед переключением остановите прежний контейнер с тем же alias по его существующей инструкции: два контейнера с alias `wallpapers` одновременно создадут неоднозначную маршрутизацию. Данные внешней PostgreSQL не удаляются.
+
+В Cloudflare включите прокси DNS и [SSL/TLS Full (strict)](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/); origin-сертификат должен быть действующим и соответствовать wallpapers.want.foundation. Origin-порты 80/443 разрешают только текущие сети Cloudflare, включая Docker ingress. App не публикует host-порты. Cache Rules должны обходить `/api/*`, `/admin/*` и `/health/*`; приватные ответы, Set-Cookie и Cache-Control: no-store не кешируются. Не включайте Cache Everything для этих путей.
+
+TRUSTED_PROXY_CIDRS содержит фактические адреса доверенных Traefik proxy. Если сохранённый X-Forwarded-For включает Cloudflare, добавьте её актуальные proxy CIDRs, полученные из [официального списка](https://www.cloudflare.com/ips/), чтобы проверка цепочки дошла до IP посетителя. Traefik должен доверять forwarded headers только Cloudflare через [forwardedHeaders.trustedIPs](https://doc.traefik.io/traefik/reference/install-configuration/entrypoints/#forwarded-headers); forwardedHeaders.insecure выключен. Для прямого Traefik без Cloudflare доверяйте только Traefik. Не используйте 0.0.0.0/0 или все private ranges. Встроенная защита проверяет цепочку справа налево при доверенном socket peer и игнорирует поддельный левый префикс. Адрес proxy фиксируйте либо используйте контролируемую изолированную сеть; проверьте её через `docker network inspect <network>`.
 
 ```bash
 make deploy-config
@@ -60,10 +68,11 @@ make migrate
 После миграций примените `deploy/runtime-grants.sql` к БД wallpapers от migrator/DBA. App не должен владеть схемой, таблицами или иметь CREATE. Не выдавайте app права на `_sqlx_migrations`. Новая миграция с новыми таблицами требует соответствующего явного grant.
 
 ```bash
-docker compose --env-file deploy/.env -f deploy/compose.yaml up -d app
+docker compose --env-file deploy/.env -f deploy/compose.yaml pull
+docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait app
 ```
 
-Один сервис app подключён к существующей внешней network. Он работает uid 10001 с read-only filesystem, без Linux capabilities, с no-new-privileges, 32 MiB tmpfs, ограничениями RAM/CPU. PostgreSQL подключается через обычный DNS/IP и TLS. Сервис migrate включается только профилем operations и не получает Traefik route. Runtime не выполняет миграции сам.
+Один сервис app подключён к существующей внешней network. Он работает uid 10001 с read-only filesystem, без Linux capabilities, с no-new-privileges, 32 MiB tmpfs, 512 MiB RAM без swap, 2 CPU, лимитом 64 процессов и local logging (max-size=5m, max-file=3). PostgreSQL подключается через обычный DNS/IP и TLS. Сервис migrate включается только профилем operations и не получает Traefik route. Runtime не выполняет миграции сам.
 
 ## 4. Проверка после запуска
 
@@ -76,11 +85,11 @@ curl --head https://wallpapers.want.foundation/admin/login/
 curl --fail https://wallpapers.want.foundation/sitemap-index.xml
 ```
 
-Проверьте реальные HTTPS, certificate chain, noindex у admin, отсутствие admin/API в sitemap, новый домен в canonical/hreflang/OG/schema, четыре языка, изображения, обе загрузки и regional fallback. В `/admin/login/` войдите паролем/TOTP, проверьте редактирование переводов, архив/restore, комментарии, жалобы и обращения. Logout должен отзывать cookie. Каталожный токен должен получать 403 на moderation; проверяйте токен с защищённым config/header file, не через буквальный аргумент CLI. Сохраните результаты без секретов и персональных сообщений. Local/CI checks не подтверждают production.
+Проверьте реальные HTTPS, certificate chain, отсутствие edge cache у admin/API/health и IP посетителя в ограничении входа за Cloudflare/Traefik, noindex у admin, отсутствие admin/API в sitemap, новый домен в canonical/hreflang/OG/schema, четыре языка, изображения, обе загрузки и regional fallback. В `/admin/login/` войдите паролем/TOTP, проверьте редактирование переводов, архив/restore, комментарии, жалобы и обращения. Logout должен отзывать cookie. Каталожный токен должен получать 403 на moderation; проверяйте токен с защищённым config/header file, не через буквальный аргумент CLI. Сохраните результаты без секретов и персональных сообщений. Local/CI checks не подтверждают production.
 
 ## 5. Обновления и rollback
 
-Перед миграциями сделайте backup внешней БД и проверьте восстановление в отдельной среде. Посмотрите diff миграций и совместимость предыдущего runtime. Соберите образ с новым неизменяемым тегом, выполните migrate с новой версией, выдайте необходимые новые grants, переключите APP_IMAGE и `up -d app`, затем повторите smoke checks. Rollback контейнера допустим только если схема совместима с прошлой версией; иначе нужен проверенный план восстановления. Автоматическое удаление/откат БД не выполняется.
+Перед миграциями сделайте backup внешней БД и проверьте восстановление в отдельной среде. Посмотрите diff миграций и совместимость предыдущего runtime. Получите проверенный новый digest, выполните migrate с новой версией, выдайте необходимые новые grants, переключите APP_IMAGE и `up -d --wait app`, затем повторите smoke checks. Сохраните предыдущий digest до обновления; rollback возвращает этот digest и повторяет `up -d --wait app`. Rollback контейнера допустим только если схема совместима с прошлой версией; иначе нужен проверенный план восстановления. Автоматическое удаление/откат БД не выполняется.
 
 Каталог: админка/API, `make catalog-pull`, проверки, сборка нового образа, обновление app. Не отдавайте приложению Docker socket для самостоятельного rebuild. Чтобы исключить изменение каталога во время сборки, сохраните согласованный snapshot в release checkout и сравните API readback перед публикацией.
 

@@ -1,9 +1,13 @@
 import { defineConfig } from '@playwright/test';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const output = join(tmpdir(), 'want-wallpapers-ui');
 
 export default defineConfig({
   testDir: './tests/ui',
-  outputDir: '/tmp/want-wallpapers-ui/results',
-  reporter: [['list'], ['html', { outputFolder: '/tmp/want-wallpapers-ui/report', open: 'never' }]],
+  outputDir: join(output, 'results'),
+  reporter: [['list'], ['html', { outputFolder: join(output, 'report'), open: 'never' }]],
   workers: 2,
   fullyParallel: true,
   timeout: 90000,

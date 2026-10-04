@@ -1,4 +1,6 @@
 .git
+.github
+.firebase
 .agents
 node_modules
 **/node_modules
@@ -15,3 +17,6 @@ target
 deploy
 scripts
 docs
+**/tests
+*-debug.log
+**/*.tsbuildinfo

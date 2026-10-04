@@ -24,7 +24,9 @@ cd ..
 make test-ui
 ```
 
-`make test` запускает поиск/фильтры/manifest и Rust API на отдельном PostgreSQL 18. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют четыре языка на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `/tmp/want-wallpapers-ui/`. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
+`make test` запускает поиск/фильтры/manifest и Rust API на отдельном PostgreSQL 18. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют четыре языка на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
+
+Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: разрешите `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md). CI создаёт профили с точными путями и выполняет smoke-launch на одноразовом runner; настройки VPS не меняются.
 
 ## Разработка
 
@@ -69,8 +71,10 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 ## Эксплуатация
 
-[Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, Traefik, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
+[Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
 
 Analytics включается только с measurement ID, согласием посетителя и разрешённым регионом. Российский IP или ошибка ipwho.is отключает социальные функции, обращения и Analytics в публичном интерфейсе; просмотр, поиск и скачивание остаются. Админка работает независимо от региона. Закрытые обращения удаляются ежедневной задачей через год.
+
+Workflow Checks запускает проверки для PR, ручного запуска и push в main, development, feature/vps-traefik-deployment и feature/rust-backend-monorepo. После успешных проверок main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`; PR и Rust-ветка образ не публикуют. Деплой VPS выполняется отдельно. Для production используйте проверенный digest из результата публикации.
 
 Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.
