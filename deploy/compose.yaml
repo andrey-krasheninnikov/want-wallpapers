@@ -1,0 +1,77 @@
+name: want-wallpapers
+x-runtime: &runtime
+  image: ${APP_IMAGE:?Set an immutable APP_IMAGE tag or digest}
+  user: '10001:10001'
+  read_only: true
+  tmpfs:
+    - /tmp:size=32m,mode=1777
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 512m
+  memswap_limit: 512m
+  cpus: 2
+  pids_limit: 64
+  logging:
+    driver: local
+    options:
+      max-size: '5m'
+      max-file: '3'
+  labels:
+    traefik.enable: 'false'
+  networks: [traefik]
+  environment: &environment
+    APP_ENV: production
+    SITE_URL: https://wallpapers.want.foundation
+    BIND_ADDR: 0.0.0.0:8080
+    STATIC_DIR: /app/frontend/dist
+    DATABASE_URL_FILE: /run/secrets/database_url
+    PGSSLROOTCERT: /run/secrets/postgres_ca
+    ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+    ADMIN_PASSWORD_HASH_FILE: /run/secrets/admin_password_hash
+    ADMIN_TOTP_SECRET_FILE: /run/secrets/admin_totp_secret
+    CATALOG_API_TOKEN_FILE: /run/secrets/catalog_api_token
+    TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:?Set only the actual trusted proxy CIDRs}
+  secrets: [database_url, postgres_ca, admin_password_hash, admin_totp_secret, catalog_api_token]
+services:
+  app:
+    <<: *runtime
+    restart: unless-stopped
+    environment:
+      <<: *environment
+      RECAPTCHA_ENABLED: 'true'
+      RECAPTCHA_PROJECT_ID: ${RECAPTCHA_PROJECT_ID:?Set Google Cloud project ID}
+      PUBLIC_RECAPTCHA_SITE_KEY: ${PUBLIC_RECAPTCHA_SITE_KEY:?Set the Web score-based reCAPTCHA site key}
+      RECAPTCHA_MIN_SCORE: ${RECAPTCHA_MIN_SCORE:-0.5}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_application_credentials
+    secrets: [database_url, postgres_ca, admin_password_hash, admin_totp_secret, catalog_api_token, google_application_credentials]
+    networks:
+      traefik:
+        aliases: [wallpapers]
+  migrate:
+    <<: *runtime
+    profiles: [operations]
+    command: [migrate]
+    restart: 'no'
+    environment:
+      <<: *environment
+      DATABASE_URL_FILE: /run/secrets/migration_database_url
+    secrets: [migration_database_url, postgres_ca]
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:?Set existing external Traefik network}
+secrets:
+  database_url:
+    file: ${SECRETS_DIR:?Set external secret directory}/database_url
+  migration_database_url:
+    file: ${SECRETS_DIR}/migration_database_url
+  postgres_ca:
+    file: ${SECRETS_DIR}/postgres_ca.pem
+  admin_password_hash:
+    file: ${SECRETS_DIR}/admin_password_hash
+  admin_totp_secret:
+    file: ${SECRETS_DIR}/admin_totp_secret
+  catalog_api_token:
+    file: ${SECRETS_DIR}/catalog_api_token
+  google_application_credentials:
+    file: ${SECRETS_DIR}/google_application_credentials.json
