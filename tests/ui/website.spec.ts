@@ -4,7 +4,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
-import type { Locale } from '../../src/data/catalog';
+import { wallpapers, type Locale } from '../../src/data/catalog';
 
 const wallpaper = 'contours-of-silence-1';
 if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_HOST) throw new Error('UI tests require local Firebase emulators. Run bun run test:ui.');
@@ -92,12 +92,12 @@ test('search URLs, filters, empty state and reset', async ({ page }) => {
   await page.getByRole('searchbox').fill('нет-такого-рисунка');
   await expect(page.getByText(copy.ru.noResults)).toBeVisible();
   await page.getByRole('button', { name: interfaceCopy.ru.reset }).first().click();
-  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(25);
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(wallpapers.length);
   await expect(page).toHaveURL('/ru/search/');
   await page.getByRole('combobox', { name: copy.ru.category, exact: true }).click();
   await page.getByRole('option', { name: 'Фэнтези', exact: true }).click();
   await expect(page).toHaveURL(/category=fantasy/);
-  expect(await page.locator('[data-wallpaper-card]').count()).toBeLessThan(25);
+  expect(await page.locator('[data-wallpaper-card]').count()).toBeLessThan(wallpapers.length);
 });
 
 test('mobile menu and cookie dialog support keyboard focus and persistence', async ({ page }, testInfo) => {

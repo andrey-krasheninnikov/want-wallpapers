@@ -12,7 +12,8 @@
     "test:rules": "bun test tests/firestore.rules.test.ts",
     "test:ui": "firebase emulators:exec --project demo-want-wallpapers --only auth,firestore 'bunx --bun playwright test'",
     "catalog:seed": "bun scripts/catalog-seed.ts",
-    "catalog:pull": "bun scripts/catalog-pull.ts"
+    "catalog:pull": "bun scripts/catalog-pull.ts",
+    "catalog:add": "bun scripts/catalog-add.ts"
   },
   "dependencies": {
     "@astrojs/react": "^4",
