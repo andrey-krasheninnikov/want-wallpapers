@@ -53,8 +53,24 @@ pub async fn headers(State(state): State<AppState>, request: Request, next: Next
     } else {
         "'self' https://ipwho.is https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://firebaseinstallations.googleapis.com"
     };
+    let captcha = !admin || path == "/admin/login/";
+    let captcha_scripts = if captcha {
+        " https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/"
+    } else {
+        ""
+    };
+    let captcha_connect = if captcha {
+        " https://www.google.com/recaptcha/"
+    } else {
+        ""
+    };
+    let frames = if captcha {
+        "https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/"
+    } else {
+        "'none'"
+    };
     let csp = format!(
-        "default-src 'self'; script-src {scripts}{analytics}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}; font-src 'self'; connect-src {connect}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}; font-src 'self'; connect-src {connect}{captcha_connect}; frame-src {frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     );
     let headers = response.headers_mut();
     if let Ok(value) = HeaderValue::from_str(&csp) {

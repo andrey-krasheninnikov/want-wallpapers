@@ -19,6 +19,7 @@ pub struct Config {
     pub credential_fingerprint: String,
     pub catalog_token_hash: String,
     pub trusted_proxies: Vec<IpNet>,
+    pub recaptcha: Option<crate::recaptcha::Settings>,
 }
 fn setting(name: &str, default: &str) -> String {
     env::var(name).unwrap_or_else(|_| default.to_owned())
@@ -96,6 +97,7 @@ impl Config {
             admin_hash,
             totp,
             catalog_token_hash: digest(&catalog_token),
+            recaptcha: crate::recaptcha::Settings::load(production)?,
             trusted_proxies: setting("TRUSTED_PROXY_CIDRS", "")
                 .split(',')
                 .filter(|s| !s.is_empty())

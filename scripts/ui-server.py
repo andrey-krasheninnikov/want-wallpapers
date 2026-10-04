@@ -19,7 +19,7 @@ database_name = 'wallpapers_ui_' + secrets.token_hex(8)
 subprocess.run(['docker', 'exec', os.environ.get('TEST_DB_CONTAINER', 'want-wallpapers-test-pg'), 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', f'CREATE DATABASE {database_name}'], check=True, stdout=subprocess.DEVNULL)
 database = (secret_dir / 'database_url').read_text().strip().replace('/wallpapers_test?', f'/{database_name}?')
 (secret_dir / 'ui_database_url').write_text(database); (secret_dir / 'ui_database_url').chmod(0o600)
-environment.update(APP_ENV='development', DATABASE_URL_FILE=str(secret_dir / 'ui_database_url'), ADMIN_PASSWORD_HASH_FILE=str(secret_dir / 'ui_admin_hash'),
+environment.update(APP_ENV='development', RECAPTCHA_ENABLED='false', DATABASE_URL_FILE=str(secret_dir / 'ui_database_url'), ADMIN_PASSWORD_HASH_FILE=str(secret_dir / 'ui_admin_hash'),
     ADMIN_TOTP_SECRET_FILE=str(secret_dir / 'ui_admin_totp'), CATALOG_API_TOKEN_FILE=str(secret_dir / 'ui_catalog_token'),
     ADMIN_USERNAME='admin', SITE_URL='http://127.0.0.1:4322', BIND_ADDR='127.0.0.1:4322', STATIC_DIR=str(repository / 'frontend/dist'))
 environment.pop('DATABASE_URL', None)

@@ -8,6 +8,7 @@ type Page = { title: string; intro: string; sections: Section[] };
 const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
   en: {
     privacy: { intro: 'This page explains what happens to your data when you browse, download or leave a note.', sections: [
+      { heading: 'Protection against abuse', paragraphs: ['When you submit a rating, comment, report or feedback, reCAPTCHA Enterprise sends technical browser data to Google. The server also sends your IP address, browser user agent and protection token to assess the request. Passwords, authenticator codes and message contents are not included. Administrator login uses the same protection. Browsing and downloads do not load reCAPTCHA.'] },
       { heading: 'Who operates this site', owner: true, paragraphs: ['wallpapers@want.foundation'] },
       { heading: 'Data we use', paragraphs: ['Cloudflare and the VPS hosting provider receive technical request data, including your IP address. Original images are also stored on the image host. An external IP lookup receives your IP address to decide whether comments, ratings, feedback and analytics are available in your region. That check can be wrong.', 'If you rate or comment, the site creates an anonymous visitor identifier and keeps a secure session cookie in your browser. Your action is tied to that identifier. Feedback includes your topic, message and optional email. We do not ask for your name.', 'Analytics is disabled until you allow it in cookie settings. It stays disabled for Russian IP addresses and when the region check fails. No advertising network is connected at launch.'] },
       { heading: 'Storage and retention', paragraphs: ['Catalogue, ratings, comments and feedback are stored in PostgreSQL on an external database server. The site runs on a VPS and uses Timeweb S3, an external IP lookup and optional Firebase Analytics; processing locations depend on those services.', 'You can delete your own comment in the same browser. We keep published comments and ratings until removal or a deletion request. Closed feedback entries are deleted after one year. Write to wallpapers@want.foundation to ask about or request deletion of your data.'] },
@@ -18,6 +19,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
       { heading: 'Operator', owner: true, paragraphs: ['wallpapers@want.foundation'] },
     ] },
     cookies: { intro: 'A small amount of browser storage makes this site work. Analytics is your choice.', sections: [
+      { heading: 'Security storage', paragraphs: ['reCAPTCHA can set the _GRECAPTCHA cookie when you use a protected action. This security check is independent of optional analytics. Google’s Privacy Policy and Terms of Service apply; links appear next to the protected forms.'] },
       { heading: 'Essential storage', paragraphs: ['Local storage keeps your cookie choice. Session storage keeps the result of the regional availability check. If you rate, comment or send feedback, an HttpOnly session cookie identifies your anonymous visitor session for up to one year. These features need this storage.'] },
       { heading: 'Optional analytics', paragraphs: ['Firebase Analytics runs only after you choose “Allow analytics”, when it is configured and available in your region. Choose “Essential only” to decline. Open Cookie settings in the footer to change your choice at any time.'] },
       { heading: 'Advertising', paragraphs: ['No advertising service is connected at launch. This page will be updated before optional advertising storage is introduced.'] },
@@ -34,6 +36,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
   },
   ru: {
     privacy: { intro: 'Здесь рассказываем, что происходит с данными при просмотре, скачивании и общении на сайте.', sections: [
+      { heading: 'Защита от злоупотреблений', paragraphs: ['При отправке оценки, комментария, жалобы или обращения reCAPTCHA Enterprise передаёт технические данные браузера Google. Сервер также передаёт IP-адрес, сведения о браузере и токен защиты для проверки запроса. Пароли, коды аутентификатора и тексты сообщений не передаются. Вход администратора использует ту же защиту. Просмотр и скачивание не загружают reCAPTCHA.'] },
       { heading: 'Кто управляет сайтом', owner: true, paragraphs: ['wallpapers@want.foundation'] },
       { heading: 'Какие данные используются', paragraphs: ['Cloudflare и провайдер VPS получают технические данные запроса, включая IP-адрес. Оригинальные изображения также хранятся в хранилище изображений. Внешний сервис проверки страны получает IP-адрес, чтобы определить доступность комментариев, оценок, формы и аналитики. Проверка может ошибаться.', 'При оценке или комментарии сайт создаёт анонимный идентификатор посетителя и сохраняет защищённый cookie сеанса в браузере. Действие связано с этим идентификатором. В форме обратной связи передаются тема, сообщение и необязательный email. Имя мы не запрашиваем.', 'Аналитика выключена до согласия в настройках cookie. Для российских IP-адресов и при ошибке проверки страны она остаётся выключенной. На момент запуска рекламная сеть не подключена.'] },
       { heading: 'Хранение и удаление', paragraphs: ['Каталог, оценки, комментарии и обращения хранятся в PostgreSQL на внешнем сервере базы данных. Сайт работает на VPS и использует Timeweb S3, внешний сервис проверки IP и необязательную Firebase Analytics. Места обработки зависят от этих сервисов.', 'Вы можете удалить свой комментарий в том же браузере. Опубликованные комментарии и оценки хранятся до удаления или запроса на удаление. Закрытые обращения удаляются через год. По вопросам данных и удаления пишите на wallpapers@want.foundation.'] },
@@ -44,6 +47,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
       { heading: 'Владелец', owner: true, paragraphs: ['wallpapers@want.foundation'] },
     ] },
     cookies: { intro: 'Небольшой объём данных в браузере нужен для работы сайта. Аналитика остаётся вашим выбором.', sections: [
+      { heading: 'Хранение для защиты', paragraphs: ['reCAPTCHA может установить cookie _GRECAPTCHA при выполнении защищённого действия. Проверка защиты не зависит от необязательной аналитики. Применяются Политика конфиденциальности и Условия использования Google; ссылки размещены рядом с защищёнными формами.'] },
       { heading: 'Необходимое хранение', paragraphs: ['Локальное хранилище запоминает выбор cookie. Хранилище сеанса сохраняет результат проверки доступности функций по стране. Для оценок, комментариев и формы HttpOnly cookie сохраняет анонимный сеанс посетителя сроком до одного года. Без этого хранения функции не работают.'] },
       { heading: 'Необязательная аналитика', paragraphs: ['Firebase Analytics включается только после выбора «Разрешить аналитику», если она настроена и доступна в вашем регионе. Выбор «Только необходимые» отключает её. Изменить решение можно через «Настройки cookie» внизу страницы.'] },
       { heading: 'Реклама', paragraphs: ['На момент запуска рекламная сеть не подключена. Перед добавлением необязательного рекламного хранения эта страница будет обновлена.'] },
@@ -60,6 +64,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
   },
   'zh-cn': {
     privacy: { intro: '本页说明你浏览、下载或留言时，我们如何处理数据。', sections: [
+      { heading: '防止滥用', paragraphs: ['提交评分、评论、举报或反馈时，reCAPTCHA Enterprise 会向 Google 发送浏览器技术数据。服务器也会发送 IP 地址、浏览器信息和验证令牌，以评估请求。密码、身份验证代码和留言内容不会发送。管理员登录使用同样的保护。浏览和下载不会加载 reCAPTCHA。'] },
       { heading: '网站运营者', owner: true, paragraphs: ['wallpapers@want.foundation'] },
       { heading: '使用的数据', paragraphs: ['Cloudflare 和 VPS 托管服务商会收到包含 IP 地址在内的技术请求数据。原始图片也保存在图片存储服务中。外部 IP 查询服务会收到 IP 地址，以判断你所在地区是否提供评论、评分、反馈和分析功能；该判断可能出错。', '评分或评论时，网站会创建匿名访客标识符，并在浏览器中保存安全的会话 Cookie。操作会关联该标识符。反馈表单收集主题、留言和可选邮箱；我们不要求姓名。', '只有你在 Cookie 设置中同意后，才会启用分析。俄罗斯 IP 地址或地区检查失败时，分析保持关闭。上线时没有接入广告网络。'] },
       { heading: '存储与删除', paragraphs: ['目录、评分、评论和反馈存储在外部 PostgreSQL 数据库服务器上。网站运行于 VPS，并使用 Timeweb S3、外部 IP 查询服务和可选的 Firebase Analytics；处理地点取决于这些服务。', '你可在同一浏览器中删除自己的评论。评论和评分保留至删除或收到删除请求。已处理完的反馈在一年后删除。如需查询或删除数据，请联系 wallpapers@want.foundation。'] },
@@ -70,6 +75,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
       { heading: '运营者', owner: true, paragraphs: ['wallpapers@want.foundation'] },
     ] },
     cookies: { intro: '少量浏览器存储用于网站运行。是否启用分析由你决定。', sections: [
+      { heading: '安全存储', paragraphs: ['执行受保护的操作时，reCAPTCHA 可能设置 _GRECAPTCHA Cookie。安全验证不依赖可选分析。适用 Google 的隐私政策和服务条款；受保护表单旁提供链接。'] },
       { heading: '必要存储', paragraphs: ['本地存储保存 Cookie 选择；会话存储保存地区功能检查结果。评分、评论或发送反馈时，HttpOnly Cookie 会保存匿名访客会话，期限最长为一年。相关功能需要这些存储。'] },
       { heading: '可选分析', paragraphs: ['只有选择“允许分析”、已配置分析且所在地区可用时，才会运行 Firebase Analytics。选择“仅必要项”即可拒绝。你可以随时通过页脚的 Cookie 设置更改选择。'] },
       { heading: '广告', paragraphs: ['网站上线时未接入广告服务。引入可选广告存储前，我们会更新本页。'] },
@@ -86,6 +92,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
   },
   'pt-br': {
     privacy: { intro: 'Esta página explica o que acontece com seus dados ao navegar, baixar ou enviar uma mensagem.', sections: [
+      { heading: 'Proteção contra abuso', paragraphs: ['Ao enviar avaliações, comentários, denúncias ou mensagens, o reCAPTCHA Enterprise envia dados técnicos do navegador ao Google. O servidor também envia seu IP, informações do navegador e o token de proteção para avaliar a solicitação. Senhas, códigos do autenticador e conteúdo das mensagens não são enviados. O login administrativo usa a mesma proteção. Navegação e downloads não carregam o reCAPTCHA.'] },
       { heading: 'Responsável pelo site', owner: true, paragraphs: ['wallpapers@want.foundation'] },
       { heading: 'Dados utilizados', paragraphs: ['A Cloudflare e o provedor de hospedagem VPS recebem dados técnicos da requisição, incluindo o IP. As imagens originais também ficam no armazenamento de imagens. Um serviço externo de consulta de IP recebe seu endereço para verificar a disponibilidade de comentários, avaliações, contato e análise na sua região. A verificação pode falhar.', 'Ao avaliar ou comentar, o site cria um identificador de visitante anônimo e mantém um cookie de sessão seguro no navegador. A ação fica associada ao identificador. O formulário recebe assunto, mensagem e email opcional. Não pedimos seu nome.', 'A análise fica desativada até sua autorização nas configurações de cookies. Também fica desativada para IPs russos ou se a verificação regional falhar. Nenhuma rede de anúncios está conectada no lançamento.'] },
       { heading: 'Armazenamento e exclusão', paragraphs: ['Catálogo, avaliações, comentários e mensagens ficam no PostgreSQL em um servidor externo de banco de dados. O site funciona em um VPS e usa Timeweb S3, consulta externa de IP e Firebase Analytics opcional; os locais de processamento dependem desses serviços.', 'Você pode excluir seu comentário no mesmo navegador. Comentários e avaliações permanecem até a remoção ou solicitação de exclusão. Mensagens encerradas são excluídas após um ano. Para consultar ou pedir a exclusão de dados, escreva para wallpapers@want.foundation.'] },
@@ -96,6 +103,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
       { heading: 'Responsável', owner: true, paragraphs: ['wallpapers@want.foundation'] },
     ] },
     cookies: { intro: 'Uma pequena quantidade de armazenamento no navegador faz o site funcionar. A análise é sua escolha.', sections: [
+      { heading: 'Armazenamento de segurança', paragraphs: ['O reCAPTCHA pode definir o cookie _GRECAPTCHA ao executar uma ação protegida. A verificação não depende da análise opcional. Aplicam-se a Política de Privacidade e os Termos de Serviço do Google; os links aparecem junto dos formulários protegidos.'] },
       { heading: 'Armazenamento essencial', paragraphs: ['O armazenamento local guarda sua escolha de cookies. O armazenamento de sessão guarda o resultado da verificação regional. Ao avaliar, comentar ou enviar contato, um cookie HttpOnly identifica a sessão de visitante anônimo por até um ano. Essas funções precisam desse armazenamento.'] },
       { heading: 'Análise opcional', paragraphs: ['O Firebase Analytics só funciona após escolher “Permitir análise”, quando estiver configurado e disponível na sua região. Escolha “Só essenciais” para recusar. Você pode mudar a decisão em Configurações de cookies no rodapé.'] },
       { heading: 'Publicidade', paragraphs: ['Nenhum serviço de anúncios está conectado no lançamento. Esta página será atualizada antes da inclusão de armazenamento publicitário opcional.'] },

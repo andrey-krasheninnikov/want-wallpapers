@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 axum = { version = "0.8", features = ["json", "tokio", "http1"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "fs"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "fs", "time"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls-ring", "postgres", "uuid", "json", "migrate", "macros"] }
@@ -25,6 +25,9 @@ url = "2"
 tower-http = { version = "0.6", features = ["fs", "limit", "timeout"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
+google-cloud-recaptchaenterprise-v1 = { version = "=1.12.0", default-features = false }
+google-cloud-gax = { version = "1", default-features = false }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

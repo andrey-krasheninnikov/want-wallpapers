@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { copy } from '@/data/copy';
+import RecaptchaNotice from '@/components/RecaptchaNotice';
+import { copy, mutationError } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { ratingValues, ratingEmoji, type Rating } from '@/data/ratings';
 import { useRegion } from '@/lib/use-region';
@@ -31,7 +32,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   async function refresh() {
     setLoading(true); setError('');
     try { const service = await import('@/lib/wallpaper-client'); setData(await service.readSocial(id)); }
-    catch { setError(ui.serviceError); }
+    catch (error) { setError(mutationError(locale, error)); }
     finally { setLoading(false); }
   }
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
     try {
       const service = await import('@/lib/wallpaper-client'); await service.saveRating(id, value as Rating);
       setStatus(text.ratingSaved); await refresh();
-    } catch { setError(ui.serviceError); }
+    } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   async function submit(event: SubmitEvent<HTMLFormElement>) {
@@ -58,7 +59,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
     try {
       const service = await import('@/lib/wallpaper-client'); await service.postComment(id, comment);
       setComment(''); setStatus(text.commentSent); await refresh();
-    } catch (error) { setError(error instanceof Error && error.message === 'comment-cooldown' ? ui.commentWait : ui.serviceError); }
+    } catch (error) { setError(error instanceof Error && error.message === 'comment-cooldown' ? ui.commentWait : mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   async function action(item: Comment) {
@@ -68,7 +69,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
       const service = await import('@/lib/wallpaper-client');
       if (await service.actOnComment(id, item) === 'reported') { setReported((value) => [...value, item.id]); setStatus(ui.reportThanks); }
       else await refresh();
-    } catch { setError(ui.serviceError); }
+    } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   if (region === 'pending') return <div data-region-pending role="status" className="grid gap-4 py-4"><p className="text-sm text-muted-foreground">{text.checkingRegion}</p><Skeleton className="h-24 w-full" /></div>;
@@ -82,6 +83,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
         </Label>)}
       </RadioGroup>}
     </section>
+    <RecaptchaNotice locale={locale} />
     <p className="min-h-6 text-sm text-link" role="status">{status}</p>
     <Separator />
     <section aria-labelledby="comments-title" className="grid gap-6"><h2 id="comments-title" className="text-2xl font-semibold tracking-tight">{ui.comments}</h2>

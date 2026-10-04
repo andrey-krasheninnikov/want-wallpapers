@@ -3,8 +3,6 @@
 import base64
 import json
 import hashlib
-import hmac
-import struct
 import os
 from pathlib import Path
 import secrets
@@ -67,6 +65,9 @@ values = {'database_url': f'postgresql://{role}:{app_password}@{postgres}:5432/{
 for name, value in values.items():
     (work / name).write_text(value); (work / name).chmod(0o444)
 (work / 'ca.crt').chmod(0o444)
+# Synthetic credentials exercise SDK initialization without contacting Google.
+(work / 'google_credentials.json').write_text(json.dumps({'type': 'service_account', 'project_id': 'want-wallpapers', 'private_key_id': 'test-only', 'private_key': (work / 'ca.key').read_text(), 'client_email': 'test-only@want-wallpapers.iam.gserviceaccount.com', 'token_uri': 'https://oauth2.googleapis.com/token'}))
+(work / 'google_credentials.json').chmod(0o444)
 common = ['docker', 'run', '--rm', '--network', network, '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--tmpfs', '/tmp:size=32m',
     '--memory', '512m', '--memory-swap', '512m', '--cpus', '2', '--pids-limit', '64',
     '--log-driver', 'local', '--log-opt', 'max-size=5m', '--log-opt', 'max-file=3',
@@ -84,8 +85,8 @@ privileges = run(['docker', 'exec', '-i', postgres, 'psql', '-U', 'postgres', '-
 assert privileges == 'f|f|f', 'Runtime must not have DDL or migration-history write privileges.'
 name = f'wallpapers-runtime-{nonce}'
 arguments = common[:2] + ['-d', '--name', name, '-p', '127.0.0.1::8080'] + common[2:]
-arguments += mounts(['database_url', 'admin_password_hash', 'admin_totp_secret', 'catalog_api_token'])
-arguments += ['-e', 'DATABASE_URL_FILE=/run/secrets/database_url', '-e', 'ADMIN_PASSWORD_HASH_FILE=/run/secrets/admin_password_hash', '-e', 'ADMIN_TOTP_SECRET_FILE=/run/secrets/admin_totp_secret', '-e', 'CATALOG_API_TOKEN_FILE=/run/secrets/catalog_api_token', image]
+arguments += mounts(['database_url', 'admin_password_hash', 'admin_totp_secret', 'catalog_api_token', 'google_credentials.json'])
+arguments += ['-e', 'DATABASE_URL_FILE=/run/secrets/database_url', '-e', 'ADMIN_PASSWORD_HASH_FILE=/run/secrets/admin_password_hash', '-e', 'ADMIN_TOTP_SECRET_FILE=/run/secrets/admin_totp_secret', '-e', 'CATALOG_API_TOKEN_FILE=/run/secrets/catalog_api_token', '-e', 'RECAPTCHA_PROJECT_ID=want-wallpapers', '-e', 'PUBLIC_RECAPTCHA_SITE_KEY=test-web-site-key', '-e', 'GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials.json', image]
 run(arguments)
 try:
     port = json.loads(run(['docker', 'inspect', name]))[0]['NetworkSettings']['Ports']['8080/tcp'][0]['HostPort']
@@ -105,15 +106,20 @@ try:
     request = urllib.request.Request(origin + '/api/v1/session', method='POST', headers={'Origin': 'https://wallpapers.want.foundation'})
     with urllib.request.urlopen(request) as response:
         cookie = response.headers['Set-Cookie']; assert all(value in cookie for value in ['__Host-want-visitor=', 'Secure', 'HttpOnly', 'SameSite=Strict', 'Path=/'])
-    counter = struct.pack('>Q', int(time.time()) // 30)
-    digest = hmac.new(base64.b32decode(values['admin_totp_secret']), counter, hashlib.sha1).digest()
-    offset = digest[-1] & 15
-    code = str((struct.unpack('>I', digest[offset:offset + 4])[0] & 0x7fffffff) % 1000000).zfill(6)
-    request = urllib.request.Request(origin + '/api/v1/admin/login', data=json.dumps({'username': 'admin', 'password': admin_password, 'code': code}).encode(), headers={'Origin': 'https://wallpapers.want.foundation', 'Content-Type': 'application/json'})
-    with urllib.request.urlopen(request) as response:
-        cookie = response.headers['Set-Cookie']; session = json.load(response)
-        assert cookie.startswith('__Host-want-admin=') and 'Domain=' not in cookie
-    admin_cookie = cookie.split(';', 1)[0]
+    with urllib.request.urlopen(origin + '/api/v1/recaptcha/config') as response:
+        assert json.load(response) == {'enabled': True, 'siteKey': 'test-web-site-key'}
+        assert response.headers['Cache-Control'] == 'no-store'
+    request = urllib.request.Request(origin + '/api/v1/admin/login', data=json.dumps({'username': 'admin', 'password': admin_password, 'code': '123456'}).encode(), headers={'Origin': 'https://wallpapers.want.foundation', 'Content-Type': 'application/json'})
+    try: urllib.request.urlopen(request); raise AssertionError('Login bypassed reCAPTCHA.')
+    except urllib.error.HTTPError as error:
+        assert error.code == 400 and json.load(error)['error']['code'] == 'recaptcha-required'
+        assert error.headers.get('Set-Cookie') is None
+    # Seed only this isolated fixture; successful login is covered by the SDK-stub API tests.
+    admin_token = secrets.token_hex(32)
+    session = {'csrf': secrets.token_hex(32)}
+    fingerprint = hashlib.sha256(f"{values['admin_password_hash']}\0{values['admin_totp_secret']}\0admin".encode()).hexdigest()
+    run(['docker', 'exec', '-i', postgres, 'psql', '-U', 'postgres', '-d', database, '-v', 'ON_ERROR_STOP=1'], f"INSERT INTO sessions(token_hash,role,csrf,credential_fingerprint,expires_at) VALUES('{hashlib.sha256(admin_token.encode()).hexdigest()}','admin','{session['csrf']}','{fingerprint}',now()+interval '8 hours');")
+    admin_cookie = '__Host-want-admin=' + admin_token
     request = urllib.request.Request(origin + '/api/v1/admin/session', headers={'Cookie': admin_cookie})
     with urllib.request.urlopen(request) as response: assert json.load(response)['username'] == 'admin'
     request = urllib.request.Request(origin + '/api/v1/admin/logout', method='POST', headers={'Origin': 'https://wallpapers.want.foundation', 'Cookie': admin_cookie, 'X-CSRF-Token': session['csrf']})
@@ -124,7 +130,7 @@ try:
     request = urllib.request.Request(origin + '/api/v1/admin/moderation/feedback', headers={'Authorization': 'Bearer ' + values['catalog_api_token']})
     try: urllib.request.urlopen(request); raise AssertionError('Catalog token reached moderation.')
     except urllib.error.HTTPError as error: assert error.code == 403
-    print('Production image passed: PostgreSQL 18 verify-full TLS, least-privilege runtime, catalog, private headers, secure cookies and token scope.')
+    print('Production image passed: PostgreSQL 18 verify-full TLS, least-privilege runtime, catalog, private headers, visitor cookie, seeded admin session/logout, required reCAPTCHA and token scope.')
 finally:
     # Remove only the exact task-created container; never delete databases or other containers.
     run(['docker', 'stop', name])
@@ -134,3 +140,10 @@ ip = json.loads(run(['docker', 'inspect', postgres]))[0]['NetworkSettings']['Net
 result = subprocess.run(common + mounts(['invalid_database_url']) + ['-e', 'DATABASE_URL_FILE=/run/secrets/invalid_database_url', image, 'migrate'], capture_output=True)
 assert result.returncode != 0, 'TLS hostname mismatch must fail.'
 print('TLS certificate hostname mismatch rejected. Test databases preserved.')
+
+# Production never allows the development opt-out or missing public configuration.
+for name, value, reason in [('RECAPTCHA_ENABLED', 'false', 'Production requires reCAPTCHA'), ('PUBLIC_RECAPTCHA_SITE_KEY', '', 'PUBLIC_RECAPTCHA_SITE_KEY is required'), ('RECAPTCHA_MIN_SCORE', 'NaN', 'RECAPTCHA_MIN_SCORE must be between 0 and 1'), ('GOOGLE_APPLICATION_CREDENTIALS', '/missing.json', 'Google credentials file is required')]:
+    invalid = common + mounts(['database_url', 'admin_password_hash', 'admin_totp_secret', 'catalog_api_token', 'google_credentials.json']) + ['-e', 'DATABASE_URL_FILE=/run/secrets/database_url', '-e', 'ADMIN_PASSWORD_HASH_FILE=/run/secrets/admin_password_hash', '-e', 'ADMIN_TOTP_SECRET_FILE=/run/secrets/admin_totp_secret', '-e', 'CATALOG_API_TOKEN_FILE=/run/secrets/catalog_api_token', '-e', 'RECAPTCHA_PROJECT_ID=want-wallpapers', '-e', 'PUBLIC_RECAPTCHA_SITE_KEY=test-web-site-key', '-e', 'GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_credentials.json', '-e', f'{name}={value}', image]
+    result = subprocess.run(invalid, capture_output=True, timeout=30)
+    assert result.returncode != 0 and reason in result.stderr.decode(), 'Production accepted invalid security configuration.'
+print('Production reCAPTCHA opt-out, missing key/credentials and non-finite score rejected.')

@@ -6,7 +6,7 @@
 
 `POST /session` с точным `Origin` создаёт или возвращает анонимную сессию: `{uid,csrf}`. Cookie `__Host-want-visitor` в production (`want-visitor` в development) — HttpOnly, SameSite=Strict, Secure в production, срок до года. Публичный `GET /wallpapers/{id}/social` возвращает `{counts,ownRating,ownUid,comments}`; последние 50 видимых комментариев, даты в миллисекундах Unix. Региональное ограничение проверяет интерфейс.
 
-Все изменения требуют cookie, `Origin` и `X-CSRF-Token`:
+Все изменения требуют cookie, `Origin`, `X-CSRF-Token` и свежий `X-ReCAPTCHA-Token`:
 
 - `PUT /wallpapers/{id}/rating`: `{value}`; cringe/minus/plus/imba. Одна текущая оценка.
 - `POST /wallpapers/{id}/comments`: `{text}`; 2–1000 символов UTF-16 после trim. Один комментарий на обои в 24 часа. Удаление не снимает cooldown.
@@ -14,9 +14,19 @@
 - `POST /wallpapers/{id}/comments/{uuid}/report`: идемпотентная жалоба на чужой видимый комментарий.
 - `POST /feedback`: `{topic,message,email}`; 1–100 / 5–2000 / до 254 символов, email необязателен.
 
+## reCAPTCHA Enterprise
+
+`GET /recaptcha/config` возвращает `{enabled,siteKey}` с `Cache-Control: no-store`. Это публичные настройки runtime, без credentials. Frontend загружает Enterprise.js только при защищённом действии; просмотр, поиск, скачивания, создание visitor session и чтение API не вызывают Google.
+
+Action: rating, comment, comment_delete, comment_report, feedback, admin_login — соответственно оценке, комментарию, удалению, жалобе, обращению и входу. Для каждого повторного действия нужен новый токен. Сервер проверяет valid, точные action и hostname из SITE_URL, наличие riskAnalysis и конечный score ≥ RECAPTCHA_MIN_SCORE (по умолчанию 0.5). Google проверяет срок токена и повторное использование. На одну оценку выделено 5 секунд, автоматических повторов нет.
+
+Отсутствующий токен даёт 400 `recaptcha-required`, непрошедшая проверка — 403 `recaptcha-rejected`, ошибка или timeout Google — 503 `recaptcha-unavailable`. Ни один из этих случаев не записывает действие или admin session. Интерфейс сохраняет введённые поля и позволяет повторить запрос с новым токеном. Origin, CSRF, ownership, пароль/TOTP и лимиты действуют дополнительно.
+
+Production требует CAPTCHA и credentials. RECAPTCHA_ENABLED=false разрешён только в development и тестах. Авторизованные действия админки после входа и scoped Bearer каталог не используют CAPTCHA. Google получает токен, action, ключ сайта, User-Agent и IP, вычисленный через доверенную proxy chain; бизнес-данные и секреты в assessment не передаются.
+
 ## Администратор
 
-`POST /admin/login`: `{username,password,code}` с Origin. Шесть цифр TOTP, SHA1, 30 секунд, допуск ±1 интервал. Лимит 5 попыток/IP и 50 попыток/аккаунт за 15 минут. Ошибка входа общая. Cookie `__Host-want-admin` в production (`want-admin` в development) не совпадает с сессией посетителя.
+`POST /admin/login`: `{username,password,code}` с Origin и свежим `X-ReCAPTCHA-Token` для action `admin_login`. Шесть цифр TOTP, SHA1, 30 секунд, допуск ±1 интервал. Лимит 5 попыток/IP и 50 попыток/аккаунт за 15 минут. Ошибка входа общая. Cookie `__Host-want-admin` в production (`want-admin` в development) не совпадает с сессией посетителя.
 
 `GET /admin/session`: `{username,csrf}`. `POST /admin/logout` требует CSRF. Срок 8 часов / 30 минут простоя. Авторизация и владение проверяются сервером независимо от URL страницы.
 

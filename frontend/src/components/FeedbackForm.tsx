@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { copy } from '@/data/copy';
+import RecaptchaNotice from '@/components/RecaptchaNotice';
+import { copy, mutationError } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { useRegion } from '@/lib/use-region';
 import type { Locale } from '@/data/catalog';
@@ -30,7 +31,7 @@ export default function FeedbackForm({ locale }: { locale: Locale }) {
     try {
       const { sendFeedback } = await import('@/lib/feedback-client'); await sendFeedback({ topic, message, email });
       setTopic(''); setMessage(''); setEmail(''); setSent(true);
-    } catch { setError(ui.serviceError); }
+    } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   if (region === 'pending') return <div data-region-pending className="grid gap-4" role="status"><p className="text-sm text-muted-foreground">{text.checkingRegion}</p><Skeleton className="h-96" /></div>;
@@ -43,7 +44,7 @@ export default function FeedbackForm({ locale }: { locale: Locale }) {
         <Field data-disabled={busy} className="gap-2"><FieldLabel htmlFor="feedback-message">{ui.message}</FieldLabel><Textarea id="feedback-message" name="message" value={message} onChange={(event) => setMessage(event.target.value)} minLength={5} maxLength={2000} required disabled={busy} aria-describedby="feedback-message-hint" className="min-h-40" /><div className="flex items-start justify-between gap-4"><FieldDescription id="feedback-message-hint" className="min-w-0">{text.feedbackMessageHint}</FieldDescription><span className="shrink-0 text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{message.length}/2000</span></div></Field>
         <Field data-disabled={busy} className="gap-2"><FieldLabel htmlFor="feedback-email">{ui.emailOptional}</FieldLabel><Input id="feedback-email" name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} autoComplete="email" disabled={busy} aria-describedby="feedback-email-hint" /><FieldDescription id="feedback-email-hint">{text.feedbackEmailHint}</FieldDescription></Field>
       </FieldGroup></CardContent>
-      <CardFooter className="flex-col items-stretch gap-4 border-t p-6 sm:items-start sm:p-8"><Button type="submit" disabled={busy}><Send data-icon="inline-start" />{busy ? ui.loading : ui.feedbackSubmit}</Button>{error && <FieldError>{error}</FieldError>}<p className="text-sm leading-relaxed text-link empty:hidden" role="status">{sent ? ui.feedbackThanks : ''}</p></CardFooter>
+      <CardFooter className="flex-col items-stretch gap-4 border-t p-6 sm:items-start sm:p-8"><Button type="submit" disabled={busy}><Send data-icon="inline-start" />{busy ? ui.loading : ui.feedbackSubmit}</Button><RecaptchaNotice locale={locale} />{error && <FieldError>{error}</FieldError>}<p className="text-sm leading-relaxed text-link empty:hidden" role="status">{sent ? ui.feedbackThanks : ''}</p></CardFooter>
     </form>
   </Card>;
 }

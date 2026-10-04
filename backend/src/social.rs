@@ -2,15 +2,17 @@ use crate::{
     AppState, auth,
     error::{ApiError, Result},
     models::text,
+    recaptcha,
 };
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{ConnectInfo, Path, State},
     http::HeaderMap,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sqlx::Row;
+use std::net::SocketAddr;
 use uuid::Uuid;
 
 async fn available(state: &AppState, id: &str) -> Result<()> {
@@ -70,6 +72,7 @@ pub struct Rating {
 }
 pub async fn rate(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     Path(id): Path<String>,
     headers: HeaderMap,
     Json(input): Json<Rating>,
@@ -79,6 +82,7 @@ pub async fn rate(
     if !["cringe", "minus", "plus", "imba"].contains(&input.value.as_str()) {
         return Err(ApiError::invalid());
     }
+    recaptcha::verify(&state, &headers, peer, "rating").await?;
     sqlx::query("INSERT INTO ratings(wallpaper_id,visitor_id,value) VALUES($1,$2,$3) ON CONFLICT(wallpaper_id,visitor_id) DO UPDATE SET value=excluded.value").bind(&id).bind(visitor).bind(input.value).execute(&state.pool).await?;
     Ok(Json(json!({"ok":true})))
 }
@@ -89,6 +93,7 @@ pub struct Comment {
 }
 pub async fn comment(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     Path(id): Path<String>,
     headers: HeaderMap,
     Json(input): Json<Comment>,
@@ -96,6 +101,7 @@ pub async fn comment(
     let visitor = visitor(&state, &headers, "comment", 10, 3600).await?;
     available(&state, &id).await?;
     let text = text(&input.text, 2, 1000)?;
+    recaptcha::verify(&state, &headers, peer, "comment").await?;
     let mut transaction = state.pool.begin().await?;
     let allowed: Option<Uuid>=sqlx::query_scalar("INSERT INTO comment_authors(wallpaper_id,visitor_id) VALUES($1,$2) ON CONFLICT(wallpaper_id,visitor_id) DO UPDATE SET last_at=now() WHERE comment_authors.last_at <= now()-interval '24 hours' RETURNING visitor_id").bind(&id).bind(visitor).fetch_optional(&mut *transaction).await?;
     if allowed.is_none() {
@@ -117,10 +123,12 @@ pub async fn comment(
 }
 pub async fn delete_comment(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     Path((id, comment)): Path<(String, Uuid)>,
     headers: HeaderMap,
 ) -> Result<Json<Value>> {
     let visitor = visitor(&state, &headers, "comment-delete", 30, 60).await?;
+    recaptcha::verify(&state, &headers, peer, "comment_delete").await?;
     let result =
         sqlx::query("DELETE FROM comments WHERE id=$1 AND wallpaper_id=$2 AND visitor_id=$3")
             .bind(comment)
@@ -135,6 +143,7 @@ pub async fn delete_comment(
 }
 pub async fn report(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     Path((id, comment)): Path<(String, Uuid)>,
     headers: HeaderMap,
 ) -> Result<Json<Value>> {
@@ -144,6 +153,7 @@ pub async fn report(
     if !exists {
         return Err(ApiError::missing());
     }
+    recaptcha::verify(&state, &headers, peer, "comment_report").await?;
     sqlx::query("INSERT INTO reports(id,comment_id,visitor_id) VALUES($1,$2,$3) ON CONFLICT(comment_id,visitor_id) DO NOTHING").bind(Uuid::new_v4()).bind(comment).bind(visitor).execute(&state.pool).await?;
     Ok(Json(json!({"ok":true})))
 }
@@ -156,6 +166,7 @@ pub struct Feedback {
 }
 pub async fn feedback(
     State(state): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
     Json(input): Json<Feedback>,
 ) -> Result<Json<Value>> {
@@ -166,6 +177,7 @@ pub async fn feedback(
     if !email.is_empty() && (!email.contains('@') || email.chars().any(char::is_whitespace)) {
         return Err(ApiError::invalid());
     }
+    recaptcha::verify(&state, &headers, peer, "feedback").await?;
     let id = Uuid::new_v4();
     sqlx::query("INSERT INTO feedback(id,visitor_id,topic,message,email) VALUES($1,$2,$3,$4,$5)")
         .bind(id)

@@ -6,6 +6,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
+    let _ = rustls::crypto::ring::default_provider().install_default();
     let command = env::args().nth(1).unwrap_or_else(|| "serve".into());
     if !["serve", "migrate"].contains(&command.as_str()) {
         return Err("Usage: want-wallpapers-server [serve|migrate]".into());
@@ -22,10 +23,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let hashes: HashMap<String, Vec<String>> = serde_json::from_str(
         &tokio::fs::read_to_string(config.static_dir.join("csp-hashes.json")).await?,
     )?;
+    let recaptcha = if config.recaptcha.is_some() {
+        Some(
+            google_cloud_recaptchaenterprise_v1::client::RecaptchaEnterpriseService::builder()
+                .build()
+                .await
+                .map_err(|_| "reCAPTCHA credentials initialization failed")?,
+        )
+    } else {
+        None
+    };
     let state = AppState {
         pool: pool.clone(),
         config: config.clone(),
         csp_hashes: Arc::new(hashes),
+        recaptcha,
         login_slots: Arc::new(tokio::sync::Semaphore::new(2)),
     };
     let cleanup = tokio::spawn(async move {

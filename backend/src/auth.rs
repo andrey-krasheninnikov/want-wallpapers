@@ -250,6 +250,7 @@ pub async fn login(
     if input.code.len() != 6 || !input.code.bytes().all(|c| c.is_ascii_digit()) {
         return Err(ApiError::unauthorized());
     }
+    crate::recaptcha::verify(&state, &headers, peer, "admin_login").await?;
     let _permit = state
         .login_slots
         .clone()

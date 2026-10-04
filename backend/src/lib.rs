@@ -4,6 +4,7 @@ pub mod config;
 pub mod error;
 pub mod models;
 pub mod moderation;
+pub mod recaptcha;
 mod security;
 pub mod social;
 
@@ -24,6 +25,7 @@ pub struct AppState {
     pub pool: PgPool,
     pub config: Arc<config::Config>,
     pub csp_hashes: Arc<HashMap<String, Vec<String>>>,
+    pub recaptcha: Option<google_cloud_recaptchaenterprise_v1::client::RecaptchaEnterpriseService>,
     pub login_slots: Arc<tokio::sync::Semaphore>,
 }
 pub fn router(state: AppState) -> Router {
@@ -33,6 +35,7 @@ pub fn router(state: AppState) -> Router {
             get(|| async { Json(json!({"status":"ok"})) }),
         )
         .route("/health/ready", get(ready))
+        .route("/api/v1/recaptcha/config", get(recaptcha::public_config))
         .route("/api/v1/catalog", get(catalog::snapshot))
         .route("/api/v1/session", post(auth::visitor_session))
         .route("/api/v1/wallpapers/{id}/social", get(social::read))

@@ -2,6 +2,13 @@ import type { Locale } from './catalog';
 
 export const copy = {
   en: {
+    recaptchaRejected: 'Security verification failed. Please try again.',
+    recaptchaUnavailable: 'Security verification is unavailable. Your input is saved; try again later.',
+    recaptchaNotice: 'This site is protected by reCAPTCHA. Google’s',
+    googlePrivacy: 'Privacy Policy',
+    recaptchaAnd: 'and',
+    googleTerms: 'Terms of Service',
+    recaptchaApplies: 'apply.',
     home: 'Home', collections: 'Collections', search: 'Search', feedback: 'Feedback', menu: 'Menu',
     heroEyebrow: 'Want Wallpapers', heroTitle: 'Wallpapers worth keeping.',
     heroText: 'Original wallpapers for the screens you keep close. Pick a mood, find your size, make it yours.',
@@ -32,6 +39,13 @@ export const copy = {
     owner: 'Andrey Krasheninnikov',
   },
   ru: {
+    recaptchaRejected: 'Проверка защиты не пройдена. Повторите попытку.',
+    recaptchaUnavailable: 'Проверка защиты временно недоступна. Данные сохранены; попробуйте позднее.',
+    recaptchaNotice: 'Сайт защищён reCAPTCHA. Применяются',
+    googlePrivacy: 'Политика конфиденциальности',
+    recaptchaAnd: 'и',
+    googleTerms: 'Условия использования',
+    recaptchaApplies: 'Google.',
     home: 'Главная', collections: 'Коллекции', search: 'Поиск', feedback: 'Обратная связь', menu: 'Меню',
     heroEyebrow: 'Want Wallpapers', heroTitle: 'Обои, которые хочется оставить.',
     heroText: 'Авторские обои для экранов, которые всегда рядом. Выберите настроение, размер и оставьте их себе.',
@@ -62,6 +76,13 @@ export const copy = {
     owner: 'Andrey Krasheninnikov',
   },
   'zh-cn': {
+    recaptchaRejected: '安全验证未通过，请重试。',
+    recaptchaUnavailable: '安全验证暂不可用。输入已保留，请稍后重试。',
+    recaptchaNotice: '本网站受 reCAPTCHA 保护，并适用 Google 的',
+    googlePrivacy: '隐私政策',
+    recaptchaAnd: '和',
+    googleTerms: '服务条款',
+    recaptchaApplies: '。',
     home: '首页', collections: '系列', search: '搜索', feedback: '反馈', menu: '菜单',
     heroEyebrow: 'Want Wallpapers', heroTitle: '想留在屏幕上的壁纸。',
     heroText: '为常伴身边的屏幕设计的原创壁纸。选一种心情，找到合适尺寸，然后带走它。',
@@ -92,6 +113,13 @@ export const copy = {
     owner: 'Andrey Krasheninnikov',
   },
   'pt-br': {
+    recaptchaRejected: 'A verificação de segurança falhou. Tente novamente.',
+    recaptchaUnavailable: 'A verificação está indisponível. Seus dados foram mantidos; tente mais tarde.',
+    recaptchaNotice: 'Este site é protegido pelo reCAPTCHA. Aplicam-se a',
+    googlePrivacy: 'Política de Privacidade',
+    recaptchaAnd: 'e os',
+    googleTerms: 'Termos de Serviço',
+    recaptchaApplies: 'do Google.',
     home: 'Início', collections: 'Coleções', search: 'Busca', feedback: 'Contato', menu: 'Menu',
     heroEyebrow: 'Want Wallpapers', heroTitle: 'Papéis de parede para ficar.',
     heroText: 'Papéis de parede originais para as telas que estão sempre por perto. Escolha um clima, encontre o tamanho e fique com ele.',
@@ -129,3 +157,9 @@ export const localPath = (locale: Locale, path = '/') => `${localePrefix(locale)
 export const languageLabels: Record<Locale, string> = {
   en: 'English', ru: 'Русский', 'zh-cn': '简体中文', 'pt-br': 'Português',
 };
+
+export function mutationError(locale: Locale, error: unknown): string {
+  const code = error instanceof Error ? error.message : '';
+  return code === 'recaptcha-rejected' || code === 'recaptcha-required' ? copy[locale].recaptchaRejected
+    : code === 'recaptcha-unavailable' ? copy[locale].recaptchaUnavailable : copy[locale].serviceError;
+}
