@@ -47,21 +47,6 @@ test('administrator edits translations, creates CDN records, archives and modera
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`admin-catalog-${width}.png`), fullPage: true });
   }
-  await page.getByRole('button', { name: 'Изменить Контуры тишины' }).click();
-  await page.getByLabel('Название · Русский').fill('Контуры для проверки');
-  await page.route('**/api/v1/admin/catalog/collections', (route) => route.abort());
-  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText('Не удалось выполнить действие');
-  await expect(page.getByLabel('Название · Русский')).toHaveValue('Контуры для проверки');
-  await page.unroute('**/api/v1/admin/catalog/collections'); await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Контуры для проверки', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Архивировать Контуры для проверки', exact: true }).click();
-  await page.getByRole('button', { name: 'Архивировать', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Контуры для проверки', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Показать архив', exact: true }).click();
-  await page.getByRole('button', { name: 'Восстановить Контуры для проверки', exact: true }).click();
-  await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
-  await page.getByRole('button', { name: 'В архиве', exact: true }).click();
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Номер папки CDN').fill('0009'); await page.getByLabel('Slug', { exact: true }).fill('ui-check');
   for (const language of ['English', 'Русский', '中文', 'Português']) {
@@ -69,8 +54,23 @@ test('administrator edits translations, creates CDN records, archives and modera
     await page.getByLabel(`Название · ${language}`).fill(`UI check ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание коллекции для проверки');
   }
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click(); await expect(page.getByRole('heading', { name: 'UI check Русский', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Изменить UI check Русский' }).click();
+  await page.getByLabel('Название · Русский').fill('Коллекция для проверки');
+  await page.route('**/api/v1/admin/catalog/collections', (route) => route.abort());
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Не удалось выполнить действие');
+  await expect(page.getByLabel('Название · Русский')).toHaveValue('Коллекция для проверки');
+  await page.unroute('**/api/v1/admin/catalog/collections'); await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Коллекция для проверки', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Архивировать Коллекция для проверки', exact: true }).click();
+  await page.getByRole('button', { name: 'Архивировать', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Коллекция для проверки', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Показать архив', exact: true }).click();
+  await page.getByRole('button', { name: 'Восстановить Коллекция для проверки', exact: true }).click();
+  await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
+  await page.getByRole('button', { name: 'В архиве', exact: true }).click();
   await page.getByRole('button', { name: 'Обои', exact: true }).click(); await page.getByRole('button', { name: 'Добавить', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Коллекция', exact: true }).click(); await page.getByRole('option', { name: 'UI check Русский', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Коллекция', exact: true }).click(); await page.getByRole('option', { name: 'Коллекция для проверки', exact: true }).click();
   for (const language of ['English', 'Русский', '中文', 'Português']) {
     await page.getByRole('tab', { name: language, exact: true }).click(); await page.getByLabel(`Название · ${language}`).fill(`Design ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание обоев для проверки');
   }

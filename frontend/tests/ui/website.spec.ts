@@ -224,6 +224,7 @@ test('FAQ keyboard interaction and language selection preserve the current page'
   await page.keyboard.press('Enter');
   await expect(page.getByText(interfaceCopy.ru.faq[0][1], { exact: true })).toBeHidden();
   await page.goto(`/ru/wallpapers/${wallpaper}/`);
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
   await page.getByRole('combobox', { name: interfaceCopy.ru.language }).click();
   await page.getByRole('option', { name: 'English', exact: true }).click();
   await expect(page).toHaveURL(`/wallpapers/${wallpaper}/`);
