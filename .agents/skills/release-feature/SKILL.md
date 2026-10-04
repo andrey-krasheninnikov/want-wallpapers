@@ -1,6 +1,6 @@
 ---
 name: release-feature
-description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Использовать при запросе конкретного релиза; деплой Hosting выполняется отдельно.
+description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Использовать при запросе конкретного релиза; деплой Docker/Traefik выполняется отдельно.
 ---
 
 # Релиз фичи Want Wallpapers
@@ -18,7 +18,7 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 ## 1. Feature в development
 
 1. Опубликуйте все согласованные изменения feature-ветки и подтвердите серверный HEAD.
-2. Выполните `bun run check`, тесты поиска и `git diff --check`.
+2. Выполните `make check` и `make test`.
 3. Создайте PR из feature-ветки в `development` с описанием результата и проверок. Перед публикацией проверьте текст и метаданные; сохраните нейтральное авторство.
 4. Выполните squash merge с явным Conventional Commit сообщением и `--match-head-commit` для проверенного HEAD. Не используйте admin bypass.
 5. Прочитайте результат PR и обновите refs. У squash-коммита должен быть один родитель — проверенный прежний HEAD development. Его дерево должно сохранять согласованные изменения обеих веток.
@@ -26,8 +26,8 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 ## 2. Release-ветка и main
 
 1. Создайте `release/vMAJOR.MINOR.PATCH` от подтверждённого `origin/development` и опубликуйте её с собственным upstream.
-2. Отдельным release-коммитом синхронизируйте версию пакета с будущим тегом и добавьте запись в `CHANGELOG.md`. Укажите фактическую дату выпуска, пользу для посетителей и известные ограничения.
-3. На кандидате выполните проверки README: типы, поиск, Firestore rules, production build и полный UI-набор с локальными эмуляторами. Соблюдайте правила запуска браузера из `AGENTS.md`.
+2. Отдельным release-коммитом синхронизируйте версию корневого `package.json`, workspace version в `Cargo.toml` и пакета в `Cargo.lock` с будущим тегом и добавьте запись в `CHANGELOG.md`. Укажите фактическую дату выпуска, пользу для посетителей и известные ограничения.
+3. На кандидате выполните проверки README: типы, поиск, Rust API на PostgreSQL 18, production build и полный UI-набор. Соблюдайте правила запуска браузера из `AGENTS.md`.
 4. Создайте PR release-ветки в `main`. Используйте обычный merge без squash и rebase, с `--match-head-commit` проверенного release HEAD.
 5. После merge подтвердите два родителя: проверенный прежний main и проверенный release HEAD. Зафиксируйте итоговый SHA main.
 
@@ -51,4 +51,8 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 - После проверки Gitflow создайте стабильный GitHub Release на существующем теге с `--verify-tag` и `--latest`. Передайте описание из changelog через `--notes-file`; проверьте фактическую страницу релиза.
 - Сохраните feature- и release-ветки. Завершите на синхронизированной development.
 - В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
-- Релиз Git не публикует Firebase Hosting. Деплой выполняется только по отдельному запросу.
+- Релиз Git не развёртывает контейнер на VPS. Деплой выполняется только по отдельному запросу.
+
+## Runtime и публикация образа
+
+Production reCAPTCHA обязательна для публичных изменений и admin login. Credentials находятся вне checkout и образа; migrate их не получает. Выполните make audit и make test-container. Native CI проверяет linux/amd64 и linux/arm64, затем публикует те же образы через artifacts. Подтвердите обе платформы, OCI revision, общий GHCR digest и anonymous pull по свежему readback. Передайте на VPS точные tag, main SHA и APP_IMAGE@sha256. Git release и synthetic Google tests не доказывают деплой или реальный assessment. На домене проверьте Web Key ID, IAM, action/hostname/score и вход; production bypass запрещён.

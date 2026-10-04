@@ -1,6 +1,6 @@
 # 0003: Use shadcn/ui with React islands
 
-Status: accepted
+Status: superseded in backend and deployment details by [0004](0004-rust-monorepo.md)
 
 Astro continues to render the public catalogue, localized text and SEO metadata as static HTML. React islands handle navigation, search, variant selection, ratings, comments, feedback and cookie settings. Static cards, breadcrumbs and links also use the same source-owned shadcn/ui components during server rendering.
 

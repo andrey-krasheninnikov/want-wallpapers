@@ -1,157 +1,80 @@
 # Want Wallpapers
 
-Коллекция дизайнерских обоев Want. Исходные PNG находятся в S3; при сборке копии для скачивания и сжатые превью публикуются на Firebase Hosting.
+Дизайнерские обои Want на https://wallpapers.want.foundation/. Публичный интерфейс Astro/React/shadcn сохранён: коллекции, поиск, desktop/mobile PNG, четыре языка. Rust API хранит каталог и действия посетителей в PostgreSQL 18. Админка: `/admin/login/` и `/admin/`. Firebase используется только для необязательной Analytics. reCAPTCHA Enterprise защищает публичные изменения и вход в админку.
 
-Интерфейс использует Astro, React, Tailwind CSS 4 и локальные компоненты shadcn/ui на Radix. Каталог и метаданные рендерятся в HTML; React отвечает за меню, поиск, форматы, формы и настройки cookie. Цвета и размеры задаются в `src/styles/global.css`, настройки компонентов — в `components.json`.
+## Структура
 
-## Локальная разработка
+- `frontend/`: Astro, React, стили, статический каталог и инструменты export/import.
+- `backend/`: Axum/Tokio/SQLx, миграции PostgreSQL 18, авторизация, публичный API и модерация.
+- `deploy/`: один контейнер за существующим Traefik, внешний PostgreSQL.
+- `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
 
-```bash
-bun install
-bun run dev
-```
-
-Для сборки нужен доступ к публичному S3 и переменные Firebase из `.env` (см. `.env.example`).
+Нужны Bun 1.3.14, Rust 1.93.0, Python 3 и Docker для тестовой БД. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
 
 ```bash
-bun run build
-bun run preview
+make install
+make test-db
+make test
+make check
+make build
+make docker-build
+make test-container
+cd frontend && bunx playwright install chromium
+cd ..
+make test-ui
 ```
 
-## Проверки
+`make test` запускает поиск/фильтры/manifest и Rust API на отдельном PostgreSQL 18. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют четыре языка на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
+
+Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: разрешите `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md). CI создаёт профили с точными путями и выполняет smoke-launch на одноразовом runner; настройки VPS не меняются.
+
+## Разработка
+
+`make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
 
 ```bash
-bun run check
-bun test tests/catalog-search.test.ts tests/search-filters.test.ts
-firebase emulators:exec --project demo-want-wallpapers --only firestore 'bun test tests/catalog-add.test.ts'
-firebase emulators:exec --project demo-want-wallpapers --only firestore 'bun run test:rules'
-bun run test:ui
+set -a
+. ./.env
+set +a
+cargo run --locked -p want-wallpapers-server -- migrate
+make dev-backend
 ```
 
-Для эмуляторов нужны Firebase CLI и Java. Для браузерных тестов установите Chromium командой `bunx --bun playwright install chromium`.
+Для локального DATABASE_URL_FILE можно использовать файл тестовой БД, подготовленный `make test-db`. Создайте отдельные секреты администратора через `scripts/create-secrets.py` вне репозитория. Для запуска Rust сначала нужна `make build`: она создаёт static site и CSP hashes. После этого frontend можно разрабатывать отдельно. Для просмотра production поведения используйте Rust: публичный API и production static site обслуживает Rust; `bun run preview` доступен для просмотра только статических страниц.
 
-`test:ui` собирает отдельный сайт в `/private/tmp/want-wallpapers-ui/site`, запускает Auth и Firestore с проектом `demo-want-wallpapers` и проверяет четыре языка на ширинах 320, 768, 1024 и 1440 px. В сценариях проверяются доступность, поиск, настройки cookie, скачивание, оценки, комментарии и форма обратной связи. Данные записываются только в локальные эмуляторы. Скриншоты и HTML-отчёт находятся в `/private/tmp/want-wallpapers-ui/`; рабочая сборка `dist/` не заменяется.
+## Каталог и CDN
 
-При ручной разработке эмуляторы подключаются только на `localhost` или `127.0.0.1` и только с `PUBLIC_USE_FIREBASE_EMULATORS=true`. Перед этим задайте все публичные Firebase-параметры для тестового проекта; не смешивайте тестовые параметры с настройками публикации.
+CDN: `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/<id>/<number>-desktop.png` и `-mobile.png`. Публичные ID/slug/download имена сохраняются. Поле fileStem остаётся в manifest для совместимости и больше не входит в имя CDN-файла. Новые PNG не загружаются через админку: она работает с существующими CDN-парами.
 
-Метаданные первого выпуска находятся в `src/data/catalog.ts`. Актуальный каталог хранится в Firestore и выгружается в `src/data/catalog-live.json`. После изменения каталога выгрузите его командой `bun run catalog:pull` перед сборкой. `bun run catalog:seed` нужен только для первого заполнения другого проекта: он требует сервисный аккаунт через `GOOGLE_APPLICATION_CREDENTIALS` и не перезаписывает существующие записи. Ключ не хранится в репозитории. Выгрузка публичного каталога использует настройки веб-приложения из `.env`.
-
-## Выпуск новой коллекции
-
-Проектный [skill `release-collection`](.agents/skills/release-collection/SKILL.md) принимает ссылку на публичную папку текущего CDN. Пример запроса:
-
-```text
-$release-collection Добавь и выпусти новую коллекцию:
-https://s3.twcstorage.ru/wallpapers/assets/collections/0004-collection-name/
-```
-
-Замените адрес на реальную папку. Этот запрос запускает подготовку текстов на четырёх языках, проверку desktop/mobile PNG, добавление в Firestore, выгрузку каталога и Gitflow: feature PR со squash в development, release PR с обычным merge в main, защищённый annotated тег и обратный semantic merge. Версия получает следующий minor и patch `0`; после тега публикуется GitHub Release. Feature- и release-ветки удаляются после подтверждения merge. Firebase Hosting публикуется отдельно по инструкции ниже.
-
-Для добавления данных используется `catalog:add`. Manifest содержит одну `collection` и массив `wallpapers` в существующих типах `Collection` и `Wallpaper`; поля и правила описаны в [инструкции подготовки каталога](.agents/skills/release-collection/references/catalogue.md). Сначала выполните проверку без доступа к Firebase:
+Миграция первоначально добавляет snapshot из Git: 3 коллекции / 25 дизайнов; старые социальные данные Firebase не импортируются. Рабочий каталог меняется через админку либо защищённый API. Статические страницы и поиск обновляются после export и rebuild:
 
 ```bash
-bun run catalog:add /absolute/path/collection.json --dry-run
+export BACKEND_API_URL=https://wallpapers.want.foundation
+make catalog-pull
+make build
 ```
 
-Для записи в рабочий Firestore нужен сервисный аккаунт проекта `want-wallpapers` с правами чтения и записи данных, например ролью `Cloud Datastore User`. В настройках проекта Firebase откройте «Сервисные аккаунты» и создайте приватный ключ. Сохраните JSON вне репозитория и задайте путь в своём терминале. Firebase CLI login не заменяет этот ключ для importer.
+Для атомарного импорта сохраните JSON `{collection,wallpapers}` и используйте токен вне репозитория. Формат и проверка PNG описаны в [инструкции каталога](.agents/skills/release-collection/references/catalogue.md).
 
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/outside-repository/service-account.json"
-bun run catalog:add /absolute/path/collection.json
-bun run catalog:pull
+make catalog-add MANIFEST=/absolute/path/collection.json ARGS=--dry-run
+export CATALOG_API_TOKEN_FILE=/absolute/path/outside-repository/catalog_api_token
+make catalog-add MANIFEST=/absolute/path/collection.json
+make catalog-pull
 ```
 
-Перед рабочим импортом убедитесь, что `FIRESTORE_EMULATOR_HOST` отсутствует. При заданном локальном адресе этой переменной importer записывает данные только в проект `demo-want-wallpapers` эмулятора. Для рабочего импорта всегда используется проект `want-wallpapers`; `--dry-run` не читает и не изменяет Firebase.
+Dry-run не обращается к CDN/API. Импорт делает точный повтор без записи; частичные или отличающиеся данные дают conflict и не перезаписываются. После сетевого сбоя сначала выполните защищённый readback (`GET /api/v1/admin/catalog`). Номер папки уникален независимо от ведущих нулей. Существующие ID и социальные данные сохраняются. Новые категории/теги требуют отдельного согласованного обновления frontend/backend и деплоя до импорта. Для тестового API HTTP допустим только localhost/127.0.0.1.
 
-Importer проверяет manifest и создаёт коллекцию с обоями одним атомарным batch, затем сверяет серверные документы. Полностью совпадающий повтор не делает записей. Частичные данные, занятый номер или изменённые документы останавливают импорт без перезаписи. При сетевой ошибке сначала проверьте серверное состояние. Не удаляйте данные и не запускайте `catalog:seed` для восстановления незавершённого выпуска. Этот процесс работает на Spark и не требует Cloud Functions.
+Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Release не развёртывает сайт автоматически.
 
-## Перед публикацией
+`make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Кэш и build output не коммитятся.
 
-`bun run build` проверяет исходные desktop/mobile PNG всех обоев, создаёт WebP-превью и кладёт копии PNG в `dist/downloads/`. Папки с изображениями и `dist/` игнорируются Git; сборка для публикации должна выполняться там, где доступен публичный S3. Проверьте размер сборки и лимит трафика Firebase Hosting перед запуском.
+## Эксплуатация
 
-Анонимный вход и базовые правила Firestore уже настроены в проекте `want-wallpapers`. На бесплатном тарифе автоматическое удаление по TTL недоступно. При закрытии обращения владелец ставит `status: closed` и поле `expireAt` типа Timestamp на один год позже даты закрытия, создаёт напоминание на эту дату и вручную удаляет запись в Firestore в срок. Открытые обращения остаются без `expireAt`.
+[Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
 
-Analytics заработает только после подключения Google Analytics к Firebase, получения `measurementId` и установки `PUBLIC_FIREBASE_MEASUREMENT_ID` перед сборкой. Для App Check также нужен зарегистрированный ключ `PUBLIC_RECAPTCHA_SITE_KEY` и проверка работы после развёртывания. До этого App Check не включайте в режиме принудительной проверки. Рекламный провайдер пока не подключён.
+Analytics включается только с measurement ID, согласием посетителя и разрешённым регионом. Российский IP или ошибка ipwho.is отключает социальные функции, обращения и Analytics в публичном интерфейсе; просмотр, поиск и скачивание остаются. Админка работает независимо от региона. Закрытые обращения удаляются ежедневной задачей через год.
 
-## Деплой на Firebase Hosting (Spark)
+Workflow Checks запускает проверки для PR, ручного запуска и push в main, development, feature/vps-traefik-deployment и feature/rust-backend-monorepo. После успешных native container проверок на amd64 и arm64 main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`. Это multi-platform index linux/amd64 + linux/arm64 из проверенных CI artifacts. PR и Rust-ветка образ не публикуют. Деплой VPS выполняется отдельно. Для production используйте проверенный digest из результата публикации.
 
-Сайт собирается в статические файлы и использует обычный Firebase Hosting. Проект остаётся на бесплатном тарифе Spark. Конфигурация уже находится в `firebase.json` и `.firebaserc`: каталог публикации `dist`, проект `want-wallpapers`. Повторно запускать `firebase init` не нужно.
-
-### 1. Подготовьте инструменты
-
-Для сборки нужен Bun. Установите Firebase CLI по [официальной инструкции](https://firebase.google.com/docs/cli#install_the_firebase_cli); для CLI также нужен поддерживаемый Node.js. Java и Chromium нужны для проверок из раздела «Проверки».
-
-Все следующие команды выполняйте из корня репозитория:
-
-```bash
-bun --version
-firebase --version
-bun install --frozen-lockfile
-```
-
-### 2. Войдите в Firebase и проверьте проект
-
-```bash
-firebase login
-firebase projects:list
-```
-
-В списке должен присутствовать проект с ID `want-wallpapers`. Используйте аккаунт с правом деплоя в этот проект. Проверьте в настройках Firebase, что тариф остаётся Spark; подключать платёжный аккаунт для этого сайта не требуется.
-
-### 3. Проверьте переменные сборки
-
-Если `.env` ещё нет, создайте его из примера. Команда сохраняет существующий файл:
-
-```bash
-cp -n .env.example .env
-```
-
-В `.env` должны быть публичные настройки веб-приложения проекта `want-wallpapers`: `PUBLIC_FIREBASE_API_KEY`, `PUBLIC_FIREBASE_AUTH_DOMAIN`, `PUBLIC_FIREBASE_PROJECT_ID` и `PUBLIC_FIREBASE_APP_ID`. `PUBLIC_USE_FIREBASE_EMULATORS` должен отсутствовать или иметь значение `false`.
-
-`PUBLIC_FIREBASE_MEASUREMENT_ID` и `PUBLIC_RECAPTCHA_SITE_KEY` заполняйте только после настройки соответствующих сервисов. Пока они пустые, аналитика и App Check не подключены. Сервисный аккаунт и `GOOGLE_APPLICATION_CREDENTIALS` для деплоя Hosting не нужны. Не добавляйте `.env` и ключи сервисного аккаунта в Git.
-
-### 4. Обновите каталог, если меняли его в Firestore
-
-```bash
-bun run catalog:pull
-```
-
-Для правок интерфейса без изменения каталога этот шаг пропустите. `catalog:seed` не входит в обычный деплой.
-
-### 5. Выполните проверки
-
-Запустите команды из раздела «Проверки» выше. Браузерные сценарии используют локальные эмуляторы и не меняют данные рабочего проекта. Продолжайте после успешного завершения проверок.
-
-### 6. Соберите и просмотрите сайт локально
-
-```bash
-bun run build
-du -sh dist
-bun run preview
-```
-
-Для сборки нужен доступ к публичному S3. В выводе preview будет локальный адрес сайта. Проверьте главную страницу, поиск, четыре языка, контакты и оба формата скачивания. Остановите preview через `Ctrl+C` перед следующим шагом.
-
-Сборка включает по два оригинальных PNG на каждый дизайн в `dist/downloads/`: desktop и mobile. Скачивание этих файлов расходует трафик Firebase Hosting, даже если исходники находятся в S3. `.env` читается при сборке: после изменения переменных выполните `bun run build` ещё раз.
-
-### 7. Опубликуйте сборку
-
-Следующая команда обновляет публичный сайт:
-
-```bash
-firebase deploy --only hosting --project want-wallpapers
-```
-
-Флаг `--only hosting` публикует файлы из `dist` и настройки Hosting. Правила Firestore и настройки других сервисов этой командой не обновляются. Для этого проекта не требуются Cloud Functions, App Hosting или переход на Blaze. Подробнее: [деплой Firebase Hosting](https://firebase.google.com/docs/hosting/quickstart).
-
-### 8. Проверьте результат
-
-После сообщения об успешном деплое откройте [want-wallpapers.web.app](https://want-wallpapers.web.app/) и [русскую главную](https://want-wallpapers.web.app/ru/). Проверьте featured «Ночное дерево», поиск, изображения, скачивание desktop/mobile PNG, контакты, cookie-настройки, `robots.txt` и `sitemap-index.xml`.
-
-Оценки, комментарии и форма доступны только в разрешённом регионе. Аналитика требует настройки и согласия посетителя. Успешный деплой сам по себе не подтверждает работу этих функций или подключение рекламы.
-
-### Лимиты бесплатного тарифа
-
-Firebase Hosting предоставляет 10 GB хранения и 10 GB исходящего трафика в месяц без оплаты. Хранение включает сохранённые релизы. При заполнении хранилища новый деплой будет заблокирован; освободите место, удалив ненужные старые релизы. При исчерпании трафика после короткого льготного периода сайт может быть отключён до начала следующего месяца. Следите за расходом в разделе Hosting в Firebase Console и сверяйте [актуальные лимиты Hosting](https://firebase.google.com/docs/hosting/usage-quotas-pricing).
-
-Публикация коммитов в GitHub не выполняет деплой Hosting. После получения новых изменений повторите проверки, сборку и команду деплоя из этой инструкции.
+Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.

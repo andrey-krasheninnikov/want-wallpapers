@@ -1,0 +1,17 @@
+---
+import '@fontsource-variable/manrope';
+import '../styles/global.css';
+import logo from '../../assets/logo.svg';
+const { title } = Astro.props;
+---
+<!doctype html>
+<html lang="ru" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>{title} · Want Wallpapers</title>
+    <link rel="icon" type="image/svg+xml" href={logo.src} />
+  </head>
+  <body class="min-h-dvh bg-background text-foreground"><slot /></body>
+</html>
