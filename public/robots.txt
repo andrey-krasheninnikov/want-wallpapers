@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://want-wallpapers.web.app/sitemap-index.xml

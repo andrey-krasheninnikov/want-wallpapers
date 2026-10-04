@@ -1,0 +1,65 @@
+name: want-wallpapers
+x-runtime: &runtime
+  image: ${APP_IMAGE:?Set an immutable APP_IMAGE tag or digest}
+  user: '10001:10001'
+  read_only: true
+  tmpfs:
+    - /tmp:size=32m,mode=1777
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [traefik]
+  environment: &environment
+    APP_ENV: production
+    SITE_URL: https://wallpapers.want.foundation
+    BIND_ADDR: 0.0.0.0:8080
+    STATIC_DIR: /app/frontend/dist
+    DATABASE_URL_FILE: /run/secrets/database_url
+    PGSSLROOTCERT: /run/secrets/postgres_ca
+    ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+    ADMIN_PASSWORD_HASH_FILE: /run/secrets/admin_password_hash
+    ADMIN_TOTP_SECRET_FILE: /run/secrets/admin_totp_secret
+    CATALOG_API_TOKEN_FILE: /run/secrets/catalog_api_token
+    TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:?Set only the actual Traefik proxy CIDRs}
+  secrets: [database_url, postgres_ca, admin_password_hash, admin_totp_secret, catalog_api_token]
+services:
+  app:
+    <<: *runtime
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 2
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: ${TRAEFIK_NETWORK:?Set existing external Traefik network}
+      traefik.http.routers.wallpapers.rule: Host(`wallpapers.want.foundation`)
+      traefik.http.routers.wallpapers.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.wallpapers.tls: 'true'
+      traefik.http.routers.wallpapers.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:?Set existing certificate resolver}
+      traefik.http.services.wallpapers.loadbalancer.server.port: '8080'
+  migrate:
+    <<: *runtime
+    profiles: [operations]
+    command: [migrate]
+    restart: 'no'
+    environment:
+      <<: *environment
+      DATABASE_URL_FILE: /run/secrets/migration_database_url
+    secrets: [migration_database_url, postgres_ca]
+    labels:
+      traefik.enable: 'false'
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK}
+secrets:
+  database_url:
+    file: ${SECRETS_DIR:?Set external secret directory}/database_url
+  migration_database_url:
+    file: ${SECRETS_DIR}/migration_database_url
+  postgres_ca:
+    file: ${SECRETS_DIR}/postgres_ca.pem
+  admin_password_hash:
+    file: ${SECRETS_DIR}/admin_password_hash
+  admin_totp_secret:
+    file: ${SECRETS_DIR}/admin_totp_secret
+  catalog_api_token:
+    file: ${SECRETS_DIR}/catalog_api_token
