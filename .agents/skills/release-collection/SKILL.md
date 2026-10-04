@@ -5,7 +5,7 @@ description: Добавлять и выпускать новую коллекц�
 
 # Выпуск коллекции Want Wallpapers
 
-Работайте в `andrey-krasheninnikov/want-wallpapers`. Вход — URL папки `https://s3.twcstorage.ru/wallpapers/assets/collections/<number-and-name>/`. Явный вызов `$release-collection` с URL или запрос «добавь и выпусти коллекцию» разрешает подготовку данных, запись новых документов Firestore, публикацию веток, PR, merges, тега, GitHub Release и удаление соответствующих временных веток. Запрос изучения папки разрешает только чтение. Деплой Hosting требует отдельного запроса. Для коллекций этот порядок имеет приоритет над `release-feature`.
+Работайте в `andrey-krasheninnikov/want-wallpapers`. Вход — URL папки `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/<number-and-name>/`. Явный вызов `$release-collection` с URL или запрос «добавь и выпусти коллекцию» разрешает подготовку данных, запись новых документов Firestore, публикацию веток, PR, merges, тега, GitHub Release и удаление соответствующих временных веток. Запрос изучения папки разрешает только чтение. Деплой Hosting требует отдельного запроса. Для коллекций этот порядок имеет приоритет над `release-feature`.
 
 ## 1. Подготовка
 

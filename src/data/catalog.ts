@@ -166,7 +166,7 @@ export const getCollection = (slug: string) => collections.find((item) => item.s
 export const getWallpaper = (slug: string) => wallpapers.find((item) => item.slug === slug);
 export const getCollectionWallpapers = (slug: string) => wallpapers.filter((item) => item.collection === slug);
 export const s3Url = (wallpaper: Wallpaper, variant: 'desktop' | 'mobile') =>
-  `https://s3.twcstorage.ru/wallpapers/assets/collections/${wallpaper.s3Folder}/${wallpaper.fileStem}-${wallpaper.number}-${variant}.png`;
+  `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/${wallpaper.s3Folder}/${wallpaper.number}-${variant}.png`;
 export const previewUrl = (wallpaper: Wallpaper, variant: 'desktop' | 'mobile') =>
   `/previews/${wallpaper.slug}-${variant}.webp`;
 export const downloadUrl = (wallpaper: Wallpaper, variant: 'desktop' | 'mobile') =>

@@ -1,6 +1,6 @@
 # Want Wallpapers
 
-Коллекция дизайнерских обоев Want. Исходные PNG находятся в S3; при сборке создаются копии для скачивания и сжатые превью. Целевой хостинг — VPS с Nginx за Traefik и Cloudflare на `wallpapers.want.foundation`; Firebase Auth и Firestore остаются в Firebase.
+Коллекция дизайнерских обоев Want. Исходные PNG находятся в публичном S3 bucket `want-foundation` по адресам `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/<collection-id>/<number>-<desktop|mobile>.png`; при сборке создаются копии для скачивания и сжатые превью. Целевой хостинг — VPS с Nginx за Traefik и Cloudflare на `wallpapers.want.foundation`; Firebase Auth и Firestore остаются в Firebase.
 
 Интерфейс использует Astro, React, Tailwind CSS 4 и локальные компоненты shadcn/ui на Radix. Каталог и метаданные рендерятся в HTML; React отвечает за меню, поиск, форматы, формы и настройки cookie. Цвета и размеры задаются в `src/styles/global.css`, настройки компонентов — в `components.json`.
 
@@ -42,7 +42,7 @@ bun run test:ui
 
 ```text
 $release-collection Добавь и выпусти новую коллекцию:
-https://s3.twcstorage.ru/wallpapers/assets/collections/0004-collection-name/
+https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0004-collection-name/
 ```
 
 Замените адрес на реальную папку. Этот запрос запускает подготовку текстов на четырёх языках, проверку desktop/mobile PNG, добавление в Firestore, выгрузку каталога и Gitflow: feature PR со squash в development, release PR с обычным merge в main, защищённый annotated тег и обратный semantic merge. Версия получает следующий minor и patch `0`; после тега публикуется GitHub Release. Feature- и release-ветки удаляются после подтверждения merge. Хостинг обновляется отдельно по соответствующей инструкции ниже.
