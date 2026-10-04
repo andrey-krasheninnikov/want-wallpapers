@@ -15,6 +15,9 @@ ENV PUBLIC_FIREBASE_MEASUREMENT_ID=${PUBLIC_FIREBASE_MEASUREMENT_ID} \
 RUN cp .env.example .env && bun run build
 
 FROM ${NGINX_IMAGE} AS runtime
+ARG VCS_REF="unknown"
+LABEL org.opencontainers.image.source="https://github.com/andrey-krasheninnikov/want-wallpapers" \
+      org.opencontainers.image.revision=${VCS_REF}
 COPY deploy/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist/ /usr/share/nginx/html/
 USER 101:101

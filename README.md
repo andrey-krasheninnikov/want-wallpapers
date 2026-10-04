@@ -30,6 +30,8 @@ bun run test:ui
 
 Для эмуляторов нужны Firebase CLI и Java. Для браузерных тестов установите Chromium командой `bunx --bun playwright install chromium`.
 
+Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: настройте разрешение `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md), не отключая sandbox. CI создаёт exact-path профили и выполняет smoke-launch только на одноразовом runner; настройки production VPS не меняются.
+
 `test:ui` собирает отдельный сайт в `want-wallpapers-ui/site` внутри системного временного каталога (`os.tmpdir()`), запускает Auth и Firestore с проектом `demo-want-wallpapers` и проверяет четыре языка на ширинах 320, 768, 1024 и 1440 px. В сценариях проверяются доступность, поиск, настройки cookie, скачивание, оценки, комментарии и форма обратной связи. Данные записываются только в локальные эмуляторы. Скриншоты и HTML-отчёт находятся в том же `want-wallpapers-ui/`; рабочая сборка `dist/` не заменяется.
 
 При ручной разработке эмуляторы подключаются только на `localhost` или `127.0.0.1` и только с `PUBLIC_USE_FIREBASE_EMULATORS=true`. Перед этим задайте все публичные Firebase-параметры для тестового проекта; не смешивайте тестовые параметры с настройками публикации.
