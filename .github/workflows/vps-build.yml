@@ -20,8 +20,6 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
-    env:
-      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -43,6 +41,8 @@ jobs:
           bunx --bun playwright install --with-deps chromium
           cp .env.example .env
       - name: Check, test and build all images
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           bun run sync:previews
           bun run check
