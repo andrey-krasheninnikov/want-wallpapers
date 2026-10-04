@@ -1,9 +1,14 @@
 import { defineConfig } from '@playwright/test';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const output = join(tmpdir(), 'want-wallpapers-ui');
+const site = JSON.stringify(join(output, 'site'));
 
 export default defineConfig({
   testDir: './tests/ui',
-  outputDir: '/private/tmp/want-wallpapers-ui/results',
-  reporter: [['list'], ['html', { outputFolder: '/private/tmp/want-wallpapers-ui/report', open: 'never' }]],
+  outputDir: join(output, 'results'),
+  reporter: [['list'], ['html', { outputFolder: join(output, 'report'), open: 'never' }]],
   workers: 2,
   fullyParallel: true,
   timeout: 90000,
@@ -17,7 +22,7 @@ export default defineConfig({
     reducedMotion: 'reduce',
   },
   webServer: {
-    command: 'bunx --bun astro build --outDir /private/tmp/want-wallpapers-ui/site && bunx --bun astro preview --outDir /private/tmp/want-wallpapers-ui/site --host 127.0.0.1 --port 4322',
+    command: `bunx --bun astro build --outDir ${site} && bunx --bun astro preview --outDir ${site} --host 127.0.0.1 --port 4322`,
     url: 'http://127.0.0.1:4322/',
     reuseExistingServer: false,
     timeout: 60000,

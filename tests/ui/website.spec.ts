@@ -32,13 +32,13 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         if (index === 0) await dismissCookies(page, locale);
         await expect(page.locator('h1')).toHaveCount(1);
         await expect(page.locator('main')).not.toBeEmpty();
-        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://want-wallpapers.web.app${localPath(locale, path)}`);
+        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
         await expect(page.locator('link[rel="alternate"]')).toHaveCount(5);
         if (path === '/') {
           await expect(page.locator('main .eyebrow')).toHaveCount(0);
           await expect(page.locator('main figure a').first()).toHaveAttribute('href', localPath(locale, '/wallpapers/contours-of-silence-11/'));
           await expect(page.locator('main figure img').first()).toHaveAttribute('src', '/previews/contours-of-silence-11-desktop.webp');
-          await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://want-wallpapers.web.app/previews/contours-of-silence-11-desktop.webp');
+          await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://wallpapers.want.foundation/previews/contours-of-silence-11-desktop.webp');
           await expect(page.locator('footer')).toContainText('© 2026 Want Foundation');
           await expect(page.locator('footer a[href="https://t.me/want_wallpapers"]')).toBeVisible();
           const buttons = await page.locator('footer nav a').evaluateAll((links) => links.map((link) => {

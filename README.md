@@ -1,6 +1,6 @@
 # Want Wallpapers
 
-Коллекция дизайнерских обоев Want. Исходные PNG находятся в S3; при сборке копии для скачивания и сжатые превью публикуются на Firebase Hosting.
+Коллекция дизайнерских обоев Want. Исходные PNG находятся в S3; при сборке создаются копии для скачивания и сжатые превью. Целевой хостинг — VPS с Nginx за Traefik и Cloudflare на `wallpapers.want.foundation`; Firebase Auth и Firestore остаются в Firebase.
 
 Интерфейс использует Astro, React, Tailwind CSS 4 и локальные компоненты shadcn/ui на Radix. Каталог и метаданные рендерятся в HTML; React отвечает за меню, поиск, форматы, формы и настройки cookie. Цвета и размеры задаются в `src/styles/global.css`, настройки компонентов — в `components.json`.
 
@@ -30,7 +30,7 @@ bun run test:ui
 
 Для эмуляторов нужны Firebase CLI и Java. Для браузерных тестов установите Chromium командой `bunx --bun playwright install chromium`.
 
-`test:ui` собирает отдельный сайт в `/private/tmp/want-wallpapers-ui/site`, запускает Auth и Firestore с проектом `demo-want-wallpapers` и проверяет четыре языка на ширинах 320, 768, 1024 и 1440 px. В сценариях проверяются доступность, поиск, настройки cookie, скачивание, оценки, комментарии и форма обратной связи. Данные записываются только в локальные эмуляторы. Скриншоты и HTML-отчёт находятся в `/private/tmp/want-wallpapers-ui/`; рабочая сборка `dist/` не заменяется.
+`test:ui` собирает отдельный сайт в `want-wallpapers-ui/site` внутри системного временного каталога (`os.tmpdir()`), запускает Auth и Firestore с проектом `demo-want-wallpapers` и проверяет четыре языка на ширинах 320, 768, 1024 и 1440 px. В сценариях проверяются доступность, поиск, настройки cookie, скачивание, оценки, комментарии и форма обратной связи. Данные записываются только в локальные эмуляторы. Скриншоты и HTML-отчёт находятся в том же `want-wallpapers-ui/`; рабочая сборка `dist/` не заменяется.
 
 При ручной разработке эмуляторы подключаются только на `localhost` или `127.0.0.1` и только с `PUBLIC_USE_FIREBASE_EMULATORS=true`. Перед этим задайте все публичные Firebase-параметры для тестового проекта; не смешивайте тестовые параметры с настройками публикации.
 
@@ -45,7 +45,7 @@ $release-collection Добавь и выпусти новую коллекцию
 https://s3.twcstorage.ru/wallpapers/assets/collections/0004-collection-name/
 ```
 
-Замените адрес на реальную папку. Этот запрос запускает подготовку текстов на четырёх языках, проверку desktop/mobile PNG, добавление в Firestore, выгрузку каталога и Gitflow: feature PR со squash в development, release PR с обычным merge в main, защищённый annotated тег и обратный semantic merge. Версия получает следующий minor и patch `0`; после тега публикуется GitHub Release. Feature- и release-ветки удаляются после подтверждения merge. Firebase Hosting публикуется отдельно по инструкции ниже.
+Замените адрес на реальную папку. Этот запрос запускает подготовку текстов на четырёх языках, проверку desktop/mobile PNG, добавление в Firestore, выгрузку каталога и Gitflow: feature PR со squash в development, release PR с обычным merge в main, защищённый annotated тег и обратный semantic merge. Версия получает следующий minor и patch `0`; после тега публикуется GitHub Release. Feature- и release-ветки удаляются после подтверждения merge. Хостинг обновляется отдельно по соответствующей инструкции ниже.
 
 Для добавления данных используется `catalog:add`. Manifest содержит одну `collection` и массив `wallpapers` в существующих типах `Collection` и `Wallpaper`; поля и правила описаны в [инструкции подготовки каталога](.agents/skills/release-collection/references/catalogue.md). Сначала выполните проверку без доступа к Firebase:
 
@@ -67,13 +67,36 @@ Importer проверяет manifest и создаёт коллекцию с о�
 
 ## Перед публикацией
 
-`bun run build` проверяет исходные desktop/mobile PNG всех обоев, создаёт WebP-превью и кладёт копии PNG в `dist/downloads/`. Папки с изображениями и `dist/` игнорируются Git; сборка для публикации должна выполняться там, где доступен публичный S3. Проверьте размер сборки и лимит трафика Firebase Hosting перед запуском.
+`bun run build` проверяет исходные desktop/mobile PNG всех обоев, создаёт WebP-превью и кладёт копии PNG в `dist/downloads/`. Папки с изображениями и `dist/` игнорируются Git; сборка для публикации должна выполняться там, где доступен публичный S3. Проверьте размер сборки, свободный диск и лимит трафика выбранного хостинга перед запуском.
 
 Анонимный вход и базовые правила Firestore уже настроены в проекте `want-wallpapers`. На бесплатном тарифе автоматическое удаление по TTL недоступно. При закрытии обращения владелец ставит `status: closed` и поле `expireAt` типа Timestamp на один год позже даты закрытия, создаёт напоминание на эту дату и вручную удаляет запись в Firestore в срок. Открытые обращения остаются без `expireAt`.
 
 Analytics заработает только после подключения Google Analytics к Firebase, получения `measurementId` и установки `PUBLIC_FIREBASE_MEASUREMENT_ID` перед сборкой. Для App Check также нужен зарегистрированный ключ `PUBLIC_RECAPTCHA_SITE_KEY` и проверка работы после развёртывания. До этого App Check не включайте в режиме принудительной проверки. Рекламный провайдер пока не подключён.
 
-## Деплой на Firebase Hosting (Spark)
+## Деплой на VPS через Traefik и Cloudflare
+
+Workflow `.github/workflows/vps-build.yml` запускается для push в `main` и `feature/vps-traefik-deployment`, а также для PR и ручного запуска. Сначала выполняются Astro check, тесты поиска, importer и Firestore rules с локальным эмулятором, UI-тесты и полная сборка всех PNG/WebP из текущего каталога. После успешных проверок push в указанные ветки публикует `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`. PR не публикуют образ. Деплой на VPS автоматически не выполняется; SSH-ключи сервера в GitHub не нужны.
+
+Dockerfile фиксирует базовые образы по digest и использует `.env.example` для публичной конфигурации Firebase. Не передавайте сервисные аккаунты или приватные ключи в сборку. Необязательные публичные значения `PUBLIC_FIREBASE_MEASUREMENT_ID` и `PUBLIC_RECAPTCHA_SITE_KEY` берутся из GitHub Actions repository variables; перед их добавлением настройте соответствующие сервисы и проверьте согласие пользователя.
+
+На сервере должны быть заранее настроены Docker, Traefik с маршрутом `wallpapers.want.foundation` → `http://wallpapers:8080`, сеть `wallpapers-proxy` и origin-сертификат. В Cloudflare включите прокси DNS и SSL/TLS **Full (strict)**. Origin-порты 80/443 должны принимать только сети Cloudflare, включая Docker ingress. Само приложение не публикует host-порты и работает без root с read-only filesystem и лимитами ресурсов.
+
+Перед первым pull сделайте GHCR-пакет публичным в его настройках либо настройте отдельную авторизацию на чтение пакета. GitHub автоматически не делает новый пакет публичным; fine-grained PAT для Git не заменяет GHCR pull-доступ.
+
+После успешного workflow используйте digest из результата `docker push`, а не изменяемый тег. Сохраните значение `WALLPAPERS_IMAGE=ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:<verified-digest>` в `/opt/want/apps/wallpapers/.env` рядом с копией `deploy/compose.yml`. Выполняйте развёртывание администратором:
+
+```bash
+sudo docker compose --project-directory /opt/want/apps/wallpapers -f /opt/want/apps/wallpapers/compose.yml pull
+sudo docker compose --project-directory /opt/want/apps/wallpapers -f /opt/want/apps/wallpapers/compose.yml up -d --wait
+sudo docker compose --project-directory /opt/want/apps/wallpapers -f /opt/want/apps/wallpapers/compose.yml ps
+curl --fail --silent --show-error https://wallpapers.want.foundation/ru/ -o /dev/null
+```
+
+Проверьте четыре языка, вложенные URL и настоящие 404, canonical/sitemap, PNG/WebP, скачивания и cookie-настройки. В Firebase проверьте Authorized domains, ограничения API key и App Check для нового домена, если они используются; Auth и Firestore не мигрируют на VPS. Не включайте эмуляторы в production.
+
+Сборку, Astro check и UI-тесты выполняйте в CI или на машине с достаточной памятью, не на малоресурсном VPS. Для отката сохраните предыдущий digest в `.env` и повторите `up -d --wait`. Старый Firebase Hosting не удаляется этим workflow; его отключение или редирект требуют отдельного решения. Раздел ниже сохранён для временного резервного хостинга; canonical остаётся на новом домене.
+
+## Альтернативный деплой на Firebase Hosting (Spark)
 
 Сайт собирается в статические файлы и использует обычный Firebase Hosting. Проект остаётся на бесплатном тарифе Spark. Конфигурация уже находится в `firebase.json` и `.firebaserc`: каталог публикации `dist`, проект `want-wallpapers`. Повторно запускать `firebase init` не нужно.
 
