@@ -23,6 +23,7 @@ bun run preview
 ```bash
 bun run check
 bun test tests/catalog-search.test.ts tests/search-filters.test.ts
+firebase emulators:exec --project demo-want-wallpapers --only firestore 'bun test tests/catalog-add.test.ts'
 firebase emulators:exec --project demo-want-wallpapers --only firestore 'bun run test:rules'
 bun run test:ui
 ```
@@ -33,11 +34,40 @@ bun run test:ui
 
 При ручной разработке эмуляторы подключаются только на `localhost` или `127.0.0.1` и только с `PUBLIC_USE_FIREBASE_EMULATORS=true`. Перед этим задайте все публичные Firebase-параметры для тестового проекта; не смешивайте тестовые параметры с настройками публикации.
 
-Метаданные первого выпуска находятся в `src/data/catalog.ts`. Текущие 3 коллекции и 25 обоев уже загружены в Firestore. После изменения каталога выгрузите его командой `bun run catalog:pull` перед сборкой. `bun run catalog:seed` нужен только для первого заполнения другого проекта: он требует сервисный аккаунт через `GOOGLE_APPLICATION_CREDENTIALS` и не перезаписывает существующие записи. Ключ не хранится в репозитории. Выгрузка публичного каталога использует настройки веб-приложения из `.env`.
+Метаданные первого выпуска находятся в `src/data/catalog.ts`. Актуальный каталог хранится в Firestore и выгружается в `src/data/catalog-live.json`. После изменения каталога выгрузите его командой `bun run catalog:pull` перед сборкой. `bun run catalog:seed` нужен только для первого заполнения другого проекта: он требует сервисный аккаунт через `GOOGLE_APPLICATION_CREDENTIALS` и не перезаписывает существующие записи. Ключ не хранится в репозитории. Выгрузка публичного каталога использует настройки веб-приложения из `.env`.
+
+## Выпуск новой коллекции
+
+Проектный [skill `release-collection`](.agents/skills/release-collection/SKILL.md) принимает ссылку на публичную папку текущего CDN. Пример запроса:
+
+```text
+$release-collection Добавь и выпусти новую коллекцию:
+https://s3.twcstorage.ru/wallpapers/assets/collections/0004-collection-name/
+```
+
+Замените адрес на реальную папку. Этот запрос запускает подготовку текстов на четырёх языках, проверку desktop/mobile PNG, добавление в Firestore, выгрузку каталога и Gitflow: feature PR со squash в development, release PR с обычным merge в main, защищённый annotated тег и обратный semantic merge. Версия получает следующий minor и patch `0`; после тега публикуется GitHub Release. Feature- и release-ветки удаляются после подтверждения merge. Firebase Hosting публикуется отдельно по инструкции ниже.
+
+Для добавления данных используется `catalog:add`. Manifest содержит одну `collection` и массив `wallpapers` в существующих типах `Collection` и `Wallpaper`; поля и правила описаны в [инструкции подготовки каталога](.agents/skills/release-collection/references/catalogue.md). Сначала выполните проверку без доступа к Firebase:
+
+```bash
+bun run catalog:add /absolute/path/collection.json --dry-run
+```
+
+Для записи в рабочий Firestore нужен сервисный аккаунт проекта `want-wallpapers` с правами чтения и записи данных, например ролью `Cloud Datastore User`. В настройках проекта Firebase откройте «Сервисные аккаунты» и создайте приватный ключ. Сохраните JSON вне репозитория и задайте путь в своём терминале. Firebase CLI login не заменяет этот ключ для importer.
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/outside-repository/service-account.json"
+bun run catalog:add /absolute/path/collection.json
+bun run catalog:pull
+```
+
+Перед рабочим импортом убедитесь, что `FIRESTORE_EMULATOR_HOST` отсутствует. При заданном локальном адресе этой переменной importer записывает данные только в проект `demo-want-wallpapers` эмулятора. Для рабочего импорта всегда используется проект `want-wallpapers`; `--dry-run` не читает и не изменяет Firebase.
+
+Importer проверяет manifest и создаёт коллекцию с обоями одним атомарным batch, затем сверяет серверные документы. Полностью совпадающий повтор не делает записей. Частичные данные, занятый номер или изменённые документы останавливают импорт без перезаписи. При сетевой ошибке сначала проверьте серверное состояние. Не удаляйте данные и не запускайте `catalog:seed` для восстановления незавершённого выпуска. Этот процесс работает на Spark и не требует Cloud Functions.
 
 ## Перед публикацией
 
-`bun run build` проверяет 50 исходных PNG, создаёт WebP-превью и кладёт копии PNG в `dist/downloads/`. Папки с изображениями и `dist/` игнорируются Git; сборка для публикации должна выполняться там, где доступен публичный S3. Проверьте размер сборки и лимит трафика Firebase Hosting перед запуском.
+`bun run build` проверяет исходные desktop/mobile PNG всех обоев, создаёт WebP-превью и кладёт копии PNG в `dist/downloads/`. Папки с изображениями и `dist/` игнорируются Git; сборка для публикации должна выполняться там, где доступен публичный S3. Проверьте размер сборки и лимит трафика Firebase Hosting перед запуском.
 
 Анонимный вход и базовые правила Firestore уже настроены в проекте `want-wallpapers`. На бесплатном тарифе автоматическое удаление по TTL недоступно. При закрытии обращения владелец ставит `status: closed` и поле `expireAt` типа Timestamp на один год позже даты закрытия, создаёт напоминание на эту дату и вручную удаляет запись в Firestore в срок. Открытые обращения остаются без `expireAt`.
 
@@ -102,7 +132,7 @@ bun run preview
 
 Для сборки нужен доступ к публичному S3. В выводе preview будет локальный адрес сайта. Проверьте главную страницу, поиск, четыре языка, контакты и оба формата скачивания. Остановите preview через `Ctrl+C` перед следующим шагом.
 
-Текущая сборка включает 50 оригинальных PNG в `dist/downloads/`. Скачивание этих файлов расходует трафик Firebase Hosting, даже если исходники находятся в S3. `.env` читается при сборке: после изменения переменных выполните `bun run build` ещё раз.
+Сборка включает по два оригинальных PNG на каждый дизайн в `dist/downloads/`: desktop и mobile. Скачивание этих файлов расходует трафик Firebase Hosting, даже если исходники находятся в S3. `.env` читается при сборке: после изменения переменных выполните `bun run build` ещё раз.
 
 ### 7. Опубликуйте сборку
 
