@@ -22,7 +22,7 @@ URL каждого секрета: `postgresql://<role>:<percent-encoded-passwor
 
 ## 2. Секреты и вход
 
-Вне checkout подготовьте новую директорию, например `/etc/want-wallpapers/secrets` с режимом 0700. На доверенной машине с Bun выполните:
+Вне checkout подготовьте новую директорию, например `/etc/want-wallpapers/secrets` с режимом 0700. Нужны Python 3 и Bun либо Docker. Без Bun скрипт использует закреплённый Bun-контейнер с отключённой сетью, read-only filesystem и паролем через stdin. Выполните:
 
 ```bash
 python3 scripts/create-secrets.py /absolute/path/outside-repository/secrets
@@ -39,11 +39,21 @@ sudo chown 10001:10001 /etc/want-wallpapers/secrets/*
 sudo chmod 400 /etc/want-wallpapers/secrets/*
 ```
 
-Не сохраняйте секреты в Git, Docker build args, образе или frontend. Файлы: database_url, migration_database_url, admin_password_hash, admin_totp_secret, catalog_api_token, postgres_ca.pem. Каталожный токен разрешает только каталог, без модерации/обращений/сессий.
+Не сохраняйте секреты в Git, Docker build args, образе или frontend. Файлы: database_url, migration_database_url, admin_password_hash, admin_totp_secret, catalog_api_token, postgres_ca.pem, google_application_credentials.json. Каталожный токен разрешает только каталог, без модерации/обращений/сессий.
+
+### reCAPTCHA Enterprise
+
+В Google Cloud project `want-wallpapers` включите reCAPTCHA Enterprise API. Создайте Web key со score-based integration для `wallpapers.want.foundation`, сохранив проверку домена. Переданное публичное значение `5465df27916cff0097d19961415940bc247e052d` нужно сверить с **reCAPTCHA → Keys → Key ID** перед запуском. Оно ещё не подтверждено реальным browser assessment; не используйте ID ключа сервисного аккаунта вместо Web key.
+
+Задайте в deploy/.env RECAPTCHA_PROJECT_ID=want-wallpapers, PUBLIC_RECAPTCHA_SITE_KEY=<проверенный Web Key ID>, RECAPTCHA_MIN_SCORE=0.5. Создайте сервисный аккаунт с минимальной ролью `roles/recaptchaenterprise.agent`; JSON разместите вне checkout как google_application_credentials.json. Compose монтирует его только в app: GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_application_credentials. Migrator и сборка его не получают. Не копируйте JSON в frontend, CI variables, build args или логи. [Создание Web key](https://docs.cloud.google.com/recaptcha/docs/create-key-website), [создание assessment](https://docs.cloud.google.com/recaptcha/docs/create-assessment-website).
+
+Production требует корректные настройки и файл credentials при старте; отключить CAPTCHA нельзя. Ошибка Google, низкий score, чужой action/hostname или просроченный/повторный токен блокируют действие. Во время сбоя просмотр и скачивания работают. Проверьте исходящий HTTPS к Google, время VPS и quotas проекта. Ошибки IAM/key/domain исправляйте в настройках, без ослабления защиты. Реальный assessment подтверждается отдельно на домене после деплоя; SDK stubs и CI synthetic credentials этого не доказывают.
+
+Enterprise.js загружается при отправке формы или оценки, включая admin login, независимо от согласия на необязательную Analytics. Google badge и ссылки Privacy/Terms сохраняются. CSP разрешает только нужные пути Google/gstatic; пользовательские поля Google не передаются.
 
 ## 3. Образ и Traefik
 
-Backend и frontend входят в один Rust-образ. Базовые образы закреплены digest, OCI labels содержат repository URL и revision. Checks выполняет audit, static/unit/API/UI/container проверки; после успеха main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`. PR, development и Rust-ветка только проверяются. Сборки выполняются в CI или на машине с достаточной памятью; малоресурсный VPS получает готовый образ. Workflow не подключается по SSH и не развёртывает сайт.
+Backend и frontend входят в один Rust-образ. Базовые образы закреплены digest, OCI labels содержат repository URL и revision. Checks выполняет audit, static/unit/API/UI и production TLS проверки на native amd64/arm64 runners; после успеха main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>` как multi-platform index linux/amd64 + linux/arm64. Публикуются именно проверенные образы из CI artifacts; повторной сборки между тестом и push нет. OCI revision обеих платформ совпадает с commit SHA. PR, development и Rust-ветка только проверяются. Сборки выполняются в CI или на машине с достаточной памятью; малоресурсный VPS получает готовый образ. Workflow не подключается по SSH и не развёртывает сайт.
 
 Для ручной сборки используйте проверенный checkout с доступным CDN:
 
@@ -85,7 +95,7 @@ curl --head https://wallpapers.want.foundation/admin/login/
 curl --fail https://wallpapers.want.foundation/sitemap-index.xml
 ```
 
-Проверьте реальные HTTPS, certificate chain, отсутствие edge cache у admin/API/health и IP посетителя в ограничении входа за Cloudflare/Traefik, noindex у admin, отсутствие admin/API в sitemap, новый домен в canonical/hreflang/OG/schema, четыре языка, изображения, обе загрузки и regional fallback. В `/admin/login/` войдите паролем/TOTP, проверьте редактирование переводов, архив/restore, комментарии, жалобы и обращения. Logout должен отзывать cookie. Каталожный токен должен получать 403 на moderation; проверяйте токен с защищённым config/header file, не через буквальный аргумент CLI. Сохраните результаты без секретов и персональных сообщений. Local/CI checks не подтверждают production.
+Проверьте реальные HTTPS, certificate chain, отсутствие edge cache у admin/API/health и IP посетителя в ограничении входа за Cloudflare/Traefik, noindex у admin, отсутствие admin/API в sitemap, новый домен в canonical/hreflang/OG/schema, четыре языка, изображения, обе загрузки и regional fallback. Проверьте настоящий Google assessment для оценки и обращения: action, hostname и score. Убедитесь, что запрос без токена и повторный токен блокируются. В `/admin/login/` войдите с CAPTCHA, паролем/TOTP, проверьте редактирование переводов, архив/restore, комментарии, жалобы и обращения. Logout должен отзывать cookie. Каталожный токен должен получать 403 на moderation; проверяйте токен с защищённым config/header file, не через буквальный аргумент CLI. Сохраните результаты без секретов и персональных сообщений. Local/CI checks не подтверждают production.
 
 ## 5. Обновления и rollback
 

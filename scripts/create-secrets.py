@@ -5,6 +5,7 @@ import getpass
 import os
 from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import sys
 
@@ -19,7 +20,8 @@ if len(password) < 16 or password != getpass.getpass('Repeat password: '): raise
 database_url = getpass.getpass('Application database URL: ')
 migration_url = getpass.getpass('Migration database URL: ')
 if not database_url or not migration_url: raise SystemExit('Both database URLs are required.')
-password_hash = subprocess.run(['bun', str(repository / 'scripts/password-hash.ts')], input=password, text=True, capture_output=True, check=True).stdout.strip()
+hash_command = ['bun', str(repository / 'scripts/password-hash.ts')] if shutil.which('bun') else ['docker', 'run', '--rm', '-i', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--memory', '256m', '--pids-limit', '32', '--mount', f"type=bind,src={repository / 'scripts/password-hash.ts'},dst=/password-hash.ts,readonly", 'oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4', 'bun', '/password-hash.ts']
+password_hash = subprocess.run(hash_command, input=password, text=True, capture_output=True, check=True).stdout.strip()
 values = [database_url, migration_url, password_hash, base64.b32encode(secrets.token_bytes(20)).decode(), secrets.token_hex(32)]
 directory.mkdir(mode=0o700, parents=True, exist_ok=True)
 if directory.stat().st_uid != os.getuid() or directory.stat().st_mode & 0o077: raise SystemExit('Secret directory must be owned by the current user with mode 0700.')

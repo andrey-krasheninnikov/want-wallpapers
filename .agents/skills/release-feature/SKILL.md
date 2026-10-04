@@ -52,3 +52,7 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 - Сохраните feature- и release-ветки. Завершите на синхронизированной development.
 - В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
 - Релиз Git не развёртывает контейнер на VPS. Деплой выполняется только по отдельному запросу.
+
+## Runtime и публикация образа
+
+Production reCAPTCHA обязательна для публичных изменений и admin login. Credentials находятся вне checkout и образа; migrate их не получает. Выполните make audit и make test-container. Native CI проверяет linux/amd64 и linux/arm64, затем публикует те же образы через artifacts. Подтвердите обе платформы, OCI revision, общий GHCR digest и anonymous pull по свежему readback. Передайте на VPS точные tag, main SHA и APP_IMAGE@sha256. Git release и synthetic Google tests не доказывают деплой или реальный assessment. На домене проверьте Web Key ID, IAM, action/hostname/score и вход; production bypass запрещён.

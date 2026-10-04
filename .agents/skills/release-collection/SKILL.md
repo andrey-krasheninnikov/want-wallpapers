@@ -66,6 +66,13 @@ git diff --check
 
 Соблюдайте правила запуска браузера из `AGENTS.md`. На новом каталоге проверяйте страницы коллекции и обоев во всех языках, canonical/hreflang, sitemap, описание/alt и structured data, поиск по описанию/тегам, фильтры и оба PNG-скачивания. Новый провал проверки блокирует merge; недоступную проверку сообщайте как непроверенную. Проверяйте реальные required CI checks, если они настроены. После конфликтов повторяйте затронутые проверки.
 
+## Runtime и публикация образа
+
+- Сохраняйте обязательную production reCAPTCHA: публичные изменения и admin login используют свежие action tokens. Не отключайте её ради CI или деплоя. Credentials остаются вне checkout и образа; migrate их не получает.
+- Выполните `make audit` и `make test-container`. Native CI проверяет linux/amd64 и linux/arm64, затем публикует именно проверенные images через artifacts. Подтвердите обе платформы, OCI revision и общий GHCR digest по свежему readback; не выдавайте локальную сборку за published image.
+- В передаче на VPS укажите точные tag, main SHA и APP_IMAGE@sha256. Проверьте публичный anonymous pull или согласованный read-only доступ. Git release и synthetic Google tests не подтверждают деплой или реальный assessment.
+- На VPS проверьте Web Key ID, domain, service account IAM, настоящий action/hostname/score, вход и публичную запись. При ошибках исправляйте настройки Google; не добавляйте production bypass.
+
 ## Возобновление
 
 - Сначала восстановите этап по серверным документам, PR и Git refs; не повторяйте неоднозначную публикацию вслепую. Восстановите выбранную версию из подтверждённого feature/release PR и changelog, а не увеличивайте уже выпущенную версию ещё раз.

@@ -33,7 +33,7 @@ catalog-pull:
 catalog-add:
 	bun run catalog:add "$(MANIFEST)" $(ARGS)
 docker-build:
-	docker build --build-arg VCS_REF="$$(git rev-parse HEAD)" --tag want-wallpapers:local .
+	docker build --build-arg VCS_REF="$$(git rev-parse HEAD)" --build-arg PUBLIC_FIREBASE_API_KEY --build-arg PUBLIC_FIREBASE_PROJECT_ID --build-arg PUBLIC_FIREBASE_APP_ID --build-arg PUBLIC_FIREBASE_MEASUREMENT_ID --tag want-wallpapers:local .
 deploy-config:
 	docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
 migrate:

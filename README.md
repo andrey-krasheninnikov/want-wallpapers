@@ -1,6 +1,6 @@
 # Want Wallpapers
 
-Дизайнерские обои Want на https://wallpapers.want.foundation/. Публичный интерфейс Astro/React/shadcn сохранён: коллекции, поиск, desktop/mobile PNG, четыре языка. Rust API хранит каталог и действия посетителей в PostgreSQL 18. Админка: `/admin/login/` и `/admin/`. Firebase используется только для необязательной Analytics.
+Дизайнерские обои Want на https://wallpapers.want.foundation/. Публичный интерфейс Astro/React/shadcn сохранён: коллекции, поиск, desktop/mobile PNG, четыре языка. Rust API хранит каталог и действия посетителей в PostgreSQL 18. Админка: `/admin/login/` и `/admin/`. Firebase используется только для необязательной Analytics. reCAPTCHA Enterprise защищает публичные изменения и вход в админку.
 
 ## Структура
 
@@ -30,7 +30,7 @@ Chromium запускается с включённым sandbox. На Ubuntu 24.
 
 ## Разработка
 
-`make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
+`make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
 
 ```bash
 set -a
@@ -75,6 +75,6 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 Analytics включается только с measurement ID, согласием посетителя и разрешённым регионом. Российский IP или ошибка ipwho.is отключает социальные функции, обращения и Analytics в публичном интерфейсе; просмотр, поиск и скачивание остаются. Админка работает независимо от региона. Закрытые обращения удаляются ежедневной задачей через год.
 
-Workflow Checks запускает проверки для PR, ручного запуска и push в main, development, feature/vps-traefik-deployment и feature/rust-backend-monorepo. После успешных проверок main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`; PR и Rust-ветка образ не публикуют. Деплой VPS выполняется отдельно. Для production используйте проверенный digest из результата публикации.
+Workflow Checks запускает проверки для PR, ручного запуска и push в main, development, feature/vps-traefik-deployment и feature/rust-backend-monorepo. После успешных native container проверок на amd64 и arm64 main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`. Это multi-platform index linux/amd64 + linux/arm64 из проверенных CI artifacts. PR и Rust-ветка образ не публикуют. Деплой VPS выполняется отдельно. Для production используйте проверенный digest из результата публикации.
 
 Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.
