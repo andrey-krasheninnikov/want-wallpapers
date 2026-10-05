@@ -75,7 +75,7 @@ class ReleaseResolution(unittest.TestCase):
                 ['verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish']]}],
         }
         stub = '''#!/usr/bin/env python3
-import json, os, sys
+import hashlib, json, os, sys
 from pathlib import Path
 fixture = json.loads(Path(os.environ['RELEASE_FIXTURE']).read_text())
 if Path(sys.argv[0]).name == 'gh':
@@ -89,14 +89,33 @@ if Path(sys.argv[0]).name == 'gh':
             state.touch()
             response = [{'workflow_runs': []}]
     print(json.dumps(response))
+elif Path(sys.argv[0]).name == 'curl':
+    configuration = sys.stdin.read()
+    assert not any('test-only' in argument or 'test+registry/token==' in argument for argument in sys.argv)
+    if '/token?' in sys.argv[-1]:
+        print(json.dumps({'token': 'test+registry/token=='}))
+    else:
+        assert 'Content-Type: application/vnd.oci.image.index.v1+json' in configuration
+        body = Path(sys.argv[sys.argv.index('--data-binary') + 1][1:]).read_bytes()
+        Path(os.environ['RELEASE_FIXTURE'] + '.published').write_bytes(body)
 else:
+    published = Path(os.environ['RELEASE_FIXTURE'] + '.published')
+    index_digest = 'sha256:' + hashlib.sha256(published.read_bytes()).hexdigest() if published.exists() else fixture['digest']
+    if sys.argv[1:4] == ['buildx', 'imagetools', 'create']:
+        index = fixture['index']
+        index['mediaType'] = 'application/vnd.docker.distribution.manifest.list.v2+json'
+        index.pop('annotations')
+        for manifest in index['manifests']:
+            manifest.update({'mediaType': 'application/vnd.docker.distribution.manifest.v2+json', 'size': 1000})
+        print(json.dumps(index))
+        sys.exit(0)
     if sys.argv[1:3] == ['image', 'inspect']:
         print(json.dumps(fixture['loadedImage']))
         sys.exit(0)
     reference = sys.argv[4]
     if '--raw' in sys.argv:
-        if reference.endswith(fixture['digest']) or reference.endswith('-73-1'):
-            print(json.dumps(fixture['index']))
+        if reference.endswith(index_digest) or reference.endswith('-73-1'):
+            print(published.read_text() if published.exists() else json.dumps(fixture['index']))
         else:
             platform = next(value for value in fixture['actualPlatforms'].values() if reference.endswith(value['digest']))
             print(json.dumps({'schemaVersion': 2, 'config': {'digest': platform['configDigest']}}))
@@ -105,9 +124,9 @@ else:
         print(json.dumps({'architecture': name.split('/')[1], 'os': 'linux',
             'config': {'Labels': {'org.opencontainers.image.revision': fixture['actualPlatforms'][name]['revision']}}}))
     else:
-        print(fixture['digest'])
+        print(index_digest)
 '''
-        for name in ['gh', 'docker']:
+        for name in ['gh', 'docker', 'curl']:
             executable = self.root / name
             executable.write_text(stub)
             executable.chmod(0o700)
@@ -123,7 +142,7 @@ else:
         return subprocess.run([sys.executable, str(COMMAND), *arguments],
             capture_output=True, text=True, env={**os.environ, 'PATH': str(self.root) + os.pathsep + os.environ['PATH'],
                 'RELEASE_FIXTURE': str(fixture), 'GITHUB_REPOSITORY': REPOSITORY, 'GITHUB_SHA': self.sha, 'GITHUB_EVENT_NAME': 'push', 'GITHUB_REF': 'refs/heads/main',
-                'GITHUB_RUN_ID': '73', 'GITHUB_RUN_ATTEMPT': '1'})
+                'GITHUB_RUN_ID': '73', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_ACTOR': 'release-owner', 'GHCR_TOKEN': 'test-only'})
 
     def resolve(self, *arguments):
         return self.execute(['resolve', '--tag', 'v1.4.0', '--timeout', '0', *arguments])
@@ -208,6 +227,19 @@ else:
         self.assertEqual(json.loads(result.stdout)['configDigest'], 'sha256:' + '5' * 64)
         self.loaded_image['Id'] = 'sha256:' + '0' * 64
         self.assertNotEqual(self.execute(['image', '--checked', str(checked), '--arch', 'amd64']).returncode, 0)
+
+    def test_docker_platform_manifests_publish_an_oci_index_with_durable_record(self):
+        record = self.root / 'release-record.json'
+        record.write_text(json.dumps(self.record))
+        result = self.execute(['publish-index', '--record', str(record)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        published = json.loads((self.root / 'fixture.json.published').read_text())
+        self.assertEqual(published['mediaType'], 'application/vnd.oci.image.index.v1+json')
+        self.assertEqual(json.loads(published['annotations']['foundation.want.wallpapers.release.v1']), self.record)
+        self.assertEqual({entry['digest'] for entry in published['manifests']},
+            {value['digest'] for value in self.record['platforms'].values()})
+        self.assertEqual(json.loads(result.stdout)['sourceSha'], self.sha)
+        self.assertEqual(json.loads(result.stdout)['platforms'], self.record['platforms'])
 
     def test_release_record_preserves_tested_platform_and_run_identity(self):
         for platform, value in self.record['platforms'].items():

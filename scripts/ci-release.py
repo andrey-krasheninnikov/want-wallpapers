@@ -2,6 +2,7 @@
 """Select CI checks and resolve the immutable evidence for a release tag."""
 import argparse
 import fnmatch
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -9,6 +10,7 @@ import re
 import subprocess
 import sys
 import time
+import tempfile
 
 REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 IMAGE = 'ghcr.io/' + REPOSITORY
@@ -26,8 +28,8 @@ def require(condition, message):
         raise ReleaseError(message)
 
 
-def command(arguments):
-    result = subprocess.run(arguments, text=True, capture_output=True, timeout=60)
+def command(arguments, input=None):
+    result = subprocess.run(arguments, input=input, text=True, capture_output=True, timeout=60)
     require(result.returncode == 0, f'{arguments[0]} {arguments[1]} failed; release evidence unavailable')
     return result.stdout.strip()
 
@@ -189,10 +191,46 @@ def create_record(arguments):
         'verificationRun': {'id': run_id, 'attempt': attempt, 'workflow': WORKFLOW}}
 
 
+def publish_index(arguments):
+    require(plan()['full'], 'Only canonical main verification can publish release records')
+    record = document(Path(arguments.record).read_text())
+    sha = source_sha(os.environ['GITHUB_SHA'])
+    run = {'id': int(os.environ['GITHUB_RUN_ID']), 'run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT'])}
+    require(record['schemaVersion'] == 1 and record['repository'] == REPOSITORY and record['sourceSha'] == sha
+        and record['verificationRun'] == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': WORKFLOW}, 'Release publication identity mismatch')
+    require(set(record['platforms']) == PLATFORMS, 'Release requires exactly amd64 and arm64')
+    references = [IMAGE + '@' + digest(record['platforms'][platform]['digest']) for platform in sorted(PLATFORMS)]
+    index = document(command(['docker', 'buildx', 'imagetools', 'create', '--dry-run', *references]))
+    descriptors = {entry['platform']['os'] + '/' + entry['platform']['architecture']: entry['digest'] for entry in index['manifests']}
+    require(index['schemaVersion'] == 2 and len(index['manifests']) == 2
+        and descriptors == {platform: checked['digest'] for platform, checked in record['platforms'].items()}, 'OCI index sources differ from the tested platforms')
+    index['mediaType'] = 'application/vnd.oci.image.index.v1+json'
+    index['annotations'] = {ANNOTATION: json.dumps(record, sort_keys=True),
+        'org.opencontainers.image.source': 'https://github.com/' + REPOSITORY, 'org.opencontainers.image.revision': sha}
+    body = json.dumps(index, sort_keys=True).encode()
+    expected_digest = 'sha256:' + hashlib.sha256(body).hexdigest()
+    reference = f"{sha}-{run['id']}-{run['run_attempt']}"
+    curl = ['curl', '-q', '--fail', '--silent', '--show-error', '--max-time', '60', '--config', '-']
+    credentials = os.environ['GITHUB_ACTOR'] + ':' + os.environ['GHCR_TOKEN']
+    authorization = document(command([*curl, 'https://ghcr.io/token?service=ghcr.io&scope=repository:' + REPOSITORY + ':pull,push'],
+        input='user = ' + json.dumps(credentials) + '\n'))['token']
+    require(isinstance(authorization, str) and re.fullmatch(r'[A-Za-z0-9._~+/\-]+=*', authorization), 'Invalid registry authorization response')
+    headers = 'header = ' + json.dumps('Authorization: Bearer ' + authorization) + '\n'
+    headers += 'header = ' + json.dumps('Content-Type: ' + index['mediaType']) + '\n'
+    with tempfile.TemporaryDirectory() as directory:
+        manifest = Path(directory) / 'index.json'
+        manifest.write_bytes(body)
+        command([*curl, '--request', 'PUT', '--data-binary', '@' + str(manifest),
+            'https://ghcr.io/v2/' + REPOSITORY + '/manifests/' + reference], input=headers)
+    return release_record(IMAGE + ':' + reference, sha, run, expected_digest)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('plan')
+    publication = commands.add_parser('publish-index')
+    publication.add_argument('--record', required=True)
     record = commands.add_parser('record')
     record.add_argument('--platform-directory', required=True)
     image = commands.add_parser('image')
@@ -205,7 +243,7 @@ def main():
     resolver.add_argument('--digest', help='Require the original index digest when repeating a release')
     arguments = parser.parse_args()
     try:
-        operations = {'plan': lambda: plan(), 'resolve': lambda: resolve(arguments), 'image': lambda: checked_image(arguments), 'record': lambda: create_record(arguments)}
+        operations = {'plan': lambda: plan(), 'resolve': lambda: resolve(arguments), 'image': lambda: checked_image(arguments), 'record': lambda: create_record(arguments), 'publish-index': lambda: publish_index(arguments)}
         value = operations[arguments.command]()
         print(json.dumps(value, sort_keys=True))
     except (ReleaseError, KeyError, TypeError, ValueError, AttributeError, IndexError, OSError, subprocess.TimeoutExpired) as error:

@@ -18,7 +18,7 @@
 
 До runtime-теста CI сохраняет Docker image ID, архитектуру и OCI revision. После PostgreSQL 18/TLS теста тот же image сохраняется через `docker save`. Publication job загружает artifact через `docker load`, сверяет image ID/platform/revision и публикует его без rebuild. У опубликованного platform manifest `config.digest` должен совпасть с проверенным image ID.
 
-Registry tags содержат source SHA, GitHub run ID и attempt: `<sha>-<run>-<attempt>-amd64`, `<sha>-<run>-<attempt>-arm64` и общий `<sha>-<run>-<attempt>`. OCI index содержит ровно linux/amd64 и linux/arm64 и собирается из их точных digests. Consumers используют `ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:<digest>`, без `latest` и без выбора по одному изменяемому registry tag.
+Registry tags содержат source SHA, GitHub run ID и attempt: `<sha>-<run>-<attempt>-amd64`, `<sha>-<run>-<attempt>-arm64` и общий `<sha>-<run>-<attempt>`. OCI index содержит ровно linux/amd64 и linux/arm64 и собирается из их точных digests. Buildx dry-run предоставляет descriptors; CLI явно задаёт OCI media type и record annotations и публикует index через Registry HTTP API. Обычные Docker platform manifests сохраняют прежние digests; их формат не может молча удалить index annotations. Readback сверяет digest отправленных bytes, record и обе платформы. Consumers используют `ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:<digest>`, без `latest` и без выбора по одному изменяемому registry tag.
 
 ## Долговечный release record
 
@@ -65,4 +65,4 @@ make check
 make test
 ```
 
-Проверьте workflows через actionlint. CLI-тесты выполняются через публичные команды `plan`, `image`, `record`, `resolve` с fixtures внешних GitHub/registry ответов. Они проверяют event matrix, защиту тега, отсутствие full jobs, failed/pending verification, source/run/platform/digest и повтор с исходным digest. Они не подтверждают реальную доставку Docker artifacts или native CI. После выпуска изменения в main отдельно сохраните реальные run IDs, оба image IDs/platform digests, общий index digest и результат раннего тега/manual retry.
+Проверьте workflows через actionlint. CLI-тесты выполняются через публичные команды `plan`, `image`, `record`, `publish-index`, `resolve` с fixtures внешних GitHub/registry ответов. Они проверяют event matrix, защиту тега, отсутствие full jobs, failed/pending verification, source/run/platform/digest и повтор с исходным digest. Они не подтверждают реальную доставку Docker artifacts или native CI. После выпуска изменения в main отдельно сохраните реальные run IDs, оба image IDs/platform digests, общий index digest и результат раннего тега/manual retry.

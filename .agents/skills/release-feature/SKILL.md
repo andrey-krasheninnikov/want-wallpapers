@@ -27,7 +27,7 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 
 1. Создайте `release/vMAJOR.MINOR.PATCH` от подтверждённого `origin/development` и опубликуйте её с собственным upstream.
 2. Отдельным release-коммитом синхронизируйте версию корневого `package.json`, workspace version в `Cargo.toml` и пакета в `Cargo.lock` с будущим тегом и добавьте запись в `CHANGELOG.md`. Укажите фактическую дату выпуска, пользу для посетителей и известные ограничения.
-3. На кандидате выполните проверки README: типы, поиск, Rust API на PostgreSQL 18, production build и полный UI-набор. Соблюдайте правила запуска браузера из `AGENTS.md`.
+3. На кандидате выполните make check, make test и git diff --check: static/type/format, unit и bounded API на PostgreSQL 18. Полный audit/UI/native runtime gate выполняет main после merge.
 4. Создайте PR release-ветки в `main`. Используйте обычный merge без squash и rebase, с `--match-head-commit` проверенного release HEAD.
 5. После merge подтвердите два родителя: проверенный прежний main и проверенный release HEAD. Зафиксируйте итоговый SHA main.
 

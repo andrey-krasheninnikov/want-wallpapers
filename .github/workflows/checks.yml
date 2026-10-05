@@ -209,21 +209,11 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
-          REFERENCE="$IMAGE:$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           trap 'docker logout ghcr.io' EXIT
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           python3 scripts/ci-release.py record --platform-directory "$RUNNER_TEMP/platforms" > "$RUNNER_TEMP/release-record.json"
-          AMD64="$(jq -r '.platforms["linux/amd64"].digest' "$RUNNER_TEMP/release-record.json")"
-          ARM64="$(jq -r '.platforms["linux/arm64"].digest' "$RUNNER_TEMP/release-record.json")"
-          docker buildx imagetools create --tag "$REFERENCE" \
-            --annotation "index:foundation.want.wallpapers.release.v1=$(cat "$RUNNER_TEMP/release-record.json")" \
-            --annotation "index:org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
-            --annotation "index:org.opencontainers.image.revision=$GITHUB_SHA" \
-            "$IMAGE@$AMD64" "$IMAGE@$ARM64"
-          DIGEST="$(docker buildx imagetools inspect "$REFERENCE" --format '{{.Manifest.Digest}}')"
-          docker buildx imagetools inspect "$IMAGE@$DIGEST" --raw > "$RUNNER_TEMP/runtime-manifest.json"
-          jq --exit-status '[.manifests[].platform | "\(.os)/\(.architecture)"] | sort == ["linux/amd64", "linux/arm64"]' "$RUNNER_TEMP/runtime-manifest.json"
-          jq --arg digest "$DIGEST" --arg image "$IMAGE@$DIGEST" '. + {indexDigest: $digest, image: $image}' "$RUNNER_TEMP/release-record.json" > "$RUNNER_TEMP/published-release.json"
+          python3 scripts/ci-release.py publish-index --record "$RUNNER_TEMP/release-record.json" > "$RUNNER_TEMP/published-release.json"
+          DIGEST="$(jq -r .indexDigest "$RUNNER_TEMP/published-release.json")"
           printf 'APP_IMAGE=%s@%s\nSource: %s\nRun: %s attempt %s\n' "$IMAGE" "$DIGEST" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
       - name: Release record copy
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
