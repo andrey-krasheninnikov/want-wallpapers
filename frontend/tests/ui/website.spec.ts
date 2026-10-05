@@ -433,3 +433,20 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     expect(await llms.text()).toContain(`## ${locale}\n`);
   });
 }
+
+test('feedback waits for hydration before accepting input', async ({ page }) => {
+  let resume!: () => void;
+  const hydration = new Promise<void>((resolve) => { resume = resolve; });
+  await page.route('**/_astro/*.js', async (route) => { await hydration; await route.continue(); });
+  try {
+    await page.goto('/ru/feedback/', { waitUntil: 'commit' });
+    await expect(page.getByLabel(copy.ru.topic)).toBeDisabled();
+    await expect(page.getByLabel(copy.ru.message)).toBeDisabled();
+    await expect(page.getByLabel(copy.ru.emailOptional)).toBeDisabled();
+    await expect(page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true })).toBeDisabled();
+  } finally { resume(); }
+  await page.getByLabel(copy.ru.topic).fill('Готовность формы');
+  await page.getByLabel(copy.ru.message).fill('Сообщение после подключения обработчиков.');
+  await page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true }).click();
+  await expect(page.getByText(copy.ru.feedbackThanks)).toBeVisible();
+});

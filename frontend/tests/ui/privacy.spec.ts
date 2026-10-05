@@ -1,10 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
 import type { Locale } from '../../src/data/catalog';
 
 const preferenceKey = 'want-cookie-preferences-v2';
+async function openSettings(page: Page) {
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+  await page.locator('[data-cookie-settings]').click();
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'DE' } }));
 });
@@ -18,7 +23,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
       await page.setViewportSize({ width, height: 900 });
       const banner = page.getByRole('region', { name: ui.cookieSettings, exact: true });
       if (await banner.isVisible()) await banner.getByRole('button', { name: ui.cookieSettings, exact: true }).click();
-      else await page.locator('[data-cookie-settings]').click();
+      else await openSettings(page);
       const dialog = page.getByRole('dialog', { name: ui.cookieSettings });
       const necessary = dialog.getByRole('switch', { name: text.necessary, exact: true });
       await expect(necessary).toBeChecked(); await expect(necessary).toBeDisabled();
@@ -36,7 +41,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
       await dialog.getByRole('button', { name: text.save, exact: true }).click();
       await expect(page.locator('[data-cookie-settings]')).toBeFocused();
       await page.reload();
-      await page.locator('[data-cookie-settings]').click();
+      await openSettings(page);
       await expect(page.getByRole('switch', { name: ui.analyticsLabel, exact: true })).toHaveAttribute('aria-checked', String(analytics));
       await expect(page.getByRole('switch', { name: ui.advertisingLabel, exact: true })).toHaveAttribute('aria-checked', String(advertising));
       await page.keyboard.press('Escape');
@@ -67,7 +72,7 @@ for (const [legacy, analytics] of [['essential', false], ['analytics', true]] as
       sessionStorage.setItem('want-region-v1', 'open');
     }, legacy);
     await page.goto('/ru/');
-    await page.locator('[data-cookie-settings]').click();
+    await openSettings(page);
     await expect(page.getByRole('switch', { name: copy.ru.analyticsLabel, exact: true })).toHaveAttribute('aria-checked', String(analytics));
     await expect(page.getByRole('switch', { name: copy.ru.advertisingLabel, exact: true })).not.toBeChecked();
     expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), preferenceKey)).toEqual({ analytics, advertising: false });
@@ -82,9 +87,9 @@ test('allow all stores both choices and withdrawal persists in another tab', asy
   const second = await context.newPage();
   await second.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'DE' } }));
   await second.goto('/ru/');
-  await second.locator('[data-cookie-settings]').click();
+  await openSettings(second);
   await second.getByRole('dialog').getByRole('button', { name: copy.ru.essentialOnly, exact: true }).click();
-  await page.locator('[data-cookie-settings]').click();
+  await openSettings(page);
   await expect(page.getByRole('switch', { name: copy.ru.analyticsLabel, exact: true })).not.toBeChecked();
   await expect(page.getByRole('switch', { name: copy.ru.advertisingLabel, exact: true })).not.toBeChecked();
   expect(optional).toEqual([]);
