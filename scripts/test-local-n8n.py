@@ -81,6 +81,7 @@ def main():
     try:
         with tempfile.TemporaryDirectory(prefix='wallpapers-n8n-check-') as temporary:
             fixtures = Path(temporary)
+            ready = workflow('LocalRecoveryReady', [], response_mode='onReceived')
             initialize = workflow('LocalRecoveryInit', [data_node('Create journal', {
                 'resource': 'table', 'operation': 'create', 'tableName': TABLE,
                 'columns': {'column': [{'name': 'runId', 'type': 'string'}, {'name': 'phase', 'type': 'string'}]},
@@ -97,7 +98,7 @@ def main():
                     'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
                     'options': {'timeout': 5000}},
                 'credentials': {'httpHeaderAuth': {'id': CREDENTIAL_ID, 'name': 'Local recovery fixture'}}}])
-            (fixtures / 'workflows.json').write_text(json.dumps([initialize, pause, read, credential_check]))
+            (fixtures / 'workflows.json').write_text(json.dumps([ready, initialize, pause, read, credential_check]))
             (fixtures / 'credential.json').write_text(json.dumps([{'id': CREDENTIAL_ID,
                 'name': 'Local recovery fixture', 'type': 'httpHeaderAuth',
                 'data': {'name': 'X-Local-Check', 'value': 'not-a-service-secret'}}]))
@@ -108,7 +109,7 @@ def main():
 
             def execute(identifier):
                 try:
-                    with urlopen(f'http://127.0.0.1:{port}/webhook/{identifier}', timeout=15) as response:
+                    with urlopen(f'http://127.0.0.1:{port}/webhook/{identifier}', timeout=30) as response:
                         return json.load(response)
                 except (OSError, ValueError):
                     raise RuntimeError(f'Local fixture endpoint failed: {identifier}.') from None
@@ -116,22 +117,33 @@ def main():
             def check_journal():
                 return sorted((row['runId'], row['phase']) for row in execute('LocalRecoveryRead'))
 
+            def wait_for(check, expected, timeout, message):
+                deadline = time.monotonic() + timeout
+                while True:
+                    try:
+                        if check() == expected:
+                            return
+                    except RuntimeError:
+                        pass
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError(message)
+                    time.sleep(1)
+
             expected = [('persistence-check', phase) for phase in ('resumed', 'started', 'waiting')]
             compose('up', '--detach', '--wait', '--wait-timeout', '180')
             print(f'Isolated n8n ready on loopback: {project}.', flush=True)
             compose('stop', '--timeout', '90', 'n8n')
             cli('import:workflow', '--input', '/fixtures/workflows.json')
             cli('import:credentials', '--input', '/fixtures/credential.json')
-            for item in (initialize, pause, read, credential_check):
+            for item in (ready, initialize, pause, read, credential_check):
                 cli('publish:workflow', '--id', item['id'])
             compose('up', '--detach', '--wait', '--wait-timeout', '180')
+            wait_for(lambda: execute('LocalRecoveryReady'), {'message': 'Workflow was started'},
+                90, 'The local fixture endpoint did not become ready.')
             execute('LocalRecoveryInit')
             execute('LocalRecoveryWait')
-            deadline = time.monotonic() + 15
-            while check_journal() != [('persistence-check', 'started'), ('persistence-check', 'waiting')]:
-                if time.monotonic() >= deadline:
-                    raise RuntimeError('The local Wait workflow did not reach its checkpoint.')
-                time.sleep(1)
+            wait_for(check_journal, [('persistence-check', 'started'), ('persistence-check', 'waiting')],
+                30, 'The local Wait workflow did not reach its checkpoint.')
             resume_at = time.monotonic() + 92
             compose('stop', '--timeout', '90', 'n8n')
             print('90-second Wait entered; test instance stopped before its deadline.', flush=True)
@@ -142,20 +154,12 @@ def main():
             while time.monotonic() < resume_at:
                 time.sleep(1)
             compose('up', '--detach', '--wait', '--wait-timeout', '180')
-            deadline = time.monotonic() + 40
-            while check_journal() != expected:
-                if time.monotonic() >= deadline:
-                    raise RuntimeError('The original instance did not catch up exactly once after downtime.')
-                time.sleep(1)
+            wait_for(check_journal, expected, 90, 'The original instance did not catch up exactly once after downtime.')
             print('Restart resumed the overdue Wait once; journal survived.', flush=True)
             compose('stop', '--timeout', '90', 'n8n')
             environment['N8N_DATA_VOLUME'] = restored_volume
             compose('up', '--detach', '--force-recreate', '--wait', '--wait-timeout', '180')
-            deadline = time.monotonic() + 40
-            while check_journal() != expected:
-                if time.monotonic() >= deadline:
-                    raise RuntimeError('The restored instance did not resume its saved Wait exactly once.')
-                time.sleep(1)
+            wait_for(check_journal, expected, 90, 'The restored instance did not resume its saved Wait exactly once.')
             accepted = execute('LocalRecoveryCredentialCheck')
             if accepted != [{'credentialAccepted': True}]:
                 raise RuntimeError('The restored key did not decrypt the synthetic credential.')
