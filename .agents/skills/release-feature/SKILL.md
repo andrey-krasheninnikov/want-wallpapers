@@ -33,10 +33,10 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 
 ## 3. Защищённый тег
 
-- До публикации тега проверьте или создайте активный tag ruleset `Protect release tags` для `refs/tags/v*`: запрет обновления и удаления, без bypass actors. Создание новых тегов разрешено. Прочитайте сохранённое правило через GitHub API.
+- До публикации тега прочитайте [контракт release gate](../../../docs/ci-releases.md). Сверьте `.github/release-policy.json` с текущим ruleset; обновлённые правила требуют полного readback без bypass и отдельного проверенного изменения policy. Проверьте или создайте активный tag ruleset `Protect release tags` для `refs/tags/v*`: запрет обновления и удаления, без bypass actors. Создание новых тегов разрешено. Прочитайте сохранённое правило через GitHub API.
 - Создайте annotated тег `vMAJOR.MINOR.PATCH` на подтверждённом merge-коммите main с сообщением `Release MAJOR.MINOR.PATCH`.
 - Опубликуйте только нужный тег обычным push. Проверьте серверный tag object и peeled SHA; peeled SHA должен совпасть с зафиксированным main.
-- Существующий тег не перемещайте и не удаляйте. При неоднозначном результате сначала прочитайте серверное состояние.
+- Существующий тег не перемещайте и не удаляйте. Push тега запускает только Release eligibility, без тяжёлых проверок. Ранний тег ожидает успешный main run/attempt и matching publication до 90 минут; ошибка или timeout блокирует дальнейший выпуск. Сохраните outputs tag/SHA/run/attempt/APP_IMAGE@digest и обе platform revisions. Для повторного допуска передавайте исходный digest; не подменяйте его новой публикацией того же SHA. При неоднозначном результате сначала прочитайте серверное состояние.
 
 ## 4. Main обратно в development
 
@@ -48,11 +48,11 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 
 ## 5. GitHub Release и отчёт
 
-- После проверки Gitflow создайте стабильный GitHub Release на существующем теге с `--verify-tag` и `--latest`. Передайте описание из changelog через `--notes-file`; проверьте фактическую страницу релиза.
+- После проверки Gitflow и успешного Release eligibility создайте стабильный GitHub Release на существующем теге с `--verify-tag` и `--latest`. Передайте описание из changelog через `--notes-file`; проверьте фактическую страницу релиза.
 - Сохраните feature- и release-ветки. Завершите на синхронизированной development.
-- В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
+- В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset, main/gate run IDs, точный image digest и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
 - Релиз Git не развёртывает контейнер на VPS. Деплой выполняется только по отдельному запросу.
 
 ## Runtime и публикация образа
 
-Production reCAPTCHA обязательна для публичных изменений и admin login. Credentials находятся вне checkout и образа; migrate их не получает. Выполните make audit и make test-container. Native CI проверяет linux/amd64 и linux/arm64, затем публикует те же образы через artifacts. Подтвердите обе платформы, OCI revision, общий GHCR digest и anonymous pull по свежему readback. Передайте на VPS точные tag, main SHA и APP_IMAGE@sha256. Git release и synthetic Google tests не доказывают деплой или реальный assessment. На домене проверьте Web Key ID, IAM, action/hostname/score и вход; production bypass запрещён.
+Production reCAPTCHA обязательна для публичных изменений и admin login. Credentials находятся вне checkout и образа; migrate их не получает. На feature/release выполняйте make check, make test и git diff --check. Используйте полный main Checks run: audit, UI и native linux/amd64 и linux/arm64 PostgreSQL 18/TLS; затем он публикует те же образы через artifacts без rebuild. Подтвердите обе платформы, OCI revision, общий GHCR digest и anonymous pull по свежему readback. Передайте на VPS record успешного Release eligibility с точными tag, main SHA, run/attempt и APP_IMAGE@sha256. Git release и synthetic Google tests не доказывают деплой или реальный assessment. На домене проверьте Web Key ID, IAM, action/hostname/score и вход; production bypass запрещён.
