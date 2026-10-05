@@ -1,0 +1,85 @@
+name: Release eligibility
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Protected annotated release tag
+        required: true
+        type: string
+      index_digest:
+        description: Original sha256 digest required for a release retry
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      index_digest:
+        required: false
+        type: string
+    outputs:
+      source_sha:
+        value: ${{ jobs.resolve.outputs.source_sha }}
+      image:
+        value: ${{ jobs.resolve.outputs.image }}
+      index_digest:
+        value: ${{ jobs.resolve.outputs.index_digest }}
+      release_record:
+        value: ${{ jobs.resolve.outputs.release_record }}
+permissions:
+  contents: read
+  actions: read
+  packages: read
+concurrency:
+  group: release-eligibility-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  resolve:
+    if: >-
+      github.repository == 'andrey-krasheninnikov/want-wallpapers' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+       (github.ref == 'refs/heads/main' && inputs.tag != '') ||
+       (startsWith(github.ref, 'refs/tags/v') && inputs.tag != ''))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+    outputs:
+      source_sha: ${{ steps.release.outputs.source_sha }}
+      image: ${{ steps.release.outputs.image }}
+      index_digest: ${{ steps.release.outputs.index_digest }}
+      release_record: ${{ steps.release.outputs.release_record }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Resolve verified release evidence
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_DIGEST: ${{ inputs.index_digest }}
+        run: |
+          TAG="${INPUT_TAG:-$GITHUB_REF_NAME}"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            test -n "$INPUT_DIGEST"
+          fi
+          ARGUMENTS=(resolve --tag "$TAG" --timeout 5400)
+          if [ -n "$INPUT_DIGEST" ]; then
+            ARGUMENTS+=(--digest "$INPUT_DIGEST")
+          fi
+          trap 'docker logout ghcr.io' EXIT
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          python3 scripts/ci-release.py "${ARGUMENTS[@]}" > "$RUNNER_TEMP/eligible-release.json"
+          jq -r '"source_sha=\(.sourceSha)", "image=\(.image)", "index_digest=\(.indexDigest)"' "$RUNNER_TEMP/eligible-release.json" >> "$GITHUB_OUTPUT"
+          printf 'release_record=%s\n' "$(jq -c . "$RUNNER_TEMP/eligible-release.json")" >> "$GITHUB_OUTPUT"
+          jq -r '"Tag: \(.tag)\nCommit: \(.sourceSha)\nAPP_IMAGE=\(.image)\nRun: \(.verificationRun.id) attempt \(.verificationRun.attempt)"' "$RUNNER_TEMP/eligible-release.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Eligibility evidence copy
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: eligible-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/eligible-release.json
+          retention-days: 90
+          if-no-files-found: error
