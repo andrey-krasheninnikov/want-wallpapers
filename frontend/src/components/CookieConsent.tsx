@@ -38,7 +38,10 @@ export default function CookieConsent({ locale, analyticsAvailable }: { locale: 
       event.preventDefault(); openSettings();
     };
     document.addEventListener('click', settings);
+    const trigger = document.querySelector('[data-cookie-settings]');
+    trigger?.setAttribute('aria-haspopup', 'dialog');
     return () => {
+      trigger?.removeAttribute('aria-haspopup');
       document.removeEventListener('click', settings);
       window.removeEventListener('want:privacy', update);
     };

@@ -6,8 +6,9 @@ import type { Locale } from '../../src/data/catalog';
 
 const preferenceKey = 'want-cookie-preferences-v2';
 async function openSettings(page: Page) {
-  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
-  await page.locator('[data-cookie-settings]').click();
+  const trigger = page.locator('[data-cookie-settings]');
+  await expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+  await trigger.click();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -113,4 +114,20 @@ test('private pages ignore previously enabled optional preferences', async ({ pa
   await page.goto('/admin/login/');
   await expect(page.getByRole('heading', { name: 'Вход в управление' })).toBeVisible();
   expect(requests.some((url) => /ipwho|google-analytics|googletagmanager|firebase/.test(url))).toBe(false);
+});
+
+test('cookie settings link advertises a dialog only after its handler mounts', async ({ page }) => {
+  let resume!: () => void;
+  const hydration = new Promise<void>((resolve) => { resume = resolve; });
+  await page.route('**/_astro/*.js', async (route) => { await hydration; await route.continue(); });
+  try {
+    await page.goto('/ru/', { waitUntil: 'commit' });
+    const trigger = page.locator('[data-cookie-settings]');
+    await expect(trigger).toHaveAttribute('href', '/ru/cookies/');
+    await expect(trigger).not.toHaveAttribute('aria-haspopup', 'dialog');
+  } finally { resume(); }
+  await openSettings(page);
+  await expect(page.getByRole('dialog', { name: copy.ru.cookieSettings })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-cookie-settings]')).toBeFocused();
 });
