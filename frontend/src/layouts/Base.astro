@@ -25,10 +25,10 @@ const analyticsAvailable = isAnalyticsConfigured();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#090911" />
     <meta name="description" content={description} />
-    {noindex && <meta name="robots" content="noindex" />}
+    {noindex && <meta name="robots" content={path === "/search/" ? "noindex, follow" : "noindex"} />}
     <link rel="canonical" href={canonical.href} />
-    {locales.map((lang) => <link rel="alternate" hreflang={lang === 'zh-cn' ? 'zh-CN' : lang === 'pt-br' ? 'pt-BR' : lang} href={new URL(localPath(lang, path), Astro.site).href} />)}
-    <link rel="alternate" hreflang="x-default" href={new URL(localPath('en', path), Astro.site).href} />
+    {!noindex && locales.map((lang) => <link rel="alternate" hreflang={lang === 'zh-cn' ? 'zh-CN' : lang === 'pt-br' ? 'pt-BR' : lang} href={new URL(localPath(lang, path), Astro.site).href} />)}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={new URL(localPath('en', path), Astro.site).href} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Want Wallpapers" />
     <meta property="og:title" content={fullTitle} />
@@ -45,8 +45,8 @@ const analyticsAvailable = isAnalyticsConfigured();
   <body>
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
     <Header locale={locale} path={path} logo={logoUrl} client:load />
-    <main id="main" tabindex="-1"><slot /></main>
-    <Footer locale={locale} logo={logoUrl} />
+    <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
+    <Fragment set:html={"<!--email_off-->"} /><Footer locale={locale} logo={logoUrl} /><Fragment set:html={"<!--/email_off-->"} />
     <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
   </body>
 </html>

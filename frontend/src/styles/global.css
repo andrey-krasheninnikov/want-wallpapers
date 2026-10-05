@@ -67,6 +67,36 @@
 }
 
 @layer components {
+  .ui-button-base { @apply inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-normal transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4; }
+  .ui-button-default { @apply bg-primary text-primary-foreground hover:bg-primary/90; }
+  .ui-button-destructive { @apply bg-destructive text-background hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40; }
+  .ui-button-outline { @apply border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50; }
+  .ui-button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/80; }
+  .ui-button-ghost { @apply hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50; }
+  .ui-button-link { @apply text-link underline-offset-4 hover:underline; }
+  .ui-button-size-default { @apply min-h-11 px-4 py-3 has-[>svg]:px-3; }
+  .ui-button-size-xs { @apply min-h-11 gap-1 rounded-md px-2 text-sm has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3; }
+  .ui-button-size-sm { @apply min-h-11 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5; }
+  .ui-button-size-lg { @apply min-h-12 rounded-md px-6 has-[>svg]:px-4; }
+  .ui-button-size-icon-xs { @apply size-11 rounded-md [&_svg:not([class*='size-'])]:size-3; }
+  .ui-badge-base { @apply inline-flex w-fit max-w-full shrink-0 items-center justify-center gap-1 rounded-md border border-transparent px-3 py-1 text-sm font-medium whitespace-normal transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3; }
+  .ui-badge-default { @apply bg-primary text-primary-foreground [a&]:hover:bg-primary/90; }
+  .ui-badge-secondary { @apply bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90; }
+  .ui-badge-destructive { @apply bg-destructive text-background focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90; }
+  .ui-badge-outline { @apply border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground; }
+  .ui-badge-ghost { @apply [a&]:hover:bg-accent [a&]:hover:text-accent-foreground; }
+  .ui-badge-link { @apply text-link underline-offset-4 [a&]:hover:underline; }
+  .ui-card-base { @apply flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm; }
+  .ui-card-header { container-type: inline-size; container-name: card-header; @apply grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6; }
+  .ui-card-footer { @apply flex items-center px-6 [.border-t]:pt-6; }
+  .gallery-card { @apply h-full gap-0 overflow-hidden py-0 shadow-none transition-colors hover:border-ring/60; }
+  .original-preview summary { @apply min-h-11 cursor-pointer rounded-md border px-4 py-3 text-sm text-link; }
+  .original-preview img { @apply mt-3 h-auto w-full rounded-md; }
+  .editorial { @apply max-w-3xl; }
+  .editorial h2 { @apply text-2xl font-semibold tracking-tight; }
+  .editorial h3 { @apply mt-6 text-lg font-semibold; }
+  .editorial p, .editorial ul { @apply mt-4 text-base leading-relaxed text-muted-foreground; }
+  .editorial a { @apply text-link underline; }
   .shell { width: min(100% - 2rem, 1280px); margin-inline: auto; }
   .section-space { padding-top: 4rem; }
   .page-heading { padding-block: 2.5rem 2rem; }

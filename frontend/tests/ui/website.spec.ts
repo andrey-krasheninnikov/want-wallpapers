@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { database } from './database';
 import { copy, localPath } from '../../src/data/copy';
@@ -52,7 +53,8 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         }
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
-        await expect(page.locator('link[rel="alternate"]')).toHaveCount(5);
+        await expect(page.locator('link[rel="alternate"]')).toHaveCount(['/search/', '/404/'].includes(path) ? 0 : 5);
+        if (path === '/search/') await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow');
         if (path === '/') {
           await expect(page.locator('main .eyebrow')).toHaveCount(0);
           await expect(page.locator('main figure a').first()).toHaveAttribute('href', localPath(locale, '/wallpapers/contours-of-silence-11/'));
@@ -161,7 +163,11 @@ for (const [slug, number] of [['where-stars-graze', 4], ['a-night-beneath-the-ic
       await expect(page.locator('#detail-image')).toHaveAttribute('alt', design.description[locale]);
       const download = page.waitForEvent('download');
       await page.locator('#download-link').click();
-      expect((await download).suggestedFilename()).toBe(`${design.slug}-${variant}.png`);
+      const saved = await download;
+      expect(saved.suggestedFilename()).toBe(`${design.slug}-${variant}.png`);
+      expect(await readFile((await saved.path())!)).toEqual(await readFile(new URL(`../../public/downloads/${design.slug}-${variant}.png`, import.meta.url)));
+      const response = await request.get(downloadUrl(design, variant));
+      expect(await response.body()).toEqual(await readFile((await saved.path())!));
     }
     const social = await request.get(`/api/v1/wallpapers/${design.id}/social`);
     expect(social.status()).toBe(200);
@@ -175,13 +181,13 @@ test('variant selection and downloads survive a failed region lookup', async ({ 
   await expect(page.locator('[data-social-panel]')).toBeVisible();
   await page.getByRole('tab', { name: copy.ru.mobile }).click();
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${wallpaper}-mobile.webp`);
-  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-mobile.png`);
+  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpaper}-mobile.png`);
   expect(await page.locator('#detail-image').evaluate((image: HTMLImageElement) => ({ fit: getComputedStyle(image).objectFit, width: image.width, naturalWidth: image.naturalWidth }))).toMatchObject({ fit: 'contain' });
   const download = page.waitForEvent('download');
   await page.locator('#download-link').click();
   expect((await download).suggestedFilename()).toBe(`${wallpaper}-mobile.png`);
   await page.getByRole('tab', { name: copy.ru.desktop }).click();
-  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-desktop.png`);
+  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpaper}-desktop.png`);
 });
 
 test('search URLs, filters, empty state and reset', async ({ page }) => {
@@ -307,8 +313,8 @@ test('catalogue, metadata and both PNG links render with JavaScript disabled', a
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:4322/ru/wallpapers/${wallpaper}/`);
   await expect(page.locator('h1')).toHaveText('Фиолетовый горизонт');
-  await expect(page.locator(`a[href="/downloads/${wallpaper}-desktop.png"]`)).toBeVisible();
-  await expect(page.locator(`a[href="/downloads/${wallpaper}-mobile.png"]`)).toBeVisible();
+  await expect(page.locator(`form[action="/downloads/${wallpaper}-desktop.png"] button`)).toBeVisible();
+  await expect(page.locator(`form[action="/downloads/${wallpaper}-mobile.png"] button`)).toBeVisible();
   expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}')['@type']).toBe('ImageObject');
   await expect(page.locator('main noscript p')).toHaveText(interfaceCopy.ru.javascriptRequired);
   await expect(page.locator('main noscript p')).toBeVisible();
@@ -336,3 +342,92 @@ test('FAQ keyboard interaction and language selection preserve the current page'
   await expect(page).toHaveURL(`/wallpapers/${wallpaper}/`);
   await expect(page.locator('h1')).toHaveText('Violet Horizon');
 });
+
+for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
+  test(`native PNG downloads without JavaScript: ${locale}`, async ({ browser, request }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(`http://127.0.0.1:4322${localPath(locale, `/wallpapers/${wallpaper}/`)}`);
+    await expect(page.locator('footer a[href="mailto:wallpapers@want.foundation"]')).toBeVisible();
+    for (const variant of ['desktop', 'mobile'] as const) {
+      const form = page.locator(`form[action="/downloads/${wallpaper}-${variant}.png"]`);
+      await expect(form).toHaveAttribute('method', 'get');
+      const waiting = page.waitForEvent('download');
+      await form.getByRole('button').click();
+      const download = await waiting;
+      expect(download.suggestedFilename()).toBe(`${wallpaper}-${variant}.png`);
+      const bytes = await readFile((await download.path())!);
+      expect(bytes).toEqual(await readFile(new URL(`../../public/downloads/${wallpaper}-${variant}.png`, import.meta.url)));
+      const response = await request.get(`/downloads/${wallpaper}-${variant}.png`);
+      expect(response.headers()['content-type']).toContain('image/png');
+      expect(response.headers()['content-disposition']).toBe(`attachment; filename="${wallpaper}-${variant}.png"`);
+      expect(await response.body()).toEqual(bytes);
+    }
+    const summary = page.locator('details.original-preview summary');
+    await summary.press('Enter');
+    await expect(page.locator('details.original-preview')).toHaveAttribute('open', '');
+    await expect(page.locator('details.original-preview img')).toBeVisible();
+    await expect(summary).toBeFocused();
+    // axe needs JavaScript timers; inspect the same no-script DOM with site scripts removed.
+    const html = await new HTMLRewriter().on('script', { element(element) { element.remove(); } }).on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(await page.content())).text();
+    const accessibilityContext = await browser.newContext({ viewport: { width: 320, height: 900 } });
+    const accessibilityPage = await accessibilityContext.newPage();
+    await accessibilityPage.route(page.url(), (route) => route.fulfill({ contentType: 'text/html', body: html }));
+    await accessibilityPage.goto(page.url());
+    await expect(accessibilityPage.locator('form button')).toHaveCount(await page.locator('form button').count());
+    const accessibility = await new AxeBuilder({ page: accessibilityPage }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
+    expect(accessibility.violations).toEqual([]);
+    await accessibilityContext.close();
+    await context.close();
+  });
+
+  test(`original preview, download event and search history: ${locale}`, async ({ page, request }, testInfo) => {
+    await page.route('https://ipwho.is/**', (route) => route.abort());
+    await page.goto(localPath(locale, `/wallpapers/${wallpaper}/`));
+    await dismissCookies(page, locale);
+    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await page.evaluate(() => window.addEventListener('want:download', (event) => { document.body.dataset.lastDownload = JSON.stringify((event as CustomEvent).detail); }));
+    for (const variant of ['desktop', 'mobile'] as const) {
+      await page.getByRole('tab', { name: copy[locale][variant], exact: true }).click();
+      const summary = page.locator('details.original-preview summary');
+      await summary.press('Enter');
+      await expect(summary).toBeFocused();
+      await expect(page.locator('details.original-preview img')).toHaveAttribute('src', `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-${variant}.png`);
+      await expect(page.locator('details.original-preview img')).toBeVisible();
+      await expect.poll(() => page.locator('details.original-preview img').evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      for (const width of [320, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
+        await page.screenshot({ path: testInfo.outputPath(`original-${variant}-${width}.png`), fullPage: true });
+      }
+      const waiting = page.waitForEvent('download');
+      await page.locator('#download-link').focus();
+      await page.keyboard.press('Enter');
+      const download = await waiting;
+      expect(download.suggestedFilename()).toBe(`${wallpaper}-${variant}.png`);
+      expect(await readFile((await download.path())!)).toEqual(await readFile(new URL(`../../public/downloads/${wallpaper}-${variant}.png`, import.meta.url)));
+      await expect(page.locator('body')).toHaveAttribute('data-last-download', JSON.stringify({ wallpaper, variant }));
+    }
+    const query = tagLabels.city[locale];
+    const searchParameters = new URLSearchParams({ q: query, category: 'fantasy', collection: 'path-to-the-light' });
+    await page.goto(localPath(locale, '/search/') + '?' + searchParameters);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow');
+    await expect(page.locator('link[hreflang]')).toHaveCount(0);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, '/search/')}`);
+    await expect(page.locator('[data-wallpaper-card]')).toHaveCount(1);
+    await page.locator('[data-wallpaper-card] a').click();
+    await page.goBack();
+    await expect(page.getByRole('searchbox')).toHaveValue(query);
+    expect(new URL(page.url()).searchParams.toString()).toBe(searchParameters.toString());
+    await expect(page.locator('[data-wallpaper-card]')).toHaveCount(1);
+    await page.getByRole('searchbox').fill('no-matching-design-731');
+    await expect(page.getByText(copy[locale].noResults, { exact: true })).toBeVisible();
+    const sitemap = await request.get('/sitemap-0.xml');
+    expect(await sitemap.text()).not.toContain('/search/');
+    const llms = await request.get('/llms.txt');
+    expect(llms.status()).toBe(200);
+    expect(llms.headers()['content-type']).toContain('text/plain');
+    expect(await llms.text()).toContain(`## ${locale}\n`);
+  });
+}
