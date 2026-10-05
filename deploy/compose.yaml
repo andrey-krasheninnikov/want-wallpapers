@@ -45,7 +45,8 @@ services:
     networks:
       traefik:
         aliases: [wallpapers]
-      egress: {}
+      egress:
+        gw_priority: 1
   migrate:
     <<: *runtime
     profiles: [operations]

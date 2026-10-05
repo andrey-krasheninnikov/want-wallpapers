@@ -27,6 +27,7 @@ for service in [app, migrate]:
 assert int(app['mem_limit']) == 512 * 1024 ** 2 and int(migrate['mem_limit']) == 128 * 1024 ** 2
 assert set(app['networks']) == {'traefik', 'egress'}
 assert app['networks']['traefik']['aliases'] == ['wallpapers']
+assert app['networks']['egress'].get('gw_priority') == 1, 'Egress default gateway must be explicit.'
 assert set(migrate['networks']) == {'egress'} and not (migrate['networks']['egress'] or {}).get('aliases')
 assert all(profile['networks'][name]['external'] for name in ['traefik', 'egress'])
 assert {secret['source'] for secret in app['secrets']} == {

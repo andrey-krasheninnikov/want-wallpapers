@@ -24,4 +24,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE :"migrator_role" REVOKE ALL ON SEQUENCES FROM 
 ALTER DEFAULT PRIVILEGES FOR ROLE :"migrator_role" IN SCHEMA public REVOKE ALL ON SEQUENCES FROM PUBLIC, :"runtime_role";
 ALTER DEFAULT PRIVILEGES FOR ROLE :"migrator_role" REVOKE ALL ON FUNCTIONS FROM PUBLIC, :"runtime_role";
 ALTER DEFAULT PRIVILEGES FOR ROLE :"migrator_role" IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM PUBLIC, :"runtime_role";
+-- Remove only the reported reciprocal table defaults for the other known role.
+ALTER DEFAULT PRIVILEGES FOR ROLE :"runtime_role" REVOKE ALL ON TABLES FROM :"migrator_role";
+ALTER DEFAULT PRIVILEGES FOR ROLE :"runtime_role" IN SCHEMA public REVOKE ALL ON TABLES FROM :"migrator_role";
 COMMIT;

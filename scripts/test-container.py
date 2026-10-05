@@ -103,6 +103,9 @@ for _ in range(2):
 run(psql, f'ALTER DEFAULT PRIVILEGES FOR ROLE "{migrator}" GRANT SELECT ON TABLES TO "{role}";')
 unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
 assert unsafe.returncode != 0, 'Broad default privileges must fail verification.'
+# Reproduce the two reciprocal public defaults reported on the production database.
+run(psql, 'ALTER DEFAULT PRIVILEGES FOR ROLE :"migrator_role" IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO :"runtime_role"; ALTER DEFAULT PRIVILEGES FOR ROLE :"runtime_role" IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLES TO :"migrator_role";')
+run(psql, f'GRANT TEMPORARY ON DATABASE {database} TO "{role}"; GRANT SELECT, UPDATE ON public.audit_log_id_seq TO "{role}"; REVOKE USAGE ON public.audit_log_id_seq FROM "{role}";')
 hardening = (repository / 'deploy/runtime-hardening.sql').read_text()
 # Reviewed remediation clears known excessive ACLs, never ownership or memberships.
 run(psql, f'GRANT ALL ON public.audit_log, public._sqlx_migrations TO "{role}";')
@@ -136,6 +139,7 @@ try:
     assert set(running['NetworkSettings']['Networks']) == {proxy, network}
     assert 'wallpapers' in running['NetworkSettings']['Networks'][proxy]['Aliases']
     assert 'wallpapers' not in running['NetworkSettings']['Networks'][network]['Aliases']
+    assert running['NetworkSettings']['Networks'][network]['GwPriority'] == 1
     assert json.loads(run(['docker', 'network', 'inspect', proxy]))[0]['Internal']
     assert not json.loads(run(['docker', 'network', 'inspect', network]))[0]['Internal']
     mounted = {mount['Destination'] for mount in running['Mounts']}
