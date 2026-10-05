@@ -14,3 +14,18 @@ One catalogue contains collections. Each collection contains wallpapers.
 - **Archive**: hides a collection or wallpaper from the next public catalogue export while keeping its identity and social data.
 - **Snapshot**: validated catalogue JSON used to build public pages and search.
 - **Administrator**: the single account protected by password and TOTP; its session is separate from anonymous visitors.
+
+## Collection lifecycle
+
+**Collection cover**:
+Static or moving artwork that represents a collection before a visitor opens an individual wallpaper.
+
+**Collection draft**:
+A proposed collection with its wallpaper variants and localized content, awaiting owner approval or publication.
+
+**Collection publication**:
+A collection becoming available on the public site with its localized pages and working downloads.
+_Avoid_: publication when referring only to an external announcement.
+
+**Collection announcement**:
+A post on an external channel that introduces an already published collection and directs readers to the site.

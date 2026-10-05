@@ -1,0 +1,5 @@
+# 0005: Separate regional ad selection from feature availability
+
+Status: accepted; implementation pending. Replaces the availability and consent decisions in [0002](0002-region-and-consent.md) and the regional-policy paragraph of [0004](0004-rust-monorepo.md).
+
+Ratings, comments, feedback and analytics will no longer be disabled solely because a visitor is in Russia or a country lookup fails; analytics remains subject to consent and configuration, and authentication, CSRF, ownership, rate limits and production reCAPTCHA remain independent. Optional analytics and advertising default to enabled for new visitors outside the EEA, while EEA visitors and unknown-country results require an explicit choice; stored refusals are preserved and advertising consent is independent of an earlier analytics choice. Country selection uses Yandex for RU/KZ/BY and Adsterra elsewhere, including unknown-country results after consent, while downloads stay available when advertising is declined, dismissed or unavailable.
