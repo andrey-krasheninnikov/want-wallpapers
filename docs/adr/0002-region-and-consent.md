@@ -2,7 +2,7 @@
 
 Status: superseded in backend and deployment details by [0004](0004-rust-monorepo.md)
 
-The replacement availability, consent and advertising decisions are recorded in [0005](0005-regional-availability-and-consent.md). Their implementation is pending.
+The replacement availability, consent and advertising decisions are recorded in [0005](0005-regional-availability-and-consent.md). Availability and consent are implemented in #10; advertising integration remains pending.
 
 The browser checks the visitor's country through an external IP lookup. For Russian IP addresses or lookup failures, the interface hides ratings, comments, feedback, and analytics. Browsing, search, and downloads stay available. The check runs in the browser and does not prevent direct Firestore API requests; it is an availability control, not a security boundary.
 

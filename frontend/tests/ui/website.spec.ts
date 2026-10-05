@@ -172,7 +172,7 @@ test('variant selection and downloads survive a failed region lookup', async ({ 
   await page.route('https://ipwho.is/**', (route) => route.abort());
   await page.goto(`/ru/wallpapers/${wallpaper}/`);
   await dismissCookies(page, 'ru');
-  await expect(page.getByText(copy.ru.regionUnavailable)).toBeVisible();
+  await expect(page.locator('[data-social-panel]')).toBeVisible();
   await page.getByRole('tab', { name: copy.ru.mobile }).click();
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${wallpaper}-mobile.webp`);
   await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-mobile.png`);
@@ -215,7 +215,8 @@ test('mobile menu and cookie dialog support keyboard focus and persistence', asy
   await expect(menu).toBeFocused();
   await page.locator('[data-cookie-settings]').click();
   await expect(page.getByRole('dialog', { name: copy.ru.cookieSettings })).toBeVisible();
-  await expect(page.getByRole('switch', { name: copy.ru.analyticsLabel })).toBeDisabled();
+  await expect(page.getByRole('switch', { name: copy.ru.analyticsLabel })).toBeEnabled();
+  await expect(page.getByRole('switch', { name: copy.ru.advertisingLabel })).toBeEnabled();
   await page.screenshot({ path: testInfo.outputPath('cookie-settings.png') });
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
   await page.getByRole('button', { name: interfaceCopy.ru.save, exact: true }).click();
@@ -311,7 +312,6 @@ test('catalogue, metadata and both PNG links render with JavaScript disabled', a
   expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}')['@type']).toBe('ImageObject');
   await expect(page.locator('main noscript p')).toHaveText(interfaceCopy.ru.javascriptRequired);
   await expect(page.locator('main noscript p')).toBeVisible();
-  await expect(page.locator('[data-region-pending]')).toBeHidden();
   await page.goto('http://127.0.0.1:4322/ru/');
   await expect(page.getByText(interfaceCopy.ru.faq[0][1], { exact: true })).toBeVisible();
   await page.goto('http://127.0.0.1:4322/404/');

@@ -14,14 +14,12 @@ import RecaptchaNotice from '@/components/RecaptchaNotice';
 import { copy, mutationError } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { ratingValues, ratingEmoji, type Rating } from '@/data/ratings';
-import { useRegion } from '@/lib/use-region';
 import type { Comment, SocialData } from '@/lib/wallpaper-client';
 import type { Locale } from '@/data/catalog';
 
 export default function SocialPanel({ id, locale }: { id: string; locale: Locale }) {
   const ui = copy[locale];
   const text = interfaceCopy[locale];
-  const region = useRegion();
   const [data, setData] = useState<SocialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,12 +34,11 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
     finally { setLoading(false); }
   }
   useEffect(() => {
-    if (region !== 'open') return;
     let active = true;
     void import('@/lib/wallpaper-client').then((service) => service.readSocial(id)).then((result) => { if (active) setData(result); })
       .catch(() => { if (active) setError(ui.serviceError); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [id, region, ui.serviceError]);
+  }, [id, ui.serviceError]);
   async function rate(value: string) {
     if (busy || !ratingValues.includes(value as Rating)) return;
     setBusy(true); setError(''); setStatus('');
@@ -72,8 +69,6 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
     } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
-  if (region === 'pending') return <div data-region-pending role="status" className="grid gap-4 py-4"><p className="text-sm text-muted-foreground">{text.checkingRegion}</p><Skeleton className="h-24 w-full" /></div>;
-  if (region === 'restricted') return <Alert><AlertDescription>{ui.regionUnavailable}</AlertDescription></Alert>;
   return <div className="grid gap-6" data-social-panel>
     {error && <Alert variant="destructive" role="alert"><AlertDescription>{error}<Button type="button" variant="outline" className="mt-3 w-fit" disabled={busy || loading} onClick={() => void refresh()}>{text.retry}</Button></AlertDescription></Alert>}
     <section aria-labelledby="ratings-title"><h2 id="ratings-title" className="text-2xl font-semibold tracking-tight">{ui.ratings}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{ui.ratingHint}</p>
