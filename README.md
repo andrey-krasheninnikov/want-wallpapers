@@ -30,6 +30,8 @@ Chromium запускается с включённым sandbox. На Ubuntu 24.
 
 ## Разработка
 
+Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/` и `/pt-br/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
+
 `make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
 
 ```bash

@@ -6,16 +6,18 @@ import WallpaperPage from '../components/WallpaperPage.astro';
 import SearchPage from '../components/SearchPage.astro';
 import FeedbackPage from '../components/FeedbackPage.astro';
 import LegalPage from '../components/LegalPage.astro';
+import NotFoundPage from '../components/NotFoundPage.astro';
 import { collections, locales, wallpapers, type Collection, type Locale, type Wallpaper } from '../data/catalog';
 import type { LegalKey } from '../data/legal';
 
-type PageProps = { locale: Locale; page: 'home' | 'collections' | 'collection' | 'wallpaper' | 'search' | 'feedback' | 'legal'; collection?: Collection; wallpaper?: Wallpaper; legal?: LegalKey };
+type PageProps = { locale: Locale; page: 'home' | 'collections' | 'collection' | 'wallpaper' | 'search' | 'feedback' | 'legal' | 'not-found'; collection?: Collection; wallpaper?: Wallpaper; legal?: LegalKey };
 export function getStaticPaths() {
   const paths: { params: { slug: string }; props: PageProps }[] = [];
   const legalPages: LegalKey[] = ['privacy', 'terms', 'cookies', 'license', 'contact'];
   for (const locale of locales) {
     const prefix = locale === 'en' ? '' : `${locale}/`;
     if (locale !== 'en') paths.push({ params: { slug: locale }, props: { locale, page: 'home' } });
+    if (locale !== 'en') paths.push({ params: { slug: `${prefix}404` }, props: { locale, page: 'not-found' } });
     paths.push({ params: { slug: `${prefix}collections` }, props: { locale, page: 'collections' } });
     paths.push({ params: { slug: `${prefix}search` }, props: { locale, page: 'search' } });
     paths.push({ params: { slug: `${prefix}feedback` }, props: { locale, page: 'feedback' } });
@@ -34,3 +36,4 @@ const props = Astro.props as PageProps;
 {props.page === 'search' && <SearchPage locale={props.locale} />}
 {props.page === 'feedback' && <FeedbackPage locale={props.locale} />}
 {props.page === 'legal' && props.legal && <LegalPage locale={props.locale} page={props.legal} />}
+{props.page === 'not-found' && <NotFoundPage locale={props.locale} />}

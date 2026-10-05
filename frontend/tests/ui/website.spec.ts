@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { createHash } from 'node:crypto';
 import AxeBuilder from '@axe-core/playwright';
 import { database } from './database';
 import { copy, localPath } from '../../src/data/copy';
@@ -14,19 +15,41 @@ async function dismissCookies(page: Page, locale: Locale) {
   await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
 }
 
-const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/'];
+const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
-  for (const width of [320, 768, 1024, 1440]) {
+  for (const width of [320, 768, 1024, 1440] as const) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 900 });
       const errors: string[] = [];
       page.on('pageerror', (error) => errors.push(error.message));
-      page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+      page.on('console', (message) => {
+        const expected404 = message.location().url === page.url() && page.url().endsWith('/404/') && message.text() === 'Failed to load resource: the server responded with a status of 404 (Not Found)';
+        if (message.type() === 'error' && !expected404) errors.push(message.text());
+      });
       for (const [index, path] of templates.entries()) {
-        await page.goto(localPath(locale, path));
+        expect((await page.goto(localPath(locale, path)))?.status()).toBe(path === '/404/' ? 404 : 200);
         await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
         if (index === 0) await dismissCookies(page, locale);
         await expect(page.locator('h1')).toHaveCount(1);
+        await page.evaluate(() => document.fonts.ready);
+        const title = page.locator('h1.display-title');
+        if (await title.count()) {
+          const size = await title.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
+          expect(size).toBeGreaterThanOrEqual(32);
+          expect(size).toBeLessThanOrEqual(56);
+          if (width === 320) expect(size).toBeCloseTo(32);
+          if (width === 1440) expect(size).toBeCloseTo(56);
+          const overflow = await title.evaluate((heading) => ({
+            fitsWidth: heading.scrollWidth <= heading.clientWidth + 1,
+            unclipped: getComputedStyle(heading).overflowY === 'visible' || heading.scrollHeight <= heading.clientHeight + 1,
+          }));
+          expect(overflow).toEqual({ fitsWidth: true, unclipped: true });
+        }
+        const legalTitle = page.locator('.prose h1');
+        if (await legalTitle.count()) {
+          const size = await legalTitle.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
+          expect(size).toBeCloseTo({ 320: 36, 768: 38.4, 1024: 51.2, 1440: 64 }[width]!);
+        }
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
         await expect(page.locator('link[rel="alternate"]')).toHaveCount(5);
@@ -61,6 +84,48 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
       expect(errors).toEqual([]);
     });
   }
+}
+
+for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
+  test(`localized 404 routes and fallback: ${locale}`, async ({ page, request }) => {
+    const path = localPath(locale, '/missing-heading-check/');
+    expect((await page.goto(path))?.status()).toBe(404);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale);
+    await expect(page.locator('h1')).toHaveText(interfaceCopy[locale].notFoundTitle);
+    await dismissCookies(page, locale);
+    await expect(page.getByRole('link', { name: interfaceCopy[locale].back })).toHaveAttribute('href', localPath(locale));
+    const route = localPath(locale, '/404/');
+    for (const url of [route, path]) {
+      const response = await request.get(url);
+      expect(response.status()).toBe(404);
+      expect(response.headers()['content-type']).toContain('text/html');
+      const body = await response.text();
+      expect(body).toContain('name="robots" content="noindex"');
+      for (const script of body.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+        if (/\bsrc\s*=/i.test(script[1]!)) continue;
+        expect(response.headers()['content-security-policy']).toContain(`'sha256-${createHash('sha256').update(script[2]!).digest('base64')}'`);
+      }
+      const head = await request.head(url);
+      expect(head.status()).toBe(404);
+      expect(await head.body()).toHaveLength(0);
+      const reload = await request.get(url, { headers: { 'if-modified-since': response.headers()['last-modified']!, range: 'bytes=0-10' } });
+      expect(reload.status()).toBe(404);
+      expect(await reload.text()).toBe(body);
+    }
+    const sitemap = await request.get('/sitemap-0.xml');
+    expect(await sitemap.text()).not.toContain(`https://wallpapers.want.foundation${route}`);
+    if (locale === 'en') {
+      const fallback = await request.get('/russian/missing-heading-check/');
+      expect(fallback.status()).toBe(404);
+      expect(await fallback.text()).toContain('lang="en"');
+      for (const url of ['/api/unknown', '/health/unknown']) {
+        const response = await request.get(url);
+        expect(response.status()).toBe(404);
+        expect(await response.json()).toEqual({ error: { code: 'not-found' } });
+        expect(response.headers()['cache-control']).toBe('no-store');
+      }
+    }
+  });
 }
 
 for (const [slug, number] of [['where-stars-graze', 4], ['a-night-beneath-the-ice', 1]] as const) for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
@@ -208,6 +273,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await page.reload();
   await page.setViewportSize({ width: 320, height: 900 });
   await expect(page.locator(`[data-comment="${otherComment}"]`)).toBeVisible();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
   await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-long-mobile.png') });
