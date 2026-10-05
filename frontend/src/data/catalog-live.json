@@ -50,6 +50,23 @@
         "zh-cn": "五段通往金色光环的静谧旅程，穿过城市、群山、森林与遗迹。",
         "en": "Five quiet journeys towards a golden circle through cities, mountains, forests and ruins."
       }
+    },
+    {
+      "id": "0004-where-stars-graze",
+      "slug": "where-stars-graze",
+      "count": 5,
+      "title": {
+        "en": "Where Stars Graze",
+        "ru": "Где пасутся звёзды",
+        "zh-cn": "星辰的牧场",
+        "pt-br": "Onde as estrelas pastam"
+      },
+      "description": {
+        "en": "Five night scenes with a shaggy ginger cow, a windmill and a blue-violet comet above misty mountains.",
+        "ru": "Пять ночных сцен: рыжая длинношёрстная корова, мельница и сине-фиолетовая комета над горами в тумане.",
+        "zh-cn": "五幅夜景：长毛红棕牛、风车和蓝紫色彗星，映衬着云雾缭绕的群山。",
+        "pt-br": "Cinco cenas noturnas com uma vaca ruiva de pelo comprido, um moinho e um cometa azul-violeta sobre montanhas cobertas de névoa."
+      }
     }
   ],
   "wallpapers": [
@@ -726,6 +743,146 @@
         "zh-cn": "石阶尽头的古老遗迹中，金色圆环熠熠发光。",
         "en": "A golden ring glows inside ancient ruins at the top of a stone staircase.",
         "pt-br": "Um anel dourado brilha entre ruínas antigas no topo de uma escadaria de pedra."
+      }
+    },
+    {
+      "id": "where-stars-graze-1",
+      "slug": "where-stars-graze-1",
+      "collection": "where-stars-graze",
+      "collectionId": "0004-where-stars-graze",
+      "s3Folder": "0004-where-stars-graze",
+      "fileStem": "where-stars-graze",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "night",
+        "blue",
+        "mountains",
+        "light"
+      ],
+      "title": {
+        "en": "Pasture Beneath the Comet",
+        "ru": "Пастбище под кометой",
+        "zh-cn": "彗星下的牧场",
+        "pt-br": "Pasto sob o cometa"
+      },
+      "description": {
+        "en": "A shaggy ginger cow grazes among flowers beneath a blue comet, with a windmill and misty mountain valleys in the distance.",
+        "ru": "Рыжая длинношёрстная корова пасётся среди цветов под синей кометой; вдали видны мельница и горные долины в тумане.",
+        "zh-cn": "长毛红棕牛在花丛中吃草，蓝色彗星划过天空，远处是风车和雾中的山谷。",
+        "pt-br": "Uma vaca ruiva de pelo comprido pasta entre flores sob um cometa azul, com um moinho e vales montanhosos na névoa ao longe."
+      }
+    },
+    {
+      "id": "where-stars-graze-2",
+      "slug": "where-stars-graze-2",
+      "collection": "where-stars-graze",
+      "collectionId": "0004-where-stars-graze",
+      "s3Folder": "0004-where-stars-graze",
+      "fileStem": "where-stars-graze",
+      "number": 2,
+      "category": "fantasy",
+      "tags": [
+        "night",
+        "blue",
+        "mountains",
+        "journey"
+      ],
+      "title": {
+        "en": "Windmill Above the Clouds",
+        "ru": "Мельница над облаками",
+        "zh-cn": "云端风车",
+        "pt-br": "Moinho acima das nuvens"
+      },
+      "description": {
+        "en": "A winding road climbs to a windmill above clouds filling the valleys; a ginger cow rests among flowers beneath a blue-violet comet.",
+        "ru": "Извилистая дорога поднимается к мельнице над облаками, заполняющими долины; рыжая корова отдыхает среди цветов под сине-фиолетовой кометой.",
+        "zh-cn": "蜿蜒山路通向云海之上的风车，红棕牛在花丛中休息，蓝紫色彗星照亮夜空。",
+        "pt-br": "Uma estrada sinuosa sobe até um moinho acima das nuvens que cobrem os vales; uma vaca ruiva descansa entre flores sob um cometa azul-violeta."
+      }
+    },
+    {
+      "id": "where-stars-graze-3",
+      "slug": "where-stars-graze-3",
+      "collection": "where-stars-graze",
+      "collectionId": "0004-where-stars-graze",
+      "s3Folder": "0004-where-stars-graze",
+      "fileStem": "where-stars-graze",
+      "number": 3,
+      "category": "fantasy",
+      "tags": [
+        "night",
+        "violet",
+        "mountains",
+        "journey"
+      ],
+      "title": {
+        "en": "Across the Starry Valley",
+        "ru": "Через звёздную долину",
+        "zh-cn": "穿越星空山谷",
+        "pt-br": "Através do vale estrelado"
+      },
+      "description": {
+        "en": "Travellers and a shaggy cow follow a rocky path above a misty valley, while a comet crosses the starry sky beside palms and a distant windmill.",
+        "ru": "Путники и длинношёрстная корова идут по каменистой тропе над туманной долиной; комета пересекает звёздное небо над пальмами и далёкой мельницей.",
+        "zh-cn": "旅人与长毛牛沿着石径行进，脚下是雾气弥漫的山谷，彗星划过棕榈树和远处风车上方的星空。",
+        "pt-br": "Viajantes e uma vaca de pelo comprido seguem uma trilha rochosa sobre um vale enevoado, enquanto um cometa cruza o céu estrelado entre palmeiras e um moinho distante."
+      }
+    },
+    {
+      "id": "where-stars-graze-4",
+      "slug": "where-stars-graze-4",
+      "collection": "where-stars-graze",
+      "collectionId": "0004-where-stars-graze",
+      "s3Folder": "0004-where-stars-graze",
+      "fileStem": "where-stars-graze",
+      "number": 4,
+      "category": "fantasy",
+      "tags": [
+        "night",
+        "water",
+        "light",
+        "mountains"
+      ],
+      "title": {
+        "en": "Comet Reflection",
+        "ru": "Отражение кометы",
+        "zh-cn": "彗星倒影",
+        "pt-br": "Reflexo do cometa"
+      },
+      "description": {
+        "en": "A ginger cow drinks at the flower-lined shore of a mountain lake, sending ripples through the reflection of a blue comet and the night sky.",
+        "ru": "Рыжая корова пьёт у цветущего берега горного озера; круги на воде расходятся по отражению синей кометы и ночного неба.",
+        "zh-cn": "红棕牛在开满鲜花的山间湖岸饮水，涟漪轻轻掠过蓝色彗星与夜空的倒影。",
+        "pt-br": "Uma vaca ruiva bebe na margem florida de um lago de montanha, espalhando ondulações pelo reflexo de um cometa azul e do céu noturno."
+      }
+    },
+    {
+      "id": "where-stars-graze-5",
+      "slug": "where-stars-graze-5",
+      "collection": "where-stars-graze",
+      "collectionId": "0004-where-stars-graze",
+      "s3Folder": "0004-where-stars-graze",
+      "fileStem": "where-stars-graze",
+      "number": 5,
+      "category": "fantasy",
+      "tags": [
+        "night",
+        "blue",
+        "violet",
+        "mountains"
+      ],
+      "title": {
+        "en": "Under a Sky of Stars",
+        "ru": "Под звёздным небом",
+        "zh-cn": "星空之下",
+        "pt-br": "Sob um céu de estrelas"
+      },
+      "description": {
+        "en": "A close view of a shaggy ginger cow with long horns, framed by flowers, misty mountains and a windmill beneath a bright blue-violet comet.",
+        "ru": "Крупный план рыжей длинношёрстной коровы с длинными рогами; вокруг цветы, горы в тумане и мельница под яркой сине-фиолетовой кометой.",
+        "zh-cn": "长角红棕牛的近景肖像，四周是鲜花、雾中的群山和风车，明亮的蓝紫色彗星悬在夜空中。",
+        "pt-br": "Um retrato próximo de uma vaca ruiva de pelo comprido e chifres longos, entre flores, montanhas enevoadas e um moinho sob um cometa azul-violeta brilhante."
       }
     }
   ]

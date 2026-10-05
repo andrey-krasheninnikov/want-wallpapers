@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { database } from './database';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
-import { wallpapers, type Locale } from '../../src/data/catalog';
+import { collections, wallpapers, downloadUrl, previewUrl, tagLabels, type Locale } from '../../src/data/catalog';
 
 const wallpaper = 'contours-of-silence-1';
 test.beforeEach(async ({ page }) => {
@@ -14,7 +14,7 @@ async function dismissCookies(page: Page, locale: Locale) {
   await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
 }
 
-const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/'];
+const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
   for (const width of [320, 768, 1024, 1440]) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
@@ -61,6 +61,46 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
       expect(errors).toEqual([]);
     });
   }
+}
+
+for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
+  test(`new collection, search and PNG downloads: ${locale}`, async ({ page, request }) => {
+    const collection = collections.find((item) => item.slug === 'where-stars-graze')!;
+    const designs = wallpapers.filter((item) => item.collectionId === collection.id);
+    await page.goto(localPath(locale, '/collections/where-stars-graze/'));
+    await dismissCookies(page, locale);
+    await expect(page.locator('h1')).toHaveText(collection.title[locale]);
+    await expect(page.locator('[data-wallpaper-card]')).toHaveCount(designs.length);
+    for (const design of designs) {
+      await expect(page.locator(`[data-wallpaper-card="${design.id}"] a`)).toHaveAttribute('href', localPath(locale, `/wallpapers/${design.slug}/`));
+      const detail = await request.get(localPath(locale, `/wallpapers/${design.slug}/`));
+      expect(detail.status()).toBe(200);
+      for (const variant of ['desktop', 'mobile'] as const) {
+        const response = await request.get(downloadUrl(design, variant));
+        expect(response.status()).toBe(200);
+        expect(response.headers()['content-type']).toContain('image/png');
+        expect((await response.body()).subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      }
+    }
+    const design = designs.find((item) => item.number === 4)!;
+    await page.goto(localPath(locale, '/search/') + `?q=${encodeURIComponent(tagLabels.water[locale])}&category=fantasy&collection=where-stars-graze`);
+    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await expect(page.locator('[data-wallpaper-card]')).toHaveCount(1);
+    await expect(page.locator('[data-wallpaper-card]')).toHaveAttribute('data-wallpaper-card', design.id);
+    await page.locator('[data-wallpaper-card] a').click();
+    await expect(page.locator('h1')).toHaveText(design.title[locale]);
+    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    for (const variant of ['mobile', 'desktop'] as const) {
+      await page.getByRole('tab', { name: copy[locale][variant], exact: true }).click();
+      await expect(page.locator('#detail-image')).toHaveAttribute('src', previewUrl(design, variant));
+      await expect(page.locator('#detail-image')).toHaveAttribute('alt', design.description[locale]);
+      const download = page.waitForEvent('download');
+      await page.locator('#download-link').click();
+      expect((await download).suggestedFilename()).toBe(`${design.slug}-${variant}.png`);
+    }
+    const social = await request.get(`/api/v1/wallpapers/${design.id}/social`);
+    expect(social.status()).toBe(200);
+  });
 }
 
 test('variant selection and downloads survive a failed region lookup', async ({ page }) => {
