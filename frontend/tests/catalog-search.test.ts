@@ -33,6 +33,21 @@ test('new collection is searchable by localized descriptions and tags', () => {
   }
 });
 
+test('ice collection is searchable by localized descriptions and tags', () => {
+  for (const [locale, description, tag] of [
+    ['en', 'reflection', 'water'],
+    ['ru', 'отражение', 'вода'],
+    ['zh-cn', '倒影', '水'],
+    ['pt-br', 'reflexo', 'água'],
+  ] as [Locale, string, string][]) {
+    const index = createSearchIndex(locale, wallpapers.map((wallpaper) => ({
+      id: wallpaper.id,
+      text: [wallpaper.title[locale], wallpaper.description[locale], ...wallpaper.tags.map((key) => tagLabels[key][locale])].join(' '),
+    })));
+    for (const phrase of [description, tag]) expect(searchIds(index, locale, phrase)).toContain('a-night-beneath-the-ice-1');
+  }
+});
+
 test('migrated source PNG names preserve local download and preview URLs', () => {
   const wallpaper = wallpapers.find((item) => item.id === 'contours-of-silence-2')!;
   expect(s3Url(wallpaper, 'desktop')).toBe('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/2-desktop.png');

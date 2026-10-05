@@ -14,7 +14,7 @@ async function dismissCookies(page: Page, locale: Locale) {
   await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
 }
 
-const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/'];
+const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
   for (const width of [320, 768, 1024, 1440]) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
@@ -63,11 +63,11 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
   }
 }
 
-for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
-  test(`new collection, search and PNG downloads: ${locale}`, async ({ page, request }) => {
-    const collection = collections.find((item) => item.slug === 'where-stars-graze')!;
+for (const [slug, number] of [['where-stars-graze', 4], ['a-night-beneath-the-ice', 1]] as const) for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
+  test(`collection, search and PNG downloads: ${slug}, ${locale}`, async ({ page, request }) => {
+    const collection = collections.find((item) => item.slug === slug)!;
     const designs = wallpapers.filter((item) => item.collectionId === collection.id);
-    await page.goto(localPath(locale, '/collections/where-stars-graze/'));
+    await page.goto(localPath(locale, `/collections/${slug}/`));
     await dismissCookies(page, locale);
     await expect(page.locator('h1')).toHaveText(collection.title[locale]);
     await expect(page.locator('[data-wallpaper-card]')).toHaveCount(designs.length);
@@ -82,12 +82,12 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
         expect((await response.body()).subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
       }
     }
-    const design = designs.find((item) => item.number === 4)!;
-    await page.goto(localPath(locale, '/search/') + `?q=${encodeURIComponent(tagLabels.water[locale])}&category=fantasy&collection=where-stars-graze`);
+    const design = designs.find((item) => item.number === number)!;
+    await page.goto(localPath(locale, '/search/') + `?q=${encodeURIComponent(tagLabels.water[locale])}&category=fantasy&collection=${slug}`);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
-    await expect(page.locator('[data-wallpaper-card]')).toHaveCount(1);
-    await expect(page.locator('[data-wallpaper-card]')).toHaveAttribute('data-wallpaper-card', design.id);
-    await page.locator('[data-wallpaper-card] a').click();
+    await expect(page.locator('[data-wallpaper-card]')).toHaveCount(designs.filter((item) => item.category === 'fantasy' && item.tags.includes('water')).length);
+    await expect(page.locator(`[data-wallpaper-card="${design.id}"]`)).toBeVisible();
+    await page.locator(`[data-wallpaper-card="${design.id}"] a`).click();
     await expect(page.locator('h1')).toHaveText(design.title[locale]);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
     for (const variant of ['mobile', 'desktop'] as const) {
