@@ -40,9 +40,9 @@ docker-build:
 deploy-config:
 	docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml config --quiet
 migrate:
-	@running_app="$$(docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml ps --status running -q app)"; \
+	@active_app="$$(docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml ps --all --status running --status restarting --status paused --status created --status removing -q app)"; \
 	 test $$? -eq 0 || exit 1; \
-	 test -z "$$running_app" || { echo 'Stop app in an approved maintenance window before migrations.'; exit 1; }
+	 test -z "$$active_app" || { echo 'Stop app in an approved maintenance window before migrations.'; exit 1; }
 	docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml --profile operations run --rm migrate
 
 .PHONY: test-container

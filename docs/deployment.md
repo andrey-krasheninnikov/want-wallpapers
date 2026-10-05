@@ -79,7 +79,7 @@ docker network create wallpapers-egress
 
 Во втором случае EGRESS_NETWORK=wallpapers-egress. На существующем VPS используйте фактическое имя сети; пример не доказывает её текущее имя.
 
-Перед обновлением скачайте проверенный образ, пока прежний app работает. `make deploy-config` использует `config --quiet` и не печатает секреты. Получите проверенный backup/restore record, затем остановите только app в согласованное окно обслуживания. `make migrate` отказывается запускаться, пока Compose app работает: на этом VPS app и миграции не должны конкурировать за память. Внешний proxy не останавливайте. Не используйте глобальные down/prune/--remove-orphans.
+Перед обновлением скачайте проверенный образ, пока прежний app работает. `make deploy-config` использует `config --quiet` и не печатает секреты. Получите проверенный backup/restore record, затем остановите только app в согласованное окно обслуживания. `make migrate` отказывается запускаться, пока Compose app активен (включая paused/restarting/created/removing): на этом VPS app и миграции не должны конкурировать за память. Внешний proxy не останавливайте. Не используйте глобальные down/prune/--remove-orphans.
 
 ```bash
 make deploy-config
@@ -97,7 +97,7 @@ psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpap
 psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpapers -v migrator_role=wallpapers-migrator -f deploy/verify-runtime-grants.sql
 ```
 
-Проверка read-only: нет superuser/CREATEDB/CREATEROLE/BYPASSRLS, memberships, владения объектами, CREATE/TEMP, grant options, широких stored default ACL и доступа к `_sqlx_migrations`, включая column grants. Runtime имеет CRUD только на явных таблицах приложения; audit — SELECT/INSERT и sequence USAGE/SELECT, без изменения/удаления. Результат общий, без строк приложения и credentials.
+Проверка read-only: нет superuser/CREATEDB/CREATEROLE/BYPASSRLS, memberships, владения объектами, CREATE/TEMP (CREATE проверяется во всех схемах), grant options, широких stored default ACL и доступа к `_sqlx_migrations`, включая column grants. Runtime имеет CRUD только на явных таблицах приложения; audit — SELECT/INSERT и sequence USAGE/SELECT, без изменения/удаления. Результат общий, без строк приложения и credentials.
 
 Если проверка не проходит, не запускайте новый app. Просмотрите владельцев, memberships, column ACL, глобальные и schema default ACL в защищённой сессии. После review только для выделенной wallpapers БД и остановленного app разрешена процедура `deploy/runtime-hardening.sql`, затем повторное применение grants и verification:
 

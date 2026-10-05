@@ -19,7 +19,10 @@ SELECT EXISTS (
       AND has_database_privilege(runtime.oid, current_database(), 'CONNECT')
       AND NOT has_database_privilege(runtime.oid, current_database(), 'CREATE,TEMPORARY')
       AND has_schema_privilege(runtime.oid, 'public', 'USAGE')
-      AND NOT has_schema_privilege(runtime.oid, 'public', 'CREATE')
+      AND NOT EXISTS (
+          SELECT 1 FROM pg_namespace namespace
+          WHERE has_schema_privilege(runtime.oid, namespace.oid, 'CREATE')
+      )
       AND NOT EXISTS (
           SELECT 1 FROM pg_shdepend dependency
           WHERE dependency.refclassid = 'pg_authid'::regclass

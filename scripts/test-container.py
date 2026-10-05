@@ -110,6 +110,12 @@ for _ in range(2):
     run(psql, hardening)
     run(psql, grants)
     run(psql, verification)
+# CREATE in another schema must fail even when public is locked down.
+run(psql, f'CREATE SCHEMA profile_extra; GRANT CREATE ON SCHEMA profile_extra TO "{role}";')
+unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
+assert unsafe.returncode != 0, 'Runtime CREATE outside public must fail verification.'
+run(psql, f'REVOKE CREATE ON SCHEMA profile_extra FROM "{role}";')
+run(psql, verification)
 # Exercise permissions as runtime, not merely catalog metadata.
 runtime_psql = psql + ['-v', f'checked_role={role}']
 run(runtime_psql, 'SET ROLE :"checked_role"; BEGIN; INSERT INTO public.audit_log(action,target,actor) VALUES (\'permission-test\',\'fixture\',\'admin\'); SELECT count(*) FROM public.collections; ROLLBACK;')
@@ -134,8 +140,13 @@ try:
     assert not json.loads(run(['docker', 'network', 'inspect', network]))[0]['Internal']
     mounted = {mount['Destination'] for mount in running['Mounts']}
     assert '/run/secrets/migration_database_url' not in mounted and '/var/run/docker.sock' not in mounted
-    refused = subprocess.run(['make', 'migrate', 'DEPLOY_ENV_FILE=/dev/null'], env=profile_environment, capture_output=True, text=True)
-    assert refused.returncode != 0 and 'Stop app' in refused.stdout, 'Migrations must refuse a running app.'
+    for state in ['running', 'paused']:
+        if state == 'paused': run(['docker', 'pause', name])
+        try:
+            refused = subprocess.run(['make', 'migrate', 'DEPLOY_ENV_FILE=/dev/null'], env=profile_environment, capture_output=True, text=True)
+            assert refused.returncode != 0 and 'Stop app' in refused.stdout, f'Migrations must refuse a {state} app.'
+        finally:
+            if state == 'paused': run(['docker', 'unpause', name])
     port = running['NetworkSettings']['Ports']['8080/tcp'][0]['HostPort']
     origin = f'http://127.0.0.1:{port}'
     for _ in range(30):
@@ -191,7 +202,7 @@ try:
     except urllib.error.HTTPError as error: assert error.code == 403
     print('Production image passed: PostgreSQL 18 verify-full TLS, least-privilege runtime, catalog, private headers, visitor cookie, seeded admin session/logout, required reCAPTCHA and token scope.')
 finally:
-    # Remove only the exact task-created container; never delete databases or other containers.
+    # Stop only the exact task-created container; never delete databases or other containers.
     run(['docker', 'stop', name])
 # Wrong hostname must fail before migration writes.
 ip = json.loads(run(['docker', 'inspect', postgres]))[0]['NetworkSettings']['Networks'][network]['IPAddress']
