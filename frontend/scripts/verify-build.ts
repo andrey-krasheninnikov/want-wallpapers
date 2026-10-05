@@ -34,12 +34,16 @@ async function scan(directory: string) {
   }
 }
 await scan(root);
+for (const name of ['404.html', 'ru/404/index.html', 'zh-cn/404/index.html', 'pt-br/404/index.html']) {
+  const html = await readFile(join(root, name), 'utf8');
+  require(/<meta[^>]*name="robots"[^>]*content="[^"]*noindex/.test(html), `${name}: missing noindex`);
+}
 for (const name of await readdir(root)) {
   if (!name.startsWith('sitemap') || !name.endsWith('.xml')) continue;
   const xml = await readFile(join(root, name), 'utf8');
   for (const match of xml.matchAll(/<loc>([^<]+)<\/loc>/g)) {
     const url = new URL(match[1]!);
-    require(url.origin === origin && !/^\/(admin|api)(\/|$)/.test(url.pathname), `${name}: private or incorrect-domain URL`);
+    require(url.origin === origin && !/^\/(admin|api)(\/|$)/.test(url.pathname) && !url.pathname.endsWith('/404/'), `${name}: private, error or incorrect-domain URL`);
   }
 }
 const robots = await readFile(join(root, 'robots.txt'), 'utf8');

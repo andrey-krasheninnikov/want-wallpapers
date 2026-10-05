@@ -9,7 +9,12 @@ mod security;
 pub mod social;
 
 use axum::{
-    Json, Router, middleware,
+    Json, Router,
+    body::Body,
+    extract::{Request, State},
+    http::{StatusCode, header},
+    middleware,
+    response::{IntoResponse, Response},
     routing::{delete, get, patch, post, put},
 };
 use serde_json::json;
@@ -72,9 +77,13 @@ pub fn router(state: AppState) -> Router {
             "/api/v1/admin/moderation/{kind}/{id}",
             patch(moderation::update),
         )
+        .route("/404/", get(not_found))
+        .route("/ru/404/", get(not_found))
+        .route("/zh-cn/404/", get(not_found))
+        .route("/pt-br/404/", get(not_found))
         .with_state(state.clone());
-    let fallback = ServeDir::new(&state.config.static_dir)
-        .not_found_service(ServeFile::new(state.config.static_dir.join("404.html")));
+    let not_found_service = Router::new().fallback(not_found).with_state(state.clone());
+    let fallback = ServeDir::new(&state.config.static_dir).fallback(not_found_service);
     api.fallback_service(fallback)
         .layer(axum::extract::DefaultBodyLimit::max(2 * 1024 * 1024))
         .layer(TimeoutLayer::with_status_code(
@@ -82,6 +91,50 @@ pub fn router(state: AppState) -> Router {
             Duration::from_secs(15),
         ))
         .layer(middleware::from_fn_with_state(state, security::headers))
+}
+fn not_found_route(path: &str) -> &'static str {
+    match path.split('/').nth(1) {
+        Some("ru") => "/ru/404/",
+        Some("zh-cn") => "/zh-cn/404/",
+        Some("pt-br") => "/pt-br/404/",
+        _ => "/404/",
+    }
+}
+async fn not_found(State(state): State<AppState>, mut request: Request) -> Response {
+    if security::is_api_path(request.uri().path()) {
+        return error::ApiError::missing().into_response();
+    }
+    let route = not_found_route(request.uri().path());
+    let file = if route == "/404/" {
+        "404.html".to_owned()
+    } else {
+        format!("{}index.html", route.trim_start_matches('/'))
+    };
+    // Error documents return a complete representation for GET, including reloads.
+    for header in [
+        header::RANGE,
+        header::IF_RANGE,
+        header::IF_MATCH,
+        header::IF_NONE_MATCH,
+        header::IF_MODIFIED_SINCE,
+        header::IF_UNMODIFIED_SINCE,
+    ] {
+        request.headers_mut().remove(header);
+    }
+    match ServeFile::new(state.config.static_dir.join(file))
+        .try_call(request)
+        .await
+    {
+        Ok(response) if response.status().is_success() => {
+            let mut response = response.map(Body::new);
+            *response.status_mut() = StatusCode::NOT_FOUND;
+            response
+        }
+        _ => {
+            tracing::error!("not-found document could not be served");
+            error::ApiError(StatusCode::INTERNAL_SERVER_ERROR, "unavailable").into_response()
+        }
+    }
 }
 async fn ready(
     axum::extract::State(state): axum::extract::State<AppState>,

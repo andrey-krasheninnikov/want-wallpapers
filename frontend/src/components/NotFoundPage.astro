@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+import { ActionLink } from './Gallery';
+import { interfaceCopy } from '../data/interface-copy';
+import { localPath } from '../data/copy';
+import type { Locale } from '../data/catalog';
+type Props = { locale: Locale };
+const { locale } = Astro.props;
+const text = interfaceCopy[locale];
+---
+<Base locale={locale} title={locale === 'en' ? 'Page not found' : text.notFoundTitle} description={text.notFoundText} path="/404/" noindex>
+  <div class="shell page-heading"><p class="eyebrow">404</p><h1 class="display-title mt-4">{text.notFoundTitle}</h1><p class="my-6 text-base leading-relaxed text-muted-foreground">{text.notFoundText}</p><ActionLink href={localPath(locale)} label={text.back} /></div>
+</Base>

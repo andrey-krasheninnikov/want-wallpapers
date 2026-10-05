@@ -831,6 +831,24 @@ async fn collection_capacity_and_private_route_boundaries(pool: PgPool) {
     );
 }
 
+#[sqlx::test(migrations = "./migrations")]
+async fn missing_error_documents_do_not_mask_server_errors_or_api_boundaries(pool: PgPool) {
+    let mut state = state(pool);
+    Arc::get_mut(&mut state.config).unwrap().static_dir =
+        std::env::temp_dir().join(format!("want-wallpapers-missing-{}", Uuid::new_v4()));
+    let app = router(state);
+    for path in ["/404/", "/ru/missing/", "/zh-cn/404/", "/pt-br/missing/"] {
+        let (status, body, _) = request(&app, "GET", path, None, None, None, None).await;
+        assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(body, json!({"error":{"code":"unavailable"}}));
+    }
+    for path in ["/api", "/api/unknown", "/health", "/health/unknown"] {
+        let (status, body, _) = request(&app, "GET", path, None, None, None, None).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert_eq!(body, json!({"error":{"code":"not-found"}}));
+    }
+}
+
 mod recaptcha_checks {
     use super::*;
     use google_cloud_recaptchaenterprise_v1::{

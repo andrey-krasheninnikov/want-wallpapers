@@ -7,12 +7,13 @@ use axum::{
 };
 use serde_json::json;
 
+pub(crate) fn is_api_path(path: &str) -> bool {
+    path == "/api" || path.starts_with("/api/") || path == "/health" || path.starts_with("/health/")
+}
+
 pub async fn headers(State(state): State<AppState>, request: Request, next: Next) -> Response {
     let path = request.uri().path().to_owned();
-    let api = path == "/api"
-        || path.starts_with("/api/")
-        || path == "/health"
-        || path.starts_with("/health/");
+    let api = is_api_path(&path);
     let admin = path == "/admin" || path.starts_with("/admin/");
     // Unknown API paths must never fall through to a static HTML page.
     let mut response = next.run(request).await;
@@ -34,7 +35,7 @@ pub async fn headers(State(state): State<AppState>, request: Request, next: Next
     }
     let mut scripts = String::from("'self'");
     let route = if response.status() == StatusCode::NOT_FOUND {
-        "/404/"
+        crate::not_found_route(&path)
     } else {
         path.as_str()
     };
