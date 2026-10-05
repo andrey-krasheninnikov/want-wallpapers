@@ -330,6 +330,8 @@ test('FAQ keyboard interaction and language selection preserve the current page'
   await page.goto('/ru/');
   await dismissCookies(page, 'ru');
   const question = page.getByRole('button', { name: interfaceCopy.ru.faq[0][0], exact: true });
+  await question.hover();
+  await expect(question).toHaveCSS('text-decoration-line', 'none');
   await question.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByText(interfaceCopy.ru.faq[0][1], { exact: true })).toBeVisible();
