@@ -8,6 +8,7 @@ import CookieConsent from '../components/CookieConsent';
 import { localPath } from '../data/copy';
 import { interfaceCopy } from '../data/interface-copy';
 import { locales, type Locale } from '../data/catalog';
+import { isAnalyticsConfigured } from '../lib/privacy';
 
 type Props = { locale: Locale; title: string; description: string; path: string; image?: string; schema?: object; noindex?: boolean };
 const { locale, title, description, path, image, schema, noindex = false } = Astro.props;
@@ -15,7 +16,7 @@ const canonical = new URL(localPath(locale, path), Astro.site);
 const fullTitle = `${title} | Want Wallpapers`;
 const imageUrl = image ? new URL(image, Astro.site) : undefined;
 const languageTag = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
-const analyticsAvailable = Boolean(import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID);
+const analyticsAvailable = isAnalyticsConfigured();
 ---
 <!doctype html>
 <html lang={languageTag} class="dark">
@@ -38,7 +39,7 @@ const analyticsAvailable = Boolean(import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_I
     <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
     <title>{fullTitle}</title>
     <link rel="icon" type="image/svg+xml" href={logoUrl} />
-    <noscript><style is:inline>[data-region-pending] { display: none; } [data-slot="accordion-content"] { display: block !important; }</style></noscript>
+    <noscript><style is:inline>[data-slot="accordion-content"] { display: block !important; }</style></noscript>
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />}
   </head>
   <body>

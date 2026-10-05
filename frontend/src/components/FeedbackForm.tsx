@@ -5,18 +5,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
 import RecaptchaNotice from '@/components/RecaptchaNotice';
 import { copy, mutationError } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
-import { useRegion } from '@/lib/use-region';
 import type { Locale } from '@/data/catalog';
 
 export default function FeedbackForm({ locale }: { locale: Locale }) {
   const ui = copy[locale];
   const text = interfaceCopy[locale];
-  const region = useRegion();
   const [topic, setTopic] = useState('');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -34,8 +30,6 @@ export default function FeedbackForm({ locale }: { locale: Locale }) {
     } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
-  if (region === 'pending') return <div data-region-pending className="grid gap-4" role="status"><p className="text-sm text-muted-foreground">{text.checkingRegion}</p><Skeleton className="h-96" /></div>;
-  if (region === 'restricted') return <Alert><AlertDescription>{ui.regionUnavailable} <a className="text-link underline" href="mailto:wallpapers@want.foundation">wallpapers@want.foundation</a></AlertDescription></Alert>;
   return <Card className="gap-0 py-0 shadow-none">
     <form onSubmit={(event) => void submit(event)} className="flex flex-col" aria-busy={busy}>
       <CardHeader className="p-6 sm:p-8"><CardTitle className="text-xl tracking-tight">{text.feedbackFormTitle}</CardTitle><CardDescription className="leading-relaxed">{text.feedbackPrivate}</CardDescription></CardHeader>

@@ -4,7 +4,7 @@
 
 ## Посетители
 
-`POST /session` с точным `Origin` создаёт или возвращает анонимную сессию: `{uid,csrf}`. Cookie `__Host-want-visitor` в production (`want-visitor` в development) — HttpOnly, SameSite=Strict, Secure в production, срок до года. Публичный `GET /wallpapers/{id}/social` возвращает `{counts,ownRating,ownUid,comments}`; последние 50 видимых комментариев, даты в миллисекундах Unix. Региональное ограничение проверяет интерфейс.
+`POST /session` с точным `Origin` создаёт или возвращает анонимную сессию: `{uid,csrf}`. Cookie `__Host-want-visitor` в production (`want-visitor` в development) — HttpOnly, SameSite=Strict, Secure в production, срок до года. Публичный `GET /wallpapers/{id}/social` возвращает `{counts,ownRating,ownUid,comments}`; последние 50 видимых комментариев, даты в миллисекундах Unix. Региональные ограничения отсутствуют. Страна и настройки optional tracking не дают авторизацию и не блокируют оценки, комментарии или обращения.
 
 Все изменения требуют cookie, `Origin`, `X-CSRF-Token` и свежий `X-ReCAPTCHA-Token`:
 
