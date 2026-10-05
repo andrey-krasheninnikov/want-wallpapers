@@ -22,7 +22,9 @@ CREDENTIAL_ID = 'LocalRecoveryCredential'
 
 class LocalEndpoint(BaseHTTPRequestHandler):
     def do_GET(self):
-        accepted = self.path == '/check' and self.headers.get('X-Local-Check') == 'not-a-service-secret'
+        accepted = self.path in ('/check', '/resume') and self.headers.get('X-Local-Check') == 'not-a-service-secret'
+        if accepted and self.path == '/resume':
+            self.server.deliveries.append('resumed')
         self.send_response(200 if accepted else 403)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
@@ -56,6 +58,13 @@ def insert_node(phase):
         'options': {}})
 
 
+def http_node(name, url):
+    return {'id': name, 'name': name, 'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2,
+        'position': [300, 0], 'parameters': {'url': url, 'authentication': 'genericCredentialType',
+            'genericAuthType': 'httpHeaderAuth', 'options': {'timeout': 15000}},
+        'credentials': {'httpHeaderAuth': {'id': CREDENTIAL_ID, 'name': 'Local recovery fixture'}}}
+
+
 def main():
     suffix = secrets.token_hex(4)
     project = 'want-wallpapers-n8n-check-' + suffix
@@ -77,6 +86,7 @@ def main():
         return run('docker', 'compose', '--project-name', project, '-f', str(COMPOSE), *arguments)
 
     server = ThreadingHTTPServer(('127.0.0.1', 0), LocalEndpoint)
+    server.deliveries = []
     Thread(target=server.serve_forever, daemon=True).start()
     try:
         with tempfile.TemporaryDirectory(prefix='wallpapers-n8n-check-') as temporary:
@@ -88,16 +98,13 @@ def main():
                 'options': {'createIfNotExists': True}}), insert_node('started')])
             pause = workflow('LocalRecoveryWait', [insert_node('waiting'), {'id': 'wait', 'name': 'Wait', 'type': 'n8n-nodes-base.wait',
                 'typeVersion': 1.1, 'position': [300, 0], 'parameters': {'resume': 'timeInterval', 'amount': 90, 'unit': 'seconds'}},
-                insert_node('resumed')], response_mode='onReceived')
+                http_node('Resume checkpoint', f'http://host.docker.internal:{server.server_port}/resume')],
+                response_mode='onReceived')
             read = workflow('LocalRecoveryRead', [data_node('Read journal', {'resource': 'row', 'operation': 'get',
                 'dataTableId': {'__rl': True, 'mode': 'name', 'value': TABLE}, 'returnAll': True,
                 'filters': {'conditions': []}, 'matchType': 'allConditions'})])
-            credential_check = workflow('LocalRecoveryCredentialCheck', [{'id': 'request', 'name': 'Check credential',
-                'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [300, 0],
-                'parameters': {'url': f'http://host.docker.internal:{server.server_port}/check',
-                    'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
-                    'options': {'timeout': 5000}},
-                'credentials': {'httpHeaderAuth': {'id': CREDENTIAL_ID, 'name': 'Local recovery fixture'}}}])
+            credential_check = workflow('LocalRecoveryCredentialCheck', [http_node('Check credential',
+                f'http://host.docker.internal:{server.server_port}/check')])
             (fixtures / 'workflows.json').write_text(json.dumps([ready, initialize, pause, read, credential_check]))
             (fixtures / 'credential.json').write_text(json.dumps([{'id': CREDENTIAL_ID,
                 'name': 'Local recovery fixture', 'type': 'httpHeaderAuth',
@@ -129,7 +136,7 @@ def main():
                         raise RuntimeError(message)
                     time.sleep(1)
 
-            expected = [('persistence-check', phase) for phase in ('resumed', 'started', 'waiting')]
+            expected = [('persistence-check', phase) for phase in ('started', 'waiting')]
             compose('up', '--detach', '--wait', '--wait-timeout', '180')
             print(f'Isolated n8n ready on loopback: {project}.', flush=True)
             compose('stop', '--timeout', '90', 'n8n')
@@ -154,15 +161,22 @@ def main():
             while time.monotonic() < resume_at:
                 time.sleep(1)
             compose('up', '--detach', '--wait', '--wait-timeout', '180')
-            wait_for(check_journal, expected, 90, 'The original instance did not catch up exactly once after downtime.')
-            print('Restart resumed the overdue Wait once; journal survived.', flush=True)
+            wait_for(lambda: len(server.deliveries), 1, 90, 'The original Wait did not resume exactly once.')
+            wait_for(check_journal, expected, 90, 'The original journal did not survive restart.')
             compose('stop', '--timeout', '90', 'n8n')
+            if len(server.deliveries) != 1:
+                raise RuntimeError('The original Wait delivered more than once before shutdown.')
+            print('Restart resumed the overdue Wait once; journal survived.', flush=True)
             environment['N8N_DATA_VOLUME'] = restored_volume
             compose('up', '--detach', '--force-recreate', '--wait', '--wait-timeout', '180')
-            wait_for(check_journal, expected, 90, 'The restored instance did not resume its saved Wait exactly once.')
+            wait_for(lambda: len(server.deliveries), 2, 90, 'The restored Wait did not resume exactly once.')
+            wait_for(check_journal, expected, 90, 'The restored journal did not match its saved checkpoint.')
             accepted = execute('LocalRecoveryCredentialCheck')
             if accepted != [{'credentialAccepted': True}]:
                 raise RuntimeError('The restored key did not decrypt the synthetic credential.')
+            compose('stop', '--timeout', '90', 'n8n')
+            if len(server.deliveries) != 2:
+                raise RuntimeError('The restored Wait did not deliver exactly once before shutdown.')
             print('Recovery preserved workflows, waiting execution, journal, and credential decryption.', flush=True)
             print(f'PASS. Preserved test volumes: {original_volume}, {restored_volume}', flush=True)
     finally:
