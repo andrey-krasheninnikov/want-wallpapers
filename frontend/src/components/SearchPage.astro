@@ -11,7 +11,7 @@ const items = await Promise.all(wallpapers.map((item) => wallpaperCard(item, loc
 const categories = Object.entries(categoryLabels).map(([value, labels]) => ({ value, title: labels[locale] }));
 const collectionOptions = collections.map((item) => ({ value: item.slug, title: item.title[locale] }));
 ---
-<Base locale={locale} title={ui.searchTitle} description={ui.searchText} path="/search/">
+<Base locale={locale} title={ui.searchTitle} description={ui.searchText} path="/search/" noindex>
   <div class="shell page-heading"><h1 class="display-title">{ui.searchTitle}</h1><p class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">{ui.searchText}</p></div>
   <section class="shell" aria-label={ui.search}><CatalogSearch locale={locale} items={items} categories={categories} collections={collectionOptions} client:load /></section>
 </Base>

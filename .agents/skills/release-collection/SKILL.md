@@ -1,6 +1,6 @@
 ---
 name: release-collection
-description: Добавлять и выпускать новую коллекцию Want Wallpapers из публичной CDN-папки с подготовкой каталога, minor-релизом через PR, защищённым тегом и обратным semantic merge. Использовать при вызове с URL или запросе выпуска коллекции; Контейнер публикуется отдельно.
+description: Добавлять и выпускать новую коллекцию Want Wallpapers из публичной CDN-папки с подготовкой каталога и атмосферного сюжета на четырёх языках, minor-релизом через PR, защищённым тегом и обратным semantic merge. Использовать при вызове с URL или запросе выпуска коллекции; Контейнер публикуется отдельно.
 ---
 
 # Выпуск коллекции Want Wallpapers
@@ -21,7 +21,7 @@ description: Добавлять и выпускать новую коллекц�
 1. Прочитайте [инструкцию каталога](references/catalogue.md). Получите полный список PNG и проверьте оба варианта каждого дизайна. При недоступном CDN, неполных парах или изменении исходников во время подготовки остановите выпуск.
 2. Сравните рабочий Rust API с snapshot в Git по содержимому существующих записей. При возобновлении исключите уже подтверждённые записи текущей коллекции из этого сравнения. Посторонние изменения требуют согласования; не включайте их в PR новой коллекции.
 3. Создайте `feature/add-<number-and-name>` от зафиксированного актуального `origin/development`, сохранив номер папки и ведущие нули. Не перезаписывайте существующую ветку.
-4. Просмотрите desktop и mobile изображения, подготовьте manifest с названиями, описаниями, категориями и тегами на четырёх языках в стиле Want. Используйте ключи taxonomy, подтверждённые через `GET /api/v1/admin/catalog` рабочего API. Новые ключи требуют отдельных согласованных изменений frontend/backend, релиза и деплоя до импорта; этот workflow сам деплой не разрешает. Не подменяйте неизвестный ключ другим молча.
+4. Просмотрите desktop и mobile изображения, подготовьте manifest с названиями, описаниями, категориями и тегами на четырёх языках в стиле Want. Отдельно подготовьте сюжет коллекции по разделу «Сюжет коллекции» в инструкции каталога; примените `$humanizer:humanizer` к окончательному тексту. Используйте ключи taxonomy, подтверждённые через `GET /api/v1/admin/catalog` рабочего API. Новые ключи требуют отдельных согласованных изменений frontend/backend, релиза и деплоя до импорта; этот workflow сам деплой не разрешает. Не подменяйте неизвестный ключ другим молча.
 5. Выполните `bun run catalog:add /absolute/path/collection.json --dry-run`. Для рабочего импорта требуйте `BACKEND_API_URL=https://wallpapers.want.foundation` и `CATALOG_API_TOKEN_FILE` вне репозитория. Токен даёт доступ только к каталогу. При отсутствии доступа подготовьте manifest и дайте инструкцию README; продолжайте после настройки. Локальный адрес допустим только для явно выбранной тестовой БД.
 6. Выполните `bun run catalog:add /absolute/path/collection.json`, подтвердите записи, затем `bun run catalog:pull`. Сверьте count, ID, переводы и snapshot; существующие обои, рейтинги и комментарии сохраняются. Сетевой сбой требует readback до повторного запуска. Не удаляйте данные для восстановления.
 7. Добавьте новые collection/detail страницы в проверяемые UI templates и проверку поиска нового дизайна на четырёх языках. Сравнение общего числа карточек используйте из каталога.
@@ -34,16 +34,16 @@ description: Добавлять и выпускать новую коллекц�
 
 1. После fetch создайте `release/v<version>` от подтверждённого `origin/development`. Проверьте весь diff будущего выпуска относительно main: он должен содержать согласованные изменения.
 2. Обновите корневой `package.json`, workspace version в `Cargo.toml`, пакет в `Cargo.lock` и `CHANGELOG.md`: одна версия, фактическая дата выпуска, название коллекции, количество дизайнов и польза для посетителей. Опубликуйте `chore(release): prepare v<version>` через `$delivery-commit-publish` с собственным upstream release-ветки.
-3. Выполните проверки на окончательном release-кандидате. Создайте PR в `main`; сохраните в теле ID коллекции, исходный feature PR, версию и release HEAD.
+3. Выполните лёгкие проверки на окончательном release-кандидате. Полный audit/UI/native runtime gate выполнит main после merge, без повторения тяжёлых прогонов на release-ветке. Создайте PR в `main`; сохраните в теле ID коллекции, исходный feature PR, версию и release HEAD.
 4. Выполните обычный merge с явным сообщением `chore(release): publish v<version>` и `--match-head-commit <verified-release-sha>`. Сохраните два родителя: проверенный прежний main и проверенный release HEAD. Не применяйте squash/rebase или bypass.
 5. Подтвердите `MERGED`, родителей, дерево и серверный main SHA. Удалите только эту release-ветку по разделу «Удаление веток».
-6. Создайте annotated тег `v<version>` на подтверждённом merge-коммите main с сообщением `Release <version>`. Опубликуйте только этот тег обычным push; через `git ls-remote` проверьте tag object и peeled SHA. Peeled SHA должен совпасть с подтверждённым main. Тег никогда не перемещайте и не удаляйте.
+6. Создайте annotated тег `v<version>` на подтверждённом merge-коммите main с сообщением `Release <version>`. Опубликуйте только этот тег обычным push; через `git ls-remote` проверьте tag object и peeled SHA. Peeled SHA должен совпасть с подтверждённым main. Тег никогда не перемещайте и не удаляйте. Проверьте matching успешный Release eligibility и сохраните source SHA, main/gate run IDs и точный APP_IMAGE@digest. Ранний тег ожидает main publication до 90 минут; сам тег не запускает build/UI/runtime suite. Ошибка, отсутствие record или несовпадение digest блокируют дальнейший выпуск.
 
 ## 4. Обратный merge и GitHub Release
 
 1. В чистом checkout переключитесь на `development` **до** применения `$delivery-semantic-merge`.
 2. Примените его с явным источником `origin/main`. Соблюдайте весь skill: `--no-ff --no-commit`, семантическое разрешение конфликтов, `git commit --no-edit`, проверка родителей и ancestry, обычный non-force push и серверный readback. Во время вызова не переключайте ветки; двухродительский merge не публикуйте через `pcoat`.
-3. Создайте стабильный GitHub Release на существующем теге через `gh release create` с `--verify-tag --latest --notes-file`. Описание — запись этой версии из changelog. Прочитайте опубликованный Release и сверяйте тег, тело, `draft: false`, `prerelease: false`.
+3. После успешного Release eligibility создайте стабильный GitHub Release на существующем теге через `gh release create` с `--verify-tag --latest --notes-file`. Описание — запись этой версии из changelog. Прочитайте опубликованный Release и сверяйте тег, тело, `draft: false`, `prerelease: false`.
 4. Завершите на синхронизированной development. Проверьте refs, `0/0`, наличие main в ancestry development, защищённый тег и отсутствие временных веток. При отсутствии параллельных изменений деревья release-кандидата, main и development совпадают.
 5. Сообщите ID и количество обоев, API readback, PR/Release URLs, SHA squash/merge, тег, проверки и ограничения. Разделяйте локальные проверки, CI, серверное состояние и Docker/Traefik. Git-релиз не подтверждает деплой или работу Analytics и рекламы.
 
@@ -58,19 +58,16 @@ description: Добавлять и выпускать новую коллекц�
 ```bash
 make check
 make test
-make build
-make test-ui
-make docker-build
 git diff --check
 ```
 
-Соблюдайте правила запуска браузера из `AGENTS.md`. На новом каталоге проверяйте страницы коллекции и обоев во всех языках, canonical/hreflang, sitemap, описание/alt и structured data, поиск по описанию/тегам, фильтры и оба PNG-скачивания. Новый провал проверки блокирует merge; недоступную проверку сообщайте как непроверенную. Проверяйте реальные required CI checks, если они настроены. После конфликтов повторяйте затронутые проверки.
+Ветки и PR выполняют только static/type/format и bounded unit/API/CI-contract проверки. Main проходит audit, полный UI и native amd64/arm64 production runtime с PostgreSQL 18/TLS. Если нужны дополнительные локальные preview/browser проверки каталога, соблюдайте правила запуска браузера из `AGENTS.md`; они не заменяют main gate. На новом каталоге проверяйте страницы коллекции и обоев во всех языках, canonical/hreflang, sitemap, описание/alt и structured data, сюжет на четырёх языках под основными изображениями, реальные размеры PNG и действующую лицензию отдельно от истории, поиск по описанию/тегам, фильтры и оба PNG-скачивания. Новый провал проверки блокирует merge; недоступную проверку сообщайте как непроверенную. Проверяйте реальные required CI checks, если они настроены. После конфликтов повторяйте затронутые проверки.
 
 ## Runtime и публикация образа
 
 - Сохраняйте обязательную production reCAPTCHA: публичные изменения и admin login используют свежие action tokens. Не отключайте её ради CI или деплоя. Credentials остаются вне checkout и образа; migrate их не получает.
-- Выполните `make audit` и `make test-container`. Native CI проверяет linux/amd64 и linux/arm64, затем публикует именно проверенные images через artifacts. Подтвердите обе платформы, OCI revision и общий GHCR digest по свежему readback; не выдавайте локальную сборку за published image.
-- В передаче на VPS укажите точные tag, main SHA и APP_IMAGE@sha256. Проверьте публичный anonymous pull или согласованный read-only доступ. Git release и synthetic Google tests не подтверждают деплой или реальный assessment.
+- Используйте успешный main Checks run: audit, полный UI и native linux/amd64 и linux/arm64 PostgreSQL 18/TLS, затем публикация именно проверенных images через artifacts, без rebuild. На ветках и при push тега эти тяжёлые проверки не повторяются. Подтвердите обе платформы, OCI revision и общий GHCR digest по свежему readback; не выдавайте локальную сборку за published image.
+- Используйте [release record и gate](../../../docs/ci-releases.md), включая закреплённую версию no-bypass ruleset в `.github/release-policy.json`. Изменение правил требует полного readback и проверенного обновления policy. В передаче на VPS укажите точные tag, main SHA, run/attempt и APP_IMAGE@sha256. Повтор передаёт gate исходный digest; latest и новая публикация того же SHA не заменяют прежний deployment intent. Проверьте публичный anonymous pull или согласованный read-only доступ. Git release и synthetic Google tests не подтверждают деплой или реальный assessment.
 - На VPS проверьте Web Key ID, domain, service account IAM, настоящий action/hostname/score, вход и публичную запись. При ошибках исправляйте настройки Google; не добавляйте production bypass.
 
 ## Возобновление

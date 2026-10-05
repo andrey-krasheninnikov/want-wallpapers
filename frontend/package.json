@@ -11,7 +11,7 @@
     "test:ui": "bunx --bun playwright test",
     "catalog:pull": "bun scripts/catalog-pull.ts",
     "catalog:add": "bun scripts/catalog-add.ts",
-    "test": "bun test tests/catalog-search.test.ts tests/search-filters.test.ts tests/catalog-add.test.ts"
+    "test": "bun test tests/seo-validation.test.ts tests/catalog-search.test.ts tests/search-filters.test.ts tests/catalog-add.test.ts tests/privacy.test.ts tests/privacy-runtime.test.ts && bun tests/privacy-sdk.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4",
@@ -40,6 +40,9 @@
     "@types/lunr": "^2.3.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sax": "1.2.7",
+    "entities": "6.0.1",
+    "sax": "1.6.1",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3"
   }

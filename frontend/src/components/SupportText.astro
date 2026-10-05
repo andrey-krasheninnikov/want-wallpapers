@@ -1,0 +1,8 @@
+---
+import { supportCopy } from '../data/editorial';
+import type { Locale } from '../data/catalog';
+type Props = { locale: Locale; page: keyof typeof supportCopy.en };
+const { locale, page } = Astro.props;
+const [title, ...paragraphs] = supportCopy[locale][page];
+---
+<section class="shell section-space"><div class="editorial" data-support-text><h2>{title}</h2>{paragraphs.map((paragraph) => <p>{paragraph}</p>)}</div></section>

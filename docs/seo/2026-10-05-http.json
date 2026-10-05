@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-10-05T13:13:55.368495+00:00",
+  "scope": "Public Cloudflare endpoint, synthetic SiteAuditBot request",
+  "results": [
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "public, max-age=14400, must-revalidate",
+      "edgeCache": "REVALIDATED",
+      "managedContentSignal": "Content-Signal: search=yes,ai-train=no,use=reference",
+      "originRobotsExcerpt": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: https://wallpapers.want.foundation/sitemap-index.xml\n"
+    },
+    {
+      "path": "/sitemap-index.xml",
+      "status": 200,
+      "contentType": "text/xml",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "edgeCache": "DYNAMIC"
+    },
+    {
+      "path": "/ru/",
+      "status": 200,
+      "contentType": "text/html",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "edgeCache": "DYNAMIC"
+    },
+    {
+      "path": "/admin/login/",
+      "status": 200,
+      "contentType": "text/html",
+      "cacheControl": "no-store",
+      "edgeCache": "DYNAMIC"
+    },
+    {
+      "path": "/api/v1/catalog",
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "edgeCache": "DYNAMIC"
+    }
+  ]
+}

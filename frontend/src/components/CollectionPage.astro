@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Editorial from './Editorial.astro';
 import { WallpaperGrid, Crumbs } from './Gallery';
 import { getCollectionWallpapers, type Collection, type Locale } from '../data/catalog';
 import { previewData } from '../data/previews';
@@ -19,4 +20,5 @@ const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', na
   <div class="shell page-heading"><Crumbs label={ui.collections} items={[{ href: localPath(locale, '/collections/'), title: ui.collections }, { title: collection.title[locale] }]} /><h1 class="display-title mt-6">{collection.title[locale]}</h1><p class="mt-6 max-w-3xl text-base leading-relaxed text-muted-foreground">{collection.description[locale]}</p></div>
   {cover && <div class="shell"><figure class="overflow-hidden rounded-xl border bg-card"><img src={cover.src} width={cover.width} height={cover.height} alt={items[0].description[locale]} fetchpriority="high" class="gallery-image" /></figure></div>}
   <section class="shell mt-8 sm:mt-10"><div class="mb-6 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-semibold tracking-tight">{ui.inCollection}</h2><p class="text-sm text-muted-foreground">{items.length} {ui.wallpapers}</p></div><WallpaperGrid items={cards} /></section>
+  <Editorial locale={locale} collection={collection} />
 </Base>

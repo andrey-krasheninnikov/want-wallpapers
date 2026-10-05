@@ -18,7 +18,7 @@ export type CollectionCardData = {
 export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardData; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return <article className="min-w-0" data-wallpaper-card={item.id}>
-    <Card className="group h-full gap-0 overflow-hidden py-0 shadow-none transition-colors hover:border-ring/60">
+    <Card className="group gallery-card">
       <a href={item.href} className="block h-full rounded-xl">
         <div className="overflow-hidden bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
         <CardContent className="flex items-start justify-between gap-4 p-4 sm:p-5">
@@ -33,7 +33,7 @@ export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardD
 export function CollectionCard({ item, headingLevel = 3 }: { item: CollectionCardData; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return <article className="min-w-0">
-    <Card className="group h-full gap-0 overflow-hidden py-0 shadow-none transition-colors hover:border-ring/60">
+    <Card className="group gallery-card">
       <a href={item.href} className="flex h-full flex-col rounded-xl">
         {item.image && <img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" />}
         <CardContent className="flex flex-1 flex-col gap-4 p-5 sm:p-6">

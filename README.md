@@ -7,6 +7,7 @@
 - `frontend/`: Astro, React, стили, статический каталог и инструменты export/import.
 - `backend/`: Axum/Tokio/SQLx, миграции PostgreSQL 18, авторизация, публичный API и модерация.
 - `deploy/`: один контейнер за существующим Traefik, внешний PostgreSQL.
+- `automation/n8n/`: отдельный локальный n8n на MacBook, постоянный Docker volume и приватные snapshots.
 - `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
 
 Нужны Bun 1.3.14, Rust 1.93.0, Python 3 и Docker для тестовой БД. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
@@ -29,6 +30,8 @@ make test-ui
 Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: разрешите `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md). CI создаёт профили с точными путями и выполняет smoke-launch на одноразовом runner; настройки VPS не меняются.
 
 ## Разработка
+
+Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/` и `/pt-br/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
 
 `make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
 
@@ -71,10 +74,12 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 ## Эксплуатация
 
+[Локальный n8n](docs/local-n8n.md): запуск на MacBook, приватный вход, постоянные workflows/credentials/Wait и журнал, backup и восстановление в новый volume. n8n не развёртывается на VPS и не принимает публичные webhooks.
+
 [Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
 
 Analytics включается только с measurement ID, согласием посетителя и разрешённым регионом. Российский IP или ошибка ipwho.is отключает социальные функции, обращения и Analytics в публичном интерфейсе; просмотр, поиск и скачивание остаются. Админка работает независимо от региона. Закрытые обращения удаляются ежедневной задачей через год.
 
-Workflow Checks запускает проверки для PR, ручного запуска и push в main, development, feature/vps-traefik-deployment и feature/rust-backend-monorepo. После успешных native container проверок на amd64 и arm64 main/VPS-ветка публикуют `ghcr.io/andrey-krasheninnikov/want-wallpapers:<commit-SHA>`. Это multi-platform index linux/amd64 + linux/arm64 из проверенных CI artifacts. PR и Rust-ветка образ не публикуют. Деплой VPS выполняется отдельно. Для production используйте проверенный digest из результата публикации.
+Workflow Checks выполняет лёгкие static/type/format и unit/API проверки на ветках, PR и ручных запусках. Только main исходного репозитория проходит audit, полный UI и native production runtime PostgreSQL 18/TLS на amd64/arm64 и публикует те же проверенные images без rebuild. OCI index и долговечный release record содержат source SHA, platform digests/revisions и run/attempt. Защищённый annotated v* тег проходит отдельный read-only gate; ранний тег ожидает main publication до 90 минут. Для повторения требуется исходный digest. [CI и допуск релиза](docs/ci-releases.md) описывает event matrix, контракт, проверку защиты и outputs для будущего deployment. Деплой VPS выполняется отдельно.
 
 Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.

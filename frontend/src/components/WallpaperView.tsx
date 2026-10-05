@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, ArrowUpRight, Monitor, Smartphone } from 'lucide-react';
+import { Download, Monitor, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,9 +26,9 @@ export default function WallpaperView({ locale, id, description, variants, tags 
           <TabsTrigger value="mobile" className="min-h-12 gap-2 whitespace-normal px-2 py-2 leading-snug"><Smartphone className="size-4 shrink-0" aria-hidden="true" />{ui.mobile}</TabsTrigger>
         </TabsList>
       <div className="grid gap-3">
-        <Button asChild size="lg"><a id="download-link" href={image.download} download onClick={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Download aria-hidden="true" />{ui.download}</a></Button>
-        <Button asChild variant="outline"><a id="original-link" href={image.original} target="_blank" rel="noopener noreferrer">{ui.viewOriginal}<ArrowUpRight aria-hidden="true" /></a></Button>
-        <noscript><Button asChild variant="outline"><a href={variants.mobile.download} download>{ui.mobile} · {ui.download}</a></Button></noscript>
+        <form id="download-form" method="get" action={image.download} onSubmit={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Button id="download-link" type="submit" size="lg" className="w-full"><Download aria-hidden="true" />{ui.download} · {ui[variant]}</Button></form>
+        <details key={variant} className="original-preview"><summary>{ui.viewOriginal} · {ui[variant]}</summary><img src={image.original} width={image.originalWidth} height={image.originalHeight} alt={description} loading="lazy" /></details>
+        <noscript><form method="get" action={variants.mobile.download}><Button type="submit" variant="outline" className="w-full">{ui.mobile} · {ui.download}</Button></form></noscript>
       </div>
       <p className="text-sm leading-relaxed text-muted-foreground">{ui.formatHint}. <a className="text-link underline" href={localPath(locale, '/license/')}>{ui.license}</a></p>
       <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="min-h-11 px-3 py-2 text-sm hover:bg-accent"><a href={tag.href}>{tag.title}</a></Badge>)}</div>

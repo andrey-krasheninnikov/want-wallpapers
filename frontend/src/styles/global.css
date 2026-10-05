@@ -67,12 +67,52 @@
 }
 
 @layer components {
+  .ui-label { @apply flex items-center gap-2 text-sm leading-none font-medium select-none; }
+  .ui-textarea { @apply flex field-sizing-content min-h-16 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none; }
+  .ui-input { @apply min-h-12 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none; }
+  .ui-separator { @apply shrink-0 bg-border; }
+  .ui-field-group { container-type: inline-size; container-name: field-group; @apply flex w-full flex-col gap-7; }
+  .ui-field-label { @apply flex w-fit gap-2 leading-snug; }
+  .ui-tabs-trigger { @apply relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all; }
+  .ui-tabs-list { @apply inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground; }
+  .ui-tabs-base { @apply flex gap-2; }
+  .ui-navigation-link { @apply flex flex-col gap-1 rounded-sm p-2 text-sm transition-all outline-none; }
+  .ui-select-trigger { @apply flex w-fit items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none; }
+  .ui-accordion-trigger { @apply flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none; }
+  .ui-button-base { @apply inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-normal transition-colors outline-none; }
+  .ui-button-default { @apply bg-primary text-primary-foreground; }
+  .ui-button-destructive { @apply bg-destructive text-background; }
+  .ui-button-outline { @apply border bg-background shadow-xs; }
+  .ui-button-secondary { @apply bg-secondary text-secondary-foreground; }
+  .ui-button-link { @apply text-link underline-offset-4; }
+  .ui-button-size-default { @apply min-h-11 px-4 py-3; }
+  .ui-button-size-xs { @apply min-h-11 gap-1 rounded-md px-2 text-sm; }
+  .ui-button-size-sm { @apply min-h-11 gap-1.5 rounded-md px-3; }
+  .ui-button-size-lg { @apply min-h-12 rounded-md px-6; }
+  .ui-button-size-icon-xs { @apply size-11 rounded-md; }
+  .ui-badge-base { @apply inline-flex w-fit max-w-full shrink-0 items-center justify-center gap-1 rounded-md border border-transparent px-3 py-1 text-sm font-medium whitespace-normal transition-colors; }
+  .ui-badge-default { @apply bg-primary text-primary-foreground; }
+  .ui-badge-secondary { @apply bg-secondary text-secondary-foreground; }
+  .ui-badge-destructive { @apply bg-destructive text-background; }
+  .ui-badge-outline { @apply border-border text-foreground; }
+  .ui-badge-link { @apply text-link underline-offset-4; }
+  .ui-card-base { @apply flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm; }
+  .ui-card-header { container-type: inline-size; container-name: card-header; @apply grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6; }
+  .ui-card-footer { @apply flex items-center px-6; }
+  .gallery-card { @apply h-full gap-0 overflow-hidden py-0 shadow-none transition-colors; }
+  .original-preview summary { @apply min-h-11 cursor-pointer rounded-md border px-4 py-3 text-sm text-link; }
+  .original-preview img { @apply mt-3 h-auto w-full rounded-md; }
+  .footer-link { @apply h-auto min-h-11 justify-start px-4 py-2 text-left whitespace-normal; }
+  .editorial { @apply max-w-3xl; }
+  .editorial h2 { @apply text-2xl font-semibold tracking-tight; }
+  .editorial h3 { @apply mt-6 text-lg font-semibold; }
+  .editorial p, .editorial ul { @apply mt-4 text-base leading-relaxed text-muted-foreground; }
+  .editorial a { @apply text-link underline; }
   .shell { width: min(100% - 2rem, 1280px); margin-inline: auto; }
   .section-space { padding-top: 4rem; }
   .page-heading { padding-block: 2.5rem 2rem; }
   .eyebrow { font-size: .875rem; font-weight: 600; color: var(--link); }
-  .display-title { font-size: clamp(2.5rem, 5vw, 5rem); font-weight: 650; line-height: 1.12; letter-spacing: -.045em; text-wrap: balance; overflow-wrap: break-word; }
-  .display-title.max-w-2xl { font-size: clamp(2.5rem, 4vw, 5rem); }
+  .display-title { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 650; line-height: 1.12; letter-spacing: -.045em; text-wrap: balance; overflow-wrap: break-word; }
   .section-title { font-size: clamp(1.75rem, 3vw, 2.75rem); font-weight: 650; line-height: 1.2; letter-spacing: -.035em; text-wrap: balance; }
   .gallery-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
   .gallery-image { width: 100%; height: auto; }
@@ -106,3 +146,38 @@
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
 }
+
+@utility ui-label { @apply group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50; }
+@utility ui-textarea { @apply placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:aria-invalid:ring-destructive/40; }
+@utility ui-input { @apply selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40; }
+@utility ui-separator { @apply data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px; }
+@utility ui-field-group { @apply data-[slot=checkbox-group]:gap-3 [&>[data-slot=field-group]]:gap-4; }
+@utility ui-field-label { @apply group-data-[disabled=true]/field:opacity-50 has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border [&>*]:data-[slot=field]:p-4 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5 dark:has-data-[state=checked]:bg-primary/10; }
+@utility ui-tabs-trigger { @apply group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-[orientation=horizontal]/tabs:after:inset-x-0 group-data-[orientation=horizontal]/tabs:after:bottom-[-5px] group-data-[orientation=horizontal]/tabs:after:h-0.5 group-data-[orientation=vertical]/tabs:after:inset-y-0 group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-[state=active]:after:opacity-100; }
+@utility ui-tabs-list { @apply group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none; }
+@utility ui-tabs-base { @apply data-[orientation=horizontal]:flex-col; }
+@utility ui-navigation-link { @apply hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 data-[active=true]:bg-accent/50 data-[active=true]:text-accent-foreground data-[active=true]:hover:bg-accent data-[active=true]:focus:bg-accent [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground; }
+@utility ui-select-trigger { @apply focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground; }
+@utility ui-accordion-trigger { @apply hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180; }
+@utility ui-button-base { @apply focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4; }
+@utility ui-button-default { @apply hover:bg-primary/90; }
+@utility ui-button-destructive { @apply hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40; }
+@utility ui-button-outline { @apply hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50; }
+@utility ui-button-secondary { @apply hover:bg-secondary/80; }
+@utility ui-button-ghost { @apply hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50; }
+@utility ui-button-link { @apply hover:underline; }
+@utility ui-button-size-default { @apply has-[>svg]:px-3; }
+@utility ui-button-size-xs { @apply has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3; }
+@utility ui-button-size-sm { @apply has-[>svg]:px-2.5; }
+@utility ui-button-size-lg { @apply has-[>svg]:px-4; }
+@utility ui-button-size-icon-xs { @apply [&_svg:not([class*='size-'])]:size-3; }
+@utility ui-badge-base { @apply focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3; }
+@utility ui-badge-default { @apply [a&]:hover:bg-primary/90; }
+@utility ui-badge-secondary { @apply [a&]:hover:bg-secondary/90; }
+@utility ui-badge-destructive { @apply focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90; }
+@utility ui-badge-outline { @apply [a&]:hover:bg-accent [a&]:hover:text-accent-foreground; }
+@utility ui-badge-ghost { @apply [a&]:hover:bg-accent [a&]:hover:text-accent-foreground; }
+@utility ui-badge-link { @apply [a&]:hover:underline; }
+@utility ui-card-header { @apply has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6; }
+@utility ui-card-footer { @apply [.border-t]:pt-6; }
+@utility gallery-card { @apply hover:border-ring/60; }
