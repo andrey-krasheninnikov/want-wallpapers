@@ -97,8 +97,20 @@ try:
                 if response.status == 200: break
         except (OSError, urllib.error.URLError): time.sleep(1)
     else: raise RuntimeError('Production image did not become ready.')
+    initial = json.loads((repository / 'backend/data/catalog.json').read_text())
+    expected = json.loads((repository / 'frontend/src/data/catalog-live.json').read_text())
     with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
-        snapshot = json.load(response); assert len(snapshot['collections']) == 3 and len(snapshot['wallpapers']) == 25
+        assert json.load(response) == initial, 'Initial migrations changed.'
+    for collection in expected['collections']:
+        manifest = {'collection': collection, 'wallpapers': [item for item in expected['wallpapers'] if item['collectionId'] == collection['id']]}
+        for attempt in range(2):
+            request = urllib.request.Request(origin + '/api/v1/admin/catalog/import', data=json.dumps(manifest).encode(), headers={'Authorization': 'Bearer ' + values['catalog_api_token'], 'Content-Type': 'application/json'})
+            with urllib.request.urlopen(request) as response:
+                result = json.load(response)['result']
+                assert result in ['created', 'unchanged'] if attempt == 0 else result == 'unchanged'
+    with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
+        assert json.load(response) == expected, 'Runtime catalogue differs from the build snapshot.'
+    print(f"Verified catalogue import/readback and exact-repeat no-op: {len(expected['collections'])} collections and {len(expected['wallpapers'])} wallpapers.")
     with urllib.request.urlopen(origin + '/admin/login/') as response:
         assert 'noindex' in response.headers['X-Robots-Tag']
         assert "'unsafe-inline'" not in response.headers['Content-Security-Policy'].split('style-src')[0]
