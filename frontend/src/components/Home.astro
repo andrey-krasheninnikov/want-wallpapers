@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Editorial from './Editorial.astro';
 import { CollectionGrid, WallpaperGrid, ActionLink } from './Gallery';
 import FAQ from './FAQ';
 import { Badge } from './ui/badge';
@@ -38,4 +39,5 @@ const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Wa
   <section class="shell section-space"><Separator /><div class="grid gap-8 py-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16 lg:py-12"><h2 class="section-title max-w-lg">{text.benefitsTitle}</h2><ol class="grid gap-6">{text.benefits.map(([title, description], index) => <li class="grid grid-cols-[2rem_1fr] gap-4"><span class="pt-1 text-sm text-link">{String(index + 1).padStart(2, '0')}</span><div><h3 class="text-lg font-semibold">{title}</h3><p class="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p></div></li>)}</ol></div><Separator /></section>
   <section class="shell section-space"><div class="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-16"><h2 class="section-title max-w-lg">{text.faqTitle}</h2><FAQ items={text.faq} client:load /></div></section>
   <section class="shell section-space"><div class="grid gap-6 rounded-xl border bg-card p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center lg:p-12"><div><h2 class="section-title max-w-2xl">{text.finalTitle}</h2><p class="mt-4 text-base leading-relaxed text-muted-foreground">{text.finalText}</p></div><div><ActionLink href={localPath(locale, '/search/')} label={ui.viewAll} /></div></div></section>
+  <Editorial locale={locale} />
 </Base>

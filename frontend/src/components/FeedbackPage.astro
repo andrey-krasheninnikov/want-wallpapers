@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SupportText from './SupportText.astro';
 import FeedbackForm from './FeedbackForm';
 import { copy } from '../data/copy';
 import { interfaceCopy } from '../data/interface-copy';
@@ -15,4 +16,5 @@ const ui = copy[locale];
     </div>
     <div class="min-w-0"><FeedbackForm locale={locale} client:load /><noscript><p class="rounded-lg border p-6 text-muted-foreground">{interfaceCopy[locale].javascriptRequired} <a class="text-link underline" href="mailto:wallpapers@want.foundation">wallpapers@want.foundation</a></p></noscript></div>
   </section>
+  <SupportText locale={locale} page="feedback" />
 </Base>

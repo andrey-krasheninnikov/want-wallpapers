@@ -1,0 +1,28 @@
+---
+import { editorialCopy, collectionStories } from '../data/editorial';
+import { copy, localPath } from '../data/copy';
+import { collections, tagLabels, getCollection, getCollectionWallpapers, type Locale, type Collection, type Wallpaper } from '../data/catalog';
+import { previewData, type WallpaperVariant } from '../data/previews';
+type Props = { locale: Locale; collection?: Collection; wallpaper?: Wallpaper; variants?: Record<'desktop' | 'mobile', WallpaperVariant> };
+const { locale, collection, wallpaper, variants } = Astro.props;
+const text = editorialCopy[locale];
+const storyCollection = collection ?? (wallpaper ? getCollection(wallpaper.collection) : undefined);
+const stories = (storyCollection ? [storyCollection] : collections).map((item) => {
+  const paragraphs = collectionStories[item.slug]?.[locale];
+  if (!paragraphs?.length) throw new Error(`Missing collection story: ${item.slug}/${locale}`);
+  return { item, paragraphs: storyCollection ? paragraphs : paragraphs.slice(0, 1) };
+});
+const designs = wallpaper ? [wallpaper] : collection ? getCollectionWallpapers(collection.slug) : [];
+const dimensions = await Promise.all(designs.map(async (item) => ({ item, sizes: variants ?? { desktop: await previewData(item, 'desktop'), mobile: await previewData(item, 'mobile') } })));
+const topics = [...new Set(designs.flatMap((item) => item.tags))];
+---
+<section class="shell section-space" data-editorial>
+  <div class="editorial">
+    <h2>{storyCollection ? text.story : text.title}</h2>
+    {stories.map(({ item, paragraphs }) => <><h3><a href={localPath(locale, `/collections/${item.slug}/`)}>{item.title[locale]}</a></h3>{paragraphs.map((paragraph) => <p>{paragraph}</p>)}</>)}
+    {collection && <><h3>{text.works}</h3><ul>{designs.map((item) => <li><a href={localPath(locale, `/wallpapers/${item.slug}/`)}>{item.title[locale]}</a>: {item.description[locale]}</li>)}</ul></>}
+    {dimensions.length > 0 && <><h3>{text.sizes}</h3><p>{text.files}</p><ul>{dimensions.map(({ item, sizes }) => <li>{item.title[locale]}: {copy[locale].desktop} {sizes.desktop.originalWidth} × {sizes.desktop.originalHeight}; {copy[locale].mobile} {sizes.mobile.originalWidth} × {sizes.mobile.originalHeight} · PNG</li>)}</ul></>}
+    <h3>{text.license}</h3><p>{text.licenseText} <a href={localPath(locale, '/license/')}>{copy[locale].license}</a></p>
+    {topics.length > 0 && <nav aria-label={text.topics}><h3>{text.topics}</h3><p>{topics.map((tag, index) => <><a href={localPath(locale, `/search/?q=${encodeURIComponent(tagLabels[tag][locale])}`)}>{tagLabels[tag][locale]}</a>{index < topics.length - 1 ? ' · ' : ''}</>)}</p></nav>}
+  </div>
+</section>

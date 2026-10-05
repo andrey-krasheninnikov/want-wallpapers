@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Editorial from './Editorial.astro';
 import { WallpaperGrid, Crumbs, ActionLink } from './Gallery';
 import WallpaperView from './WallpaperView';
 import SocialPanel from './SocialPanel';
@@ -27,4 +28,5 @@ const schema = { '@context': 'https://schema.org', '@type': 'ImageObject', name:
   <section class="shell" aria-label={wallpaper.title[locale]}><WallpaperView locale={locale} id={wallpaper.id} description={wallpaper.description[locale]} variants={variants} tags={tags} client:load /></section>
   <div class="shell section-space"><div class="max-w-4xl"><SocialPanel id={wallpaper.id} locale={locale} client:load /><noscript><p class="rounded-lg border p-6 text-muted-foreground">{interfaceCopy[locale].javascriptRequired}</p></noscript></div></div>
   <section class="shell section-space"><div class="mb-8 flex flex-wrap items-end justify-between gap-6"><h2 class="section-title">{ui.inCollection}</h2><ActionLink href={localPath(locale, `/collections/${collection.slug}/`)} label={ui.viewCollection} variant="ghost" /></div><WallpaperGrid items={related} /></section>
+  <Editorial locale={locale} wallpaper={wallpaper} variants={variants} />
 </Base>

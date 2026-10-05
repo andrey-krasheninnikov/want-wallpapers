@@ -4,28 +4,28 @@ import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-normal transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "ui-button-base",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "ui-button-default",
         destructive:
-          "bg-destructive text-background hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+          "ui-button-destructive",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "ui-button-outline",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "ui-button-secondary",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-link underline-offset-4 hover:underline",
+          "ui-button-ghost",
+        link: "ui-button-link",
       },
       size: {
-        default: "min-h-11 px-4 py-3 has-[>svg]:px-3",
-        xs: "min-h-11 gap-1 rounded-md px-2 text-sm has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "min-h-11 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "min-h-12 rounded-md px-6 has-[>svg]:px-4",
+        default: "ui-button-size-default",
+        xs: "ui-button-size-xs",
+        sm: "ui-button-size-sm",
+        lg: "ui-button-size-lg",
         icon: "size-11",
-        "icon-xs": "size-11 rounded-md [&_svg:not([class*='size-'])]:size-3",
+        "icon-xs": "ui-button-size-icon-xs",
         "icon-sm": "size-11",
         "icon-lg": "size-12",
       },
