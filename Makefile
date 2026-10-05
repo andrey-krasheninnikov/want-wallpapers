@@ -1,6 +1,6 @@
-.PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
+.PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
-	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate'
+	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate'
 install:
 	bun install --frozen-lockfile --ignore-scripts
 	cargo fetch --locked
@@ -22,7 +22,9 @@ test-backend: test-db
 	python3 scripts/test-run.py cargo test --locked --workspace
 test-frontend:
 	bun run test
-test: test-frontend test-backend
+test-ci:
+	python3 -B -m unittest discover -s scripts/tests -v
+test: test-frontend test-backend test-ci
 test-ui: test-db
 	bun run build
 	bun run test:ui

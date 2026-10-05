@@ -3,16 +3,55 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches: [development, main, feature/vps-traefik-deployment, feature/rust-backend-monorepo]
+    branches: ['**']
 permissions:
   contents: read
 concurrency:
   group: checks-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 env:
   ASTRO_TELEMETRY_DISABLED: '1'
 jobs:
   verify:
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      full: ${{ steps.selection.outputs.full }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Select verification mode
+        id: selection
+        run: |
+          python3 scripts/ci-release.py plan > "$RUNNER_TEMP/ci-plan.json"
+          jq -r '"full=\(.full)"' "$RUNNER_TEMP/ci-plan.json" >> "$GITHUB_OUTPUT"
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.3.14
+      - name: Install Rust toolchain
+        run: rustup toolchain install 1.93.0 --profile minimal --component rustfmt --component clippy
+      - name: Install dependencies
+        run: make install
+      - name: Static checks
+        run: make check
+      - name: PostgreSQL 18 and application tests
+        timeout-minutes: 10
+        run: make test
+      - name: Dependency audit
+        if: steps.selection.outputs.full == 'true'
+        run: |
+          cargo install cargo-audit --version 0.22.2 --locked
+          make audit
+  ui:
+    name: Full UI
+    needs: verify
+    if: >-
+      github.repository == 'andrey-krasheninnikov/want-wallpapers' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.verify.outputs.full == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -23,17 +62,9 @@ jobs:
         with:
           bun-version: 1.3.14
       - name: Install Rust toolchain
-        run: rustup toolchain install 1.93.0 --profile minimal --component rustfmt --component clippy
+        run: rustup toolchain install 1.93.0 --profile minimal
       - name: Install dependencies
         run: make install
-      - name: Dependency audit
-        run: |
-          cargo install cargo-audit --version 0.22.2 --locked
-          make audit
-      - name: Static checks
-        run: make check
-      - name: PostgreSQL 18 and application tests
-        run: make test
       - name: Install browser
         run: cd frontend && bunx playwright install --with-deps chromium
       - name: Enable sandbox for the installed Playwright browsers
@@ -65,6 +96,10 @@ jobs:
           if-no-files-found: ignore
   containers:
     name: Runtime (${{ matrix.arch }})
+    if: >-
+      github.repository == 'andrey-krasheninnikov/want-wallpapers' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 50
     strategy:
@@ -85,27 +120,34 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: 1.3.14
-      - name: Build the native runtime image
-        run: make docker-build
+      - name: Build and identify the native runtime image
+        run: |
+          make docker-build
+          docker image inspect want-wallpapers:local --format '{{json .}}' > "$RUNNER_TEMP/checked-image.json"
       - name: Production image and PostgreSQL 18 TLS
         run: make test-container
       - name: Save the checked image
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/vps-traefik-deployment')
         run: docker save want-wallpapers:local --output "$RUNNER_TEMP/runtime-image.tar"
       - name: Checked image
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/vps-traefik-deployment')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: runtime-image-${{ matrix.arch }}
-          path: ${{ runner.temp }}/runtime-image.tar
+          name: runtime-image-${{ matrix.arch }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/runtime-image.tar
+            ${{ runner.temp }}/checked-image.json
           retention-days: 1
           if-no-files-found: error
   publish-platforms:
-    needs: [verify, containers]
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/vps-traefik-deployment')
+    name: Publish (${{ matrix.arch }})
+    needs: [verify, ui, containers]
+    if: >-
+      github.repository == 'andrey-krasheninnikov/want-wallpapers' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         include:
           - { arch: amd64, runner: ubuntu-24.04 }
@@ -114,9 +156,12 @@ jobs:
       contents: read
       packages: write
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
-          name: runtime-image-${{ matrix.arch }}
+          name: runtime-image-${{ matrix.arch }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}
       - name: Push the checked native image
         env:
@@ -124,33 +169,56 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          REFERENCE="$IMAGE:$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$ARCH"
           trap 'docker logout ghcr.io' EXIT
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker load --input "$RUNNER_TEMP/runtime-image.tar"
-          test "$(docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' want-wallpapers:local)" = "$GITHUB_SHA"
-          test "$(docker inspect --format '{{ .Architecture }}' want-wallpapers:local)" = "$ARCH"
-          docker tag want-wallpapers:local "$IMAGE:$GITHUB_SHA-$ARCH"
-          docker push "$IMAGE:$GITHUB_SHA-$ARCH"
+          python3 scripts/ci-release.py image --checked "$RUNNER_TEMP/checked-image.json" --arch "$ARCH"
+          docker tag want-wallpapers:local "$REFERENCE"
+          docker push "$REFERENCE"
+          python3 scripts/ci-release.py image --checked "$RUNNER_TEMP/checked-image.json" --arch "$ARCH" --reference "$REFERENCE" > "$RUNNER_TEMP/$ARCH.json"
+      - name: Platform publication evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: platform-${{ matrix.arch }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/${{ matrix.arch }}.json
+          retention-days: 1
+          if-no-files-found: error
   publish:
-    needs: publish-platforms
+    needs: [verify, ui, containers, publish-platforms]
+    if: >-
+      github.repository == 'andrey-krasheninnikov/want-wallpapers' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
       packages: write
     steps:
-      - name: Publish the multi-platform manifest
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          pattern: platform-*-${{ github.run_attempt }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/platforms
+      - name: Publish the verified OCI index and durable release record
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
           trap 'docker logout ghcr.io' EXIT
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          AMD64="$(docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA-amd64" --format '{{.Manifest.Digest}}')"
-          ARM64="$(docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA-arm64" --format '{{.Manifest.Digest}}')"
-          docker buildx imagetools create --tag "$IMAGE:$GITHUB_SHA" "$IMAGE@$AMD64" "$IMAGE@$ARM64"
-          docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA"
-          docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA" --raw > "$RUNNER_TEMP/runtime-manifest.json"
-          jq --exit-status '[.manifests[].platform | "\(.os)/\(.architecture)"] | sort == ["linux/amd64", "linux/arm64"]' "$RUNNER_TEMP/runtime-manifest.json"
-          DIGEST="$(docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA" --format '{{.Manifest.Digest}}')"
-          printf 'APP_IMAGE=%s@%s\n' "$IMAGE" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/ci-release.py record --platform-directory "$RUNNER_TEMP/platforms" > "$RUNNER_TEMP/release-record.json"
+          python3 scripts/ci-release.py publish-index --record "$RUNNER_TEMP/release-record.json" > "$RUNNER_TEMP/published-release.json"
+          DIGEST="$(jq -r .indexDigest "$RUNNER_TEMP/published-release.json")"
+          printf 'APP_IMAGE=%s@%s\nSource: %s\nRun: %s attempt %s\n' "$IMAGE" "$DIGEST" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
+      - name: Release record copy
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-record-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/published-release.json
+          retention-days: 90
+          if-no-files-found: error
