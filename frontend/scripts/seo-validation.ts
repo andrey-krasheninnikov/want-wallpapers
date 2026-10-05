@@ -41,29 +41,42 @@ export async function parsePage(html: string, path: string): Promise<Page> {
 
 export function parseSitemap(xml: string): { kind: string; locations: string[] } {
   const parser = sax.parser(true, { xmlns: true, trim: true });
+  const namespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
   const locations: string[] = [];
+  const elements: string[] = [];
   let kind = '';
-  let depth = 0;
+  let entryHasLocation = false;
   let location: string | undefined;
   parser.ondoctype = () => { throw new Error('Sitemap must not contain a doctype'); };
   parser.onopentag = (node) => {
     require('local' in node && 'uri' in node, 'Sitemap namespaces required');
-    if (depth++ === 0) {
+    require(location === undefined, 'Sitemap location must contain text only');
+    if (elements.length === 0) {
       kind = node.local;
-      require(['urlset', 'sitemapindex'].includes(kind) && node.uri === 'http://www.sitemaps.org/schemas/sitemap/0.9', 'Invalid sitemap root or namespace');
+      require(['urlset', 'sitemapindex'].includes(kind) && node.uri === namespace, 'Invalid sitemap root or namespace');
+    } else if (elements.length === 1) {
+      require(node.local === (kind === 'urlset' ? 'url' : 'sitemap') && node.uri === namespace, 'Invalid sitemap entry');
+      entryHasLocation = false;
     }
     if (node.local === 'loc') {
-      require(depth === 3 && node.uri === 'http://www.sitemaps.org/schemas/sitemap/0.9', 'Invalid sitemap loc element');
+      require(elements.length === 2 && node.uri === namespace && !entryHasLocation, 'Invalid or repeated sitemap loc element');
       location = '';
     }
+    elements.push(node.local);
   };
   parser.ontext = (text) => { if (location !== undefined) location += text; };
-  parser.onclosetag = (name) => {
-    if (name === 'loc') { require(location, 'Empty sitemap location'); locations.push(location); location = undefined; }
-    depth--;
+  parser.oncdata = parser.ontext;
+  parser.onclosetag = () => {
+    const name = elements.pop();
+    if (name === 'loc') {
+      require(location, 'Empty sitemap location');
+      locations.push(location);
+      location = undefined;
+      entryHasLocation = true;
+    } else if (elements.length === 1) require(entryHasLocation, 'Sitemap entry has no location');
   };
   parser.write(xml).close();
-  require(kind && locations.length && depth === 0, 'Empty or incomplete sitemap');
+  require(kind && locations.length && elements.length === 0, 'Empty or incomplete sitemap');
   require(new Set(locations).size === locations.length, 'Duplicate sitemap location');
   return { kind, locations };
 }

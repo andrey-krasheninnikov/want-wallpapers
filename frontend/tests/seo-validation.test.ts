@@ -52,6 +52,10 @@ test('ordinary PNG navigation is rejected while a native GET action is allowed',
 test('strict sitemap XML decodes URLs and rejects malformed structure', () => {
   const xml = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${origin}/</loc></url></urlset>`;
   expect(parseSitemap(xml)).toEqual({ kind: 'urlset', locations: [origin + '/'] });
+  const prefixed = xml.replace(/<(\/?)(urlset|url|loc)(?=[ >])/g, '<$1s:$2').replace('xmlns=', 'xmlns:s=');
+  expect(parseSitemap(prefixed)).toEqual(parseSitemap(xml));
+  const invalidEntries = [xml.replaceAll('<url>', '<wrong>').replaceAll('</url>', '</wrong>'), xml.replace('</loc>', '</loc><loc>' + origin + '/ru/</loc>'), xml.replace('<loc>' + origin + '/</loc>', ''), xml.replace(origin + '/', '<nested>' + origin + '/</nested>')];
+  for (const invalid of invalidEntries) expect(() => parseSitemap(invalid)).toThrow();
   for (const invalid of [xml.replace('</url>', '</missing>'), xml.replace('http://www.sitemaps.org/schemas/sitemap/0.9', 'wrong'), '<urlset>', '<!DOCTYPE urlset>' + xml, xml.replace('<url>', '<url><loc></loc>')]) expect(() => parseSitemap(invalid)).toThrow();
 });
 
