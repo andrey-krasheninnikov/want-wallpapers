@@ -1,3 +1,5 @@
+DEPLOY_ENV_FILE ?= deploy/.env
+
 .PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
 	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate'
@@ -12,6 +14,7 @@ build:
 	bun run build
 	cargo build --locked --release -p want-wallpapers-server
 check:
+	python3 scripts/test-deploy-profile.py
 	bun run check
 	cargo fmt --all -- --check
 	cargo clippy --locked --workspace --all-targets -- -D warnings
@@ -35,11 +38,14 @@ catalog-pull:
 catalog-add:
 	bun run catalog:add "$(MANIFEST)" $(ARGS)
 docker-build:
-	docker build --build-arg VCS_REF="$$(git rev-parse HEAD)" --build-arg PUBLIC_FIREBASE_API_KEY --build-arg PUBLIC_FIREBASE_PROJECT_ID --build-arg PUBLIC_FIREBASE_APP_ID --build-arg PUBLIC_FIREBASE_MEASUREMENT_ID --tag want-wallpapers:local .
+	docker build --build-arg VCS_REF="$$(git rev-parse HEAD)" --build-arg PUBLIC_FIREBASE_API_KEY --build-arg PUBLIC_FIREBASE_PROJECT_ID --build-arg PUBLIC_FIREBASE_APP_ID --build-arg PUBLIC_FIREBASE_MEASUREMENT_ID --tag "$${TEST_APP_IMAGE:-want-wallpapers:local}" .
 deploy-config:
-	docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
+	docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml config --quiet
 migrate:
-	docker compose --env-file deploy/.env -f deploy/compose.yaml --profile operations run --rm migrate
+	@active_app="$$(docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml ps --all --status running --status restarting --status paused --status created --status removing -q app)"; \
+	 test $$? -eq 0 || exit 1; \
+	 test -z "$$active_app" || { echo 'Stop app in an approved maintenance window before migrations.'; exit 1; }
+	docker compose --env-file "$(DEPLOY_ENV_FILE)" -f deploy/compose.yaml --profile operations run --rm migrate
 
 .PHONY: test-container
 test-container: test-db
