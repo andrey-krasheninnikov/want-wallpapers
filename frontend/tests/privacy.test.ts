@@ -19,7 +19,7 @@ test('stored independent preferences take precedence over legacy choices', () =>
 });
 
 test('new visitors wait for explicit permission in the EEA and unknown countries', () => {
-  for (const country of [null, 'DE', 'IS', 'LI', 'NO']) {
+  for (const country of [null, 'DE', 'IS', 'LI', 'NO', 'AX', 'GP', 'GF', 'MQ', 'RE', 'YT', 'MF']) {
     expect(effectiveCookiePreferences(null, country)).toEqual({ analytics: false, advertising: false });
   }
   for (const country of ['RU', 'KZ', 'BY', 'GE', 'BR', 'GB', 'CH']) {

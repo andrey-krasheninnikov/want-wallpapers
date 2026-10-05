@@ -11,7 +11,7 @@
     "test:ui": "bunx --bun playwright test",
     "catalog:pull": "bun scripts/catalog-pull.ts",
     "catalog:add": "bun scripts/catalog-add.ts",
-    "test": "bun test tests/catalog-search.test.ts tests/search-filters.test.ts tests/catalog-add.test.ts tests/privacy.test.ts tests/privacy-runtime.test.ts"
+    "test": "bun test tests/catalog-search.test.ts tests/search-filters.test.ts tests/catalog-add.test.ts tests/privacy.test.ts tests/privacy-runtime.test.ts && bun tests/privacy-sdk.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4",

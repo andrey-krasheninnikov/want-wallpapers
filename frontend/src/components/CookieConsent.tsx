@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
 import { copy, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
@@ -64,14 +64,16 @@ export default function CookieConsent({ locale, analyticsAvailable }: { locale: 
         target?.focus();
       }}>
         <DialogHeader className="pr-8 text-left"><DialogTitle>{ui.cookieSettings}</DialogTitle><DialogDescription>{text.settings}</DialogDescription></DialogHeader>
-        <div className="grid gap-5 py-2">
-          <div className="flex items-start justify-between gap-4"><div><Label htmlFor="essential-storage">{text.necessary}</Label><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text.necessaryHint}</p></div><Switch id="essential-storage" checked disabled className="mt-1 shrink-0" aria-label={text.necessary} /></div>
-          <Separator />
-          <div className="flex items-start justify-between gap-4"><div><Label htmlFor="analytics-storage">{ui.analyticsLabel}</Label><p id="analytics-hint" className="mt-2 text-sm leading-relaxed text-muted-foreground">{analyticsAvailable ? text.analyticsHint : text.unavailableAnalytics}</p></div><Switch id="analytics-storage" checked={draft.analytics} onCheckedChange={(value) => change('analytics', value)} aria-describedby="analytics-hint" className="mt-1 shrink-0" /></div>
-          <Separator />
-          <div className="flex items-start justify-between gap-4"><div><Label htmlFor="advertising-storage">{ui.advertisingLabel}</Label><p id="advertising-hint" className="mt-2 text-sm leading-relaxed text-muted-foreground">{text.advertisingHint}</p></div><Switch id="advertising-storage" checked={draft.advertising} onCheckedChange={(value) => change('advertising', value)} aria-describedby="advertising-hint" className="mt-1 shrink-0" /></div>
+        <FieldSet aria-label={ui.cookieSettings} className="gap-5 py-2">
+          <FieldGroup className="gap-5">
+            <Field orientation="horizontal" data-disabled className="gap-4"><FieldContent className="gap-2"><FieldLabel htmlFor="essential-storage">{text.necessary}</FieldLabel><FieldDescription className="leading-relaxed">{text.necessaryHint}</FieldDescription></FieldContent><Switch id="essential-storage" checked disabled className="mt-1 shrink-0" aria-label={text.necessary} /></Field>
+            <Separator />
+            <Field orientation="horizontal" className="gap-4"><FieldContent className="gap-2"><FieldLabel htmlFor="analytics-storage">{ui.analyticsLabel}</FieldLabel><FieldDescription id="analytics-hint" className="leading-relaxed">{analyticsAvailable ? text.analyticsHint : text.unavailableAnalytics}</FieldDescription></FieldContent><Switch id="analytics-storage" checked={draft.analytics} onCheckedChange={(value) => change('analytics', value)} aria-describedby="analytics-hint" className="mt-1 shrink-0" /></Field>
+            <Separator />
+            <Field orientation="horizontal" className="gap-4"><FieldContent className="gap-2"><FieldLabel htmlFor="advertising-storage">{ui.advertisingLabel}</FieldLabel><FieldDescription id="advertising-hint" className="leading-relaxed">{text.advertisingHint}</FieldDescription></FieldContent><Switch id="advertising-storage" checked={draft.advertising} onCheckedChange={(value) => change('advertising', value)} aria-describedby="advertising-hint" className="mt-1 shrink-0" /></Field>
+          </FieldGroup>
           <a href={localPath(locale, '/cookies/')} className="w-fit text-sm text-link underline">{ui.cookies}</a>
-        </div>
+        </FieldSet>
         <DialogFooter><Button variant="secondary" onClick={() => save({ analytics: false, advertising: false })}>{ui.essentialOnly}</Button><Button onClick={() => save(draft)}>{text.save}</Button></DialogFooter>
       </DialogContent>
     </Dialog>

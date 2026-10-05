@@ -9,6 +9,7 @@ let enabled = false;
 let events: string[] = [];
 let permissions: Record<string, string> = {};
 let supported: () => Promise<boolean> = async () => true;
+let pendingCollection: Array<() => void> | null = null;
 let ready: Promise<void>;
 let markReady: () => void;
 let serial = 0;
@@ -18,12 +19,15 @@ mock.module('firebase/analytics', () => ({
   isSupported: () => supported(),
   getAnalytics: () => { initialized++; markReady(); return {}; },
   setConsent: (value: Record<string, string>) => { permissions = value; },
-  setAnalyticsCollectionEnabled: (_analytics: unknown, value: boolean) => { enabled = value; },
+  setAnalyticsCollectionEnabled: (_analytics: unknown, value: boolean) => {
+    if (pendingCollection) pendingCollection.push(() => { enabled = value; });
+    else enabled = value;
+  },
   logEvent: (_analytics: unknown, name: string) => { if (enabled) events.push(name); },
 }));
 
 async function browser(response: unknown, stored?: string, pathname = '/') {
-  initialized = 0; enabled = false; events = []; permissions = {};
+  initialized = 0; enabled = false; events = []; permissions = {}; pendingCollection = null;
   supported = async () => true;
   ready = new Promise((resolve) => { markReady = resolve; });
   for (const key of keys) process.env[key] = 'test-public-setting';
@@ -113,6 +117,20 @@ test('a storage event withdraws collection in another open tab', async () => {
   target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2' }));
   expect(enabled).toBe(false);
   expect(privacy.getCookiePreferences()).toEqual({ analytics: false, advertising: false });
+});
+
+test('withdrawal disables collection before pending Firebase initialization completes', async () => {
+  const { privacy, target } = await browser({ success: true, country_code: 'DE' });
+  await privacy.initializePrivacy();
+  pendingCollection = [];
+  privacy.saveCookiePreferences({ analytics: true, advertising: true });
+  await ready;
+  const pendingDefault = permissions;
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  expect(Reflect.get(target, 'ga-disable-test-public-setting')).toBe(true);
+  expect(pendingDefault).toEqual({ analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
+  for (const complete of pendingCollection) complete();
+  expect(enabled).toBe(false);
 });
 
 test('incomplete analytics configuration does not start the SDK', async () => {

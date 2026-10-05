@@ -11,6 +11,7 @@ let initialization: Promise<void> | undefined;
 let analyticsLoading: Promise<void> | undefined;
 let analytics: Analytics | undefined;
 let analyticsSdk: typeof import('firebase/analytics') | undefined;
+let pendingConsent: ReturnType<typeof consent> | undefined;
 
 export function isAnalyticsConfigured(): boolean {
   return [import.meta.env.PUBLIC_FIREBASE_API_KEY, import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
@@ -65,6 +66,9 @@ function consent() {
 }
 
 function updateAnalytics(): void {
+  if (isAnalyticsConfigured()) Reflect.set(window, `ga-disable-${import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID}`, !getCookiePreferences().analytics);
+  // Firebase retains this object until asynchronous initialization emits consent defaults.
+  if (pendingConsent) Object.assign(pendingConsent, consent());
   if (analytics && analyticsSdk) {
     analyticsSdk.setConsent(consent());
     analyticsSdk.setAnalyticsCollectionEnabled(analytics, getCookiePreferences().analytics);
@@ -76,7 +80,8 @@ function updateAnalytics(): void {
     if (!getCookiePreferences().analytics || !await sdk.isSupported() || !getCookiePreferences().analytics) return;
     const { app } = await import('./analytics-client');
     if (!getCookiePreferences().analytics) return;
-    sdk.setConsent(consent());
+    pendingConsent = consent();
+    sdk.setConsent(pendingConsent);
     analytics = sdk.getAnalytics(app);
     analyticsSdk = sdk;
     sdk.setAnalyticsCollectionEnabled(analytics, getCookiePreferences().analytics);
