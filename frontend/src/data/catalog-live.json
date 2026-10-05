@@ -67,6 +67,23 @@
         "zh-cn": "五幅夜景：长毛红棕牛、风车和蓝紫色彗星，映衬着云雾缭绕的群山。",
         "pt-br": "Cinco cenas noturnas com uma vaca ruiva de pelo comprido, um moinho e um cometa azul-violeta sobre montanhas cobertas de névoa."
       }
+    },
+    {
+      "id": "0005-a-night-beneath-the-ice",
+      "slug": "a-night-beneath-the-ice",
+      "count": 5,
+      "title": {
+        "en": "A Night Beneath the Ice",
+        "pt-br": "Uma noite sob o gelo",
+        "ru": "Ночь подо льдом",
+        "zh-cn": "冰下之夜"
+      },
+      "description": {
+        "en": "Five quiet night scenes where ice, dark firs and warm city lights meet blue luminous rings.",
+        "pt-br": "Cinco cenas noturnas tranquilas em que o gelo, os abetos escuros e as luzes quentes da cidade encontram anéis luminosos azuis.",
+        "ru": "Пять тихих ночных сцен, где лёд, тёмные ели и тёплые огни города встречаются с синими светящимися кольцами.",
+        "zh-cn": "五幅静谧的夜景，浮冰、深色冷杉与温暖的城市灯火交织在蓝色光环之间。"
+      }
     }
   ],
   "wallpapers": [
@@ -883,6 +900,158 @@
         "ru": "Крупный план рыжей длинношёрстной коровы с длинными рогами; вокруг цветы, горы в тумане и мельница под яркой сине-фиолетовой кометой.",
         "zh-cn": "长角红棕牛的近景肖像，四周是鲜花、雾中的群山和风车，明亮的蓝紫色彗星悬在夜空中。",
         "pt-br": "Um retrato próximo de uma vaca ruiva de pelo comprido e chifres longos, entre flores, montanhas enevoadas e um moinho sob um cometa azul-violeta brilhante."
+      }
+    },
+    {
+      "id": "a-night-beneath-the-ice-1",
+      "slug": "a-night-beneath-the-ice-1",
+      "collection": "a-night-beneath-the-ice",
+      "collectionId": "0005-a-night-beneath-the-ice",
+      "s3Folder": "0005-a-night-beneath-the-ice",
+      "fileStem": "a-night-beneath-the-ice",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "night",
+        "water",
+        "city",
+        "portal",
+        "light"
+      ],
+      "title": {
+        "en": "A Ring Among the Ice Floes",
+        "pt-br": "Um anel entre blocos de gelo",
+        "ru": "Кольцо среди льдин",
+        "zh-cn": "浮冰间的光环"
+      },
+      "description": {
+        "en": "A golden dome leaves its reflection in dark water between broken ice floes, framed by a luminous blue ring.",
+        "pt-br": "Um domo dourado deixa seu reflexo na água escura entre blocos de gelo, emoldurado por um anel azul luminoso.",
+        "ru": "Золотой купол оставляет отражение в тёмной воде между льдинами, обрамлённое светящимся синим кольцом.",
+        "zh-cn": "金色穹顶的倒影映在碎冰间的深色水面上，被发光的蓝色圆环围住。"
+      }
+    },
+    {
+      "id": "a-night-beneath-the-ice-2",
+      "slug": "a-night-beneath-the-ice-2",
+      "collection": "a-night-beneath-the-ice",
+      "collectionId": "0005-a-night-beneath-the-ice",
+      "s3Folder": "0005-a-night-beneath-the-ice",
+      "fileStem": "a-night-beneath-the-ice",
+      "number": 2,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "night",
+        "water",
+        "city",
+        "portal",
+        "light"
+      ],
+      "title": {
+        "en": "Above the Frozen River",
+        "pt-br": "Sobre o rio congelado",
+        "ru": "Над замёрзшей рекой",
+        "zh-cn": "冰河上空"
+      },
+      "description": {
+        "en": "A blue ring hangs in heavy clouds above a misty river, ice floes and a waterfront glowing with golden lights.",
+        "pt-br": "Um anel azul paira entre nuvens pesadas sobre um rio enevoado, blocos de gelo e uma orla iluminada por luzes douradas.",
+        "ru": "Синее кольцо зависло в тяжёлых облаках над туманной рекой, льдинами и набережной с золотыми огнями.",
+        "zh-cn": "蓝色光环悬在厚重的云层中，下方是薄雾笼罩的河流、浮冰与亮着金色灯火的河岸。"
+      }
+    },
+    {
+      "id": "a-night-beneath-the-ice-3",
+      "slug": "a-night-beneath-the-ice-3",
+      "collection": "a-night-beneath-the-ice",
+      "collectionId": "0005-a-night-beneath-the-ice",
+      "s3Folder": "0005-a-night-beneath-the-ice",
+      "fileStem": "a-night-beneath-the-ice",
+      "number": 3,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "night",
+        "light",
+        "city",
+        "forest",
+        "journey"
+      ],
+      "title": {
+        "en": "The Blue Lantern",
+        "pt-br": "A lanterna azul",
+        "ru": "Синий фонарь",
+        "zh-cn": "蓝色灯环"
+      },
+      "description": {
+        "en": "A blue ring lights an old wall beside a wet stone lane, while amber lanterns lead through firs towards a distant city.",
+        "pt-br": "Um anel azul ilumina uma parede antiga junto a uma viela de pedra molhada, enquanto lanternas âmbar conduzem entre abetos até a cidade distante.",
+        "ru": "Синее кольцо освещает старую стену у мокрого каменного переулка, а янтарные фонари ведут сквозь ели к далёкому городу.",
+        "zh-cn": "蓝色光环照亮湿润石巷旁的旧墙，琥珀色路灯穿过冷杉，通向远处的城市。"
+      }
+    },
+    {
+      "id": "a-night-beneath-the-ice-4",
+      "slug": "a-night-beneath-the-ice-4",
+      "collection": "a-night-beneath-the-ice",
+      "collectionId": "0005-a-night-beneath-the-ice",
+      "s3Folder": "0005-a-night-beneath-the-ice",
+      "fileStem": "a-night-beneath-the-ice",
+      "number": 4,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "night",
+        "light",
+        "forest",
+        "journey",
+        "water",
+        "city"
+      ],
+      "title": {
+        "en": "Lights on the Descent",
+        "pt-br": "Luzes na descida",
+        "ru": "Огни на спуске",
+        "zh-cn": "下坡路上的微光"
+      },
+      "description": {
+        "en": "Blue ring lamps follow a snowy stone path down through dark firs towards an icy river and a warmly lit city.",
+        "pt-br": "Luminárias de anéis azuis acompanham uma trilha de pedra nevada entre abetos escuros, rumo ao rio gelado e às luzes quentes da cidade.",
+        "ru": "Синие кольца фонарей сопровождают заснеженную каменную тропу среди тёмных елей к ледяной реке и тёплым огням города.",
+        "zh-cn": "蓝色环形路灯沿着覆雪的石径，在深色冷杉间延伸向结冰的河流与灯火温暖的城市。"
+      }
+    },
+    {
+      "id": "a-night-beneath-the-ice-5",
+      "slug": "a-night-beneath-the-ice-5",
+      "collection": "a-night-beneath-the-ice",
+      "collectionId": "0005-a-night-beneath-the-ice",
+      "s3Folder": "0005-a-night-beneath-the-ice",
+      "fileStem": "a-night-beneath-the-ice",
+      "number": 5,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "night",
+        "light",
+        "city",
+        "water",
+        "portal",
+        "forest"
+      ],
+      "title": {
+        "en": "A City Within",
+        "pt-br": "Uma cidade por dentro",
+        "ru": "Город внутри",
+        "zh-cn": "心中的城"
+      },
+      "description": {
+        "en": "The silhouette of a man in a dark coat blends with firs, a golden waterfront and ice-strewn water beneath a floating blue ring.",
+        "pt-br": "A silhueta de um homem de casaco escuro se mistura a abetos, uma orla dourada e água entre blocos de gelo sob um anel azul flutuante.",
+        "ru": "Силуэт мужчины в тёмном пальто сливается с елями, золотой набережной и водой среди льдин под парящим синим кольцом.",
+        "zh-cn": "深色大衣男子的轮廓与冷杉、金色河岸和浮冰间的水面融为一体，上方悬着蓝色光环。"
       }
     }
   ]
