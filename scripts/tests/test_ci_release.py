@@ -160,6 +160,12 @@ else:
         result = self.resolve()
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_readonly_token_accepts_equivalent_utc_protection_timestamp(self):
+        self.responses['rulesets/24392512']['updated_at'] = '2026-10-02T21:38:23.060Z'
+        del self.responses['rulesets/24392512']['bypass_actors']
+        result = self.resolve()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_successful_run_with_skipped_full_verification_is_rejected(self):
         self.responses['actions/runs/73/attempts/1/jobs?per_page=100'] = [{'jobs': [{'name': 'Full UI', 'conclusion': 'skipped'}]}]
         self.assertNotEqual(self.resolve().returncode, 0)
