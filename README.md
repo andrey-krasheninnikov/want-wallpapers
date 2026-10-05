@@ -7,6 +7,7 @@
 - `frontend/`: Astro, React, стили, статический каталог и инструменты export/import.
 - `backend/`: Axum/Tokio/SQLx, миграции PostgreSQL 18, авторизация, публичный API и модерация.
 - `deploy/`: один контейнер за существующим Traefik, внешний PostgreSQL.
+- `automation/n8n/`: отдельный локальный n8n на MacBook, постоянный Docker volume и приватные snapshots.
 - `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
 
 Нужны Bun 1.3.14, Rust 1.93.0, Python 3 и Docker для тестовой БД. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
@@ -72,6 +73,8 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 `make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Кэш и build output не коммитятся.
 
 ## Эксплуатация
+
+[Локальный n8n](docs/local-n8n.md): запуск на MacBook, приватный вход, постоянные workflows/credentials/Wait и журнал, backup и восстановление в новый volume. n8n не развёртывается на VPS и не принимает публичные webhooks.
 
 [Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
 

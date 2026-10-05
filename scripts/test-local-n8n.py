@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Check restart and snapshot recovery in an isolated local n8n project."""
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
+import os
+from pathlib import Path
+import secrets
+import socket
+import subprocess
+import sys
+import tempfile
+from threading import Thread
+import time
+from urllib.request import urlopen
+
+REPOSITORY = Path(__file__).resolve().parent.parent
+COMPOSE = REPOSITORY / 'automation/n8n/compose.yaml'
+STATE_COMMAND = REPOSITORY / 'scripts/n8n-state.py'
+TABLE = 'local_recovery_journal'
+CREDENTIAL_ID = 'LocalRecoveryCredential'
+
+
+class LocalEndpoint(BaseHTTPRequestHandler):
+    def do_GET(self):
+        accepted = self.path == '/check' and self.headers.get('X-Local-Check') == 'not-a-service-secret'
+        self.send_response(200 if accepted else 403)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'credentialAccepted': accepted}).encode())
+
+    def log_message(self, *arguments):
+        pass
+
+
+def workflow(identifier, nodes, response_mode='lastNode'):
+    trigger = {'id': 'start', 'name': 'Start', 'type': 'n8n-nodes-base.webhook',
+        'typeVersion': 2, 'position': [0, 0], 'webhookId': identifier,
+        'parameters': {'httpMethod': 'GET', 'path': identifier, 'responseMode': response_mode,
+            'responseData': 'allEntries', 'options': {}}}
+    sequence = [trigger, *nodes]
+    connections = {before['name']: {'main': [[{'node': after['name'], 'type': 'main', 'index': 0}]]}
+        for before, after in zip(sequence, sequence[1:])}
+    return {'id': identifier, 'name': identifier, 'active': False, 'nodes': sequence,
+        'connections': connections, 'settings': {'executionOrder': 'v1', 'saveExecutionProgress': True}}
+
+
+def data_node(name, parameters):
+    return {'id': name, 'name': name, 'type': 'n8n-nodes-base.dataTable', 'typeVersion': 1.1,
+        'position': [300, 0], 'parameters': parameters}
+
+
+def insert_node(phase):
+    return data_node('Record ' + phase, {'resource': 'row', 'operation': 'insert',
+        'dataTableId': {'__rl': True, 'mode': 'name', 'value': TABLE},
+        'columns': {'mappingMode': 'defineBelow', 'value': {'runId': 'persistence-check', 'phase': phase}},
+        'options': {}})
+
+
+def main():
+    suffix = secrets.token_hex(4)
+    project = 'want-wallpapers-n8n-check-' + suffix
+    original_volume = project + '-data'
+    restored_volume = project + '-recovery'
+    with socket.socket() as listener:
+        listener.bind(('127.0.0.1', 0))
+        port = listener.getsockname()[1]
+    environment = {**os.environ, 'N8N_DATA_VOLUME': original_volume, 'N8N_PORT': str(port)}
+
+    def run(*command):
+        try:
+            return subprocess.run(command, check=True, capture_output=True, text=True,
+                env=environment, timeout=210).stdout
+        except (OSError, subprocess.SubprocessError):
+            raise RuntimeError('Local n8n check command failed; inspect only the isolated test project.') from None
+
+    def compose(*arguments):
+        return run('docker', 'compose', '--project-name', project, '-f', str(COMPOSE), *arguments)
+
+    server = ThreadingHTTPServer(('127.0.0.1', 0), LocalEndpoint)
+    Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        with tempfile.TemporaryDirectory(prefix='wallpapers-n8n-check-') as temporary:
+            fixtures = Path(temporary)
+            initialize = workflow('LocalRecoveryInit', [data_node('Create journal', {
+                'resource': 'table', 'operation': 'create', 'tableName': TABLE,
+                'columns': {'column': [{'name': 'runId', 'type': 'string'}, {'name': 'phase', 'type': 'string'}]},
+                'options': {'createIfNotExists': True}}), insert_node('started')])
+            pause = workflow('LocalRecoveryWait', [insert_node('waiting'), {'id': 'wait', 'name': 'Wait', 'type': 'n8n-nodes-base.wait',
+                'typeVersion': 1.1, 'position': [300, 0], 'parameters': {'resume': 'timeInterval', 'amount': 90, 'unit': 'seconds'}},
+                insert_node('resumed')], response_mode='onReceived')
+            read = workflow('LocalRecoveryRead', [data_node('Read journal', {'resource': 'row', 'operation': 'get',
+                'dataTableId': {'__rl': True, 'mode': 'name', 'value': TABLE}, 'returnAll': True,
+                'filters': {'conditions': []}, 'matchType': 'allConditions'})])
+            credential_check = workflow('LocalRecoveryCredentialCheck', [{'id': 'request', 'name': 'Check credential',
+                'type': 'n8n-nodes-base.httpRequest', 'typeVersion': 4.2, 'position': [300, 0],
+                'parameters': {'url': f'http://host.docker.internal:{server.server_port}/check',
+                    'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
+                    'options': {'timeout': 5000}},
+                'credentials': {'httpHeaderAuth': {'id': CREDENTIAL_ID, 'name': 'Local recovery fixture'}}}])
+            (fixtures / 'workflows.json').write_text(json.dumps([initialize, pause, read, credential_check]))
+            (fixtures / 'credential.json').write_text(json.dumps([{'id': CREDENTIAL_ID,
+                'name': 'Local recovery fixture', 'type': 'httpHeaderAuth',
+                'data': {'name': 'X-Local-Check', 'value': 'not-a-service-secret'}}]))
+
+            def cli(command, *arguments):
+                return compose('run', '--rm', '--no-deps', '-T', '--volume', str(fixtures) + ':/fixtures:ro',
+                    '--entrypoint', 'n8n', 'n8n', command, *arguments)
+
+            def execute(identifier):
+                try:
+                    with urlopen(f'http://127.0.0.1:{port}/webhook/{identifier}', timeout=15) as response:
+                        return json.load(response)
+                except (OSError, ValueError):
+                    raise RuntimeError(f'Local fixture endpoint failed: {identifier}.') from None
+
+            def check_journal():
+                return sorted((row['runId'], row['phase']) for row in execute('LocalRecoveryRead'))
+
+            expected = [('persistence-check', phase) for phase in ('resumed', 'started', 'waiting')]
+            compose('up', '--detach', '--wait', '--wait-timeout', '180')
+            print(f'Isolated n8n ready on loopback: {project}.', flush=True)
+            compose('stop', '--timeout', '90', 'n8n')
+            cli('import:workflow', '--input', '/fixtures/workflows.json')
+            cli('import:credentials', '--input', '/fixtures/credential.json')
+            for item in (initialize, pause, read, credential_check):
+                cli('publish:workflow', '--id', item['id'])
+            compose('up', '--detach', '--wait', '--wait-timeout', '180')
+            execute('LocalRecoveryInit')
+            execute('LocalRecoveryWait')
+            deadline = time.monotonic() + 15
+            while check_journal() != [('persistence-check', 'started'), ('persistence-check', 'waiting')]:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('The local Wait workflow did not reach its checkpoint.')
+                time.sleep(1)
+            resume_at = time.monotonic() + 92
+            compose('stop', '--timeout', '90', 'n8n')
+            print('90-second Wait entered; test instance stopped before its deadline.', flush=True)
+            archive = run(sys.executable, '-B', str(STATE_COMMAND), '--project', project,
+                'backup', '--directory', str(fixtures / 'backups')).strip()
+            run(sys.executable, '-B', str(STATE_COMMAND), '--project', project,
+                'restore', archive, '--volume', restored_volume)
+            while time.monotonic() < resume_at:
+                time.sleep(1)
+            compose('up', '--detach', '--wait', '--wait-timeout', '180')
+            deadline = time.monotonic() + 40
+            while check_journal() != expected:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('The original instance did not catch up exactly once after downtime.')
+                time.sleep(1)
+            print('Restart resumed the overdue Wait once; journal survived.', flush=True)
+            compose('stop', '--timeout', '90', 'n8n')
+            environment['N8N_DATA_VOLUME'] = restored_volume
+            compose('up', '--detach', '--force-recreate', '--wait', '--wait-timeout', '180')
+            deadline = time.monotonic() + 40
+            while check_journal() != expected:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('The restored instance did not resume its saved Wait exactly once.')
+                time.sleep(1)
+            accepted = execute('LocalRecoveryCredentialCheck')
+            if accepted != [{'credentialAccepted': True}]:
+                raise RuntimeError('The restored key did not decrypt the synthetic credential.')
+            print('Recovery preserved workflows, waiting execution, journal, and credential decryption.', flush=True)
+            print(f'PASS. Preserved test volumes: {original_volume}, {restored_volume}', flush=True)
+    finally:
+        server.shutdown()
+        server.server_close()
+        compose('stop', '--timeout', '90', 'n8n')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError) as error:
+        print(str(error) if isinstance(error, RuntimeError) else 'Local n8n check failed.', file=sys.stderr)
+        sys.exit(1)

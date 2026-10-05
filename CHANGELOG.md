@@ -2,6 +2,10 @@
 
 ## Не выпущено
 
+### Добавлено
+
+- Локальный n8n на MacBook: закреплённый Docker-образ, loopback-доступ, постоянные workflows/credentials/Wait и Data Tables, приватные snapshots и восстановление в новый volume.
+
 ### Изменено
 
 - Лёгкие проверки веток и PR; полный UI, native runtime и публикация проверенных образов только на main. Защищённый релизный тег проверяет source SHA, CI run и точный digest без повторной сборки.

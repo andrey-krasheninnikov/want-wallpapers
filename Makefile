@@ -1,6 +1,6 @@
 .PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
-	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate'
+	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n'
 install:
 	bun install --frozen-lockfile --ignore-scripts
 	cargo fetch --locked
@@ -48,3 +48,19 @@ test-container: test-db
 .PHONY: audit
 audit:
 	python3 scripts/audit-dependencies.py
+
+.PHONY: n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n
+n8n-config:
+	docker compose -f automation/n8n/compose.yaml config --quiet
+n8n-up:
+	docker compose -f automation/n8n/compose.yaml up --detach --wait --wait-timeout 180
+n8n-stop:
+	docker compose -f automation/n8n/compose.yaml stop --timeout 90 n8n
+n8n-status:
+	docker compose -f automation/n8n/compose.yaml ps --all
+n8n-backup:
+	python3 -B scripts/n8n-state.py backup
+n8n-restore:
+	python3 -B scripts/n8n-state.py restore "$(ARCHIVE)" --volume "$(VOLUME)"
+test-n8n:
+	python3 -u -B scripts/test-local-n8n.py
