@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Select CI checks and resolve the immutable evidence for a release tag."""
 import argparse
+from datetime import datetime
 import fnmatch
 import hashlib
 import json
@@ -65,6 +66,12 @@ def source_sha(value):
     return value
 
 
+def timestamp(value):
+    parsed = datetime.fromisoformat(value)
+    require(parsed.tzinfo is not None, 'Release protection timestamp needs a timezone')
+    return parsed
+
+
 def plan():
     event = os.environ.get('GITHUB_EVENT_NAME')
     ref = os.environ.get('GITHUB_REF', '')
@@ -89,7 +96,7 @@ def tag_commit(tag):
             if summary['id'] != policy['id'] or summary['target'] != 'tag' or summary['enforcement'] != 'active':
                 continue
             ruleset = api('rulesets/' + str(summary['id']))
-            require(ruleset['id'] == policy['id'] and ruleset['updated_at'] == policy['updatedAt'], 'Tag protection changed; review and refresh release-policy.json')
+            require(ruleset['id'] == policy['id'] and timestamp(ruleset['updated_at']) == timestamp(policy['updatedAt']), 'Tag protection changed; review and refresh release-policy.json')
             require(ruleset.get('bypass_actors', policy['bypassActors']) == [], 'Release tag protection permits bypass')
             names = ruleset['conditions']['ref_name']
             matches = lambda pattern: pattern == '~ALL' or fnmatch.fnmatchcase('refs/tags/' + tag, pattern)
