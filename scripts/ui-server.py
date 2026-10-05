@@ -24,5 +24,6 @@ environment.update(APP_ENV='development', RECAPTCHA_ENABLED='false', DATABASE_UR
     ADMIN_USERNAME='admin', SITE_URL='http://127.0.0.1:4322', BIND_ADDR='127.0.0.1:4322', STATIC_DIR=str(repository / 'frontend/dist'))
 environment.pop('DATABASE_URL', None)
 subprocess.run(['cargo', 'run', '--locked', '-p', 'want-wallpapers-server', '--', 'migrate'], cwd=repository, env=environment, check=True)
+subprocess.run(['bun', 'scripts/ui-catalog.ts'], cwd=repository / 'frontend', env=environment, check=True)
 os.chdir(repository)
 os.execvpe('cargo', ['cargo', 'run', '--locked', '-p', 'want-wallpapers-server'], environment)

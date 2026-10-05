@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { wallpapers, s3Url, previewUrl, downloadUrl } from '../src/data/catalog';
+import { wallpapers, s3Url, previewUrl, downloadUrl, tagLabels } from '../src/data/catalog';
 import { createSearchIndex, searchIds } from '../src/lib/catalog-search';
 import type { Locale } from '../src/data/catalog';
 
@@ -15,6 +15,21 @@ test('localized catalogue search finds the same design in four languages', () =>
       text: `${wallpaper.title[locale]} ${wallpaper.description[locale]}`,
     })));
     expect(searchIds(index, locale, phrase)).toContain('contours-of-silence-1');
+  }
+});
+
+test('new collection is searchable by localized descriptions and tags', () => {
+  for (const [locale, description, tag] of [
+    ['en', 'ripples', 'water'],
+    ['ru', 'круги', 'вода'],
+    ['zh-cn', '涟漪', '水'],
+    ['pt-br', 'ondulações', 'água'],
+  ] as [Locale, string, string][]) {
+    const index = createSearchIndex(locale, wallpapers.map((wallpaper) => ({
+      id: wallpaper.id,
+      text: [wallpaper.title[locale], wallpaper.description[locale], ...wallpaper.tags.map((key) => tagLabels[key][locale])].join(' '),
+    })));
+    for (const phrase of [description, tag]) expect(searchIds(index, locale, phrase)).toContain('where-stars-graze-4');
   }
 });
 
