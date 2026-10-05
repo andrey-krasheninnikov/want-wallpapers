@@ -1,22 +1,22 @@
 # Деплой на VPS: Docker, Traefik, внешний PostgreSQL 18
 
-Сайт: `https://wallpapers.want.foundation/`. Развёртывание выполняется оператором отдельно от Git release. В production нет контейнера PostgreSQL и Docker socket приложения. Нужны DNS домена на VPS, уже работающий Traefik с HTTPS origin-сертификатом и готовым маршрутом к `http://wallpapers:8080`, внешняя Docker network `wallpapers-proxy` и внешний PostgreSQL 18 с сертификатом, соответствующим DNS/IP соединения. Укажите точные значения вашей установки, а не пример subnet.
+Сайт: `https://wallpapers.want.foundation/`. Развёртывание выполняется оператором отдельно от Git release. В production нет контейнера PostgreSQL и Docker socket приложения. Нужны DNS домена на VPS, уже работающий Traefik с HTTPS origin-сертификатом и готовым маршрутом к `http://wallpapers:8080`, существующая internal Docker network `wallpapers-proxy`, отдельная внешняя non-internal egress network и внешний PostgreSQL 18 с сертификатом, соответствующим DNS/IP соединения. Укажите точные значения вашей установки, а не пример subnet. Требуется Docker Compose ≥2.33.1: app сохраняет `gw_priority: 1` для egress как default gateway ([Compose networks](https://docs.docker.com/reference/compose-file/services/#gw_priority)).
 
 ## 1. База и роли
 
 На PostgreSQL 18 через защищённое административное соединение создайте новую БД и две роли. Пароли задавайте интерактивно через `\password`, не в SQL-файле или истории shell.
 
 ```sql
-CREATE ROLE wallpapers_migrator LOGIN;
-\password wallpapers_migrator
-CREATE ROLE wallpapers_app LOGIN;
-\password wallpapers_app
-CREATE DATABASE wallpapers OWNER wallpapers_migrator;
+CREATE ROLE "wallpapers-migrator" LOGIN;
+\password "wallpapers-migrator"
+CREATE ROLE wallpapers LOGIN;
+\password wallpapers
+CREATE DATABASE wallpapers OWNER "wallpapers-migrator";
 REVOKE ALL ON DATABASE wallpapers FROM PUBLIC;
-GRANT CONNECT ON DATABASE wallpapers TO wallpapers_app;
+GRANT CONNECT ON DATABASE wallpapers TO wallpapers;
 ```
 
-Migrator владеет БД и выполняет DDL только в one-off операции. App получает ограниченные права после миграций через `deploy/runtime-grants.sql`. На сервере БД разрешите TLS-соединения только с VPS и настройте SCRAM authentication. Не публикуйте PostgreSQL на весь интернет без сетевого ограничения.
+Это только первоначальное provisioning новой выделенной БД. На действующей установке не создавайте роли/БД повторно: проверьте фактические `wallpapers-migrator` и `wallpapers`, владельцев и grants. Migrator владеет БД и выполняет DDL только в one-off операции. App получает ограниченные права после миграций через `deploy/runtime-grants.sql`. На сервере БД разрешите TLS-соединения только с VPS и настройте SCRAM authentication. Не публикуйте PostgreSQL на весь интернет без сетевого ограничения.
 
 URL каждого секрета: `postgresql://<role>:<percent-encoded-password>@<certificate-host>:5432/wallpapers?sslmode=verify-full`. Если используется IP, сертификат должен содержать этот IP в SAN. Не заменяйте verify-full на require/disable. Приложение проверяет major 18 и отказывается работать с другой версией. CA PostgreSQL сохраните в отдельный `postgres_ca.pem` (для публичного CA тоже можно предоставить цепочку доверия).
 
@@ -43,7 +43,7 @@ sudo chmod 400 /etc/want-wallpapers/secrets/*
 
 ### reCAPTCHA Enterprise
 
-В Google Cloud project `want-wallpapers` включите reCAPTCHA Enterprise API. Создайте Web key со score-based integration для `wallpapers.want.foundation`, сохранив проверку домена. Переданное публичное значение `5465df27916cff0097d19961415940bc247e052d` нужно сверить с **reCAPTCHA → Keys → Key ID** перед запуском. Оно ещё не подтверждено реальным browser assessment; не используйте ID ключа сервисного аккаунта вместо Web key.
+В Google Cloud project `want-wallpapers` включите reCAPTCHA Enterprise API. Создайте Web key со score-based integration для `wallpapers.want.foundation`, сохранив проверку домена. На действующей установке сохраните Web key, score, domain verification и JSON credentials из operational config; повторное создание ключа не требуется. При новой установке возьмите Web Key ID из **reCAPTCHA → Keys → Key ID**; ID сервисного аккаунта для этого не подходит. Текущее публичное значение из recovery notes приведено ниже как документированный snapshot, а не свежая проверка Google assessment.
 
 Задайте в deploy/.env RECAPTCHA_PROJECT_ID=want-wallpapers, PUBLIC_RECAPTCHA_SITE_KEY=<проверенный Web Key ID>, RECAPTCHA_MIN_SCORE=0.5. Создайте сервисный аккаунт с минимальной ролью `roles/recaptchaenterprise.agent`; JSON разместите вне checkout как google_application_credentials.json. Compose монтирует его только в app: GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google_application_credentials. Migrator и сборка его не получают. Не копируйте JSON в frontend, CI variables, build args или логи. [Создание Web key](https://docs.cloud.google.com/recaptcha/docs/create-key-website), [создание assessment](https://docs.cloud.google.com/recaptcha/docs/create-assessment-website).
 
@@ -64,25 +64,74 @@ cp -n deploy/.env.example deploy/.env
 
 Перед первым GHCR pull сделайте пакет публичным либо настройте отдельный доступ только на чтение пакета. Права Git сами по себе не дают pull-доступ. В APP_IMAGE укажите `ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:<verified-digest>` из record успешного release gate для выбранного защищённого тега; локальная сборка использует `want-wallpapers:local`. Analytics следует настройкам согласия ADR 0005: defaults включены для новых посетителей вне ЕЭЗ, а ЕЭЗ и unknown требуют явного выбора; сохранённый отказ имеет приоритет. При сборке передавайте публичные PUBLIC_FIREBASE_API_KEY, PUBLIC_FIREBASE_PROJECT_ID, PUBLIC_FIREBASE_APP_ID и PUBLIC_FIREBASE_MEASUREMENT_ID; CI берёт их из repository variables. Без полной публичной конфигурации Analytics выключена. Приватные ключи, DB URL и токены в build args не передаются.
 
-Задайте SECRETS_DIR, ADMIN_USERNAME, TRAEFIK_NETWORK и TRUSTED_PROXY_CIDRS. Compose добавляет alias `wallpapers` только сервису app в существующей сети `wallpapers-proxy`; route и origin-сертификат принадлежат установленному Traefik. Docker discovery выключен для app/migrate, labels не создают второй route. Если существующий route использует healthcheck, укажите `/health/ready` вместо прежнего Nginx `/healthz`. Перед переключением остановите прежний контейнер с тем же alias по его существующей инструкции: два контейнера с alias `wallpapers` одновременно создадут неоднозначную маршрутизацию. Данные внешней PostgreSQL не удаляются.
+Задайте SECRETS_DIR, ADMIN_USERNAME, TRAEFIK_NETWORK, EGRESS_NETWORK и TRUSTED_PROXY_CIDRS. EGRESS_NETWORK обязательна: укажите имя уже существующей non-internal egress сети из read-only inventory. На проверенной установке 5 октября 2026 сеть называется `want-wallpapers_egress`; задайте `EGRESS_NETWORK=want-wallpapers_egress` при переходе на этот профиль, сохранив саму сеть. В прежнем operational Compose переменной EGRESS_NETWORK нет, имя разрешается через Compose project. App подключается к proxy и egress; migrate — только к egress, без alias `wallpapers`. Compose не создаёт сети и не меняет Traefik. Перед обновлением проверьте, что `wallpapers-proxy` имеет Internal=true, egress — Internal=false, и alias принадлежит только действующему app. Не создавайте вторую egress сеть при обновлении. Compose добавляет alias `wallpapers` только сервису app в существующей сети `wallpapers-proxy`; route и origin-сертификат принадлежат установленному Traefik. Docker discovery выключен для app/migrate, labels не создают второй route. Если существующий route использует healthcheck, укажите `/health/ready` вместо прежнего Nginx `/healthz`. Перед переключением остановите прежний контейнер с тем же alias по его существующей инструкции: два контейнера с alias `wallpapers` одновременно создадут неоднозначную маршрутизацию. Данные внешней PostgreSQL не удаляются.
 
 В Cloudflare включите прокси DNS и [SSL/TLS Full (strict)](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/); origin-сертификат должен быть действующим и соответствовать wallpapers.want.foundation. Origin-порты 80/443 разрешают только текущие сети Cloudflare, включая Docker ingress. App не публикует host-порты. Cache Rules должны обходить `/api/*`, `/admin/*` и `/health/*`; приватные ответы, Set-Cookie и Cache-Control: no-store не кешируются. Не включайте Cache Everything для этих путей.
 
 TRUSTED_PROXY_CIDRS содержит фактические адреса доверенных Traefik proxy. Если сохранённый X-Forwarded-For включает Cloudflare, добавьте её актуальные proxy CIDRs, полученные из [официального списка](https://www.cloudflare.com/ips/), чтобы проверка цепочки дошла до IP посетителя. Traefik должен доверять forwarded headers только Cloudflare через [forwardedHeaders.trustedIPs](https://doc.traefik.io/traefik/reference/install-configuration/entrypoints/#forwarded-headers); forwardedHeaders.insecure выключен. Для прямого Traefik без Cloudflare доверяйте только Traefik. Не используйте 0.0.0.0/0 или все private ranges. Встроенная защита проверяет цепочку справа налево при доверенном socket peer и игнорирует поддельный левый префикс. Адрес proxy фиксируйте либо используйте контролируемую изолированную сеть; проверьте её через `docker network inspect <network>`.
 
+Для первоначального provisioning, если сети действительно отсутствуют и эти имена не заняты другими сервисами, оператор создаёт их отдельно:
+
+```bash
+docker network create --internal wallpapers-proxy
+docker network create wallpapers-egress
+```
+
+Во втором случае EGRESS_NETWORK=wallpapers-egress. На существующем VPS используйте фактическое имя сети; пример не доказывает её текущее имя.
+
+Перед обновлением сохраните прежний APP_IMAGE/config, задайте новый проверенный digest в APP_IMAGE и скачайте образ, пока прежний app работает. Изменение файла не переключает работающий контейнер. `make deploy-config` использует `config --quiet` и не печатает секреты. Получите проверенный backup/restore record, затем остановите только app в согласованное окно обслуживания. `make migrate` отказывается запускаться, пока Compose app активен (включая paused/restarting/created/removing): на этом VPS app и миграции не должны конкурировать за память. Внешний proxy не останавливайте. Не используйте глобальные down/prune/--remove-orphans.
+
 ```bash
 make deploy-config
+docker compose --env-file deploy/.env -f deploy/compose.yaml pull app migrate
+docker compose --env-file deploy/.env -f deploy/compose.yaml stop app
 make migrate
 ```
 
-После миграций примените `deploy/runtime-grants.sql` к БД wallpapers от migrator/DBA. App не должен владеть схемой, таблицами или иметь CREATE. Не выдавайте app права на `_sqlx_migrations`. Новая миграция с новыми таблицами требует соответствующего явного grant.
+После миграций примените `deploy/runtime-grants.sql` к БД wallpapers от migrator/DBA, затем `deploy/verify-runtime-grants.sql`. Скрипты поддерживают psql variables `runtime_role` и `migrator_role`; defaults — `wallpapers` и `wallpapers-migrator`, идентификаторы всегда quoted. Новая таблица требует явного grant и обновления allowlist проверки.
+
+Используйте заранее настроенный приватный libpq service `wallpapers-operator` с TLS verify-full/CA и внешним password file, доступным только оператору. Не передавайте URL/пароль в argv, shell history или CI. Service подключается к выделенной wallpapers БД от migrator/DBA:
 
 ```bash
-docker compose --env-file deploy/.env -f deploy/compose.yaml pull
+psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpapers -f deploy/runtime-grants.sql
+psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpapers -v migrator_role=wallpapers-migrator -f deploy/verify-runtime-grants.sql
+```
+
+Проверка read-only: нет superuser/CREATEDB/CREATEROLE/BYPASSRLS, memberships, владения объектами, CREATE/TEMP (CREATE проверяется во всех схемах), grant options, широких stored default ACL и доступа к `_sqlx_migrations`, включая column grants. Runtime имеет CRUD только на явных таблицах приложения; audit — SELECT/INSERT и sequence USAGE/SELECT, без изменения/удаления. Результат общий, без строк приложения и credentials.
+
+Если проверка не проходит, не запускайте новый app. Просмотрите владельцев, memberships, column ACL, глобальные и schema default ACL в защищённой сессии. После review только для выделенной wallpapers БД и остановленного app подготовлена процедура `deploy/runtime-hardening.sql`, затем повторное применение grants и verification:
+
+```bash
+psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpapers -v migrator_role=wallpapers-migrator -f deploy/runtime-hardening.sql
+psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpapers -f deploy/runtime-grants.sql
+psql -X 'service=wallpapers-operator' -v ON_ERROR_STOP=1 -v runtime_role=wallpapers -v migrator_role=wallpapers-migrator -f deploy/verify-runtime-grants.sql
+```
+
+Hardening отзывает известные table/sequence ACL у runtime/PUBLIC, CREATE/TEMP этой БД и CREATE public; очищает global/public defaults указанного migrator и только reciprocal table defaults runtime → migrator. Для всей процедуры нужен DBA с правом ALTER DEFAULT PRIVILEGES обеих ролей: прав одного migrator недостаточно. Service wallpapers-operator для hardening должен использовать такую административную роль; не расширяйте memberships или runtime права ради выполнения процедуры. REVOKE использует RESTRICT: зависимые grants требуют ручного review. Процедура не меняет владельцев, memberships, column ACL, неизвестные объекты/creator roles и другие БД, не запускается автоматически при деплое. Если такие нарушения найдены, подготовьте отдельные точные REVOKE/ALTER после review; не используйте REASSIGN OWNED, DROP OWNED или CASCADE. После любого сбоя оставьте app остановленным до восстановления allowlist и успешной проверки.
+
+```bash
 docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait app
 ```
 
-Один сервис app подключён к существующей внешней network. Он работает uid 10001 с read-only filesystem, без Linux capabilities, с no-new-privileges, 32 MiB tmpfs, 512 MiB RAM без swap, 2 CPU, лимитом 64 процессов и local logging (max-size=5m, max-file=3). PostgreSQL подключается через обычный DNS/IP и TLS. Сервис migrate включается только профилем operations и не получает Traefik route. Runtime не выполняет миграции сам.
+Один сервис app подключён к двум существующим внешним сетям: internal proxy и non-internal egress. Он работает uid 10001 с read-only filesystem, без Linux capabilities, с no-new-privileges, 32 MiB tmpfs, 512 MiB RAM без container swap, 1 CPU, лимитом 64 процессов и local logging (max-size=5m, max-file=3). PostgreSQL подключается через обычный DNS/IP и TLS. Сервис migrate включается только профилем operations, имеет 128 MiB RAM без container swap и 1 CPU, получает только migration_database_url и CA. В его environment нет admin, Google, reCAPTCHA или proxy config. Runtime получает только runtime DB URL и не выполняет миграции сам.
+
+### Бюджет и baseline действующей установки
+
+Для host около 889 MiB: app 512 MiB + отдельно управляемый Traefik 192 MiB оставляют около 185 MiB на OS/Docker и лёгкий мониторинг. Это пределы, не измеренное одновременное потребление. Monitor/CIDR updater запускаются кратковременно; перед операцией проверьте available RAM, swap, disk и текущие нагрузки. Host swap 1 GiB не заменяет бюджет контейнеров. Миграция 128 MiB выполняется при остановленном app; при OOM/ошибке миграции дальнейший запуск запрещён. Backup/restore PostgreSQL 18 выполняется вне VPS по [ADR 0007](adr/0007-off-vps-restore-verification.md); сборки и тяжёлые E2E на VPS не запускаются.
+
+Read-only SSH 5 октября 2026 подтвердил linux/amd64, 1 CPU, 910440 KiB MemTotal (около 889 MiB), swap 1 GiB и активные want-monitor/want-cloudflare-update timers. `/README.md` скачан как recovery snapshot. В notes текущий release — v1.3.0, хотя operational directory остаётся `/opt/want/apps/wallpapers-v1.1.0`. Read-only checkout `/home/krasheninnikov/want-wallpapers-v1.3.0-mjtuffxk` содержит revision `017ce1cc4ea033aedfa1784d0c9cccfd82b7e612`; `/opt/want/repos/want-wallpapers` остаётся более старым checkout и не определяет deployed revision.
+
+Notes указывают platform digest `sha256:9f83237ed9b29fe73813b671fd4bc8ae779d7e21b88c19dc154bf2ea8c4360d5`, CPU 1, RAM 512 MiB, локальную egress patch, роли `wallpapers-migrator`/`wallpapers`, внешний PostgreSQL 18.6/verify-full и успешный ранее Google assessment. Документированный Web key — `6LdJa98tAAAAAA6TZlxW7OPKJ0v1fm6YDMmcvzeh`, project want-wallpapers, score 0.5. Это сведения recovery notes, не свежий Docker/DB readback; обновление не должно заменять текущие значения.
+
+Привилегированный read-only аудит 5 октября 2026 (13:16–13:22 UTC, Docker readback 13:21:50 UTC) подтвердил running digest/revision, app/Traefik healthy, CPU/RAM/isolation, фактические networks/mounts, PostgreSQL 18.6/TLS verify-full для обеих ролей, включённую reCAPTCHA, ops timers и rollback artifacts. Исходный закрытый отчёт `wallpapers-audit-2026-10-05.md` имеет SHA256 `c09f914adf2b083d863b86485eb88cdd2dd9c252f19f1cc822254f5e8754b875`; в Git сохранена только сводка без secrets и пользовательских данных.
+
+Аудит опроверг ACL сведения recovery README: runtime имеет SELECT/INSERT/UPDATE/DELETE на `_sqlx_migrations` и audit_log, TEMP на БД, SELECT/UPDATE без USAGE на audit sequence. Сохранились public table defaults migrator → runtime (CRUD) и runtime → migrator (CRUD/TRUNCATE/REFERENCES/TRIGGER); причина расхождения не установлена. Column ACL, широкие table grant options, ownership постоянных relations и memberships не обнаружены. Runtime владеет записью собственных default ACL, которую проверка также отклоняет до удаления этого известного reciprocal grant.
+
+**Production ACL сейчас не соответствуют целевому профилю.** На VPS права не изменены. До применения нового app профиль требует reviewed hardening, восстановления явных grants и успешного read-only verification. Исходный отчёт подтверждает inventory, но не выполнение remediation, backup restore или настоящего Google assessment. Нельзя объявлять production runtime least-privilege на основании одного merge этого изменения.
+
+Подтверждённые различия профиля: app уже имеет CPU 1 и обе сети, egress `gw_priority: 1`; operational migrate имеет proxy + egress и не получает alias wallpapers. Новый профиль сохраняет gateway priority, задаёт существующую egress через обязательную переменную и исключает proxy из migrate. Legacy container остановлен, но сохраняет alias в конфигурации; не запускайте его рядом с app. Сохраните operational patch, deploy/.env, root0700 secret directory и файлы UID10001/GID10001 mode0400, Traefik route `/health/ready`, monitor `/usr/local/sbin/want-monitor` и updater.
+
+Перед первым применением сверяйте этот snapshot с `/README.md` и закрытым inventory; сохраните прежний digest/config в root0700 rollback directory. Аудит подтвердил наличие и права предыдущего record `/var/lib/want-deploy/wallpapers/20261005T041256Z-v130-aholi5md`; путь нужно проверить заново, а не считать постоянным. Не печатайте Compose config, environment dump или полный Docker inspect. Возвращайте только allowlisted resource/network/mount metadata, без содержимого секретов.
 
 ## 4. Проверка после запуска
 
@@ -99,7 +148,7 @@ curl --fail https://wallpapers.want.foundation/sitemap-index.xml
 
 ## 5. Обновления и rollback
 
-Перед миграциями сделайте backup внешней БД и проверьте восстановление в отдельной среде. Посмотрите diff миграций и совместимость предыдущего runtime. Получите record успешного release gate для нового защищённого тега и сохраните tag/SHA/run/attempt/digest вне checkout. Для повтора сверяйте исходный digest через gate, без выбора latest или rebuild. Выполните migrate с новой версией, выдайте необходимые новые grants, переключите APP_IMAGE и `up -d --wait app`, затем повторите smoke checks. Сохраните предыдущий digest до обновления; rollback возвращает этот digest и повторяет `up -d --wait app`. Rollback контейнера допустим только если схема совместима с прошлой версией; иначе нужен проверенный план восстановления. Автоматическое удаление/откат БД не выполняется.
+Перед миграциями сделайте свежий backup внешней БД и проверьте восстановление в изолированной PostgreSQL 18 среде вне VPS по ADR 0007. Pull нового digest выполняется до остановки прежнего app; миграции — только после остановки app и успешного restore record. Посмотрите diff миграций и совместимость предыдущего runtime. Получите record успешного release gate для нового защищённого тега и сохраните tag/SHA/run/attempt/digest вне checkout. Для повтора сверяйте исходный digest через gate, без выбора latest или rebuild. Задайте новый APP_IMAGE до pull/migrate. Выполните migrate с новой версией, примените grants и read-only verification, затем `up -d --wait app`, затем повторите smoke checks. Сохраните предыдущий digest до обновления; rollback возвращает этот digest и повторяет `up -d --wait app`. Rollback контейнера допустим только если схема совместима с прошлой версией; иначе нужен проверенный план восстановления. Автоматическое удаление/откат БД не выполняется.
 
 Каталог: админка/API, `make catalog-pull`, проверки, сборка нового образа, обновление app. Не отдавайте приложению Docker socket для самостоятельного rebuild. Чтобы исключить изменение каталога во время сборки, сохраните согласованный snapshot в release checkout и сравните API readback перед публикацией.
 
