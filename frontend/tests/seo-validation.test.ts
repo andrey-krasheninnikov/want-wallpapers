@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { origin, parsePage, parseSitemap, validatePages, wordCount } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
-async function localizedPages() {
+async function localizedPages(fallback = '') {
   const paths = ['/', '/ru/', '/zh-cn/', '/pt-br/'];
-  const pages = await Promise.all(paths.map((path, index) => parsePage(`<!doctype html><html lang="${languages[index]}"><head><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}">${paths.map((target, index) => `<link rel="alternate" hreflang="${languages[index]}" href="${origin}${target}">`).join('')}<link rel="alternate" hreflang="x-default" href="${origin}/"></head><body><main id="main">Visible text</main><script>hidden content</script><a href="#main">Skip</a></body></html>`, path)));
+  const pages = await Promise.all(paths.map((path, index) => parsePage(`<!doctype html><html lang="${languages[index]}"><head><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}">${paths.map((target, index) => `<link rel="alternate" hreflang="${languages[index]}" href="${origin}${target}">`).join('')}<link rel="alternate" hreflang="x-default" href="${origin}/"></head><body><main id="main">Visible text</main><noscript>${index === 0 ? fallback : ''}</noscript><script>hidden content</script><a href="#main">Skip</a></body></html>`, path)));
   return new Map(pages.map((page) => [page.path, page]));
 }
 
@@ -14,6 +14,17 @@ test('HTML parsing preserves attributes, fragments, scripts and locale reciproci
   expect(pages.get('/')!.text).not.toContain('hidden content');
   expect(pages.get('/')!.scripts[0]!.text).toBe('hidden content');
   expect(pages.get('/')!.ids.has('main')).toBe(true);
+});
+
+test('no-script fallback markup contributes text and checked references', async () => {
+  const pages = await localizedPages('<a href="/missing/">Fallback</a><form action="/downloads/picture.png"><button>Save</button></form>');
+  const page = pages.get('/')!;
+  expect(page.text).toContain('Fallback');
+  expect(page.text).not.toContain('href=');
+  expect(page.references).toContainEqual({ tag: 'form', url: '/downloads/picture.png' });
+  expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/broken.*missing/);
+  page.references = page.references.filter((reference) => reference.url !== '/missing/');
+  expect(() => validatePages(pages, new Set(['downloads/picture.png']))).not.toThrow();
 });
 
 test('broken addresses and fragments fail the graph check', async () => {

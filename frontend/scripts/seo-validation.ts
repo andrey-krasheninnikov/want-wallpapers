@@ -12,6 +12,7 @@ export type Page = { path: string; lang: string; canonical: string[]; alternates
 
 export async function parsePage(html: string, path: string): Promise<Page> {
   const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), references: [], scripts: [], text: '', bytes: Buffer.byteLength(html) };
+  const document = await new HTMLRewriter().on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(html)).text();
   const parser = new HTMLRewriter()
     .on('html', { element(element) { page.lang = attributeValue(element, 'lang') ?? ''; } })
     .on('[id], a[name]', { element(element) { const id = attributeValue(element, 'id') ?? attributeValue(element, 'name'); if (id) page.ids.add(id); } })
@@ -32,8 +33,8 @@ export async function parsePage(html: string, path: string): Promise<Page> {
       const script = { source: attributeValue(element, 'src'), type: attributeValue(element, 'type'), text: '' };
       page.scripts.push(script);
     }, text(chunk) { page.scripts.at(-1)!.text += chunk.text; } });
-  await parser.transform(new Response(html)).text();
-  const readable = await new HTMLRewriter().on('head, script, style, template, [hidden], [aria-hidden="true"]', { element(element) { element.remove(); } }).transform(new Response(html)).text();
+  await parser.transform(new Response(document)).text();
+  const readable = await new HTMLRewriter().on('head, script, style, template, [hidden], [aria-hidden="true"]', { element(element) { element.remove(); } }).transform(new Response(document)).text();
   await new HTMLRewriter().on('body', { text(chunk) { page.text += chunk.text; } }).transform(new Response(readable)).text();
   page.text = decodeHTML(page.text).replace(/\s+/g, ' ').trim();
   return page;

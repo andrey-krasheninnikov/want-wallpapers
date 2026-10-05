@@ -14,5 +14,5 @@ const legal = legalPage(locale, page);
   <article class="shell prose py-10 sm:py-14"><Crumbs label={legal.title} items={[{ href: localPath(locale), title: copy[locale].home }, { title: legal.title }]} /><h1 class="mt-6">{legal.title}</h1><p>{legal.intro}</p>
     {legal.sections.map((section) => <section><h2>{section.heading}</h2>{section.owner && <OwnerContact locale={locale} />}{section.paragraphs.map((paragraph) => <p>{paragraph === 'wallpapers@want.foundation' ? <a href="mailto:wallpapers@want.foundation">{paragraph}</a> : paragraph}</p>)}</section>)}
   </article>
-  {(page === 'contact' || page === 'license' || page === 'terms') && <SupportText locale={locale} page={page} />}
+  {(page === 'contact' || page === 'license' || page === 'terms' || page === 'cookies') && <SupportText locale={locale} page={page} />}
 </Base>
