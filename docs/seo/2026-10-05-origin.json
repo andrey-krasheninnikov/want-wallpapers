@@ -1,0 +1,24 @@
+{
+  "observedAt": "2026-10-05T13:57:44+00:00",
+  "scope": "Provided readback of the running origin container, direct loopback HTTP",
+  "revision": "017ce1cc4ea033aedfa1784d0c9cccfd82b7e612",
+  "imageReference": "ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:9f83237ed9b29fe73813b671fd4bc8ae779d7e21b88c19dc154bf2ea8c4360d5",
+  "repositoryDigests": [
+    "ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:9f83237ed9b29fe73813b671fd4bc8ae779d7e21b88c19dc154bf2ea8c4360d5"
+  ],
+  "results": [
+    {
+      "path": "/robots.txt",
+      "status": 200
+    },
+    {
+      "path": "/sitemap-index.xml",
+      "status": 200
+    },
+    {
+      "path": "/ru/",
+      "status": 200
+    }
+  ],
+  "robots": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nSitemap: https://wallpapers.want.foundation/sitemap-index.xml\n"
+}
