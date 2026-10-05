@@ -6,7 +6,7 @@ async function enable(page: Page) {
 }
 const sdk = `window.grecaptcha = { enterprise: { ready(callback) { callback(); }, async execute(key, options) { window.captchaCalls ??= []; window.captchaCalls.push(options.action); return options.action + '-' + window.captchaCalls.length; } } };`;
 
-test('reading, downloads and restricted feedback never load reCAPTCHA', async ({ page }) => {
+test('reading, downloads and Russian feedback do not load reCAPTCHA before a protected action', async ({ page }) => {
   const requests: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
   await page.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'GE' } }));
@@ -18,9 +18,9 @@ test('reading, downloads and restricted feedback never load reCAPTCHA', async ({
   await page.locator('#download-link').click();
   expect((await download).suggestedFilename()).toBe('contours-of-silence-1-desktop.png');
   await page.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'RU' } }));
-  await page.evaluate(() => sessionStorage.removeItem('want-region-v1'));
+  await page.evaluate(() => sessionStorage.removeItem('want-country-v1'));
   await page.goto('/ru/feedback/');
-  await expect(page.getByText(copy.ru.regionUnavailable)).toBeVisible();
+  await expect(page.locator('#feedback-message')).toBeVisible();
   expect(requests.filter((url) => /recaptcha/.test(url))).toEqual([]);
 });
 
