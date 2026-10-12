@@ -241,12 +241,14 @@ def execute(store, record):
             require(fresh['sourceSha'] == record['sourceSha'] and fresh['verificationRun'] == record['verificationRun'],
                     'release-verification-changed')
             verify_privileges(environment)
+            verify_receipt(record, record['receipt'])
             publish(store, record, 'app-stopped')
             stopped = True
             compose('stop', '--timeout', '30', 'app')
             target_env = snapshot / 'target.env'
             target_env.write_bytes(update_image(original_env, image))
             target_env.chmod(0o600)
+            verify_receipt(record, record['receipt'])
             publish(store, record, 'migrating')
             compose('--profile', 'operations', 'run', '--rm', '--no-deps', '--pull', 'never', 'migrate',
                     environment=target_env, timeout=300)

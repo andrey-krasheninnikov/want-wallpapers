@@ -20,7 +20,7 @@ spec.loader.exec_module(server)
 
 class ServerTransitions(unittest.TestCase):
     def exercise(self, *, wrong_image=False, worker_failure=False, migration_failure=False,
-                 schema_changes=False, readiness_failure=False, worker_unavailable=False):
+                 schema_changes=False, readiness_failure=False, worker_unavailable=False, release_delay=0):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             environment = root / '.env'
@@ -88,6 +88,10 @@ class ServerTransitions(unittest.TestCase):
                 if readiness_failure and active['Config']['Image'] != previous:
                     raise DeployError('readiness-fixture-failed')
 
+            def resolve(arguments):
+                clock[0] += release_delay
+                return record
+
             with patch.multiple(server, ENV=environment, COMPOSE=composition, STATE=root, DEPLOYMENT=root, README=notes), \
                  patch.dict(os.environ, {'WANT_RELEASE_PUBLIC_API': '0'}), \
                  patch.object(server, 'preflight', return_value=(copy.deepcopy(active), {}, '5' * 64)), \
@@ -98,7 +102,7 @@ class ServerTransitions(unittest.TestCase):
                  patch.object(server, 'database_state', side_effect=state), patch.object(server, 'psql', return_value=''), \
                  patch.object(server, 'verify_privileges', return_value=None), patch.object(server, 'validate_container', return_value=None), \
                  patch.object(server, 'run', return_value='active'), patch.object(server, 'smoke', side_effect=smoke), \
-                 patch.object(server.release, 'resolve', return_value=record), \
+                 patch.object(server.release, 'resolve', side_effect=resolve), \
                  patch.object(server.time, 'time', side_effect=lambda: clock[0]), \
                  patch.object(server.time, 'sleep', side_effect=worker):
                 server.execute(store, record)
@@ -132,6 +136,13 @@ class ServerTransitions(unittest.TestCase):
     def test_failed_new_readiness_returns_the_old_compatible_app(self):
         result, environment, _ = self.exercise(readiness_failure=True)
         self.assertEqual(result['state'], 'rolled-back')
+        self.assertIn(('sha256:' + '6' * 64).encode(), environment)
+
+    def test_slow_release_revalidation_cannot_use_an_expired_backup_proof(self):
+        result, environment, migrated = self.exercise(release_delay=301)
+        self.assertEqual(result['state'], 'failed')
+        self.assertEqual(result['errorCode'], 'stale-backup-receipt')
+        self.assertFalse(migrated)
         self.assertIn(('sha256:' + '6' * 64).encode(), environment)
 
     def test_submit_acknowledges_before_oneshot_service_finishes(self):
