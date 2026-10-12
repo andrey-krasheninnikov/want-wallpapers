@@ -2,3 +2,10 @@
 services:
   migrate:
     networks: !override [egress]
+    mem_limit: 128m
+    memswap_limit: 128m
+    environment: !override
+      APP_ENV: production
+      DATABASE_URL_FILE: /run/secrets/migration_database_url
+      PGSSLROOTCERT: /run/secrets/postgres_ca
+    secrets: !override [migration_database_url, postgres_ca]

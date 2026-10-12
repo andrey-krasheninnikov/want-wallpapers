@@ -19,7 +19,7 @@ sudo python3 scripts/install-deployment.py \
   --worker-key /absolute/private/path/backup-worker.pub
 ```
 
-Installer читает файлы указанного commit, устанавливает их в `/usr/local/lib/wallpapers-deploy`, проверяет sudoers/effective sshd configuration и reload только SSH. App, БД и proxy не перезапускаются. Operational `.env` и Compose сохраняются побайтно и получают root ownership. Migration-only override исключает proxy network из one-off migrate. Требуются Docker Compose с `!override` и `psql`.
+Installer читает файлы указанного commit, устанавливает их в `/usr/local/lib/wallpapers-deploy`, проверяет sudoers/effective sshd configuration и reload только SSH. App, БД и proxy не перезапускаются. Operational `.env` и Compose сохраняются побайтно и получают root ownership. Migration-only override задаёт egress network, лимит памяти 128 MiB и только migrator URL/CA; runtime environment и admin secrets в migrate не входят. Требуются Docker Compose с `!override` и `psql`.
 
 Приватно создайте PostgreSQL login `wallpapers-backup`: без superuser, role/database creation, replication, bypass RLS и memberships. В базе `wallpapers` выполните `deploy/backup-owner-grants.sql` от фактического database/schema owner (`wallpapers-admin`, public принадлежит `pg_database_owner`), затем `deploy/backup-table-grants.sql` от `wallpapers-migrator`. Backup получает SELECT нужных таблиц/sequence; runtime grants не расширяются. Schema owner предоставляет migrator CREATE public для one-off DDL. Новые таблицы требуют review и обновления grant files. Deployment не хранит administrator password и не исправляет неизвестные ACL автоматически.
 
