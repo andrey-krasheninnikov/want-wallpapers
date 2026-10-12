@@ -1,6 +1,6 @@
 ---
 name: release-feature
-description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Использовать при запросе конкретного релиза; деплой Docker/Traefik выполняется отдельно.
+description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Protected tag запускает отдельный production workflow с проверкой backup/restore.
 ---
 
 # Релиз фичи Want Wallpapers
@@ -51,7 +51,7 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 - После проверки Gitflow и успешного Release eligibility создайте стабильный GitHub Release на существующем теге с `--verify-tag` и `--latest`. Передайте описание из changelog через `--notes-file`; проверьте фактическую страницу релиза.
 - Сохраните feature- и release-ветки. Завершите на синхронизированной development.
 - В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset, main/gate run IDs, точный image digest и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
-- Релиз Git не развёртывает контейнер на VPS. Деплой выполняется только по отдельному запросу.
+- Публикация protected tag запускает production workflow. До тега проверьте готовность root-owned механизма, production environment и вручную запущенного Mac worker по docs/production-deployments.md. Принятая автоматизация разрешает deployment проверенного релиза; результат Git/CI не подтверждает фактическое переключение VPS или приватную приёмку владельца.
 
 ## Runtime и публикация образа
 

@@ -2,7 +2,7 @@
 
 Статус: принято. Заменяет сведения о backend, хранении и деплое в ADR 0001–0003.
 
-Региональная доступность и согласие реализованы по [0005](0005-regional-availability-and-consent.md); подключение рекламы ожидает отдельной реализации. Следующие принятые решения ожидают реализации: [0006](0006-protected-tag-deployments.md) — условия production-деплоя; [0007](0007-off-vps-restore-verification.md) — проверку восстановления backup. Остальные положения этого ADR сохраняются.
+Региональная доступность и согласие реализованы по [0005](0005-regional-availability-and-consent.md); подключение рекламы ожидает отдельной реализации. [0006](0006-protected-tag-deployments.md) и [0007](0007-off-vps-restore-verification.md) реализованы; первая production-приёмка требует provisioning и supervised deployment по [инструкции](../production-deployments.md). Остальные положения этого ADR сохраняются.
 
 Frontend остаётся Astro/React/Tailwind/shadcn с прежними публичными маршрутами и четырьмя языками в `frontend/`. `backend/` содержит Axum/Tokio/SQLx, PostgreSQL 18 и миграции. Один непривилегированный контейнер раздаёт статическую сборку и API через готовый маршрут существующего Traefik к wallpapers:8080. Alias wallpapers принадлежит только app во внешней сети wallpapers-proxy; Compose не создаёт route или сертификат. PostgreSQL внешний; соединение в production обязательно проверяет сертификат и hostname (`verify-full`). Контейнер не получает Docker socket.
 
