@@ -153,7 +153,10 @@ def preflight():
     profile = json.loads(compose('--profile', 'operations', 'config', '--format', 'json'))
     migration = profile['services']['migrate']
     require(set(migration['networks']) == {'egress'} and migration['user'] == '10001:10001'
-            and int(migration['mem_limit']) == 128 * 1024 ** 2 and migration['read_only']
+            and int(migration['mem_limit']) == int(migration['memswap_limit']) == 128 * 1024 ** 2
+            and migration['read_only']
+            and {entry['source']: entry['target'] for entry in migration['secrets']}
+                == {'migration_database_url': 'migration_database_url', 'postgres_ca': 'postgres_ca'}
             and set(migration['environment']) == {'APP_ENV', 'DATABASE_URL_FILE', 'PGSSLROOTCERT'}
             and migration['environment']['DATABASE_URL_FILE'] == '/run/secrets/migration_database_url',
             'migration-profile-mismatch')
