@@ -1,0 +1,4 @@
+# Applies only to the one-off migration service; the operational app stays unchanged.
+services:
+  migrate:
+    networks: !override [egress]

@@ -12,6 +12,8 @@ import subprocess
 import sys
 import time
 import tempfile
+import urllib.request
+import urllib.parse
 
 REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 IMAGE = 'ghcr.io/' + REPOSITORY
@@ -43,6 +45,25 @@ def document(value):
 
 
 def api(path, pages=False):
+    if os.environ.get('WANT_RELEASE_PUBLIC_API') == '1':
+        url = 'https://api.github.com/repos/' + REPOSITORY + '/' + path
+        results = []
+        while url:
+            require(url.startswith('https://api.github.com/repos/' + REPOSITORY + '/'), 'Invalid GitHub evidence URL')
+            try:
+                request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json',
+                    'User-Agent': 'want-wallpapers-release'})
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    body = response.read(2 * 1024 ** 2 + 1)
+                    require(len(body) <= 2 * 1024 ** 2, 'GitHub evidence response is too large')
+                    results.append(document(body.decode()))
+                    links = response.headers.get('Link', '')
+            except Exception as error:
+                raise ReleaseError('Public GitHub release evidence unavailable') from error
+            following = re.search(r'<([^>]+)>; rel="next"', links)
+            url = following.group(1) if pages and following else None
+            require(len(results) <= 100, 'GitHub evidence pagination exceeded')
+        return results if pages else results[0]
     arguments = ['gh', 'api', 'repos/' + REPOSITORY + '/' + path]
     if pages:
         arguments += ['--paginate', '--slurp']
@@ -50,10 +71,46 @@ def api(path, pages=False):
 
 
 def registry(reference, output='--raw'):
+    if os.environ.get('WANT_RELEASE_PUBLIC_API') == '1':
+        return public_registry(reference, output)
     arguments = ['docker', 'buildx', 'imagetools', 'inspect', reference]
     arguments += ['--raw'] if output == '--raw' else ['--format', output]
     value = command(arguments)
     return value if output == '{{.Manifest.Digest}}' else document(value)
+
+
+def public_registry(reference, output):
+    require(reference.startswith(IMAGE + '@') or reference.startswith(IMAGE + ':'), 'Invalid release registry reference')
+    name = reference[len(IMAGE) + 1:]
+    require(re.fullmatch(r'(sha256:[0-9a-f]{64}|[0-9a-f]{40}-[0-9]+-[0-9]+)', name), 'Invalid release registry reference')
+    def fetch(url, headers=None):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {}), timeout=30) as response:
+                body = response.read(2 * 1024 ** 2 + 1)
+            require(len(body) <= 2 * 1024 ** 2, 'Release registry response is too large')
+            return body
+        except ReleaseError:
+            raise
+        except Exception as error:
+            raise ReleaseError('Public registry release evidence unavailable') from error
+    query = urllib.parse.urlencode({'service': 'ghcr.io', 'scope': 'repository:' + REPOSITORY + ':pull'})
+    token = document(fetch('https://ghcr.io/token?' + query).decode())['token']
+    require(isinstance(token, str) and re.fullmatch(r'[A-Za-z0-9._~+/\-]+=*', token), 'Invalid registry authorization response')
+    headers = {'Authorization': 'Bearer ' + token,
+               'Accept': 'application/vnd.oci.image.index.v1+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json'}
+    body = fetch('https://ghcr.io/v2/' + REPOSITORY + '/manifests/' + name, headers)
+    actual = 'sha256:' + hashlib.sha256(body).hexdigest()
+    require(not name.startswith('sha256:') or name == actual, 'Registry manifest checksum mismatch')
+    if output == '{{.Manifest.Digest}}':
+        return actual
+    manifest = document(body.decode())
+    if output == '--raw':
+        return manifest
+    require(output == '{{json .Image}}', 'Unsupported release registry output')
+    config_digest = digest(manifest['config']['digest'])
+    config = fetch('https://ghcr.io/v2/' + REPOSITORY + '/blobs/' + config_digest, headers)
+    require('sha256:' + hashlib.sha256(config).hexdigest() == config_digest, 'Registry config checksum mismatch')
+    return document(config.decode())
 
 
 def digest(value):
