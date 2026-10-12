@@ -34,9 +34,10 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 ## 3. Защищённый тег
 
 - До публикации тега прочитайте [контракт release gate](../../../docs/ci-releases.md). Сверьте `.github/release-policy.json` с текущим ruleset; обновлённые правила требуют полного readback без bypass и отдельного проверенного изменения policy. Проверьте или создайте активный tag ruleset `Protect release tags` для `refs/tags/v*`: запрет обновления и удаления, без bypass actors. Создание новых тегов разрешено. Прочитайте сохранённое правило через GitHub API.
+- До публикации тега проверьте готовность root-owned механизма, protected production environment и вручную запущенного Mac backup worker по docs/production-deployments.md. Отсутствующие prerequisites блокируют публикацию тега; остальные согласованные этапы можно подготовить заранее.
 - Создайте annotated тег `vMAJOR.MINOR.PATCH` на подтверждённом merge-коммите main с сообщением `Release MAJOR.MINOR.PATCH`.
 - Опубликуйте только нужный тег обычным push. Проверьте серверный tag object и peeled SHA; peeled SHA должен совпасть с зафиксированным main.
-- Существующий тег не перемещайте и не удаляйте. Push тега запускает только Release eligibility, без тяжёлых проверок. Ранний тег ожидает успешный main run/attempt и matching publication до 90 минут; ошибка или timeout блокирует дальнейший выпуск. Сохраните outputs tag/SHA/run/attempt/APP_IMAGE@digest и обе platform revisions. Для повторного допуска передавайте исходный digest; не подменяйте его новой публикацией того же SHA. При неоднозначном результате сначала прочитайте серверное состояние.
+- Существующий тег не перемещайте и не удаляйте. Push тега запускает Release eligibility и Production deployment, без rebuild и повторения тяжёлых main проверок. Ранний тег ожидает успешный main run/attempt и matching publication до 90 минут; ошибка или timeout блокирует дальнейший выпуск. Сохраните outputs tag/SHA/run/attempt/APP_IMAGE@digest и обе platform revisions. Для повторного допуска передавайте исходный digest; не подменяйте его новой публикацией того же SHA. При неоднозначном результате сначала прочитайте серверное состояние.
 
 ## 4. Main обратно в development
 
