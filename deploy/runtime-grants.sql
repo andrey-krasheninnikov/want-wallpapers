@@ -1,4 +1,4 @@
--- Run after migrations as the database owner. psql quotes runtime_role as an identifier.
+-- Run after migrations as the table owner. psql quotes runtime_role as an identifier.
 \set ON_ERROR_STOP on
 \if :{?runtime_role}
 \else

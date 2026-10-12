@@ -6,7 +6,7 @@ Protected release tag задаёт commit и image digest. GitHub Actions про
 
 CI account `wallpapers-deploy` принимает только `deploy <tag> <sourceSha> <indexDigest>` и `deploy-status <requestId>`. Для reconciliation потерянного ответа есть readonly `deploy-status <tag> <sourceSha> <indexDigest>`. Worker account `wallpapers-backup` принимает `backup-next` и `backup-result <requestId>` с JSON через stdin, максимум 16 KiB и 10 секунд. Чтение payload не блокирует status и переходы deployment. Повтор идентичного принятого receipt возвращает сохранённый acknowledgement; другой payload и новый запрос со старым receipt отклоняются.
 
-Accounts имеют разные Ed25519 keys, forced command, root-owned authorized keys и недоступный для записи home. Shell, PTY, forwarding, user rc, SCP/SFTP, Docker-group и общий sudo отсутствуют. Sudo разрешает только фиксированный launcher с проверкой account/команды. CI не загружает исполняемые scripts на VPS; обновление механизма требует установки проверенного commit оператором.
+Accounts имеют разные Ed25519 keys, forced command, root-owned authorized keys и недоступный для записи home. Для каждой учётки отдельный Match User задаёт AllowUsers только с её именем, чтобы существующий глобальный список не блокировал CI/worker. Глобальные правила остальных пользователей сохраняются. Shell, PTY, forwarding, user rc, SCP/SFTP, Docker-group и общий sudo отсутствуют. Sudo разрешает только фиксированный launcher с проверкой account/команды. CI не загружает исполняемые scripts на VPS; обновление механизма требует установки проверенного commit оператором.
 
 Создайте keys в приватном каталоге вне checkout. Private keys имеют mode 0600 и не попадают в чат, issues, argv или Git. В чистом checkout проверенного опубликованного commit оператор выполняет:
 
@@ -19,7 +19,7 @@ sudo python3 scripts/install-deployment.py \
   --worker-key /absolute/private/path/backup-worker.pub
 ```
 
-Installer читает файлы указанного commit, устанавливает их в `/usr/local/lib/wallpapers-deploy`, проверяет sudoers/effective sshd configuration и reload только SSH. App, БД и proxy не перезапускаются. Operational `.env` и Compose сохраняются побайтно и получают root ownership. Migration-only override исключает proxy network из one-off migrate. Требуются Docker Compose с `!override` и `psql`.
+Installer читает файлы указанного commit, устанавливает их в `/usr/local/lib/wallpapers-deploy`, проверяет sudoers/effective sshd configuration и reload только SSH. App, БД и proxy не перезапускаются. Operational `.env` и Compose сохраняются побайтно и получают root ownership. Migration-only override задаёт egress network, лимит памяти 128 MiB и только migrator URL/CA; runtime environment и admin secrets в migrate не входят. Требуются Docker Compose с `!override` и `psql`.
 
 Приватно создайте PostgreSQL login `wallpapers-backup`: без superuser, role/database creation, replication, bypass RLS и memberships. В базе `wallpapers` выполните `deploy/backup-owner-grants.sql` от фактического database/schema owner (`wallpapers-admin`, public принадлежит `pg_database_owner`), затем `deploy/backup-table-grants.sql` от `wallpapers-migrator`. Backup получает SELECT нужных таблиц/sequence; runtime grants не расширяются. Schema owner предоставляет migrator CREATE public для one-off DDL. Новые таблицы требуют review и обновления grant files. Deployment не хранит administrator password и не исправляет неизвестные ACL автоматически.
 

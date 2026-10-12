@@ -3,7 +3,7 @@ PYTHON ?= python3
 
 .PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-backup test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
-	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n'
+	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n test-project-isolation'
 install:
 	bun install --frozen-lockfile --ignore-scripts
 	cargo fetch --locked
@@ -73,3 +73,7 @@ n8n-restore:
 	python3 -B scripts/n8n-state.py restore "$(ARCHIVE)" --volume "$(VOLUME)"
 test-n8n:
 	python3 -u -B scripts/test-local-n8n.py
+
+.PHONY: test-project-isolation
+test-project-isolation:
+	$(PYTHON) -B scripts/test-project-isolation.py

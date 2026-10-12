@@ -11,8 +11,14 @@
 - Deployment сохраняет состояние и прежний образ/config. Автоматический rollback разрешён при подтверждённой совместимости schema/history; остальные ошибки требуют оператора.
 - Ручной повтор использует исходный immutable digest и его успешный main run/attempt, даже после новой публикации того же commit.
 
+### Исправлено
+
+- Миграции используют только migrator URL/CA, egress и 128 MiB памяти даже при наследовании старого operational Compose.
+- Добавлены проверяемые SQL-процедуры изоляции PostgreSQL от известных ролей других приложений и восстановления ограниченных runtime grants.
+
 ### Подготовка и проверка
 
+- Установщик допускает ограниченные CI/backup SSH-учётки при существующем глобальном AllowUsers, сохраняя доступ администратора и запрет остальных пользователей.
 - Первый deployment требует установки проверенного механизма на VPS, отдельных backup credentials и вручную запущенного Mac worker. Key recovery и initial provisioning описаны в docs/production-deployments.md.
 - Main CI проверяет audit, UI и native amd64/arm64 runtime до публикации образа. Production deployment и приватная приёмка CAPTCHA/login/logout подтверждаются отдельно.
 
