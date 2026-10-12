@@ -60,7 +60,7 @@ def main():
         root = Path(directory)
         root.chmod(0o700)
         key, known, config = root / 'key', root / 'known_hosts', root / 'config'
-        key.write_text(os.environ.pop('PRODUCTION_SSH_PRIVATE_KEY'))
+        key.write_text(os.environ.pop('PRODUCTION_SSH_PRIVATE_KEY').rstrip('\r\n') + '\n')
         key.chmod(0o600)
         known.write_text(os.environ['PRODUCTION_SSH_KNOWN_HOSTS'])
         known.chmod(0o600)

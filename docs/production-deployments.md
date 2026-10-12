@@ -8,7 +8,7 @@ CI account `wallpapers-deploy` принимает только `deploy <tag> <so
 
 Accounts имеют разные Ed25519 keys, forced command, root-owned authorized keys и недоступный для записи home. Для каждой учётки отдельный Match User задаёт AllowUsers только с её именем, чтобы существующий глобальный список не блокировал CI/worker. Глобальные правила остальных пользователей сохраняются. Shell, PTY, forwarding, user rc, SCP/SFTP, Docker-group и общий sudo отсутствуют. Sudo разрешает только фиксированный launcher с проверкой account/команды. CI не загружает исполняемые scripts на VPS; обновление механизма требует установки проверенного commit оператором.
 
-Создайте keys в приватном каталоге вне checkout. Private keys имеют mode 0600 и не попадают в чат, issues, argv или Git. В чистом checkout проверенного опубликованного commit оператор выполняет:
+Создайте keys в приватном каталоге вне checkout. Private keys имеют mode 0600 и не попадают в чат, issues, argv или Git. CI восстанавливает завершающий newline перед записью SSH key: GitHub CLI удаляет его при provisioning через stdin. В чистом checkout проверенного опубликованного commit оператор выполняет:
 
 Для подготовки Mac используйте `python3 scripts/setup-production-owner.py --postgres-host <verified-host> --postgres-ca <private-path-to-same-CA>` в собственном терминале. Helper вводит backup/S3 credentials скрыто, создаёт keys и worker files вне checkout и настраивает GitHub environment. Уже существующие environment protections и AWS profiles сохраняются; несовместимые environment settings требуют review. После этого передайте на VPS только `production-ci.pub` и `backup-ssh.pub` из приватного worker directory.
 
