@@ -10,7 +10,7 @@
 - `automation/n8n/`: отдельный локальный n8n на MacBook, постоянный Docker volume и приватные snapshots.
 - `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
 
-Нужны Bun 1.3.14, Rust 1.93.0, Python 3 и Docker для тестовой БД. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
+Нужны Bun 1.3.14, Rust 1.93.0, Python 3, Docker для тестовой БД и `age` для проверки encrypted backup/restore. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
 
 ```bash
 make install
@@ -25,7 +25,7 @@ cd ..
 make test-ui
 ```
 
-`make test` запускает поиск/фильтры/manifest и Rust API на отдельном PostgreSQL 18. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют четыре языка на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
+`make test` запускает поиск/фильтры/manifest, Rust API на отдельном PostgreSQL 18, CI/deployment contracts и изолированное encrypted backup/restore. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют четыре языка на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
 
 Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: разрешите `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md). CI создаёт профили с точными путями и выполняет smoke-launch на одноразовом runner; настройки VPS не меняются.
 
@@ -68,7 +68,7 @@ make catalog-pull
 
 Dry-run не обращается к CDN/API. Импорт делает точный повтор без записи; частичные или отличающиеся данные дают conflict и не перезаписываются. После сетевого сбоя сначала выполните защищённый readback (`GET /api/v1/admin/catalog`). Номер папки уникален независимо от ведущих нулей. Существующие ID и социальные данные сохраняются. Новые категории/теги требуют отдельного согласованного обновления frontend/backend и деплоя до импорта. Для тестового API HTTP допустим только localhost/127.0.0.1.
 
-Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Release не развёртывает сайт автоматически.
+Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Protected v* tag запускает production workflow после release eligibility; deployment требует подготовленного VPS и работающего Mac backup worker.
 
 `make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Кэш и build output не коммитятся.
 
@@ -80,6 +80,6 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 Analytics включается только с measurement ID, согласием посетителя и разрешённым регионом. Российский IP или ошибка ipwho.is отключает социальные функции, обращения и Analytics в публичном интерфейсе; просмотр, поиск и скачивание остаются. Админка работает независимо от региона. Закрытые обращения удаляются ежедневной задачей через год.
 
-Workflow Checks выполняет лёгкие static/type/format и unit/API проверки на ветках, PR и ручных запусках. Только main исходного репозитория проходит audit, полный UI и native production runtime PostgreSQL 18/TLS на amd64/arm64 и публикует те же проверенные images без rebuild. OCI index и долговечный release record содержат source SHA, platform digests/revisions и run/attempt. Защищённый annotated v* тег проходит отдельный read-only gate; ранний тег ожидает main publication до 90 минут. Для повторения требуется исходный digest. [CI и допуск релиза](docs/ci-releases.md) описывает event matrix, контракт, проверку защиты и outputs для будущего deployment. Деплой VPS выполняется отдельно.
+Workflow Checks выполняет лёгкие static/type/format и unit/API проверки на ветках, PR и ручных запусках. Только main исходного репозитория проходит audit, полный UI и native production runtime PostgreSQL 18/TLS на amd64/arm64 и публикует те же проверенные images без rebuild. OCI index и долговечный release record содержат source SHA, platform digests/revisions и run/attempt. Защищённый annotated v* тег проходит отдельный read-only gate; ранний тег ожидает main publication до 90 минут. Для повторения требуется исходный digest. [CI и допуск релиза](docs/ci-releases.md) описывает event matrix, контракт и outputs. [Production deployment](docs/production-deployments.md) описывает автоматический запуск, private backup worker, первоначальную установку и supervised acceptance.
 
 Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.

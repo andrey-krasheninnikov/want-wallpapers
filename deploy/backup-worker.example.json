@@ -1,0 +1,9 @@
+{
+  "sshConfig": "~/.config/want-wallpapers/backup-worker/ssh_config",
+  "pgServiceFile": "~/.config/want-wallpapers/backup-worker/pg_service.conf",
+  "pgPassFile": "~/.config/want-wallpapers/backup-worker/pgpass",
+  "postgresCa": "~/.config/want-wallpapers/backup-worker/postgres_ca.pem",
+  "ageIdentity": "~/.config/want-wallpapers/backup-worker/age-identity",
+  "ageRecipient": "<public age recipient>",
+  "awsProfile": "timeweb-wallpapers-backup"
+}
