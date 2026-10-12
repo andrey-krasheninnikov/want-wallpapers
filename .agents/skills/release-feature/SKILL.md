@@ -1,6 +1,6 @@
 ---
 name: release-feature
-description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Использовать при запросе конкретного релиза; деплой Docker/Traefik выполняется отдельно.
+description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Protected tag запускает отдельный production workflow с проверкой backup/restore.
 ---
 
 # Релиз фичи Want Wallpapers
@@ -34,9 +34,10 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 ## 3. Защищённый тег
 
 - До публикации тега прочитайте [контракт release gate](../../../docs/ci-releases.md). Сверьте `.github/release-policy.json` с текущим ruleset; обновлённые правила требуют полного readback без bypass и отдельного проверенного изменения policy. Проверьте или создайте активный tag ruleset `Protect release tags` для `refs/tags/v*`: запрет обновления и удаления, без bypass actors. Создание новых тегов разрешено. Прочитайте сохранённое правило через GitHub API.
+- До публикации тега проверьте готовность root-owned механизма, protected production environment и вручную запущенного Mac backup worker по docs/production-deployments.md. Отсутствующие prerequisites блокируют публикацию тега; остальные согласованные этапы можно подготовить заранее.
 - Создайте annotated тег `vMAJOR.MINOR.PATCH` на подтверждённом merge-коммите main с сообщением `Release MAJOR.MINOR.PATCH`.
 - Опубликуйте только нужный тег обычным push. Проверьте серверный tag object и peeled SHA; peeled SHA должен совпасть с зафиксированным main.
-- Существующий тег не перемещайте и не удаляйте. Push тега запускает только Release eligibility, без тяжёлых проверок. Ранний тег ожидает успешный main run/attempt и matching publication до 90 минут; ошибка или timeout блокирует дальнейший выпуск. Сохраните outputs tag/SHA/run/attempt/APP_IMAGE@digest и обе platform revisions. Для повторного допуска передавайте исходный digest; не подменяйте его новой публикацией того же SHA. При неоднозначном результате сначала прочитайте серверное состояние.
+- Существующий тег не перемещайте и не удаляйте. Push тега запускает Release eligibility и Production deployment, без rebuild и повторения тяжёлых main проверок. Ранний тег ожидает успешный main run/attempt и matching publication до 90 минут; ошибка или timeout блокирует дальнейший выпуск. Сохраните outputs tag/SHA/run/attempt/APP_IMAGE@digest и обе platform revisions. Для повторного допуска передавайте исходный digest; не подменяйте его новой публикацией того же SHA. При неоднозначном результате сначала прочитайте серверное состояние.
 
 ## 4. Main обратно в development
 
@@ -51,7 +52,7 @@ description: Выпускать фичи Want Wallpapers по Gitflow через
 - После проверки Gitflow и успешного Release eligibility создайте стабильный GitHub Release на существующем теге с `--verify-tag` и `--latest`. Передайте описание из changelog через `--notes-file`; проверьте фактическую страницу релиза.
 - Сохраните feature- и release-ветки. Завершите на синхронизированной development.
 - В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset, main/gate run IDs, точный image digest и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
-- Релиз Git не развёртывает контейнер на VPS. Деплой выполняется только по отдельному запросу.
+- Публикация protected tag запускает production workflow. До тега проверьте готовность root-owned механизма, production environment и вручную запущенного Mac worker по docs/production-deployments.md. Принятая автоматизация разрешает deployment проверенного релиза; результат Git/CI не подтверждает фактическое переключение VPS или приватную приёмку владельца.
 
 ## Runtime и публикация образа
 

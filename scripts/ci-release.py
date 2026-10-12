@@ -12,6 +12,8 @@ import subprocess
 import sys
 import time
 import tempfile
+import urllib.request
+import urllib.parse
 
 REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 IMAGE = 'ghcr.io/' + REPOSITORY
@@ -43,6 +45,25 @@ def document(value):
 
 
 def api(path, pages=False):
+    if os.environ.get('WANT_RELEASE_PUBLIC_API') == '1':
+        url = 'https://api.github.com/repos/' + REPOSITORY + '/' + path
+        results = []
+        while url:
+            require(url.startswith('https://api.github.com/repos/' + REPOSITORY + '/'), 'Invalid GitHub evidence URL')
+            try:
+                request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json',
+                    'User-Agent': 'want-wallpapers-release'})
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    body = response.read(2 * 1024 ** 2 + 1)
+                    require(len(body) <= 2 * 1024 ** 2, 'GitHub evidence response is too large')
+                    results.append(document(body.decode()))
+                    links = response.headers.get('Link', '')
+            except Exception as error:
+                raise ReleaseError('Public GitHub release evidence unavailable') from error
+            following = re.search(r'<([^>]+)>; rel="next"', links)
+            url = following.group(1) if pages and following else None
+            require(len(results) <= 100, 'GitHub evidence pagination exceeded')
+        return results if pages else results[0]
     arguments = ['gh', 'api', 'repos/' + REPOSITORY + '/' + path]
     if pages:
         arguments += ['--paginate', '--slurp']
@@ -50,10 +71,46 @@ def api(path, pages=False):
 
 
 def registry(reference, output='--raw'):
+    if os.environ.get('WANT_RELEASE_PUBLIC_API') == '1':
+        return public_registry(reference, output)
     arguments = ['docker', 'buildx', 'imagetools', 'inspect', reference]
     arguments += ['--raw'] if output == '--raw' else ['--format', output]
     value = command(arguments)
     return value if output == '{{.Manifest.Digest}}' else document(value)
+
+
+def public_registry(reference, output):
+    require(reference.startswith(IMAGE + '@') or reference.startswith(IMAGE + ':'), 'Invalid release registry reference')
+    name = reference[len(IMAGE) + 1:]
+    require(re.fullmatch(r'(sha256:[0-9a-f]{64}|[0-9a-f]{40}-[0-9]+-[0-9]+)', name), 'Invalid release registry reference')
+    def fetch(url, headers=None):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {}), timeout=30) as response:
+                body = response.read(2 * 1024 ** 2 + 1)
+            require(len(body) <= 2 * 1024 ** 2, 'Release registry response is too large')
+            return body
+        except ReleaseError:
+            raise
+        except Exception as error:
+            raise ReleaseError('Public registry release evidence unavailable') from error
+    query = urllib.parse.urlencode({'service': 'ghcr.io', 'scope': 'repository:' + REPOSITORY + ':pull'})
+    token = document(fetch('https://ghcr.io/token?' + query).decode())['token']
+    require(isinstance(token, str) and re.fullmatch(r'[A-Za-z0-9._~+/\-]+=*', token), 'Invalid registry authorization response')
+    headers = {'Authorization': 'Bearer ' + token,
+               'Accept': 'application/vnd.oci.image.index.v1+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json'}
+    body = fetch('https://ghcr.io/v2/' + REPOSITORY + '/manifests/' + name, headers)
+    actual = 'sha256:' + hashlib.sha256(body).hexdigest()
+    require(not name.startswith('sha256:') or name == actual, 'Registry manifest checksum mismatch')
+    if output == '{{.Manifest.Digest}}':
+        return actual
+    manifest = document(body.decode())
+    if output == '--raw':
+        return manifest
+    require(output == '{{json .Image}}', 'Unsupported release registry output')
+    config_digest = digest(manifest['config']['digest'])
+    config = fetch('https://ghcr.io/v2/' + REPOSITORY + '/blobs/' + config_digest, headers)
+    require('sha256:' + hashlib.sha256(config).hexdigest() == config_digest, 'Registry config checksum mismatch')
+    return document(config.decode())
 
 
 def digest(value):
@@ -136,12 +193,38 @@ def release_record(reference, sha, run, expected_digest=None):
     return {**record, 'image': IMAGE + '@' + index_digest, 'indexDigest': index_digest}
 
 
+def successful_attempt(sha, run_id, attempt_number):
+    require(type(run_id) is int and run_id > 0 and type(attempt_number) is int and attempt_number > 0,
+            'Invalid verification run identity')
+    attempt = api(f'actions/runs/{run_id}/attempts/{attempt_number}')
+    require(attempt['id'] == run_id and attempt['run_attempt'] == attempt_number and main_run(attempt, sha)
+            and attempt['status'] == 'completed' and attempt['conclusion'] == 'success',
+            'Verification attempt is not successful main evidence')
+    jobs = [job for page in api(f'actions/runs/{run_id}/attempts/{attempt_number}/jobs?per_page=100', pages=True)
+            for job in page['jobs']]
+    required = {'verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish'}
+    require(required <= {job['name'] for job in jobs if job['conclusion'] == 'success'},
+            'Full main verification/publication jobs did not all succeed')
+    return attempt
+
+
 def resolve(arguments):
     require(os.environ.get('GITHUB_REPOSITORY', REPOSITORY) == REPOSITORY, 'Forks cannot authorize releases')
     require(0 <= arguments.timeout <= 5400, 'Release timeout must be between 0 and 5400 seconds')
     if arguments.digest:
         digest(arguments.digest)
     sha = tag_commit(arguments.tag)
+    if arguments.digest:
+        reference = IMAGE + '@' + arguments.digest
+        index = registry(reference)
+        recorded = document(index['annotations'][ANNOTATION])
+        require(recorded['repository'] == REPOSITORY and recorded['sourceSha'] == sha, 'Release record source mismatch')
+        verification = recorded['verificationRun']
+        require(verification['workflow'] == WORKFLOW, 'Release record workflow mismatch')
+        attempt = successful_attempt(sha, verification['id'], verification['attempt'])
+        record = release_record(reference, sha, attempt, arguments.digest)
+        require(tag_commit(arguments.tag) == sha, 'Release tag changed during verification')
+        return {**record, 'tag': arguments.tag}
     deadline = time.monotonic() + arguments.timeout
     while True:
         pages = api('actions/workflows/checks.yml/runs?head_sha=' + sha + '&branch=main&per_page=100', pages=True)
@@ -150,11 +233,7 @@ def resolve(arguments):
             run = max(candidates, key=lambda run: run['id'])
             if run['status'] == 'completed':
                 require(run['conclusion'] == 'success', 'Matching main verification failed')
-                attempt = api(f"actions/runs/{run['id']}/attempts/{run['run_attempt']}")
-                require(main_run(attempt, sha) and attempt['status'] == 'completed' and attempt['conclusion'] == 'success', 'Verification attempt is not successful main evidence')
-                jobs = [job for page in api(f"actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs?per_page=100", pages=True) for job in page['jobs']]
-                required = {'verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish'}
-                require(required <= {job['name'] for job in jobs if job['conclusion'] == 'success'}, 'Full main verification/publication jobs did not all succeed')
+                successful_attempt(sha, run['id'], run['run_attempt'])
                 reference = f"{IMAGE}:{sha}-{run['id']}-{run['run_attempt']}"
                 record = release_record(reference, sha, run, arguments.digest)
                 require(tag_commit(arguments.tag) == sha, 'Release tag changed during verification')
