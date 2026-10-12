@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import select
 import shutil
 import sys
 import time
@@ -52,6 +53,24 @@ def database_state(environment):
 
 def verify_privileges(environment):
     psql(environment, (ROOT / 'deploy/verify-runtime-grants.sql').read_text())
+
+
+def database_connections():
+    ca = SECRETS / 'postgres_ca.pem'
+    runtime, runtime_id = database_environment(SECRETS / 'database_url', 'wallpapers', ca)
+    migrator, database_id = database_environment(SECRETS / 'migration_database_url', 'wallpapers-migrator', ca)
+    require(runtime_id == database_id, 'database-identity-mismatch')
+    sql = "SELECT json_build_object('user',current_user,'sessionUser',session_user,'database',current_database()," \
+          "'server',inet_server_addr()::text,'port',inet_server_port(),'version',current_setting('server_version_num')::int);"
+    actual = []
+    for environment in (runtime, migrator):
+        connection = json.loads(psql(environment, sql))
+        require(connection['user'] == environment['PGUSER'] and connection['sessionUser'] == environment['PGUSER']
+                and connection['database'] == 'wallpapers', 'database-connection-role-mismatch')
+        require(connection['version'] // 10000 == 18, 'postgresql-version')
+        actual.append({key: connection[key] for key in ('server', 'port', 'database', 'version')})
+    require(actual[0] == actual[1], 'database-identity-mismatch')
+    return migrator, database_id
 
 
 def https(path, headers=False):
@@ -146,9 +165,7 @@ def preflight():
             and current_image['Architecture'] == 'amd64'
             and current_image['Config']['Labels'].get('org.opencontainers.image.source') == 'https://github.com/' + release.REPOSITORY,
             'current-image-config-mismatch')
-    environment, database_id = database_environment(SECRETS / 'migration_database_url',
-                                                   'wallpapers-migrator', SECRETS / 'postgres_ca.pem')
-    require(int(psql(environment, 'SHOW server_version_num;').strip()) // 10000 == 18, 'postgresql-version')
+    environment, database_id = database_connections()
     verify_privileges(environment)
     return container, environment, database_id
 
@@ -172,6 +189,10 @@ def execute(store, record):
     before = None
     try:
         with store.lock('deployment', blocking=False):
+            with store.lock():
+                record = store.read(record['requestId'])
+                if record['state'] != 'running':
+                    return
             publish(store, record, 'preflight')
             previous, environment, database_id = preflight()
             record['databaseId'] = database_id
@@ -213,6 +234,8 @@ def execute(store, record):
                 time.sleep(5)
             require(database_state(environment) == before and ENV.read_bytes() == original_env
                     and COMPOSE.read_bytes() == original_compose, 'preflight-changed')
+            fresh_environment, fresh_database_id = database_connections()
+            require(fresh_environment == environment and fresh_database_id == database_id, 'database-profile-changed')
             os.environ['WANT_RELEASE_PUBLIC_API'] = '1'
             fresh = release.resolve(argparse.Namespace(tag=record['tag'], digest=record['indexDigest'], timeout=0))
             require(fresh['sourceSha'] == record['sourceSha'] and fresh['verificationRun'] == record['verificationRun'],
@@ -330,7 +353,7 @@ def submit(store, tag, sha, digest):
                   'createdAt': int(time.time())}
         store.write(record)
         try:
-            run(['/usr/bin/systemd-run', '--quiet', '--unit', 'wallpapers-deploy-' + request_id,
+            run(['/usr/bin/systemd-run', '--quiet', '--no-block', '--unit', 'wallpapers-deploy-' + request_id,
                  '--property=Type=oneshot', '--property=UMask=0077', '--property=TimeoutStartSec=45min',
                  '--property=ExecStopPost=/usr/local/sbin/wallpapers-deploy reconcile ' + request_id,
                  '/usr/local/sbin/wallpapers-deploy', 'run', request_id])
@@ -341,11 +364,27 @@ def submit(store, tag, sha, digest):
         return public_record(record)
 
 
+def read_receipt(stream, timeout=10):
+    deadline = time.monotonic() + timeout
+    payload = bytearray()
+    while len(payload) <= 16384:
+        remaining = deadline - time.monotonic()
+        require(remaining > 0 and select.select([stream], [], [], remaining)[0], 'backup-receipt-timeout')
+        block = os.read(stream.fileno(), 16385 - len(payload))
+        if not block:
+            receipt = json.loads(payload)
+            require(isinstance(receipt, dict), 'invalid-backup-receipt')
+            return receipt
+        payload.extend(block)
+    raise DeployError('backup-receipt-too-large')
+
+
 def protocol(store, actor, words):
     command = request_command(' '.join(words), actor)
     require(os.environ.get('SUDO_USER') == ACTORS[actor], 'invalid-account')
     if command[0] == 'deploy':
         return submit(store, *command[1:])
+    receipt = read_receipt(sys.stdin.buffer) if command[0] == 'backup-result' else None
     with store.lock():
         if command[0] == 'deploy-status':
             if len(command) == 2:
@@ -372,9 +411,6 @@ def protocol(store, actor, words):
                                                         'databaseId', 'before', 'backupDeadline')}
             return {'pending': False}
         record = store.read(command[1])
-        payload = sys.stdin.buffer.read(16385)
-        require(len(payload) <= 16384, 'backup-receipt-too-large')
-        receipt = json.loads(payload)
         if record.get('receipt') == receipt:
             return {'requestId': record['requestId'], 'accepted': True}
         require(record['state'] == 'running' and record['stage'] == 'backup-pending'

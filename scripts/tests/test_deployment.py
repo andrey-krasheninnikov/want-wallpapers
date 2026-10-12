@@ -15,7 +15,7 @@ spec.loader.exec_module(deployment)
 
 class DeploymentContractTests(unittest.TestCase):
     def test_owner_provisioning_rejects_noninteractive_credential_input(self):
-        result = subprocess.run([sys.executable, str(ROOT / 'scripts/setup-production-owner.py'),
+        result = subprocess.run([sys.executable, '-B', str(ROOT / 'scripts/setup-production-owner.py'),
                                  '--postgres-host', 'database.example.invalid', '--postgres-ca', '/unused/ca.pem'],
                                 stdin=subprocess.DEVNULL, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)

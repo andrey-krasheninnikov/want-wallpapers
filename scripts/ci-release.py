@@ -193,12 +193,38 @@ def release_record(reference, sha, run, expected_digest=None):
     return {**record, 'image': IMAGE + '@' + index_digest, 'indexDigest': index_digest}
 
 
+def successful_attempt(sha, run_id, attempt_number):
+    require(type(run_id) is int and run_id > 0 and type(attempt_number) is int and attempt_number > 0,
+            'Invalid verification run identity')
+    attempt = api(f'actions/runs/{run_id}/attempts/{attempt_number}')
+    require(attempt['id'] == run_id and attempt['run_attempt'] == attempt_number and main_run(attempt, sha)
+            and attempt['status'] == 'completed' and attempt['conclusion'] == 'success',
+            'Verification attempt is not successful main evidence')
+    jobs = [job for page in api(f'actions/runs/{run_id}/attempts/{attempt_number}/jobs?per_page=100', pages=True)
+            for job in page['jobs']]
+    required = {'verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish'}
+    require(required <= {job['name'] for job in jobs if job['conclusion'] == 'success'},
+            'Full main verification/publication jobs did not all succeed')
+    return attempt
+
+
 def resolve(arguments):
     require(os.environ.get('GITHUB_REPOSITORY', REPOSITORY) == REPOSITORY, 'Forks cannot authorize releases')
     require(0 <= arguments.timeout <= 5400, 'Release timeout must be between 0 and 5400 seconds')
     if arguments.digest:
         digest(arguments.digest)
     sha = tag_commit(arguments.tag)
+    if arguments.digest:
+        reference = IMAGE + '@' + arguments.digest
+        index = registry(reference)
+        recorded = document(index['annotations'][ANNOTATION])
+        require(recorded['repository'] == REPOSITORY and recorded['sourceSha'] == sha, 'Release record source mismatch')
+        verification = recorded['verificationRun']
+        require(verification['workflow'] == WORKFLOW, 'Release record workflow mismatch')
+        attempt = successful_attempt(sha, verification['id'], verification['attempt'])
+        record = release_record(reference, sha, attempt, arguments.digest)
+        require(tag_commit(arguments.tag) == sha, 'Release tag changed during verification')
+        return {**record, 'tag': arguments.tag}
     deadline = time.monotonic() + arguments.timeout
     while True:
         pages = api('actions/workflows/checks.yml/runs?head_sha=' + sha + '&branch=main&per_page=100', pages=True)
@@ -207,11 +233,7 @@ def resolve(arguments):
             run = max(candidates, key=lambda run: run['id'])
             if run['status'] == 'completed':
                 require(run['conclusion'] == 'success', 'Matching main verification failed')
-                attempt = api(f"actions/runs/{run['id']}/attempts/{run['run_attempt']}")
-                require(main_run(attempt, sha) and attempt['status'] == 'completed' and attempt['conclusion'] == 'success', 'Verification attempt is not successful main evidence')
-                jobs = [job for page in api(f"actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs?per_page=100", pages=True) for job in page['jobs']]
-                required = {'verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish'}
-                require(required <= {job['name'] for job in jobs if job['conclusion'] == 'success'}, 'Full main verification/publication jobs did not all succeed')
+                successful_attempt(sha, run['id'], run['run_attempt'])
                 reference = f"{IMAGE}:{sha}-{run['id']}-{run['run_attempt']}"
                 record = release_record(reference, sha, run, arguments.digest)
                 require(tag_commit(arguments.tag) == sha, 'Release tag changed during verification')

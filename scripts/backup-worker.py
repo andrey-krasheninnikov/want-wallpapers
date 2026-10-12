@@ -113,7 +113,7 @@ def restore(ciphertext, identity):
     run(['docker', 'run', '--detach', '--name', name, '--network', 'none', '--memory', '512m',
          '--cpus', '1', '--pids-limit', '128', '--security-opt', 'no-new-privileges:true',
          '--label', 'foundation.want.wallpapers.restore=' + name,
-         '--tmpfs', '/var/lib/postgresql:size=384m,mode=0700',
+         '--tmpfs', '/var/lib/postgresql:size=384m,mode=0700,uid=999,gid=999',
          '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', 'POSTGRES_DB=wallpapers_restore', POSTGRES], timeout=180)
     try:
         for attempt in range(60):

@@ -148,7 +148,7 @@ def database_environment(secret, role, ca):
             and secret.stat().st_mode & 0o077 == 0, 'database-secret-permissions')
     url = urllib.parse.urlsplit(secret.read_text().strip())
     require(url.scheme in ('postgres', 'postgresql') and url.hostname
-            and urllib.parse.parse_qs(url.query).get('sslmode') == ['verify-full']
+            and not url.fragment and urllib.parse.parse_qs(url.query, keep_blank_values=True) == {'sslmode': ['verify-full']}
             and urllib.parse.unquote(url.username or '') == role
             and urllib.parse.unquote(url.path) == '/wallpapers', 'database-profile-mismatch')
     environment = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8', 'PGHOST': url.hostname,

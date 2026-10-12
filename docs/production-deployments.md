@@ -4,7 +4,7 @@ Protected release tag задаёт commit и image digest. GitHub Actions про
 
 ## Первоначальная установка
 
-CI account `wallpapers-deploy` принимает только `deploy <tag> <sourceSha> <indexDigest>` и `deploy-status <requestId>`. Для reconciliation потерянного ответа есть readonly `deploy-status <tag> <sourceSha> <indexDigest>`. Worker account `wallpapers-backup` принимает `backup-next` и `backup-result <requestId>` с JSON через stdin, максимум 16 KiB. Повтор идентичного принятого receipt возвращает сохранённый acknowledgement; другой payload и новый запрос со старым receipt отклоняются.
+CI account `wallpapers-deploy` принимает только `deploy <tag> <sourceSha> <indexDigest>` и `deploy-status <requestId>`. Для reconciliation потерянного ответа есть readonly `deploy-status <tag> <sourceSha> <indexDigest>`. Worker account `wallpapers-backup` принимает `backup-next` и `backup-result <requestId>` с JSON через stdin, максимум 16 KiB и 10 секунд. Чтение payload не блокирует status и переходы deployment. Повтор идентичного принятого receipt возвращает сохранённый acknowledgement; другой payload и новый запрос со старым receipt отклоняются.
 
 Accounts имеют разные Ed25519 keys, forced command, root-owned authorized keys и недоступный для записи home. Shell, PTY, forwarding, user rc, SCP/SFTP, Docker-group и общий sudo отсутствуют. Sudo разрешает только фиксированный launcher с проверкой account/команды. CI не загружает исполняемые scripts на VPS; обновление механизма требует установки проверенного commit оператором.
 
@@ -70,7 +70,7 @@ Worker ожидается максимум 30 минут; после восст�
 
 Порядок: requested, preflight, pulling, backup-pending, app-stopped, migrating, starting, verifying, complete. Private records находятся в `/var/lib/want-deploy/wallpapers/requests`. Snapshots сохраняют previous immutable image и operational config. Public artifact содержит только allowlisted tag/SHA/digest/request/platform/verification/status metadata.
 
-До остановки app проверяются root-owned profile, resources/networks/secret mounts, PostgreSQL 18/TLS, grants, quiet Compose, image и backup proof. Затем выполняются one-off migrate с migrator secrets, явные runtime grants, strict verification и запуск app. Proxy/monitoring/другие services сохраняются. Public smoke проверяет readiness, catalogue, четыре языка, static assets и private cache controls.
+До остановки app проверяются root-owned profile, resources/networks/secret mounts, PostgreSQL 18/TLS, grants, quiet Compose, image и backup proof. Runtime connection должен использовать `wallpapers`, migrator connection — `wallpapers-migrator`; оба подключаются к одной базе с одной CA. Фактические роли и server/database identity проверяются read-only, затем повторно после backup. Затем выполняются one-off migrate с migrator secrets, явные runtime grants, strict verification и запуск app. Proxy/monitoring/другие services сохраняются. Public smoke проверяет readiness, catalogue, четыре языка, static assets и private cache controls.
 
 Ошибки до остановки дают failed и оставляют app. После остановки rollback допустим только при одинаковых schema fingerprint/migration history и successful strict privileges. Возвращается previous image/config; database data сохраняются. Изменение schema/history, неопределённый результат или неуспешный rollback даёт recovery-required и требует оператора. Не восстанавливайте поверх production, не удаляйте database, не выполняйте down/prune/remove-orphans или restart Docker/Traefik.
 

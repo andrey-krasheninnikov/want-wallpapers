@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
     recipient = run(['age-keygen', '-y', str(identity)]).strip()
     run(['docker', 'run', '--detach', '--name', name, '--network', 'none', '--memory', '512m',
          '--cpus', '1', '--label', 'foundation.want.wallpapers.backup-test=' + name,
-         '--tmpfs', '/var/lib/postgresql:size=384m,mode=0700',
+         '--tmpfs', '/var/lib/postgresql:size=384m,mode=0700,uid=999,gid=999',
          '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', 'POSTGRES_DB=wallpapers_restore', worker.POSTGRES], timeout=180)
     try:
         import time
