@@ -34,8 +34,8 @@ jobs:
         run: rustup toolchain install 1.93.0 --profile minimal --component rustfmt --component clippy
       - name: Install dependencies
         run: make install
-      - name: Install backup encryption test tool
-        run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends age
+      - name: Install backup and SSH test tools
+        run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends age openssh-server
       - name: Static checks
         run: make check
       - name: PostgreSQL 18 and application tests

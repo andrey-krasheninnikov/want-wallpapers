@@ -30,6 +30,18 @@ def public_key(path):
     return 'restrict ' + ' '.join(value[:2]) + '\n'
 
 
+def ssh_configuration():
+    blocks = []
+    for account, actor in (('wallpapers-deploy', 'ci'), ('wallpapers-backup', 'worker')):
+        blocks.append(f'Match User {account}\n'
+                      f'    AllowUsers {account}\n'
+                      '    AuthenticationMethods publickey\n    PasswordAuthentication no\n'
+                      '    KbdInteractiveAuthentication no\n    PermitTTY no\n    DisableForwarding yes\n'
+                      '    PermitUserRC no\n    AuthorizedKeysFile /etc/ssh/wallpapers-keys/%u\n'
+                      f'    ForceCommand /usr/bin/python3 -I {DESTINATION}/scripts/ssh-deploy.py {actor}\n')
+    return ('\n'.join(blocks) + '\nMatch all\n').encode()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', required=True, help='Exact reviewed and published source commit')
@@ -74,20 +86,14 @@ def main():
     run(['/usr/sbin/visudo', '-c', '-f', str(candidate)])
     atomic_bytes(Path('/etc/sudoers.d/wallpapers-deploy'), sudoers.encode())
     Path('/etc/sudoers.d/wallpapers-deploy').chmod(0o440)
-    blocks = []
-    for account, actor in (('wallpapers-deploy', 'ci'), ('wallpapers-backup', 'worker')):
-        blocks.append(f'Match User {account}\n'
-                      '    AuthenticationMethods publickey\n    PasswordAuthentication no\n'
-                      '    KbdInteractiveAuthentication no\n    PermitTTY no\n    DisableForwarding yes\n'
-                      '    PermitUserRC no\n    AuthorizedKeysFile /etc/ssh/wallpapers-keys/%u\n'
-                      f'    ForceCommand /usr/bin/python3 -I {DESTINATION}/scripts/ssh-deploy.py {actor}\n')
     configuration = Path('/etc/ssh/sshd_config.d/60-wallpapers-deploy.conf')
     previous = configuration.read_bytes() if configuration.exists() else None
-    atomic_bytes(configuration, ('\n'.join(blocks) + '\nMatch all\n').encode())
+    atomic_bytes(configuration, ssh_configuration())
     try:
         run(['/usr/sbin/sshd', '-t'])
         for account, actor in (('wallpapers-deploy', 'ci'), ('wallpapers-backup', 'worker')):
             effective = run(['/usr/sbin/sshd', '-T', '-C', 'user=' + account + ',host=localhost,addr=127.0.0.1'])
+            require('\nallowusers ' + account + '\n' in '\n' + effective, 'restricted-account-not-allowed')
             require('forcecommand /usr/bin/python3 -I ' + str(DESTINATION) + '/scripts/ssh-deploy.py ' + actor in effective,
                     'forced-command-not-effective')
         # Existing operational Compose bytes and application container remain untouched.

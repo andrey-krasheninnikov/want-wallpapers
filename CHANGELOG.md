@@ -13,6 +13,7 @@
 
 ### Подготовка и проверка
 
+- Установщик допускает ограниченные CI/backup SSH-учётки при существующем глобальном AllowUsers, сохраняя доступ администратора и запрет остальных пользователей.
 - Первый deployment требует установки проверенного механизма на VPS, отдельных backup credentials и вручную запущенного Mac worker. Key recovery и initial provisioning описаны в docs/production-deployments.md.
 - Main CI проверяет audit, UI и native amd64/arm64 runtime до публикации образа. Production deployment и приватная приёмка CAPTCHA/login/logout подтверждаются отдельно.
 
