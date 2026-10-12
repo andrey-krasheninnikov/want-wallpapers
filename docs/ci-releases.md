@@ -66,3 +66,5 @@ make test
 ```
 
 Проверьте workflows через actionlint. CLI-тесты выполняются через публичные команды `plan`, `image`, `record`, `publish-index`, `resolve` с fixtures внешних GitHub/registry ответов. Они проверяют event matrix, защиту тега, отсутствие full jobs, failed/pending verification, source/run/platform/digest и повтор с исходным digest. Они не подтверждают реальную доставку Docker artifacts или native CI. После выпуска изменения в main отдельно сохраните реальные run IDs, оба image IDs/platform digests, общий index digest и результат раннего тега/manual retry.
+
+Production deployment отдельно выполняет `.github/workflows/deploy-production.yml`. Workflow использует reusable gate, protected-tag environment и restricted SSH protocol. Manual retry выбирает ref самого release tag и требует исходный digest. [Provisioning, backup gate и recovery](production-deployments.md) описывают operator prerequisites и actual production acceptance.

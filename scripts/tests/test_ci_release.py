@@ -155,6 +155,14 @@ else:
         self.assertEqual(output['image'], 'ghcr.io/' + REPOSITORY + '@' + self.digest)
         self.assertEqual(output['verificationRun'], self.record['verificationRun'])
 
+    def test_exact_digest_retry_keeps_the_original_successful_run_after_a_new_publication(self):
+        newer = {**self.run, 'id': 74, 'run_attempt': 2}
+        self.responses['actions/workflows/checks.yml/runs?head_sha=' + self.sha + '&branch=main&per_page=100'] = [
+            {'workflow_runs': [newer, self.run]}]
+        result = self.resolve('--digest', self.digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['verificationRun'], self.record['verificationRun'])
+
     def test_readonly_token_can_verify_the_pinned_ruleset_version(self):
         del self.responses['rulesets/24392512']['bypass_actors']
         result = self.resolve()

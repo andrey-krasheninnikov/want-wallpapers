@@ -1,6 +1,7 @@
 DEPLOY_ENV_FILE ?= deploy/.env
+PYTHON ?= python3
 
-.PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
+.PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-backup test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
 	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n'
 install:
@@ -14,20 +15,22 @@ build:
 	bun run build
 	cargo build --locked --release -p want-wallpapers-server
 check:
-	python3 scripts/test-deploy-profile.py
+	$(PYTHON) scripts/test-deploy-profile.py
 	bun run check
 	cargo fmt --all -- --check
 	cargo clippy --locked --workspace --all-targets -- -D warnings
 	git diff --check
 test-db:
-	python3 scripts/test-db.py
+	$(PYTHON) scripts/test-db.py
 test-backend: test-db
-	python3 scripts/test-run.py cargo test --locked --workspace
+	$(PYTHON) scripts/test-run.py cargo test --locked --workspace
 test-frontend:
 	bun run test
 test-ci:
-	python3 -B -m unittest discover -s scripts/tests -v
-test: test-frontend test-backend test-ci
+	$(PYTHON) -B -m unittest discover -s scripts/tests -v
+test-backup:
+	$(PYTHON) -B scripts/test-backup.py
+test: test-frontend test-backend test-ci test-backup
 test-ui: test-db
 	bun run build
 	bun run test:ui

@@ -1,0 +1,71 @@
+name: Production deployment
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Protected annotated release tag; select this same tag as the workflow ref
+        required: true
+        type: string
+      index_digest:
+        description: Original immutable release digest
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  packages: read
+jobs:
+  guard:
+    if: github.repository == 'andrey-krasheninnikov/want-wallpapers'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Reject non-release deployment requests
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_DIGEST: ${{ inputs.index_digest }}
+        run: python3 scripts/deploy-client.py guard --tag "$INPUT_TAG" --digest "$INPUT_DIGEST"
+  eligibility:
+    needs: guard
+    uses: ./.github/workflows/release-gate.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+      index_digest: ${{ inputs.index_digest || '' }}
+  deploy:
+    needs: eligibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    environment: production
+    concurrency:
+      group: want-wallpapers-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Deploy exact verified release
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_SOURCE: ${{ needs.eligibility.outputs.source_sha }}
+          RELEASE_DIGEST: ${{ needs.eligibility.outputs.index_digest }}
+          PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          PRODUCTION_SSH_HOST: ${{ vars.PRODUCTION_SSH_HOST }}
+          PRODUCTION_SSH_PORT: ${{ vars.PRODUCTION_SSH_PORT }}
+          PRODUCTION_SSH_USER: ${{ vars.PRODUCTION_SSH_USER }}
+          PRODUCTION_SSH_KNOWN_HOSTS: ${{ vars.PRODUCTION_SSH_KNOWN_HOSTS }}
+        run: |
+          python3 scripts/deploy-client.py deploy --tag "$RELEASE_TAG" --source "$RELEASE_SOURCE" --digest "$RELEASE_DIGEST" > "$RUNNER_TEMP/deployment.json"
+      - name: Deployment record
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: deployment-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/deployment.json
+          if-no-files-found: ignore
+          retention-days: 90
