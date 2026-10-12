@@ -104,8 +104,7 @@ async fn visitor(app: &Router) -> (String, String, Uuid) {
         value["uid"].as_str().unwrap().parse().unwrap(),
     )
 }
-async fn admin(app: &Router, state: &AppState) -> (String, String) {
-    let code = state.config.totp.generate_current().unwrap();
+async fn admin(app: &Router, code: &str) -> (String, String) {
     let (status, _, cookie) = request(
         app,
         "POST",
@@ -467,8 +466,34 @@ async fn public_api_enforces_csrf_ownership_and_atomic_cooldown(pool: PgPool) {
 async fn administrator_token_scope_totp_replay_versions_and_retention(pool: PgPool) {
     let state = state(pool.clone());
     let app = router(state.clone());
-    let (cookie, csrf) = admin(&app, &state).await;
-    assert_eq!(request(&app,"POST","/api/v1/admin/login",Some(json!({"username":"admin","password":PASSWORD,"code":state.config.totp.generate_current().unwrap()})),None,None,None).await.0,StatusCode::UNAUTHORIZED);
+    let code = state.config.totp.generate_current().unwrap();
+    let (cookie, csrf) = admin(&app, &code).await;
+    assert_eq!(
+        request(
+            &app,
+            "POST",
+            "/api/v1/admin/login",
+            Some(json!({"username":"admin","password":PASSWORD,"code":code})),
+            None,
+            None,
+            None
+        )
+        .await
+        .0,
+        StatusCode::UNAUTHORIZED
+    );
+    for query in [
+        "SELECT count(*) FROM sessions WHERE role='admin'",
+        "SELECT count(*) FROM audit_log WHERE action='login'",
+    ] {
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(query)
+                .fetch_one(&pool)
+                .await
+                .unwrap(),
+            1
+        );
+    }
     assert_eq!(
         request(
             &app,
