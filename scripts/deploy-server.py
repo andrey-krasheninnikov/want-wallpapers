@@ -156,7 +156,7 @@ def preflight():
             and int(migration['mem_limit']) == int(migration['memswap_limit']) == 128 * 1024 ** 2
             and migration['read_only']
             and {entry['source']: entry['target'] for entry in migration['secrets']}
-                == {'migration_database_url': 'migration_database_url', 'postgres_ca': 'postgres_ca'}
+                == {'migration_database_url': '/run/secrets/migration_database_url', 'postgres_ca': '/run/secrets/postgres_ca'}
             and set(migration['environment']) == {'APP_ENV', 'DATABASE_URL_FILE', 'PGSSLROOTCERT'}
             and migration['environment']['DATABASE_URL_FILE'] == '/run/secrets/migration_database_url',
             'migration-profile-mismatch')

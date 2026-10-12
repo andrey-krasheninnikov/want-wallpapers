@@ -65,8 +65,9 @@ secrets:
             self.assertEqual(migration['environment'], {'APP_ENV': 'production',
                              'DATABASE_URL_FILE': '/run/secrets/migration_database_url',
                              'PGSSLROOTCERT': '/run/secrets/postgres_ca'})
-            self.assertEqual({secret['source'] for secret in migration['secrets']},
-                             {'migration_database_url', 'postgres_ca'})
+            self.assertEqual({secret['source']: secret['target'] for secret in migration['secrets']},
+                             {'migration_database_url': '/run/secrets/migration_database_url',
+                              'postgres_ca': '/run/secrets/postgres_ca'})
             self.assertEqual(int(migration['mem_limit']), 128 * 1024 ** 2)
             self.assertEqual(int(migration['memswap_limit']), 128 * 1024 ** 2)
             self.assertEqual(migration['user'], '10001:10001')
