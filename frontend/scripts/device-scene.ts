@@ -106,8 +106,8 @@ const phone = group('Phone', [
 
 const binary = Buffer.concat(chunks);
 const document = { asset: { version: '2.0' }, scene: 0, scenes: [{ nodes: [monitor, phone] }], nodes, meshes,
-  materials, images, textures: [{ source: 0, sampler: 0 }, { source: 1, sampler: 0 }], samplers: [{ magFilter: 9729, minFilter: 9987, wrapS: 33071, wrapT: 33071 }],
-  buffers: [{ byteLength }], bufferViews: views, accessors, extensionsUsed: ['KHR_materials_unlit'] };
+  materials, images, textures: [0, 1].map((source) => ({ sampler: 0, extensions: { EXT_texture_webp: { source } } })), samplers: [{ magFilter: 9729, minFilter: 9987, wrapS: 33071, wrapT: 33071 }],
+  buffers: [{ byteLength }], bufferViews: views, accessors, extensionsUsed: ['KHR_materials_unlit', 'EXT_texture_webp'], extensionsRequired: ['EXT_texture_webp'] };
 const json = Buffer.from(JSON.stringify(document));
 const padded = Buffer.concat([json, Buffer.alloc((4 - json.length % 4) % 4, 0x20)]);
 const header = Buffer.alloc(12), jsonHeader = Buffer.alloc(8), binaryHeader = Buffer.alloc(8);
