@@ -27,10 +27,12 @@ Read-only SSH до и после подтвердил healthy app, revision `e75
 
 ## Проверки и ограничения
 
-Целевые SEO-тесты: 31 passed, включая точное сравнение возле 10%, границу 200 слов, UTF-8, перевод в main и разные источники входящих ссылок. Полный frontend suite: 74 passed и delayed Firebase consent passed. Typecheck: 0 errors, 0 warnings, 6 существующих media-test hints; он предшествует последним test-only уточнениям assertions. Build validation прошла для 202 HTML страниц.
+Целевые SEO-тесты: 31 passed, включая точное сравнение возле 10%, границу 200 слов, UTF-8, перевод в main и разные источники входящих ссылок. Полный frontend suite: 74 passed и delayed Firebase consent passed. Финальный typecheck: 0 errors, 0 warnings, 6 существующих media-test hints. После усиления city guard повторены 31 целевой SEO-тест и validation 202 HTML страниц; полный frontend suite предшествует этому усилению и повторно не запускался.
 
 13 отдельных browser-сценариев прошли за два scoped запуска. Новые четыре сценария проверяют EN/RU/zh-CN/pt-BR на 320/768/1024/1440, padding, шрифты, hover после transition, overflow и axe. Ещё девять проверяют поиск, history, оригинал, download event и PNG bytes/filenames без JavaScript. Mobile и desktop screenshots просмотрены. Первоначальные четыре hover assertions читали цвет до окончания transition; ожидание CSS устранило ошибку проверки.
 
 Реальная семантическая классификация языка Semrush не проверена. Точный результат четырёх исходных категорий после нового unchanged-scope Semrush audit отсутствует. Закрытие #25 фиксирует принятые изменения и собственные проверки, с согласованными исключениями для Semrush и noindex-поиска. Кандидат ещё не развёрнут; текущие 20 low-ratio страниц production не объявляются исправленными на сервере. После отдельного релиза требуется повторить HTTP-проверку, затем при доступности Semrush сверить все четыре категории с исходным архивом.
+
+Итоговый source review на `d9a4c632`: Standards 0, Spec 0. Исправлены отбор контекстных источников, исключение hidden/aria-hidden ссылок и повторение indexability policy; упрощение оформлено отдельным commit.
 
 Backend/container suites, остальные UI suites, Lighthouse и ожидание CI пропущены. Production, Cloudflare, БД и защита CAPTCHA не изменены.
