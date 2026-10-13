@@ -23,9 +23,19 @@ require(package['overrides']['sharp'] == '0.35.5', 'The AVIF mitigation requires
 require(package['overrides']['esbuild'] == '0.25.12', 'Review a changed esbuild override.')
 require(package.get('trustedDependencies') == [], 'Dependency scripts require separate review.')
 require("output: 'static'" in (repository / 'frontend/astro.config.mjs').read_text(), 'Astro server mode requires new dependency review.')
+def unreviewed_astro_features(source, path):
+    if path == repository / 'frontend/src/layouts/Base.astro':
+        for name in ('header', 'cookies', 'feedback-root'):
+            source = source.replace(f'transition:persist="{name}"', '')
+    return bool(re.search(r'define:vars|transition:|server:defer|slot=\{|\{\.\.\.', source))
+
+base = repository / 'frontend/src/layouts/Base.astro'
+assert not unreviewed_astro_features('transition:persist="header"', base)
+for source in ('transition:persist={input}', 'transition:persist="unknown"', 'transition:animate={input}', 'define:vars={input}'):
+    assert unreviewed_astro_features(source, base)
+assert unreviewed_astro_features('transition:persist="header"', base.with_name('Other.astro'))
 for path in (repository / 'frontend/src').rglob('*.astro'):
-    source = path.read_text()
-    require(not re.search(r'define:vars|transition:|server:defer|slot=\{|\{\.\.\.', source), f'{path.name}: newly used Astro feature needs security review.')
+    require(not unreviewed_astro_features(path.read_text(), path), f'{path.name}: newly used Astro feature needs security review.')
 
 result = execute(['bun', 'audit', '--json'])
 require(result.returncode in (0, 1), 'Bun audit could not complete.')
