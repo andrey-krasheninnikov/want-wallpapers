@@ -34,7 +34,7 @@ export default function CommentFeed({ locale, comments, ownUid, reported, busy, 
     const element = track.current!;
     element.scrollTo({ left: Math.max(0, Math.min(element.scrollWidth - element.clientWidth, (page.at - 1 + direction) * step.current)), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   }
-  return <div data-comment-carousel><div ref={track} className="comment-feed" data-comment-feed role="region" tabIndex={0} aria-label={ui.comments}>{comments.length === 0 ? <p className="text-sm leading-relaxed text-muted-foreground">{ui.commentEmpty}</p> : comments.map((item) => {
+  return <div data-comment-carousel><div ref={track} className="comment-feed" data-comment-feed role="group" tabIndex={0} aria-label={ui.comments}>{comments.length === 0 ? <p className="text-sm leading-relaxed text-muted-foreground">{ui.commentEmpty}</p> : comments.map((item) => {
     const own = item.uid === ownUid;
     const saved = reported.includes(item.id);
     return <article key={item.id} className="comment-row" data-comment={item.id}>

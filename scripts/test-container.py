@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the production image against a separate PostgreSQL 18 TLS endpoint."""
 import base64
+from datetime import datetime
 import json
 import hashlib
 import os
@@ -161,6 +162,8 @@ try:
     else: raise RuntimeError('Production image did not become ready.')
     initial = json.loads((repository / 'backend/data/catalog.json').read_text())
     expected = json.loads((repository / 'frontend/src/data/catalog-live.json').read_text())
+    expected['publicationDates'] = {key: datetime.fromisoformat(value.replace('Z', '+00:00')).strftime('%Y-%m-%dT%H:%M:%S.%fZ') for key, value in expected['publicationDates'].items()}
+    initial['publicationDates'] = {item['id']: expected['publicationDates'][item['id']] for item in initial['wallpapers']}
     with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
         assert json.load(response) == initial, 'Initial migrations changed.'
     for collection in expected['collections']:
