@@ -4,14 +4,16 @@ import { localPath, copy } from '../data/copy';
 import { legalPage } from '../data/legal';
 
 export const GET: APIRoute = ({ site }) => {
-  const link = (title: string, path: string, description: string) => `- [${title}](${new URL(path, site)}): ${description}`;
+  const inline = (text: string) => text.replace(/\s+/g, ' ').replace(/[\\`*_[\]<>]/g, '\\$&');
+  const link = (title: string, path: string, description: string) => `- [${inline(title)}](${new URL(path, site)}): ${inline(description)}`;
   const license = legalPage('en', 'license');
   const lines = ['# Want Wallpapers', '', '> A public gallery of desktop and mobile wallpapers with original PNG downloads.', '',
-    '## Usage license', '', license.intro, ...license.sections.flatMap((section) => section.paragraphs), ''];
+    'Usage license:', '', license.intro, '', ...license.sections.flatMap((section) => [section.heading + ':', '', ...section.paragraphs, ''])];
   for (const locale of locales) {
     lines.push(`## ${locale}`, '', link(copy[locale].home, localPath(locale), copy[locale].heroText),
       link(copy[locale].collections, localPath(locale, '/collections/'), copy[locale].allCollectionsText),
       link(copy[locale].license, localPath(locale, '/license/'), legalPage(locale, 'license').intro),
+      link(copy[locale].terms, localPath(locale, '/terms/'), legalPage(locale, 'terms').intro),
       ...collections.map((collection) => link(collection.title[locale], localPath(locale, `/collections/${collection.slug}/`), collection.description[locale])),
       ...wallpapers.map((wallpaper) => link(wallpaper.title[locale], localPath(locale, `/wallpapers/${wallpaper.slug}/`), wallpaper.description[locale])), '');
   }
