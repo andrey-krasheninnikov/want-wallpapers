@@ -68,3 +68,34 @@ make test
 Проверьте workflows через actionlint. CLI-тесты выполняются через публичные команды `plan`, `image`, `record`, `publish-index`, `resolve` с fixtures внешних GitHub/registry ответов. Они проверяют event matrix, защиту тега, отсутствие full jobs, failed/pending verification, source/run/platform/digest и повтор с исходным digest. Они не подтверждают реальную доставку Docker artifacts или native CI. После выпуска изменения в main отдельно сохраните реальные run IDs, оба image IDs/platform digests, общий index digest и результат раннего тега/manual retry.
 
 Production deployment отдельно выполняет `.github/workflows/deploy-production.yml`. Workflow использует reusable gate, protected-tag environment и restricted SSH protocol. Manual retry выбирает ref самого release tag и требует исходный digest. [Provisioning, backup gate и recovery](production-deployments.md) описывают operator prerequisites и actual production acceptance.
+
+## Подтверждение #13: 13 октября 2026
+
+Основная реализация вошла в development через [PR #38](https://github.com/andrey-krasheninnikov/want-wallpapers/pull/38), затем в main. GitHub API, существующие CI artifacts и публичный GHCR подтвердили следующие результаты:
+
+| Событие | Run | Результат |
+| --- | --- | --- |
+| Push feature | [37326131495](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/37326131495) | verify прошёл; Runtime, Full UI и publication пропущены |
+| PR feature | [37326137880](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/37326137880) | verify прошёл; тяжёлые jobs пропущены |
+| Push development | [38327119128](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/38327119128) | verify прошёл; audit и тяжёлые jobs пропущены |
+| Push release/v1.5.0 | [38326146493](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/38326146493) | лёгкий run завершился успешно |
+| Main для v1.5.0 | [38321320250](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/38321320250) | verify, Full UI, обе Runtime, обе Publish и publish прошли |
+| Protected tag v1.5.0 | [38322934382](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/38322934382) | resolve прошёл; сборочных jobs нет |
+| Manual retry production workflow | [38325383839](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/38325383839) | reusable eligibility сохранил исходный release record |
+
+Тег `v1.5.0` является annotated tag object `52b7ea252d037b8c24077c3f11c1d06fb57a7546` и закреплён на source SHA `79db2ff375866e5b7ba4e270ba52bb52e58700f9`. Его main verification run: `38321320250`, attempt `1`. Активный ruleset `24392512` запрещает update/delete для `refs/tags/v*`, bypass list пуст; версия правила соответствует `.github/release-policy.json`.
+
+Исходный index digest: `sha256:4737fa1c5a253cf929de7c3ded3444b601066acfb60e0e9ff9d8c1e55d6e3d6a`. `published-release.json`, tag eligibility и manual retry содержат одинаковые source/run/platform/index значения; eligibility добавляет только `tag`.
+
+| Платформа | Исходный checked image ID и опубликованный config.digest | Platform manifest digest |
+| --- | --- | --- |
+| linux/amd64 | `sha256:6aa964ac3a10885f11681e8f742485c3cb33dbcbddc00a7c810c1646f94fef7e` | `sha256:9ce9c0b5a94a8c63c66362b2c2c26319613df1e894a6a854ebcd7f5493ed4ac2` |
+| linux/arm64 | `sha256:425b6e739330157e4167db4134c6a30a4f1a825a74f03b3158fbf0cb281ebee9` | `sha256:ee9c3e58178517a2d54bec68a5a46bc5cf008a8fb225539befc69cd18d898a14` |
+
+Image IDs прочитаны из исходных `checked-image.json` в runtime artifacts `11778318021` (amd64) и `11778953885` (arm64). Они совпали с config digests опубликованных platform manifests; обе OCI revisions равны source SHA. Read-only resolver повторно проверил GitHub jobs, immutable tag и registry по исходному digest. Эти проверки подтверждают передачу проверенных images в publication без rebuild. Состояние работающего VPS отдельно не проверялось.
+
+У `v1.4.1` [tag gate 37380923001](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/37380923001) начал resolve в `2026-10-05T22:12:15Z`, пока [matching main 37380849814](https://github.com/andrey-krasheninnikov/want-wallpapers/actions/runs/37380849814) ещё выполнялся. Main завершился failure в `22:14:24Z`, gate также завершился failure в `22:14:56Z`. Успешное ожидание раннего тега, timeout, fork и отдельные ручные Checks/Release eligibility события проверены fixtures; отдельные реальные runs для этих сценариев не запускались.
+
+Локально существующий UTC timestamp test воспроизвёл отказ системного Python 3.9.6: `Malformed or unavailable release evidence`. Resolver нормализует завершающий `Z` в `+00:00` перед стандартным ISO parser, сохраняя обязательную timezone и сравнение версии ruleset. UTC и негативные boundary tests прошли на Python 3.9.6 и 3.13; `make test-ci PYTHON=/opt/homebrew/bin/python3.13` завершился с 53 успешными тестами. Исправленный resolver на Python 3.9.6 прочитал существующий v1.5.0 и тот же digest через публичные GitHub/GHCR API.
+
+Новые тяжёлые CI runs, E2E, release tags и deployments для этой проверки не запускались. CI workflows и release-record contract не менялись.
