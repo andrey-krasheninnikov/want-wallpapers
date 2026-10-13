@@ -2,6 +2,8 @@
 
 n8n работает отдельно от сайта и VPS: Docker Desktop на MacBook, SQLite и постоянный Docker volume. Контейнер слушает только `127.0.0.1:5678`. Публичные webhooks, туннели, Traefik и входящие provider callbacks не используются. Автоматизация обращается к GitHub, API каталога и будущим каналам публикации через исходящие запросы и polling. Настройка этих рабочих workflows относится к отдельным задачам, включая журнал анонсов в #30.
 
+Согласованный выбор API, бесплатный режим и ограничения для будущего workflow #26 описаны в [решении по провайдеру генерации](generation-provider.md). Рабочий generation workflow ещё не подключён.
+
 ## Запуск и вход
 
 Нужны работающий Docker Desktop с Compose v2 и Python 3. Проверено на macOS arm64 с Docker 29.1.3 / Compose 2.40.3. Образ закреплён версией `2.41.7` и multi-platform digest в `automation/n8n/compose.yaml`; `latest` не используется. Образ поддерживает arm64/amd64. Из корня checkout:
