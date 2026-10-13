@@ -11,14 +11,15 @@
     "originalBrokenLinkRows": 95,
     "originalHreflangRows": 27,
     "affectedSourceUrls": 95,
-    "publicHtmlUrls": 205,
+    "publicHtmlUrls": 296,
     "navigationTargets": 296,
     "staticAssets": 9,
     "expectedErrorUrls": 8,
     "nativeDownloads": 2,
     "httpRequests": 324,
     "uniqueHttpUrls": 320,
-    "supplementalPageRequests": 4
+    "supplementalPageRequests": 4,
+    "initialPublicHtmlUrls": 205
   },
   "failures": [],
   "criticalJavaScriptPaths": [

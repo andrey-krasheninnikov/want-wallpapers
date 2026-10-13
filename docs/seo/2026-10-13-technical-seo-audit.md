@@ -14,14 +14,14 @@ Read-only SSH до и после HTTP-проверок подтвердил heal
 | Hreflang | Targets существуют, индексируемы, отвечают 200, согласованы с canonical и взаимными ссылками |
 | Исходные URL | Проверены все 95 source URL из [broken-links CSV](2026-10-05-broken-links.csv), включая девять search URL из 27 строк [hreflang CSV](2026-10-05-hreflang.csv) |
 | Email | Ни одна проверенная публичная HTML-страница не содержит ссылки на `/cdn-cgi/l/email-protection` |
-| Поиск | 205 публичных HTML URL включают параметризованные страницы; search отвечает 200 с `noindex, follow`, canonical без параметров и без hreflang |
+| Поиск | Все 104 search URL отвечают 200 с `noindex, follow`, canonical без параметров и без hreflang |
 | Навигация | 296 уникальных внутренних targets отвечают 200; фрагменты ссылок существуют |
 | Статика | Один CSS и восемь JS для Astro islands отвечают 200; JS имеет JavaScript content type |
 | Ошибки | Четыре явные 404-страницы и четыре неизвестных локализованных пути отвечают 404 с `noindex`, без hreflang |
 | Приватные маршруты | Admin login имеет `noindex` без hreflang; login, session и readiness имеют `no-store`; session без авторизации отвечает 401 |
 | PNG | Desktop и mobile для `where-stars-graze-4` сохраняют attachment filename и PNG signature при GET с Range |
 
-Всего 324 HTTP-запроса к 320 уникальным URL. Четыре повторных HTML-запроса нужны для извлечения component-url/renderer-url Astro islands. Ошибок перечисленных проверок не обнаружено. Этот результат относится к описанному собственному crawl, а не к новой кампании Semrush. Ожидаемые 404 и приватный 401 не относятся к неожиданным ошибкам публичной навигации. Старый `/cdn-cgi/l/email-protection` не превращён в рабочую страницу: удалены ссылки, которые направляли туда посетителей.
+Начальный набор содержит 205 публичных HTML URL из sitemap, архива и базовых маршрутов поиска. После обхода навигации проверены 296 публичных HTML URL: 192 индексируемые страницы и 104 search URL. JSON отдельно хранит initialPublicHtmlUrls и publicHtmlUrls. Всего 324 HTTP-запроса к 320 уникальным URL. Четыре повторных HTML-запроса нужны для извлечения component-url/renderer-url Astro islands. Ошибок перечисленных проверок не обнаружено. Этот результат относится к описанному собственному crawl, а не к новой кампании Semrush. Ожидаемые 404 и приватный 401 не относятся к неожиданным ошибкам публичной навигации. Старый `/cdn-cgi/l/email-protection` не превращён в рабочую страницу: удалены ссылки, которые направляли туда посетителей.
 
 ## Build validation
 
