@@ -53,6 +53,16 @@ for (const locale of locales) {
         expect(box!.x + box!.width).toBeLessThanOrEqual(width - 32);
         expect(side === 'left' ? centre!.x - (box!.x + box!.width) : box!.x - (centre!.x + centre!.width)).toBe(24);
       }
+      await page.evaluate(() => { document.documentElement.style.fontSize = '20px'; });
+      const enlargedCentre = await page.locator('.wallpaper-advertising-layout').boundingBox();
+      expect(enlargedCentre!.width).toBe(1280);
+      for (const side of ['left', 'right']) {
+        const box = await page.locator(`.wallpaper-advertisement[data-side="${side}"]`).boundingBox();
+        expect(box!.x).toBeGreaterThanOrEqual(32);
+        expect(box!.x + box!.width).toBeLessThanOrEqual(width - 32);
+        expect(side === 'left' ? enlargedCentre!.x - (box!.x + box!.width) : box!.x - (enlargedCentre!.x + enlargedCentre!.width)).toBe(24);
+      }
+      await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
       if (locale === 'ru') await page.screenshot({ path: testInfo.outputPath(`advertising-${width}.png`), fullPage: true });
