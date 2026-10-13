@@ -310,11 +310,11 @@
   .contact-avatar { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 16px; background: var(--primary); color: var(--primary-foreground); font-weight: 650; }
   .contact-identity small { display: block; margin-top: .25rem; color: var(--muted-foreground); font-size: .875rem; }
   .contact-actions { display: grid; gap: .5rem; }
-  .contact-link { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .75rem; min-height: 56px; padding: .75rem 1rem; border-radius: var(--radius); background: var(--card); color: var(--foreground); text-decoration: none; transition: background-color var(--motion-fast), transform var(--motion-fast); }
+  .contact-link { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .75rem; min-height: 56px; padding: .75rem 1rem; border-radius: var(--radius); background: var(--card); color: var(--foreground); text-decoration: none; transition: background-color var(--motion-fast), transform var(--motion-fast); }
   .contact-link:hover { background: var(--background); }
   .contact-link:active { transform: translateY(1px); }
   .contact-link svg { width: 20px; height: 20px; color: var(--link); }
-  .contact-link small { display: block; margin-top: .25rem; color: var(--muted-foreground); font-size: .875rem; overflow-wrap: anywhere; }
+  .contact-link small { display: block; margin-top: .25rem; color: var(--muted-foreground); font-size: .875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .feedback-layout { display: grid; gap: 2rem; align-items: start; padding-block: 2.5rem; }
   .feedback-direct { display: grid; gap: 1rem; margin-top: 2rem; padding: 1.5rem; border-radius: var(--panel-radius); background: var(--card); }
   .feedback-direct > svg { width: 28px; height: 28px; color: var(--link); }

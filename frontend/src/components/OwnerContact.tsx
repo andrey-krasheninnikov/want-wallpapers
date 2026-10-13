@@ -11,6 +11,6 @@ export default function OwnerContact({ locale }: { locale: Locale }) {
   ];
   return <div className="contact-card" data-owner-contact>
     <div className="contact-identity"><span className="contact-avatar" aria-hidden="true">{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><div><strong>{name}</strong><small>Want Foundation</small></div></div>
-    <div className="contact-actions">{contacts.map(({ title, detail, href, icon: Icon, label }) => <a key={href} className="contact-link" href={href} target="_blank" rel="noopener noreferrer" aria-label={label}><Icon aria-hidden="true" /><span>{title}<small>{detail}</small></span><ArrowUpRight className="contact-arrow" aria-hidden="true" /></a>)}</div>
+    <div className="contact-actions">{contacts.map(({ title, detail, href, icon: Icon, label }) => <a key={href} className="contact-link" href={href} target="_blank" rel="noopener noreferrer" aria-label={label}><Icon aria-hidden="true" /><span>{title}<small title={detail}>{detail}</small></span><ArrowUpRight className="contact-arrow" aria-hidden="true" /></a>)}</div>
   </div>;
 }
