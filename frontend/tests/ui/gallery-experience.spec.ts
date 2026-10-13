@@ -36,6 +36,7 @@ for (const locale of locales) test(`feedback opens in place and keeps its draft:
 
 test('mobile feedback returns focus to menu and direct route stays available', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 }); await page.goto('/');
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
   await page.getByRole('button', { name: copy.en.menu, exact: true }).click();
   await page.getByRole('link', { name: copy.en.feedback, exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(1);
