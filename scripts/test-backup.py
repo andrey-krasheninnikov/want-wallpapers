@@ -27,7 +27,8 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
     run(['docker', 'run', '--detach', '--name', name, '--network', 'none', '--memory', '512m',
          '--cpus', '1', '--label', 'foundation.want.wallpapers.backup-test=' + name,
          '--tmpfs', '/var/lib/postgresql:size=384m,mode=0700,uid=999,gid=999',
-         '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', 'POSTGRES_DB=wallpapers_restore', worker.POSTGRES], timeout=180)
+         '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', 'POSTGRES_DB=wallpapers_restore',
+         '--env', 'POSTGRES_INITDB_ARGS=--locale=C', worker.POSTGRES], timeout=180)
     try:
         import time
         for attempt in range(60):
@@ -46,7 +47,8 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
             checksum = hashlib.sha384(migration.read_bytes()).hexdigest()
             setup += f"INSERT INTO public._sqlx_migrations VALUES ({version},decode('{checksum}','hex'),true);\n"
         run(['docker', 'exec', '--interactive', name, 'psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1',
-             '-U', 'postgres', '-d', 'wallpapers_restore'], input=setup)
+             '-U', 'postgres', '-d', 'wallpapers_restore'], input=setup + 'CREATE INDEX fingerprint_context_order_idx ON public.collections (id);\n'
+                   + 'ALTER DATABASE wallpapers_restore SET search_path=pg_catalog;\n')
         expected = worker.restored_state(name)
         cipher = root / 'backup.dump.age'
         with cipher.open('wb') as encrypted:
@@ -57,6 +59,13 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
         require(restored == expected, 'restored-metadata-mismatch')
         require(len(restored['history']) == 2 and restored['history'][0]['version'] == 202610040001
                 and restored['history'][1]['version'] == 202610040002, 'restored-migration-history-mismatch')
+        run(['docker', 'exec', '--interactive', name, 'psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1',
+             '-U', 'postgres', '-d', 'wallpapers_restore'],
+            input='DROP INDEX public.fingerprint_context_order_idx;\n'
+                  'CREATE INDEX fingerprint_context_order_idx ON public.collections (id DESC);\n')
+        changed = worker.restored_state(name)
+        require(changed['schema'] != expected['schema'] and changed['history'] == expected['history']
+                and changed['catalog'] == expected['catalog'], 'changed-index-not-detected')
         corrupt = root / 'corrupt.age'
         body = bytearray(cipher.read_bytes())
         body[-1] ^= 1
