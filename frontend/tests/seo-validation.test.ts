@@ -1,5 +1,8 @@
 import { test, expect } from 'bun:test';
-import { origin, parsePage, parseSitemap, validatePages, validateRobots, wordCount } from '../scripts/seo-validation';
+import type { APIContext } from 'astro';
+import { GET } from '../src/pages/llms.txt';
+import { collections } from '../src/data/catalog';
+import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
 async function localizedPages(fallback = '') {
@@ -44,6 +47,59 @@ test('conflicting and noncanonical alternates fail', async () => {
   expect(() => validatePages(pages, new Set())).toThrow(/noncanonical/);
 });
 
+async function localizedErrorPages() {
+  const paths = ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/'];
+  const pages = await Promise.all(paths.map((path, index) => parsePage(`<html lang="${languages[index]}"><head><meta name="robots" content="noindex"><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}"></head><body><main id="main">Page not found</main></body></html>`, path)));
+  return new Map(pages.map((page) => [page.path, page]));
+}
+
+test('public navigation rejects localized error routes even when their HTML exists', async () => {
+  for (const path of ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/']) {
+    const pages = await localizedPages(`<a href="${path}?from=home#main">Missing page</a>`);
+    for (const [path, page] of await localizedErrorPages()) pages.set(path, page);
+    expect(() => validatePages(pages, new Set())).toThrow(/error page target/);
+  }
+});
+
+test('error pages retain navigation to home and their localized error documents', async () => {
+  const pages = await localizedPages();
+  const errors = await localizedErrorPages();
+  for (const [path, page] of errors) {
+    page.references.push({ tag: 'a', url: '/' });
+    for (const target of errors.keys()) page.references.push({ tag: 'a', url: target });
+    pages.set(path, page);
+  }
+  expect(() => validatePages(pages, new Set())).not.toThrow();
+});
+
+test('missing and nonreciprocal alternate targets fail', async () => {
+  const missing = await localizedPages();
+  missing.delete('/pt-br/');
+  expect(() => validatePages(missing, new Set())).toThrow(/missing or noncanonical/);
+  const nonreciprocal = await localizedPages();
+  nonreciprocal.get('/ru/')!.alternates = nonreciprocal.get('/ru/')!.alternates.filter((alternate) => alternate.lang !== 'en');
+  expect(() => validatePages(nonreciprocal, new Set())).toThrow(/nonreciprocal/);
+});
+
+test('indexable pages require one normalized self-canonical and English x-default', async () => {
+  for (const canonical of [[origin + '/', origin + '/'], [origin + '/?q=city'], ['http://wallpapers.want.foundation/']]) {
+    const pages = await localizedPages();
+    pages.get('/')!.canonical = canonical;
+    expect(() => validatePages(pages, new Set())).toThrow(/canonical/);
+  }
+  const pages = await localizedPages();
+  pages.get('/')!.alternates.find((alternate) => alternate.lang === 'x-default')!.href = origin + '/ru/';
+  expect(() => validatePages(pages, new Set())).toThrow(/incorrect alternate x-default/);
+});
+
+test('search, error and private pages never advertise localized alternates', async () => {
+  for (const path of ['/search/', '/404/', '/admin/login/']) {
+    const robots = path === '/search/' ? 'noindex, follow' : 'noindex';
+    const page = await parsePage(`<html lang="en"><head><meta name="robots" content="${robots}"><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}"><link rel="alternate" hreflang="en" href="${origin}${path}"></head><body></body></html>`, path);
+    expect(() => validatePages(new Map([[path, page]]), new Set())).toThrow(/excluded page has hreflang/);
+  }
+});
+
 test('noindex search follows parameter links and does not emit alternates', async () => {
   const html = `<html lang="en"><head><link rel="canonical" href="${origin}/search/"><meta property="og:url" content="${origin}/search/"><meta name="robots" content="noindex, follow"></head><body><a href="/search/?q=city&amp;category=fantasy">City</a></body></html>`;
   const page = await parsePage(html, '/search/');
@@ -58,6 +114,34 @@ test('ordinary PNG navigation is rejected while a native GET action is allowed',
   expect(() => validatePages(pages, files)).not.toThrow();
   pages.get('/')!.references.push({ tag: 'a', url: '/downloads/picture.png' });
   expect(() => validatePages(pages, files)).toThrow(/PNG/);
+});
+
+test('PNG page links are rejected after URL and HTML decoding, including no-script markup', async () => {
+  for (const url of ['/downloads/picture.png', '/downloads/picture.PNG?view=1&amp;size=2#original', '/downloads/picture.%70%6e%67', '/downloads/picture%2Epng', 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-desktop.png?view=1#original']) {
+    const pages = await localizedPages(`<a href="${url}">View original</a>`);
+    expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/PNG formatted as a page link/);
+  }
+});
+
+test('PNG images and native GET downloads retain resource semantics', async () => {
+  for (const method of ['', 'method="get"', 'method="GET"', 'method=""', 'method="unknown"']) {
+    const pages = await localizedPages(`<img src="https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-desktop.png" alt="Dark dunes"><form ${method} action="/downloads/picture.%70%6e%67?source=gallery"><button type="submit">Download PNG</button></form>`);
+    expect(() => validatePages(pages, new Set(['downloads/picture.png']))).not.toThrow();
+  }
+});
+
+test('PNG downloads reject POST and dialog forms, including encoded targets', async () => {
+  for (const method of ['post', 'POST', 'dialog', 'DIALOG']) {
+    for (const url of ['/downloads/picture.png', '/downloads/picture.%70%6e%67']) {
+      const pages = await localizedPages(`<form method="${method}" action="${url}"><button type="submit">Download PNG</button></form>`);
+      expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/PNG download must use GET/);
+    }
+  }
+});
+
+test('non-PNG page links and forms retain existing behavior', async () => {
+  const pages = await localizedPages('<a href="/?image=picture.png#main">Gallery</a><form method="post" action="/"><button>Search</button></form>');
+  expect(() => validatePages(pages, new Set())).not.toThrow();
 });
 
 test('strict sitemap XML decodes URLs and rejects malformed structure', () => {
@@ -113,4 +197,61 @@ test('robots accepts comments and CRLF but rejects ungrouped rules and mixed wil
   expect(() => validateRobots('# Public policy\r\n' + publicRobots.replaceAll('\n', '\r\n'))).not.toThrow();
   expect(() => validateRobots('Disallow: /\n' + publicRobots)).toThrow(/group/);
   expect(() => validateRobots(publicRobots.replace('User-agent: *', 'User-agent: *\nUser-agent: ExampleCrawler'))).toThrow(/wildcard/);
+});
+
+test('llms response preserves license restrictions before localized file lists', async () => {
+  const response = await GET({ site: new URL(origin) } as APIContext);
+  const text = await response.text();
+  expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
+  expect(text).toStartWith('# Want Wallpapers\n\n> ');
+  expect(text).toContain('You may:\n\nDownload and use');
+  expect(text).toContain('Please do not:\n\nSell, redistribute or upload');
+  expect(text).toContain('Ownership:\n\nThe images remain');
+  expect(text.indexOf('Please do not:')).toBeLessThan(text.indexOf('## en\n'));
+  expect(text).not.toContain('## Usage license');
+  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) {
+    expect(text).toContain(`](${origin}${prefix}/terms/)`);
+    expect(text).toContain(`](${origin}${prefix}/license/)`);
+    expect(text).toContain(`](${origin}${prefix}/collections/a-night-beneath-the-ice/)`);
+  }
+});
+
+test('llms renders catalog Markdown and newlines as literal inline text', async () => {
+  const collection = collections[0]!;
+  const title = collection.title.en;
+  const description = collection.description.en;
+  let response: Response;
+  try {
+    collection.title.en = 'Line [one] \\ two\n第二行';
+    collection.description.en = 'A [label](https://example.org/)\n## Injected heading';
+    response = await GET({ site: new URL(origin) } as APIContext);
+  } finally {
+    collection.title.en = title;
+    collection.description.en = description;
+  }
+  const line = (await response.text()).split('\n').find((line) => line.includes('/collections/contours-of-silence/'));
+  expect(line).toBe('- [Line \\[one\\] \\\\ two 第二行](https://wallpapers.want.foundation/collections/contours-of-silence/): A \\[label\\](https://example.org/) ## Injected heading');
+});
+
+test('llms build validation rejects missing license labels and malformed file lists', async () => {
+  const text = await (await GET({ site: new URL(origin) } as APIContext)).text();
+  const indexed = new Set([...text.matchAll(/\]\((https:[^)]+)\)/g)].map((link) => link[1]!));
+  expect(() => validateLlms(text, indexed)).not.toThrow();
+  for (const invalid of [text.replace('Please do not:', ''), text.replace('## ru\n', '### ru\n'), text.replace('## en\n', '## Usage license\n\nProse\n\n## en\n'), text + 'Extra prose\n']) {
+    expect(() => validateLlms(invalid, indexed)).toThrow();
+  }
+});
+
+test('llms build validation requires current public catalog links in their locale', async () => {
+  const text = await (await GET({ site: new URL(origin) } as APIContext)).text();
+  const indexed = new Set([...text.matchAll(/\]\((https:[^)]+)\)/g)].map((link) => link[1]!));
+  indexed.add(origin + '/api/v1/catalog');
+  const invalidFiles = [
+    text.replace(origin + '/collections/contours-of-silence/', 'https://example.org/collections/contours-of-silence/'),
+    text.replace(/^.*\]\(https:\/\/wallpapers\.want\.foundation\/collections\/contours-of-silence\/\).*\n/m, ''),
+    text.replace(origin + '/ru/license/', origin + '/license/'),
+    text.replace(/## pt-br\n[\s\S]+$/, '## pt-br\n'),
+    text + `- [Private](${origin}/api/v1/catalog)\n`,
+  ];
+  for (const invalid of invalidFiles) expect(() => validateLlms(invalid, indexed)).toThrow();
 });

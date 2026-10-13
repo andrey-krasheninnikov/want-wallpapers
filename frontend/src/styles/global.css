@@ -423,3 +423,11 @@ html[data-wallpaper-direction="next"] { --slide-distance: 24px; }
   }
   @media (max-width: 767px) { .feedback-submit-row .ui-button-base { width: 100%; } }
 }
+
+.wallpaper-advertising-layout { position: relative; }
+.wallpaper-advertisement { display: none; position: absolute; top: 0; width: 160px; }
+.wallpaper-advertisement[data-side="left"] { right: calc(100% + 24px); }
+.wallpaper-advertisement[data-side="right"] { left: calc(100% + 24px); }
+@media (min-width: 1712px) {
+  .wallpaper-advertisement { display: block; }
+}

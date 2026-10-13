@@ -1,0 +1,254 @@
+{
+  "capturedAt": "2026-10-13T02:14:42.554843+00:00",
+  "tag": "v1.5.1",
+  "deployedRevision": "a9e21ab361e2c74e272f753360f96004a484d550",
+  "image": "ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:77d8f0915951fbe1e44eec4800ad1f6bdba5f5383e2f992ef6d47de381c3b2d9",
+  "productionRun": 38335024315,
+  "requestId": "26e1448182634f1d8ab251c0e2d6749c",
+  "health": "healthy",
+  "backupVerified": true,
+  "cloudflareManagedContent": false,
+  "robotsSha256": "5dec68ca5deb2f4e6c530d57636bd3ae160e0fee5f311f068f6a9d4559b27282",
+  "blockedUserAgents": [
+    "Amazonbot",
+    "Applebot-Extended",
+    "Bytespider",
+    "CCBot",
+    "ClaudeBot",
+    "Diffbot",
+    "Google-Extended",
+    "GPTBot",
+    "omgili",
+    "anthropic-ai",
+    "Claude-Web",
+    "cohere-ai",
+    "MistralAI-Training",
+    "meta-externalagent",
+    "GoogleOther",
+    "Baiduspider",
+    "PetalBot",
+    "AwarioSmartBot",
+    "AwarioRssBot",
+    "Google-CloudVertexBot",
+    "QualifiedBot",
+    "Cotoyogi",
+    "ICC-Crawler",
+    "atlassian-bot",
+    "FishBot",
+    "BorderxBot",
+    "NavuBot",
+    "SemrushBot-SWA",
+    "WARDBot",
+    "magpie-crawler",
+    "KimiBot",
+    "CitibotSiteCrawler",
+    "Perplexity-User",
+    "FireCrawl",
+    "FirecrawlAgent",
+    "Claude-User",
+    "ChatGPT-User",
+    "Google-Agent",
+    "Google-GeminiNotebook",
+    "Google-NotebookLM",
+    "MistralAI-User",
+    "Kimi-User",
+    "Amzn-User",
+    "meta-externalfetcher",
+    "Retool",
+    "Instapaper",
+    "ChathiveCrawler"
+  ],
+  "robotsParserVerified": true,
+  "semrushAudit": "deferred by owner (paid audit)",
+  "syntheticHttp": [
+    {
+      "path": "/robots.txt",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "cf-cache-status": "MISS"
+      },
+      "sha256": "5dec68ca5deb2f4e6c530d57636bd3ae160e0fee5f311f068f6a9d4559b27282"
+    },
+    {
+      "path": "/sitemap-index.xml",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/xml",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "3c985e7c88b890fe01cb9aee1353fc1819bb8c83adfe1994990347fc5685142f"
+    },
+    {
+      "path": "/sitemap-0.xml",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/xml",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "927c2233f228ecce7989ed135a05994d854b08b7a9c0d28496323f77991d5f27"
+    },
+    {
+      "path": "/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "53869f2349eb9ba0bccdc6f1a8f269bf779bc453c74967fcc1ee635435c7dee5"
+    },
+    {
+      "path": "/ru/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "635803c4cef6132c7ea184c546c2d51737ae62cf2e4718900c6b290fb59d57db"
+    },
+    {
+      "path": "/zh-cn/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "f089bc4e985049c38c2c8f6d67262f0209b957acad31069be0200ff95fb1b902"
+    },
+    {
+      "path": "/pt-br/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "85980e738e4d21792f3a0be6f71db930a6e32b1750c437fcf3eafca66d02dfc4"
+    },
+    {
+      "path": "/search/?q=city",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "f491e522b980ba214ce7f1cc1451f3b2fcec08d5e703ac85cbf0e5d24fadd076"
+    },
+    {
+      "path": "/llms.txt",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "0a04187ea3884514548b451d476a570cc7435d8fe6f8032a61cf3f9c4c66a100"
+    },
+    {
+      "path": "/admin/login/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "no-store",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "352ce354ae54c0f98a922bf36f28e95ce3f66ca68c37ffcc576d46243bb57e8e"
+    },
+    {
+      "path": "/api/v1/admin/session",
+      "userAgent": "SiteAuditBot",
+      "status": 401,
+      "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "1ea0ca13adaba22808e95a6c823fbedc67904880f1bd9f6f52376a8669928833"
+    },
+    {
+      "path": "/health/ready",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288"
+    },
+    {
+      "path": "/_astro/CookieConsent.CrE5gePH.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "6a40d46398eba31a742c1a01f9419bdefd7287243c201ab217208b9cb3cec2fa"
+    },
+    {
+      "path": "/_astro/FAQ.CqInVBCA.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "509adad09a2a50c96c6497c09b63cd95e5d85669c016af788401ddb4907b6835"
+    },
+    {
+      "path": "/_astro/Header.Cq0C2XgS.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "ec0e91792973ec62b87b979c69dab2379d90aa227a7a5d39fb9280ce56b85836"
+    },
+    {
+      "path": "/_astro/client.ypqWw5DA.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "c24cf1f8d90d590c2db8750f08c8bb3d1ec94d320d7a6bd0fc41d1b3f180a601"
+    },
+    {
+      "path": "/_astro/index.C5zVWDtW.css",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/css",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "166f8bff436582b856b11e5f9e2c47bbd488b7efaf6ec255bd4540e1f13c63cb"
+    }
+  ],
+  "source": "Synthetic HTTPS checks from local IP after owner disabled Cloudflare Bot Preference Sync and purged robots.txt"
+}

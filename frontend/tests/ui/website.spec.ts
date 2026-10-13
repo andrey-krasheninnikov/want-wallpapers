@@ -356,8 +356,11 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     for (const variant of ['desktop', 'mobile'] as const) {
       const form = page.locator(`form[action="/downloads/${wallpaper}-${variant}.png"]`);
       await expect(form).toHaveAttribute('method', 'get');
+      const name = variant === 'desktop' ? `${copy[locale].download} · ${copy[locale].desktop}` : `${copy[locale].mobile} · ${copy[locale].download}`;
+      const button = form.getByRole('button', { name, exact: true });
+      await expect(button).toBeVisible();
       const waiting = page.waitForEvent('download');
-      await form.getByRole('button').click();
+      await button.click();
       const download = await waiting;
       expect(download.suggestedFilename()).toBe(`${wallpaper}-${variant}.png`);
       const bytes = await readFile((await download.path())!);

@@ -1398,3 +1398,63 @@ async fn collection_video_covers_preserve_authorization_versions_and_snapshot_ro
         .unwrap();
     assert!(csp.contains("media-src https://want-foundation.s3.twcstorage.ru;"));
 }
+
+#[tokio::test]
+async fn llms_static_response_is_utf8_text_and_missing_file_remains_html() {
+    let mut state = state(PgPool::connect_lazy("postgresql://localhost/unused").unwrap());
+    let directory = std::env::temp_dir().join(format!("want-wallpapers-llms-{}", Uuid::new_v4()));
+    std::fs::create_dir(&directory).unwrap();
+    let text = "# Want Wallpapers\n\n> Коллекции, 壁纸, coleções.\n";
+    std::fs::write(directory.join("llms.txt"), text).unwrap();
+    std::fs::write(
+        directory.join("404.html"),
+        "<!doctype html><title>Not found</title>",
+    )
+    .unwrap();
+    Arc::get_mut(&mut state.config).unwrap().static_dir = directory.clone();
+    let app = router(state);
+    for method in ["GET", "HEAD"] {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(method)
+                    .uri("/llms.txt")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers()[header::CONTENT_TYPE],
+            "text/plain; charset=utf-8"
+        );
+        assert_eq!(
+            response.headers()[header::CACHE_CONTROL],
+            "public, max-age=0, must-revalidate"
+        );
+        let bytes = response.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(
+            bytes.as_ref(),
+            if method == "GET" {
+                text.as_bytes()
+            } else {
+                b""
+            }
+        );
+    }
+    std::fs::remove_file(directory.join("llms.txt")).unwrap();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/llms.txt")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_eq!(response.headers()[header::CONTENT_TYPE], "text/html");
+    std::fs::remove_dir_all(directory).unwrap();
+}

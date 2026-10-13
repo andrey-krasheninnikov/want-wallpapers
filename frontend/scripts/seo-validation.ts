@@ -1,5 +1,6 @@
 import sax from 'sax';
 import { decodeHTMLAttribute, decodeHTML } from 'entities';
+import { legalPage } from '../src/data/legal';
 
 function attributeValue(element: { getAttribute(name: string): string | null }, name: string): string | null {
   const value = element.getAttribute(name);
@@ -8,7 +9,7 @@ function attributeValue(element: { getAttribute(name: string): string | null }, 
 
 export const origin = 'https://wallpapers.want.foundation';
 export function require(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; references: { url: string; tag: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; bytes: number };
+export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; references: { url: string; tag: string; method?: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; bytes: number };
 
 export async function parsePage(html: string, path: string): Promise<Page> {
   const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), references: [], scripts: [], text: '', bytes: Buffer.byteLength(html) };
@@ -27,7 +28,9 @@ export async function parsePage(html: string, path: string): Promise<Page> {
     } })
     .on('a[href], img[src], script[src], link[href], form[action]', { element(element) {
       const attribute = element.tagName === 'form' ? 'action' : ['img', 'script'].includes(element.tagName) ? 'src' : 'href';
-      page.references.push({ url: attributeValue(element, attribute) ?? '', tag: element.tagName });
+      const reference: Page['references'][number] = { url: attributeValue(element, attribute) ?? '', tag: element.tagName };
+      if (element.tagName === 'form' && element.hasAttribute('method')) reference.method = attributeValue(element, 'method') ?? '';
+      page.references.push(reference);
     } })
     .on('script', { element(element) {
       const script = { source: attributeValue(element, 'src'), type: attributeValue(element, 'type'), text: '' };
@@ -98,6 +101,7 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     const excluded = privatePage || /\/(404|search)\/$/.test(page.path);
     const noindex = page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'));
     require(noindex === excluded, `${page.path}: incorrect indexing policy`);
+    if (excluded) require(page.alternates.length === 0, `${page.path}: excluded page has hreflang`);
     if (privatePage) continue;
     const self = origin + page.path;
     require(page.canonical.length === 1 && page.canonical[0] === self, `${page.path}: canonical must identify this page exactly once`);
@@ -106,7 +110,6 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : 'en';
     require(page.lang === lang, `${page.path}: incorrect document language`);
     if (excluded) {
-      require(page.alternates.length === 0, `${page.path}: excluded page has hreflang`);
       if (page.path.endsWith('/search/')) require(page.robots.length === 1 && page.robots[0] === 'noindex, follow', `${page.path}: search must follow links`);
     } else {
       const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'x-default'];
@@ -121,7 +124,11 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
       }
     }
     for (const reference of page.references) {
-      require(!(reference.tag === 'a' && new URL(reference.url, origin + page.path).pathname.toLowerCase().endsWith('.png')), `${page.path}: PNG formatted as a page link`);
+      const png = decodeURIComponent(new URL(reference.url, origin + page.path).pathname).toLowerCase().endsWith('.png');
+      if (png) {
+        require(reference.tag !== 'a', `${page.path}: PNG formatted as a page link`);
+        if (reference.tag === 'form') require(!['post', 'dialog'].includes(reference.method?.toLowerCase() ?? 'get'), `${page.path}: PNG download must use GET`);
+      }
       const target = internal(reference.url, page.path);
       if (!target) continue;
       const targetPage = pages.get(target.pathname);
@@ -129,6 +136,7 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
       require(targetPage || files.has(filename), `${page.path}: broken ${reference.tag} target ${reference.url}`);
       if (target.hash) require(targetPage?.ids.has(decodeURIComponent(target.hash.slice(1))), `${page.path}: broken fragment ${reference.url}`);
       if (reference.tag === 'a') {
+        require(page.path.endsWith('/404/') || !target.pathname.endsWith('/404/'), `${page.path}: error page target ${reference.url}`);
         const key = target.pathname + target.search;
         if (!incoming.has(key)) incoming.set(key, new Set());
         incoming.get(key)!.add(page.path);
@@ -169,4 +177,33 @@ export function validateRobots(robots: string): void {
   require(rules.length === 3 && ['allow:/', 'disallow:/admin/', 'disallow:/api/'].every((rule) => rules.includes(rule)), 'Invalid wildcard public/private robots policy');
   for (const group of groups) if (!group.agents.includes('*')) require(group.rules.length === 1 && group.rules[0] === 'disallow:/', 'Crawler-specific groups must block the whole site');
   require(sitemaps.length === 1 && sitemaps[0] === `${origin}/sitemap-index.xml`, 'Invalid robots sitemap');
+}
+
+export function validateLlms(text: string, indexed: ReadonlySet<string>): void {
+  require(text.startsWith('# Want Wallpapers\n\n> '), 'Invalid llms.txt title or summary');
+  const [intro, ...sections] = text.split(/^## /m);
+  require(!/^#{1,6} /m.test(intro!.slice('# Want Wallpapers'.length)), 'llms.txt context must precede file-list headings');
+  const license = legalPage('en', 'license');
+  require(intro!.includes('Usage license:\n\n' + license.intro), 'llms.txt missing license context');
+  for (const section of license.sections) require(intro!.includes(section.heading + ':\n\n' + section.paragraphs.join('\n')), `llms.txt missing license section: ${section.heading}`);
+  const required = new Set([...indexed].filter((link) => {
+    const url = new URL(link);
+    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br)(?=\/)/, '');
+    return url.origin === origin && (path === '/' || /^\/(collections\/|wallpapers\/|license\/$|terms\/$)/.test(path));
+  }));
+  const found = new Set<string>();
+  const locales = new Set(['en', 'ru', 'zh-cn', 'pt-br']);
+  for (const section of sections) {
+    const [locale, ...lines] = section.trim().split('\n');
+    require(locales.delete(locale!), 'Invalid or duplicate llms.txt locale section');
+    for (const line of lines.filter((line) => line.trim())) {
+      const link = line.match(/^- \[((?:\\.|[^\]\\])+)\]\((https:\/\/[^)\s]+)\)(?:: .+)?$/);
+      require(link && required.has(link[2]!), `Invalid llms.txt public link: ${line}`);
+      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
+      require(!found.has(link[2]!), 'Duplicate llms.txt public link');
+      found.add(link[2]!);
+    }
+  }
+  require(locales.size === 0, 'llms.txt missing locale sections');
+  require([...required].every((link) => found.has(link)), 'llms.txt omits current public catalog or usage links');
 }

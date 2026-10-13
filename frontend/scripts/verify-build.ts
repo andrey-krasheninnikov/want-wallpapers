@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve, basename } from 'node:path';
 import { tmpdir } from 'node:os';
-import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, wordCount, require, type Page } from './seo-validation';
+import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, validateLlms, wordCount, require, type Page } from './seo-validation';
 
 const root = resolve(import.meta.dir, '../dist');
 const hashes = JSON.parse(await readFile(join(root, 'csp-hashes.json'), 'utf8')) as Record<string, string[]>;
@@ -27,7 +27,10 @@ async function scan(directory: string) {
     if (name.startsWith('admin/')) require(!/ipwho\.is|googletagmanager\.com|google-analytics\.com/.test(html), `${name}: private page includes tracking`);
     if (!name.startsWith('admin/')) {
       const comments: string[] = [];
-      await new HTMLRewriter().onDocument({ comments(comment) { comments.push(comment.text); } }).transform(new Response(html)).text();
+      const descriptions: { href: string | null; type: string | null }[] = [];
+      await new HTMLRewriter().on('link[rel="describedby"]', { element(element) { descriptions.push({ href: element.getAttribute('href'), type: element.getAttribute('type') }); } })
+        .onDocument({ comments(comment) { comments.push(comment.text); } }).transform(new Response(html)).text();
+      require(descriptions.length === 1 && descriptions[0]!.href === origin + '/llms.txt' && descriptions[0]!.type === 'text/plain', `${name}: missing llms.txt discovery`);
       require(comments.includes('email_off') && comments.includes('/email_off'), `${name}: missing email protection opt-out comments`);
       const protectedHtml = html.replace(/<!--email_off-->[\s\S]*?<!--\/email_off-->/g, '');
       require(!protectedHtml.includes('wallpapers@want.foundation'), `${name}: unprotected email fragment`);
@@ -56,10 +59,7 @@ require(sitemapPages.size === indexed.size, 'Sitemap omits indexable pages');
 const robots = await readFile(join(root, 'robots.txt'), 'utf8');
 validateRobots(robots);
 const llms = await readFile(join(root, 'llms.txt'), 'utf8');
-require(llms.startsWith('# Want Wallpapers\n\n> ') && llms.includes('## Usage license'), 'Invalid llms.txt structure');
-for (const locale of ['en', 'ru', 'zh-cn', 'pt-br']) require(llms.includes(`## ${locale}\n`), `llms.txt missing ${locale}`);
-for (const link of llms.matchAll(/\]\(([^)]+)\)/g)) require(indexed.has(link[1]!), `Invalid llms.txt public link: ${link[1]}`);
-require(!/\/(admin|api)\//.test(llms), 'Private link in llms.txt');
+validateLlms(llms, indexed);
 const content = [...pages.values()].filter((page) => !page.robots.some((value) => value.includes('noindex')));
 const metrics = content.map((page) => ({ path: page.path, words: wordCount(page.text, page.lang), ratio: Math.round(Buffer.byteLength(page.text) / page.bytes * 1000) / 10, htmlBytes: page.bytes }));
 console.log(`Verified links, fragments, canonical, reciprocal hreflang, sitemap, robots, llms and CSP for ${pages.size} HTML pages.`);
