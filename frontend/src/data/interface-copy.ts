@@ -4,6 +4,7 @@ export const interfaceCopy = {
   en: {
     advertisement: 'Advertisement',
     pauseCover: 'Pause animation', playCover: 'Play animation',
+    pauseBackground: 'Pause background glow', playBackground: 'Resume background glow',
     skip: 'Skip to content', language: 'Language', legal: 'Information', close: 'Close',
     catalogue: 'The catalogue', reset: 'Reset filters', retry: 'Try again', saved: 'Saved',
     settings: 'Choose what to allow', save: 'Save settings', necessary: 'Essential storage',
@@ -40,6 +41,7 @@ export const interfaceCopy = {
   ru: {
     advertisement: 'Реклама',
     pauseCover: 'Остановить анимацию', playCover: 'Включить анимацию',
+    pauseBackground: 'Остановить свечение фона', playBackground: 'Включить свечение фона',
     skip: 'Перейти к содержимому', language: 'Язык', legal: 'Информация', close: 'Закрыть',
     catalogue: 'Каталог', reset: 'Сбросить фильтры', retry: 'Попробовать ещё раз', saved: 'Сохранено',
     settings: 'Выберите, что разрешить', save: 'Сохранить настройки', necessary: 'Необходимое хранение',
@@ -76,6 +78,7 @@ export const interfaceCopy = {
   'zh-cn': {
     advertisement: '广告',
     pauseCover: '暂停动画', playCover: '播放动画',
+    pauseBackground: '暂停背景光效', playBackground: '恢复背景光效',
     skip: '跳到正文', language: '语言', legal: '网站信息', close: '关闭',
     catalogue: '壁纸目录', reset: '重置筛选', retry: '重试', saved: '已保存',
     settings: '选择允许的功能', save: '保存设置', necessary: '必要存储',
@@ -112,6 +115,7 @@ export const interfaceCopy = {
   'pt-br': {
     advertisement: 'Publicidade',
     pauseCover: 'Pausar animação', playCover: 'Reproduzir animação',
+    pauseBackground: 'Pausar brilho de fundo', playBackground: 'Retomar brilho de fundo',
     skip: 'Ir para o conteúdo', language: 'Idioma', legal: 'Informações', close: 'Fechar',
     catalogue: 'O catálogo', reset: 'Limpar filtros', retry: 'Tentar novamente', saved: 'Salvo',
     settings: 'Escolha o que permitir', save: 'Salvar configurações', necessary: 'Armazenamento essencial',

@@ -1,11 +1,11 @@
-# Graphite Gallery
+# Electric Gallery
 
-A wallpaper needs room around it. The gallery uses a quiet graphite ground and broad media planes so the picture carries the visual weight. Devices give the image a familiar scale. The composition stays readable before any optional scene starts.
+The gallery places wallpapers on a deep navy ground. Electric violet marks actions and selected states; cold light text keeps reading clear. Filled surfaces distinguish the page, a panel and its controls. Artwork retains its own colors.
 
-Surfaces establish depth through their fills. Page, panel and inset control have distinct values; spacing makes their relationship clear. Violet identifies the main action or a selected mark. Artwork keeps its own colors, while supporting text uses a legible neutral.
+A pixel grid carries the reference into the space around the images. Sparse squares and soft light establish the atmosphere. The grid stays still while the light rises and settles over twelve seconds. Visitors can stop the glow, and the site remembers that choice. Reduced motion keeps the background still; forced colors remove the decoration.
 
-Compact headings give each section a clear entry. Long text has a measured reading width and enough leading. Stories, formats, licensing and topics each have a place in the composition. Legal explanations continue inside the same reading surface.
+Compact Onest headings introduce each section. Manrope carries body text and controls, while system monospace distinguishes small indices and metadata. Stories, formats, licensing and topics stay in measured reading columns. Legal explanations continue inside the same reading surface.
 
-Controls belong to the task they serve. A writing surface holds the feedback form; linked rows hold contact actions; a compact feed holds comments. Corners follow the size and purpose of the surface. Keyboard focus changes fill and text together without a decorative contour.
+Controls belong to the task they serve. A writing surface holds the feedback form; linked rows hold contact actions; a compact feed holds comments. Corners follow the size and purpose of the surface. Keyboard focus changes fill and text together. Soft glow identifies a primary action or interactive surface without adding an outline.
 
-Movement explains a change: an image is uncovered, a panel opens, a neighboring wallpaper arrives or a submission receives an answer. Each effect settles quickly. Reduced motion keeps the same information and actions in a still composition. A final visual pass checks spacing, type, contrast and alignment at desktop and mobile sizes.
+Action feedback settles quickly: an image is uncovered, a panel opens, a neighboring wallpaper arrives or a submission receives an answer. The background glow never moves content or intercepts input. The final visual pass checks contrast at maximum glow, translated wrapping, focus and alignment at desktop and mobile sizes.

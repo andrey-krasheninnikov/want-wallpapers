@@ -20,11 +20,11 @@ const languageTag = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' 
 const analyticsAvailable = isAnalyticsConfigured();
 ---
 <!doctype html>
-<html lang={languageTag} class="dark">
+<html lang={languageTag} class="dark" data-pixel-background>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1A1A1A" />
+    <meta name="theme-color" content="#070918" />
     <style is:inline>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
     {path.startsWith('/wallpapers/') && <link rel="expect" href="#wallpaper-view" blocking="render" />}
     {path.startsWith('/wallpapers/') && <script is:inline>

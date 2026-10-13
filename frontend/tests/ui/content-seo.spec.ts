@@ -27,7 +27,7 @@ for (const locale of locales) {
           await expect(page.locator('.wallpaper-tag-link').first()).toHaveCSS('padding-top', '8px');
           const tag = page.locator('.wallpaper-tag-link').first();
           await tag.hover();
-          await expect(tag).toHaveCSS('background-color', 'rgb(38, 38, 38)');
+          await expect(tag).toHaveCSS('background-color', 'rgb(35, 43, 89)');
           await page.mouse.move(0, 0);
         }
         if (width === 320 || width === 1440) {

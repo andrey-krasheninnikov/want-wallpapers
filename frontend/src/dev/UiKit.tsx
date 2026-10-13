@@ -27,18 +27,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const palette = [
-  ['Background', '--background', '#1A1A1A'], ['Card', '--card', '#202020'], ['Secondary', '--secondary', '#262626'],
-  ['Foreground', '--foreground', '#F5F5F5'], ['Muted text', '--muted-foreground', '#B3B3B3'],
-  ['Accent', '--accent', '#262626'], ['Input', '--input', '#777777'], ['Destructive', '--destructive', '#E58B91'],
-  ['Primary', '--primary', '#5F4EF5'], ['Readable accent', '--link', '#A79BFF'], ['Focus fill', '--foreground', '#F5F5F5'],
+  ['Background', '--background', '#070918'], ['Card', '--card', '#11152F'], ['Secondary', '--secondary', '#191F43'],
+  ['Foreground', '--foreground', '#F5F6FF'], ['Muted text', '--muted-foreground', '#B8C0E8'],
+  ['Accent', '--accent', '#232B59'], ['Input', '--input', '#8493D5'], ['Destructive', '--destructive', '#FF8EB5'],
+  ['Grid', '--pixel-grid', '#252E63'], ['Primary hover', '--primary-hover', '#6658FF'], ['Primary active', '--primary-active', '#4836E5'], ['Primary', '--primary', '#6050FF'], ['Readable accent', '--link', '#A5AFFF'], ['Focus fill', '--foreground', '#F5F6FF'],
 ] as const;
 
 export default function UiKit({ item }: { item: WallpaperCardData }) {
   const [saved, setSaved] = useState(false);
   const [reported, setReported] = useState<string[]>([]);
   return <div className="kit-grid">
-    <Section title="Palette"><div className="grid grid-cols-2 gap-4">{palette.map(([label, token, hex]) => <div key={token}><div className="kit-swatch" style={{ backgroundColor: `var(${token})` }} /><p className="mt-2 text-sm">{label}<span className="block text-muted-foreground">{hex}</span></p></div>)}</div></Section>
-    <Section title="Typography"><h3 className="hero-title">A screen worth keeping.</h3><p className="mt-6 text-base leading-relaxed text-muted-foreground">Onest carries headings. Manrope keeps labels and body text clear. Body text stays at 16 px, and controls keep at least 44 px of touch space.</p><p className="mt-4 text-sm text-muted-foreground">Panel 24 px · Prominent surface 32 px · Media 24 px · Input 12 px</p></Section>
+    <Section title="Palette"><div className="grid grid-cols-2 gap-4">{palette.map(([label, token, hex]) => <div key={label}><div className="kit-swatch" style={{ backgroundColor: `var(${token})` }} /><p className="mt-2 text-sm">{label}<span className="block text-muted-foreground">{hex}</span></p></div>)}</div></Section>
+    <Section title="Typography"><h3 className="hero-title">A screen worth keeping.</h3><p className="mt-6 text-base leading-relaxed text-muted-foreground">Onest carries compact headings. Manrope keeps labels and body text clear. System monospace gives indices and metadata a technical accent. Body text stays at 16 px, and controls keep at least 44 px of touch space.</p><p className="mt-4 text-sm text-muted-foreground">Panel 24 px · Prominent surface 32 px · Media 24 px · Input 12 px</p></Section>
     <Section title="Buttons"><div className="flex flex-wrap gap-3">{(['default', 'secondary', 'outline', 'ghost', 'link', 'destructive'] as const).map((variant) => <Button key={variant} variant={variant}>{variant}</Button>)}<Button disabled>Disabled</Button><Button disabled aria-busy="true">Saving…</Button><Button><Download data-icon="inline-start" />Download PNG</Button><Button size="icon" aria-label="Download example"><Download /></Button></div><p className="mt-4 text-sm text-muted-foreground">Tab through controls to inspect focus. Press to inspect tactile feedback.</p></Section>
     <Section title="Fields, input and textarea"><form onSubmit={(event) => { event.preventDefault(); setSaved(true); }}><FieldGroup>
       <Field><FieldLabel htmlFor="kit-title">Wallpaper title</FieldLabel><Input id="kit-title" name="title" defaultValue="Violet Horizon" required autoComplete="off" /><FieldDescription>A complete, editable field.</FieldDescription></Field>

@@ -35,8 +35,8 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   const button = page.getByRole('button', { name: 'Save example', exact: true });
   await page.keyboard.press('Tab');
   await button.focus();
-  await expect(button).toHaveCSS('background-color', 'rgb(245, 245, 245)');
-  await expect(button).toHaveCSS('color', 'rgb(26, 26, 26)');
+  await expect(button).toHaveCSS('background-color', 'rgb(245, 246, 255)');
+  await expect(button).toHaveCSS('color', 'rgb(7, 9, 24)');
   await expect(button).toHaveCSS('border-width', '0px');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
