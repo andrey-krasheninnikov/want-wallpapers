@@ -34,7 +34,6 @@ export async function parsePage(html: string, path: string): Promise<Page> {
       if (element.tagName === 'form' && element.hasAttribute('method')) reference.method = attributeValue(element, 'method') ?? '';
       page.references.push(reference);
     } })
-    .on('main a[href]', { element(element) { page.contextualLinks.push(attributeValue(element, 'href') ?? ''); } })
     .on('script', { element(element) {
       const script = { source: attributeValue(element, 'src'), type: attributeValue(element, 'type'), text: '' };
       page.scripts.push(script);
@@ -42,7 +41,9 @@ export async function parsePage(html: string, path: string): Promise<Page> {
   await parser.transform(new Response(document)).text();
   const readable = await new HTMLRewriter().on('head, script, style, template, [hidden], [aria-hidden="true"]', { element(element) { element.remove(); } }).transform(new Response(document)).text();
   await new HTMLRewriter().on('body', { text(chunk) { page.text += chunk.text; } })
-    .on('main', { text(chunk) { page.mainText += chunk.text; } }).transform(new Response(readable)).text();
+    .on('main', { text(chunk) { page.mainText += chunk.text; } })
+    .on('main a[href]', { element(element) { page.contextualLinks.push(attributeValue(element, 'href') ?? ''); } })
+    .transform(new Response(readable)).text();
   page.text = decodeHTML(page.text).replace(/\s+/g, ' ').trim();
   page.mainText = decodeHTML(page.mainText).replace(/\s+/g, ' ').trim();
   return page;

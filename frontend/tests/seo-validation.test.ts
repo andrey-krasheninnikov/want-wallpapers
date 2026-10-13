@@ -309,6 +309,9 @@ test('city search needs distinct contextual source pages, excluding navigation a
   expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
   search.robots = [];
   expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  const hidden = await parsePage('<html lang="en"><body><main><p hidden><a href="/search/?q=city">City</a></p><p aria-hidden="true"><a href="/search/?q=city">City</a></p></main></body></html>', '/wallpapers/path-to-the-light-1/');
+  pages.set(hidden.path, hidden);
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
   const second = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a></main></body></html>', '/wallpapers/path-to-the-light-1/');
   pages.set(second.path, second);
   expect(() => validateCityLinks(pages)).not.toThrow();
