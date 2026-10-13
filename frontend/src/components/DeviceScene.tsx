@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, RotateCcw, RotateCw } from 'lucide-react';
 import type { ModelViewerElement } from '@google/model-viewer';
 import { Button } from '@/components/ui/button';
@@ -12,21 +12,11 @@ export default function DeviceScene({ locale, desktop, mobile, title, descriptio
   locale: Locale; desktop: Preview; mobile: Preview; title: string; description: string; href: string;
 }) {
   const text = designCopy[locale];
-  const stage = useRef<React.ComponentRef<'figure'>>(null);
   const host = useRef<HTMLDivElement>(null);
   const model = useRef<ModelViewerElement | null>(null);
   const [activation, activate] = useState(0);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    if (!matchMedia('(min-width: 768px)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) { activate(1); observer.disconnect(); }
-    });
-    if (stage.current) observer.observe(stage.current);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!activation) return;
@@ -68,7 +58,7 @@ export default function DeviceScene({ locale, desktop, mobile, title, descriptio
     viewer.cameraOrbit = `${theta}rad ${orbit.phi}rad ${orbit.radius}m`;
   }
 
-  return <figure ref={stage} className="device-stage" data-scene-state={failed ? 'failed' : ready ? 'ready' : activation ? 'loading' : 'poster'}>
+  return <figure className="device-stage" data-scene-state={failed ? 'failed' : ready ? 'ready' : activation ? 'loading' : 'poster'}>
     <div className="device-canvas">
       <a href={href} aria-label={title} className="device-poster" hidden={ready}>
         <span className="device-monitor"><img src={desktop.src} width={desktop.width} height={desktop.height} alt={description} fetchPriority="high" /></span>

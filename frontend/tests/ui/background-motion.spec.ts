@@ -7,6 +7,27 @@ test.describe('pixel background', () => {
     await page.addInitScript(() => { try { localStorage.setItem('want-cookie-preferences-v2', JSON.stringify({ analytics: false, advertising: false })); } catch {} });
   });
 
+  test('reading stays still while the background glow remains faint', async ({ page }) => {
+    expect((await page.goto('/ru/'))?.status()).toBe(200);
+    await expect(page.locator('html')).toHaveAttribute('data-background-motion', 'running');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(13, 16, 25)');
+    await expect(page.locator('h1')).toHaveCSS('animation-name', 'none');
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
+    const background = await page.evaluate(() => {
+      const grid = getComputedStyle(document.body, '::before');
+      const glow = getComputedStyle(document.body, '::after');
+      const animation = document.getAnimations().find((item) => (item as CSSAnimation).animationName === 'want-pixel-glow');
+      if (!animation) throw new Error('Background glow missing');
+      animation.pause(); animation.currentTime = 12000;
+      return { gridOpacity: grid.opacity, duration: glow.animationDuration, maxOpacity: getComputedStyle(document.body, '::after').opacity };
+    });
+    expect(background).toEqual({ gridOpacity: '0.12', duration: '24s', maxOpacity: '0.04' });
+    const card = page.locator('.gallery-card').first();
+    await card.scrollIntoViewIfNeeded();
+    await expect(card.locator('.media-frame')).toHaveCSS('animation-name', 'none');
+    expect(await card.locator('.media-frame').evaluate((element) => getComputedStyle(element, '::after').content)).toBe('none');
+  });
+
   test('localized controls preserve pause and resume across pages', async ({ page }) => {
     const labels = [
       ['en', 'Pause background glow', 'Resume background glow'],

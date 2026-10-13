@@ -6,7 +6,7 @@ export function initCollectionCovers() {
     const video = root.querySelector<HTMLVideoElement>('[data-cover-video]');
     const button = root.querySelector<HTMLButtonElement>('[data-cover-control]');
     if (!video || !button || !video.canPlayType('video/mp4') || typeof IntersectionObserver === 'undefined') continue;
-    let visible = false, paused = false, failed = false, attempt = 0;
+    let visible = false, paused = true, failed = false, attempt = 0;
     const allowed = () => !motion.matches && !data.matches && !connection?.saveData && !failed;
     function poster() { video!.pause(); video!.hidden = true; }
     function label(playing: boolean) {
@@ -17,6 +17,7 @@ export function initCollectionCovers() {
       const current = ++attempt;
       button!.hidden = !allowed() || !visible;
       if (!allowed() || !visible || document.hidden || paused) {
+        paused = true;
         poster(); label(false);
         if (!allowed() && video!.hasAttribute('src')) { video!.removeAttribute('src'); video!.load(); }
         return;
@@ -29,7 +30,7 @@ export function initCollectionCovers() {
         if (current !== attempt) return;
         video!.hidden = false; label(true);
       } catch {
-        if (current === attempt) { poster(); label(false); }
+        if (current === attempt) { paused = true; poster(); label(false); }
       }
     }
     button.addEventListener('click', () => { paused = !video.paused; void update(); });

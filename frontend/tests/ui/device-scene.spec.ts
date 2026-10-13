@@ -44,7 +44,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
   });
 }
 
-test('desktop activates only visible 3D and reduced motion keeps the poster', async ({ page }, testInfo) => {
+test('desktop keeps the poster until explicit activation, including motion preference changes', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: copy.en.essentialOnly, exact: true }).click();
@@ -52,6 +52,9 @@ test('desktop activates only visible 3D and reduced motion keeps the poster', as
   await expect(page.locator('model-viewer')).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.reload();
+  await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'poster');
+  await expect(page.locator('model-viewer')).toHaveCount(0);
+  await page.getByRole('button', { name: designCopy.en.view, exact: true }).press('Enter');
   await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'ready', { timeout: 45000 });
   const viewer = page.locator('model-viewer');
   const before = await viewer.evaluate((element) => (element as ModelViewerElement).getCameraOrbit().theta);

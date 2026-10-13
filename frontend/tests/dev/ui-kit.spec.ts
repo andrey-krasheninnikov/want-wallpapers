@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test.use({ reducedMotion: 'no-preference' });
+
 for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width}px`, async ({ page }, testInfo) => {
   await page.setViewportSize({ width, height: 900 });
   const errors: string[] = [];
@@ -24,10 +26,12 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   await expect(page.getByText('Original PNG downloads use a native link or form.', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Open dialog', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Wallpaper details', exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Wallpaper details', exact: true })).toHaveCSS('animation-name', 'none');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Open dialog', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Open sheet', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Collection navigation', exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Collection navigation', exact: true })).toHaveCSS('animation-name', 'none');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Open sheet', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Report', exact: true }).click();
@@ -35,8 +39,8 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   const button = page.getByRole('button', { name: 'Save example', exact: true });
   await page.keyboard.press('Tab');
   await button.focus();
-  await expect(button).toHaveCSS('background-color', 'rgb(245, 246, 255)');
-  await expect(button).toHaveCSS('color', 'rgb(7, 9, 24)');
+  await expect(button).toHaveCSS('background-color', 'rgb(242, 244, 250)');
+  await expect(button).toHaveCSS('color', 'rgb(13, 16, 25)');
   await expect(button).toHaveCSS('border-width', '0px');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
