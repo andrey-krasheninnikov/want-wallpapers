@@ -16,3 +16,7 @@ Firebase Analytics требует полной публичной конфигу
 Политика согласия опирается на [рекомендации EDPB](https://www.edpb.europa.eu/sme/be-compliant/process-personal-data-lawfully_en); это не общее юридическое одобрение рекламных конфигураций. API consent и отключения сбора описан в [Firebase Analytics](https://firebase.google.com/docs/reference/js/analytics).
 
 Территории сверяются с [перечнем регионов ЕС](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=legissum%3Aoutermost_regions) и [декларацией о применении ЕЭЗ к Аландским островам](https://treatydatabase.overheid.nl/en/Treaty/Details/004981_p).
+
+## Подготовка рекламных аккаунтов #16
+
+[Инструкция подключения](../advertising-providers.md) фиксирует действия владельца, форму публичных параметров, ограничения видеоформатов и порядок проверки согласия/CSP. Аккаунты и блоки пока не подтверждены; #16 остаётся открыт. Интеграция выполняется отдельно в #22/#28 после проверки требований провайдеров. Действующая политика согласия не меняется.

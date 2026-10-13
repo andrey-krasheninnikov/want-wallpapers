@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: make install
       - name: Install backup and SSH test tools
-        run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends age openssh-server
+        run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends age openssh-server ffmpeg
       - name: Static checks
         run: make check
       - name: PostgreSQL 18 and application tests
@@ -67,6 +67,8 @@ jobs:
         run: rustup toolchain install 1.93.0 --profile minimal
       - name: Install dependencies
         run: make install
+      - name: Install media validation tools
+        run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends ffmpeg
       - name: Install browser
         run: cd frontend && bunx playwright install --with-deps chromium
       - name: Enable sandbox for the installed Playwright browsers

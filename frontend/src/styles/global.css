@@ -257,3 +257,5 @@
     .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 }
+[data-cover-video][hidden], [data-cover-control][hidden] { display: none; }
+[data-cover-control][data-playing="false"] [data-cover-pause], [data-cover-control][data-playing="true"] [data-cover-play] { display: none; }
