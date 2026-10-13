@@ -1,5 +1,8 @@
 import { test, expect } from 'bun:test';
-import { origin, parsePage, parseSitemap, validatePages, validateRobots, wordCount } from '../scripts/seo-validation';
+import type { APIContext } from 'astro';
+import { GET } from '../src/pages/llms.txt';
+import { collections } from '../src/data/catalog';
+import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
 async function localizedPages(fallback = '') {
@@ -113,4 +116,61 @@ test('robots accepts comments and CRLF but rejects ungrouped rules and mixed wil
   expect(() => validateRobots('# Public policy\r\n' + publicRobots.replaceAll('\n', '\r\n'))).not.toThrow();
   expect(() => validateRobots('Disallow: /\n' + publicRobots)).toThrow(/group/);
   expect(() => validateRobots(publicRobots.replace('User-agent: *', 'User-agent: *\nUser-agent: ExampleCrawler'))).toThrow(/wildcard/);
+});
+
+test('llms response preserves license restrictions before localized file lists', async () => {
+  const response = await GET({ site: new URL(origin) } as APIContext);
+  const text = await response.text();
+  expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
+  expect(text).toStartWith('# Want Wallpapers\n\n> ');
+  expect(text).toContain('You may:\n\nDownload and use');
+  expect(text).toContain('Please do not:\n\nSell, redistribute or upload');
+  expect(text).toContain('Ownership:\n\nThe images remain');
+  expect(text.indexOf('Please do not:')).toBeLessThan(text.indexOf('## en\n'));
+  expect(text).not.toContain('## Usage license');
+  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) {
+    expect(text).toContain(`](${origin}${prefix}/terms/)`);
+    expect(text).toContain(`](${origin}${prefix}/license/)`);
+    expect(text).toContain(`](${origin}${prefix}/collections/a-night-beneath-the-ice/)`);
+  }
+});
+
+test('llms renders catalog Markdown and newlines as literal inline text', async () => {
+  const collection = collections[0]!;
+  const title = collection.title.en;
+  const description = collection.description.en;
+  let response: Response;
+  try {
+    collection.title.en = 'Line [one] \\ two\n第二行';
+    collection.description.en = 'A [label](https://example.org/)\n## Injected heading';
+    response = await GET({ site: new URL(origin) } as APIContext);
+  } finally {
+    collection.title.en = title;
+    collection.description.en = description;
+  }
+  const line = (await response.text()).split('\n').find((line) => line.includes('/collections/contours-of-silence/'));
+  expect(line).toBe('- [Line \\[one\\] \\\\ two 第二行](https://wallpapers.want.foundation/collections/contours-of-silence/): A \\[label\\](https://example.org/) ## Injected heading');
+});
+
+test('llms build validation rejects missing license labels and malformed file lists', async () => {
+  const text = await (await GET({ site: new URL(origin) } as APIContext)).text();
+  const indexed = new Set([...text.matchAll(/\]\((https:[^)]+)\)/g)].map((link) => link[1]!));
+  expect(() => validateLlms(text, indexed)).not.toThrow();
+  for (const invalid of [text.replace('Please do not:', ''), text.replace('## ru\n', '### ru\n'), text.replace('## en\n', '## Usage license\n\nProse\n\n## en\n'), text + 'Extra prose\n']) {
+    expect(() => validateLlms(invalid, indexed)).toThrow();
+  }
+});
+
+test('llms build validation requires current public catalog links in their locale', async () => {
+  const text = await (await GET({ site: new URL(origin) } as APIContext)).text();
+  const indexed = new Set([...text.matchAll(/\]\((https:[^)]+)\)/g)].map((link) => link[1]!));
+  indexed.add(origin + '/api/v1/catalog');
+  const invalidFiles = [
+    text.replace(origin + '/collections/contours-of-silence/', 'https://example.org/collections/contours-of-silence/'),
+    text.replace(/^.*\]\(https:\/\/wallpapers\.want\.foundation\/collections\/contours-of-silence\/\).*\n/m, ''),
+    text.replace(origin + '/ru/license/', origin + '/license/'),
+    text.replace(/## pt-br\n[\s\S]+$/, '## pt-br\n'),
+    text + `- [Private](${origin}/api/v1/catalog)\n`,
+  ];
+  for (const invalid of invalidFiles) expect(() => validateLlms(invalid, indexed)).toThrow();
 });
