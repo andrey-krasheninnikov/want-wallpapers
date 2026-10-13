@@ -9,7 +9,7 @@ function attributeValue(element: { getAttribute(name: string): string | null }, 
 
 export const origin = 'https://wallpapers.want.foundation';
 export function require(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; references: { url: string; tag: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; bytes: number };
+export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; references: { url: string; tag: string; method?: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; bytes: number };
 
 export async function parsePage(html: string, path: string): Promise<Page> {
   const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), references: [], scripts: [], text: '', bytes: Buffer.byteLength(html) };
@@ -28,7 +28,9 @@ export async function parsePage(html: string, path: string): Promise<Page> {
     } })
     .on('a[href], img[src], script[src], link[href], form[action]', { element(element) {
       const attribute = element.tagName === 'form' ? 'action' : ['img', 'script'].includes(element.tagName) ? 'src' : 'href';
-      page.references.push({ url: attributeValue(element, attribute) ?? '', tag: element.tagName });
+      const reference: Page['references'][number] = { url: attributeValue(element, attribute) ?? '', tag: element.tagName };
+      if (element.tagName === 'form' && element.hasAttribute('method')) reference.method = attributeValue(element, 'method') ?? '';
+      page.references.push(reference);
     } })
     .on('script', { element(element) {
       const script = { source: attributeValue(element, 'src'), type: attributeValue(element, 'type'), text: '' };
@@ -122,7 +124,11 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
       }
     }
     for (const reference of page.references) {
-      require(!(reference.tag === 'a' && new URL(reference.url, origin + page.path).pathname.toLowerCase().endsWith('.png')), `${page.path}: PNG formatted as a page link`);
+      const png = decodeURIComponent(new URL(reference.url, origin + page.path).pathname).toLowerCase().endsWith('.png');
+      if (png) {
+        require(reference.tag !== 'a', `${page.path}: PNG formatted as a page link`);
+        if (reference.tag === 'form') require(!['post', 'dialog'].includes(reference.method?.toLowerCase() ?? 'get'), `${page.path}: PNG download must use GET`);
+      }
       const target = internal(reference.url, page.path);
       if (!target) continue;
       const targetPage = pages.get(target.pathname);

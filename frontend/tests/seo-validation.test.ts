@@ -116,6 +116,34 @@ test('ordinary PNG navigation is rejected while a native GET action is allowed',
   expect(() => validatePages(pages, files)).toThrow(/PNG/);
 });
 
+test('PNG page links are rejected after URL and HTML decoding, including no-script markup', async () => {
+  for (const url of ['/downloads/picture.png', '/downloads/picture.PNG?view=1&amp;size=2#original', '/downloads/picture.%70%6e%67', '/downloads/picture%2Epng', 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-desktop.png?view=1#original']) {
+    const pages = await localizedPages(`<a href="${url}">View original</a>`);
+    expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/PNG formatted as a page link/);
+  }
+});
+
+test('PNG images and native GET downloads retain resource semantics', async () => {
+  for (const method of ['', 'method="get"', 'method="GET"', 'method=""', 'method="unknown"']) {
+    const pages = await localizedPages(`<img src="https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-desktop.png" alt="Dark dunes"><form ${method} action="/downloads/picture.%70%6e%67?source=gallery"><button type="submit">Download PNG</button></form>`);
+    expect(() => validatePages(pages, new Set(['downloads/picture.png']))).not.toThrow();
+  }
+});
+
+test('PNG downloads reject POST and dialog forms, including encoded targets', async () => {
+  for (const method of ['post', 'POST', 'dialog', 'DIALOG']) {
+    for (const url of ['/downloads/picture.png', '/downloads/picture.%70%6e%67']) {
+      const pages = await localizedPages(`<form method="${method}" action="${url}"><button type="submit">Download PNG</button></form>`);
+      expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/PNG download must use GET/);
+    }
+  }
+});
+
+test('non-PNG page links and forms retain existing behavior', async () => {
+  const pages = await localizedPages('<a href="/?image=picture.png#main">Gallery</a><form method="post" action="/"><button>Search</button></form>');
+  expect(() => validatePages(pages, new Set())).not.toThrow();
+});
+
 test('strict sitemap XML decodes URLs and rejects malformed structure', () => {
   const xml = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${origin}/</loc></url></urlset>`;
   expect(parseSitemap(xml)).toEqual({ kind: 'urlset', locations: [origin + '/'] });
