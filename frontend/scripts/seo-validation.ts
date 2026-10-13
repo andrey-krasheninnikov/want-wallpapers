@@ -98,6 +98,7 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     const excluded = privatePage || /\/(404|search)\/$/.test(page.path);
     const noindex = page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'));
     require(noindex === excluded, `${page.path}: incorrect indexing policy`);
+    if (excluded) require(page.alternates.length === 0, `${page.path}: excluded page has hreflang`);
     if (privatePage) continue;
     const self = origin + page.path;
     require(page.canonical.length === 1 && page.canonical[0] === self, `${page.path}: canonical must identify this page exactly once`);
@@ -106,7 +107,6 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : 'en';
     require(page.lang === lang, `${page.path}: incorrect document language`);
     if (excluded) {
-      require(page.alternates.length === 0, `${page.path}: excluded page has hreflang`);
       if (page.path.endsWith('/search/')) require(page.robots.length === 1 && page.robots[0] === 'noindex, follow', `${page.path}: search must follow links`);
     } else {
       const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'x-default'];
@@ -129,6 +129,7 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
       require(targetPage || files.has(filename), `${page.path}: broken ${reference.tag} target ${reference.url}`);
       if (target.hash) require(targetPage?.ids.has(decodeURIComponent(target.hash.slice(1))), `${page.path}: broken fragment ${reference.url}`);
       if (reference.tag === 'a') {
+        require(page.path.endsWith('/404/') || !target.pathname.endsWith('/404/'), `${page.path}: error page target ${reference.url}`);
         const key = target.pathname + target.search;
         if (!incoming.has(key)) incoming.set(key, new Set());
         incoming.get(key)!.add(page.path);

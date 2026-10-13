@@ -44,6 +44,59 @@ test('conflicting and noncanonical alternates fail', async () => {
   expect(() => validatePages(pages, new Set())).toThrow(/noncanonical/);
 });
 
+async function localizedErrorPages() {
+  const paths = ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/'];
+  const pages = await Promise.all(paths.map((path, index) => parsePage(`<html lang="${languages[index]}"><head><meta name="robots" content="noindex"><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}"></head><body><main id="main">Page not found</main></body></html>`, path)));
+  return new Map(pages.map((page) => [page.path, page]));
+}
+
+test('public navigation rejects localized error routes even when their HTML exists', async () => {
+  for (const path of ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/']) {
+    const pages = await localizedPages(`<a href="${path}?from=home#main">Missing page</a>`);
+    for (const [path, page] of await localizedErrorPages()) pages.set(path, page);
+    expect(() => validatePages(pages, new Set())).toThrow(/error page target/);
+  }
+});
+
+test('error pages retain navigation to home and their localized error documents', async () => {
+  const pages = await localizedPages();
+  const errors = await localizedErrorPages();
+  for (const [path, page] of errors) {
+    page.references.push({ tag: 'a', url: '/' });
+    for (const target of errors.keys()) page.references.push({ tag: 'a', url: target });
+    pages.set(path, page);
+  }
+  expect(() => validatePages(pages, new Set())).not.toThrow();
+});
+
+test('missing and nonreciprocal alternate targets fail', async () => {
+  const missing = await localizedPages();
+  missing.delete('/pt-br/');
+  expect(() => validatePages(missing, new Set())).toThrow(/missing or noncanonical/);
+  const nonreciprocal = await localizedPages();
+  nonreciprocal.get('/ru/')!.alternates = nonreciprocal.get('/ru/')!.alternates.filter((alternate) => alternate.lang !== 'en');
+  expect(() => validatePages(nonreciprocal, new Set())).toThrow(/nonreciprocal/);
+});
+
+test('indexable pages require one normalized self-canonical and English x-default', async () => {
+  for (const canonical of [[origin + '/', origin + '/'], [origin + '/?q=city'], ['http://wallpapers.want.foundation/']]) {
+    const pages = await localizedPages();
+    pages.get('/')!.canonical = canonical;
+    expect(() => validatePages(pages, new Set())).toThrow(/canonical/);
+  }
+  const pages = await localizedPages();
+  pages.get('/')!.alternates.find((alternate) => alternate.lang === 'x-default')!.href = origin + '/ru/';
+  expect(() => validatePages(pages, new Set())).toThrow(/incorrect alternate x-default/);
+});
+
+test('search, error and private pages never advertise localized alternates', async () => {
+  for (const path of ['/search/', '/404/', '/admin/login/']) {
+    const robots = path === '/search/' ? 'noindex, follow' : 'noindex';
+    const page = await parsePage(`<html lang="en"><head><meta name="robots" content="${robots}"><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}"><link rel="alternate" hreflang="en" href="${origin}${path}"></head><body></body></html>`, path);
+    expect(() => validatePages(new Map([[path, page]]), new Set())).toThrow(/excluded page has hreflang/);
+  }
+});
+
 test('noindex search follows parameter links and does not emit alternates', async () => {
   const html = `<html lang="en"><head><link rel="canonical" href="${origin}/search/"><meta property="og:url" content="${origin}/search/"><meta name="robots" content="noindex, follow"></head><body><a href="/search/?q=city&amp;category=fantasy">City</a></body></html>`;
   const page = await parsePage(html, '/search/');
