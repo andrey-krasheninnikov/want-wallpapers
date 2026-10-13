@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { categoryLabels, locales, tagLabels, type Collection, type Wallpaper } from '../src/data/catalog';
 import { catalogRequest } from './catalog-api';
+import { parseVideoCover } from '../src/lib/collection-cover';
 
 export type CollectionManifest = { collection: Collection; wallpapers: Wallpaper[] };
 
@@ -22,7 +23,9 @@ function localized(value: unknown, label: string, max: number) {
 }
 
 export function parseCollection(value: unknown): Collection {
-  const collection = record(value, 'Collection', ['id', 'slug', 'count', 'title', 'description']);
+  const keys = ['id', 'slug', 'count', 'title', 'description'];
+  if (value && typeof value === 'object' && Object.hasOwn(value, 'videoCover')) keys.push('videoCover');
+  const collection = record(value, 'Collection', keys);
   if (typeof collection.slug !== 'string' || collection.slug.length > 180 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(collection.slug)) {
     throw new Error('Collection slug must use lowercase letters, digits and single hyphens.');
   }
@@ -33,6 +36,7 @@ export function parseCollection(value: unknown): Collection {
   if (typeof collection.count !== 'number' || !Number.isSafeInteger(collection.count) || collection.count < 0 || collection.count > 1000) {
     throw new Error('Collection count must be an integer between 0 and 1000.');
   }
+  if (Object.hasOwn(collection, 'videoCover')) parseVideoCover(collection.videoCover, collection.id as string);
   localized(collection.title, 'Collection title', 200);
   localized(collection.description, 'Collection description', 2000);
   return value as Collection;

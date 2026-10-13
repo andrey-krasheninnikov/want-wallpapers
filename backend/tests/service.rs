@@ -1244,3 +1244,217 @@ mod recaptcha_checks {
         );
     }
 }
+
+#[sqlx::test(migrations = "./migrations")]
+async fn collection_video_covers_preserve_authorization_versions_and_snapshot_round_trips(
+    pool: PgPool,
+) {
+    let app = router(state(pool));
+    let (_, listing, _) = request(
+        &app,
+        "GET",
+        "/api/v1/admin/catalog",
+        None,
+        None,
+        None,
+        Some(TOKEN),
+    )
+    .await;
+    let mut item = listing["collections"][0]["item"].clone();
+    assert!(item.get("videoCover").is_none());
+    let prefix = format!(
+        "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/{}/",
+        item["id"].as_str().unwrap()
+    );
+    let cover = json!({"src":format!("{prefix}cover.mp4"),"poster":format!("{prefix}cover.png")});
+    item["videoCover"] = cover.clone();
+    let input = json!({"item":item,"version":1});
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/collections",
+            Some(input.clone()),
+            None,
+            None,
+            None
+        )
+        .await
+        .0,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/collections",
+            Some(input.clone()),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/collections",
+            Some(input),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::CONFLICT
+    );
+    let (_, exported, _) = request(&app, "GET", "/api/v1/catalog", None, None, None, None).await;
+    assert_eq!(exported["collections"][0]["videoCover"], cover);
+    let (_, readback, _) = request(
+        &app,
+        "GET",
+        "/api/v1/admin/catalog",
+        None,
+        None,
+        None,
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(readback["collections"][0]["item"]["videoCover"], cover);
+    for invalid in [
+        json!(null),
+        json!({"src":format!("{prefix}cover.mp4")}),
+        json!({"src":"https://example.com/cover.mp4","poster":format!("{prefix}cover.png")}),
+        json!({"src":format!("{prefix}../cover.mp4"),"poster":format!("{prefix}cover.png")}),
+        json!({"src":format!("{prefix}cover.mp4?x=1"),"poster":format!("{prefix}cover.png")}),
+        json!({"src":format!("{prefix}cover.mp4"),"poster":format!("{prefix}cover.png"),"extra":true}),
+    ] {
+        item["videoCover"] = invalid;
+        assert!(
+            request(
+                &app,
+                "PUT",
+                "/api/v1/admin/catalog/collections",
+                Some(json!({"item":item,"version":2})),
+                None,
+                None,
+                Some(TOKEN)
+            )
+            .await
+            .0
+            .is_client_error()
+        );
+    }
+    item.as_object_mut().unwrap().remove("videoCover");
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/collections",
+            Some(json!({"item":item,"version":2})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    let (_, exported, _) = request(&app, "GET", "/api/v1/catalog", None, None, None, None).await;
+    assert!(exported["collections"][0].get("videoCover").is_none());
+    let mut imported = manifest();
+    imported.collection.video_cover = Some(want_wallpapers_server::models::VideoCover { src: "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0004-test-light/cover.mp4".into(), poster: "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0004-test-light/cover.png".into() });
+    for expected in ["created", "unchanged"] {
+        let (status, result, _) = request(
+            &app,
+            "POST",
+            "/api/v1/admin/catalog/import",
+            Some(json!(imported)),
+            None,
+            None,
+            Some(TOKEN),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(result["result"], expected);
+    }
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/api/v1/catalog")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let csp = response
+        .headers()
+        .get("content-security-policy")
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert!(csp.contains("media-src https://want-foundation.s3.twcstorage.ru;"));
+}
+
+#[tokio::test]
+async fn llms_static_response_is_utf8_text_and_missing_file_remains_html() {
+    let mut state = state(PgPool::connect_lazy("postgresql://localhost/unused").unwrap());
+    let directory = std::env::temp_dir().join(format!("want-wallpapers-llms-{}", Uuid::new_v4()));
+    std::fs::create_dir(&directory).unwrap();
+    let text = "# Want Wallpapers\n\n> Коллекции, 壁纸, coleções.\n";
+    std::fs::write(directory.join("llms.txt"), text).unwrap();
+    std::fs::write(
+        directory.join("404.html"),
+        "<!doctype html><title>Not found</title>",
+    )
+    .unwrap();
+    Arc::get_mut(&mut state.config).unwrap().static_dir = directory.clone();
+    let app = router(state);
+    for method in ["GET", "HEAD"] {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(method)
+                    .uri("/llms.txt")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers()[header::CONTENT_TYPE],
+            "text/plain; charset=utf-8"
+        );
+        assert_eq!(
+            response.headers()[header::CACHE_CONTROL],
+            "public, max-age=0, must-revalidate"
+        );
+        let bytes = response.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(
+            bytes.as_ref(),
+            if method == "GET" {
+                text.as_bytes()
+            } else {
+                b""
+            }
+        );
+    }
+    std::fs::remove_file(directory.join("llms.txt")).unwrap();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/llms.txt")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_eq!(response.headers()[header::CONTENT_TYPE], "text/html");
+    std::fs::remove_dir_all(directory).unwrap();
+}

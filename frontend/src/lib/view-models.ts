@@ -1,6 +1,6 @@
 import { collections, getCollectionWallpapers, categoryLabels, tagLabels, type Collection, type Locale, type Wallpaper } from '@/data/catalog';
 import { copy, localPath } from '@/data/copy';
-import { previewData } from '@/data/previews';
+import { previewData, collectionCoverData } from '@/data/previews';
 import type { CollectionCardData, WallpaperCardData } from '@/components/Gallery';
 
 export async function wallpaperCard(wallpaper: Wallpaper, locale: Locale): Promise<WallpaperCardData> {
@@ -19,6 +19,6 @@ export async function collectionCard(collection: Collection, locale: Locale): Pr
   return {
     href: localPath(locale, `/collections/${collection.slug}/`), title: collection.title[locale],
     description: collection.description[locale], countLabel: `${items.length} ${copy[locale].wallpapers}`,
-    image: items[0] ? await previewData(items[0], 'desktop') : undefined,
+    image: await collectionCoverData(collection), video: collection.videoCover?.src, locale,
   };
 }

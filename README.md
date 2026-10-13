@@ -10,7 +10,7 @@
 - `automation/n8n/`: отдельный локальный n8n на MacBook, постоянный Docker volume и приватные snapshots.
 - `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
 
-Нужны Bun 1.3.14, Rust 1.93.0, Python 3, Docker для тестовой БД и `age` для проверки encrypted backup/restore. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
+Нужны Bun 1.3.14, Rust 1.93.0, Python 3, FFmpeg (ffmpeg/ffprobe) для проверки видеообложек, Docker для тестовой БД и `age` для проверки encrypted backup/restore. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
 
 ```bash
 make install
@@ -70,7 +70,7 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Protected v* tag запускает production workflow после release eligibility; deployment требует подготовленного VPS и работающего Mac backup worker.
 
-`make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Кэш и build output не коммитятся.
+`make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Видеообложки необязательны: [формат, проверка и публикация](docs/collection-covers.md). Сборка проверяет MP4/H.264 без аудио, до 10 секунд и 8 MiB, а также обязательный PNG-постер. FFmpeg нужен только в build/test-среде; Docker build устанавливает его автоматически. Кэш и build output не коммитятся.
 
 ## Эксплуатация
 
@@ -78,7 +78,7 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 [Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
 
-Analytics включается только с measurement ID, согласием посетителя и разрешённым регионом. Российский IP или ошибка ipwho.is отключает социальные функции, обращения и Analytics в публичном интерфейсе; просмотр, поиск и скачивание остаются. Админка работает независимо от региона. Закрытые обращения удаляются ежедневной задачей через год.
+Analytics включается только с полной публичной конфигурацией и разрешением analytics в независимых настройках согласия. Страна определяет defaults: вне EEA optional services включены для новых посетителей, в EEA и при неизвестной стране ожидают явного выбора. Сохранённый отказ имеет приоритет. Российский IP и ошибка ipwho.is не отключают оценки, комментарии и обращения; просмотр, поиск и скачивание доступны независимо от выбора. Админка не загружает optional tracking. Закрытые обращения удаляются ежедневной задачей через год. [Политика согласия](docs/adr/0005-regional-availability-and-consent.md) описывает правила; [подготовка рекламных аккаунтов](docs/advertising-providers.md) содержит инструкции и данные для будущей интеграции. Рекламные сети пока не подключены.
 
 Workflow Checks выполняет лёгкие static/type/format и unit/API проверки на ветках, PR и ручных запусках. Только main исходного репозитория проходит audit, полный UI и native production runtime PostgreSQL 18/TLS на amd64/arm64 и публикует те же проверенные images без rebuild. OCI index и долговечный release record содержат source SHA, platform digests/revisions и run/attempt. Защищённый annotated v* тег проходит отдельный read-only gate; ранний тег ожидает main publication до 90 минут. Для повторения требуется исходный digest. [CI и допуск релиза](docs/ci-releases.md) описывает event matrix, контракт и outputs. [Production deployment](docs/production-deployments.md) описывает автоматический запуск, private backup worker, первоначальную установку и supervised acceptance.
 

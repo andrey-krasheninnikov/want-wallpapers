@@ -49,12 +49,20 @@ test('administrator edits translations, creates CDN records, archives and modera
   }
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByLabel('Номер папки CDN').fill('0009'); await page.getByLabel('Slug', { exact: true }).fill('ui-check');
+  await page.getByLabel('Видеообложка, URL MP4').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.mp4');
+  await page.getByLabel('Постер, URL PNG').fill('https://example.com/cover.png');
   for (const language of ['English', 'Русский', '中文', 'Português']) {
     await page.getByRole('tab', { name: language, exact: true }).click();
     await page.getByLabel(`Название · ${language}`).fill(`UI check ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание коллекции для проверки');
   }
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Укажите MP4 и PNG-постер');
+  await page.getByLabel('Постер, URL PNG').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.png');
+  await expect(page.getByRole('dialog')).toContainText('export каталога, build и release');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click(); await expect(page.getByRole('heading', { name: 'UI check Русский', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Изменить UI check Русский' }).click();
+  await expect(page.getByLabel('Видеообложка, URL MP4')).toHaveValue('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.mp4');
+  await expect(page.getByLabel('Постер, URL PNG')).toHaveValue('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.png');
   await page.getByLabel('Название · Русский').fill('Коллекция для проверки');
   await page.route('**/api/v1/admin/catalog/collections', (route) => route.abort());
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();

@@ -221,6 +221,22 @@ def retention(config):
             run(aws(config, 'delete-object', '--bucket', BUCKET, '--key', key))
 
 
+def verify_backup_policy(policy):
+    require(isinstance(policy, dict) and isinstance(policy.get('Statement'), list)
+            and all(isinstance(entry, dict) for entry in policy['Statement']), 'backup-prefix-policy-not-verified')
+    statements = policy['Statement']
+    public = [entry for entry in statements if entry.get('Sid') == 'PublicReadGetObject_v1']
+    require(len(public) == 1 and public[0].get('Principal') == {'AWS': '*'}
+            and public[0].get('Effect') == 'Allow' and public[0].get('Action') == 's3:GetObject'
+            and isinstance(public[0].get('NotResource'), list)
+            and 'arn:aws:s3:::want-foundation/wallpapers-backups/*' in public[0]['NotResource'],
+            'backup-prefix-policy-not-verified')
+    media = {'Sid': 'PrizmaxisPublicProductionMedia', 'Effect': 'Allow', 'Principal': '*',
+             'Action': 's3:GetObject', 'Resource': 'arn:aws:s3:::want-foundation/prizmaxis/production/media/*'}
+    others = [entry for entry in statements if entry.get('Sid') != 'PublicReadGetObject_v1']
+    require(others in ([], [media]), 'backup-prefix-policy-not-verified')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=('once', 'serve'))
@@ -232,12 +248,7 @@ def main():
         run(['docker', 'version', '--format', '{{.Server.Version}}'], timeout=15)
         run(['docker', 'pull', POSTGRES], timeout=300)
         policy = json.loads(json.loads(run(aws(config, 'get-bucket-policy', '--bucket', BUCKET)))['Policy'])
-        statements = policy.get('Statement', [])
-        require(len(statements) == 1 and statements[0].get('Sid') == 'PublicReadGetObject_v1'
-                and statements[0].get('Principal') == {'AWS': '*'}
-                and statements[0].get('Effect') == 'Allow' and statements[0].get('Action') == 's3:GetObject'
-                and 'arn:aws:s3:::want-foundation/wallpapers-backups/*' in statements[0].get('NotResource', []),
-                'backup-prefix-policy-not-verified')
+        verify_backup_policy(policy)
         retention(config)
         while True:
             request = ssh(config, 'backup-next')

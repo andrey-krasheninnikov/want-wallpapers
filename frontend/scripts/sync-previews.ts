@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { wallpapers, s3Url } from '../src/data/catalog';
+import { prepareCollectionCover } from './collection-covers';
+import { collections, wallpapers, s3Url } from '../src/data/catalog';
 
 const output = new URL('../public/previews/', import.meta.url);
 const downloads = new URL('../public/downloads/', import.meta.url);
@@ -34,5 +35,12 @@ async function worker() {
 }
 
 await Promise.all(Array.from({ length: 4 }, () => worker()));
+for (const collection of collections) {
+  const poster = await prepareCollectionCover(collection);
+  if (!poster) continue;
+  const key = `collection-${collection.id}`;
+  await writeFile(new URL(`${key}.webp`, output), poster.bytes);
+  dimensions[key] = { width: poster.width, height: poster.height };
+}
 await writeFile(new URL('dimensions.json', output), JSON.stringify(dimensions, null, 2) + '\n');
 console.log(`Prepared ${jobs.length} previews from CDN.`);

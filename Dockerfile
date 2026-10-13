@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS frontend
+FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS media-tools
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates && rm -rf /var/lib/apt/lists/*
+
+FROM media-tools AS frontend
 WORKDIR /app
 ENV ASTRO_TELEMETRY_DISABLED=1
 COPY package.json bun.lock ./
