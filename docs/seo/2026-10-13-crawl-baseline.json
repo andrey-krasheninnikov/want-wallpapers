@@ -1,0 +1,313 @@
+{
+  "capturedAt": "2026-10-13T01:04:31.294636+00:00",
+  "url": "https://wallpapers.want.foundation/robots.txt",
+  "deployedRevision": "79db2ff375866e5b7ba4e270ba52bb52e58700f9",
+  "image": "ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:4737fa1c5a253cf929de7c3ded3444b601066acfb60e0e9ff9d8c1e55d6e3d6a",
+  "robotsSha256": "2feac1f2f1a1523883357bf79642c4c7c17861e45dbefe9dc684eea573741a36",
+  "blockedUserAgents": [
+    "Amazonbot",
+    "Applebot-Extended",
+    "Bytespider",
+    "CCBot",
+    "ClaudeBot",
+    "Diffbot",
+    "Google-Extended",
+    "GPTBot",
+    "omgili",
+    "anthropic-ai",
+    "Claude-Web",
+    "cohere-ai",
+    "MistralAI-Training",
+    "meta-externalagent",
+    "GoogleOther",
+    "Baiduspider",
+    "PetalBot",
+    "AwarioSmartBot",
+    "AwarioRssBot",
+    "Google-CloudVertexBot",
+    "QualifiedBot",
+    "Cotoyogi",
+    "ICC-Crawler",
+    "atlassian-bot",
+    "FishBot",
+    "BorderxBot",
+    "NavuBot",
+    "SemrushBot-SWA",
+    "WARDBot",
+    "magpie-crawler",
+    "KimiBot",
+    "CitibotSiteCrawler",
+    "Perplexity-User",
+    "FireCrawl",
+    "FirecrawlAgent",
+    "Claude-User",
+    "ChatGPT-User",
+    "Google-Agent",
+    "Google-GeminiNotebook",
+    "Google-NotebookLM",
+    "MistralAI-User",
+    "Kimi-User",
+    "Amzn-User",
+    "meta-externalfetcher",
+    "Retool",
+    "Instapaper",
+    "ChathiveCrawler"
+  ],
+  "source": "Public Cloudflare robots response before the managed addition is disabled",
+  "semrushAudit": "pending owner export",
+  "origin": {
+    "revision": "79db2ff375866e5b7ba4e270ba52bb52e58700f9",
+    "image": "ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:4737fa1c5a253cf929de7c3ded3444b601066acfb60e0e9ff9d8c1e55d6e3d6a",
+    "health": "healthy",
+    "responses": [
+      {
+        "path": "/robots.txt",
+        "userAgent": "SiteAuditBot",
+        "status": 200,
+        "sha256": "9c19197c9ef8681f813e56bd6aa4661ec69c421cc4b5b87540971fd2c1dceb2f",
+        "body": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: https://wallpapers.want.foundation/sitemap-index.xml\n"
+      },
+      {
+        "path": "/sitemap-index.xml",
+        "userAgent": "SiteAuditBot",
+        "status": 200,
+        "sha256": "3c985e7c88b890fe01cb9aee1353fc1819bb8c83adfe1994990347fc5685142f"
+      },
+      {
+        "path": "/ru/",
+        "userAgent": "SiteAuditBot",
+        "status": 200,
+        "sha256": "6d142d4216f090a0dd636ba955a95b867ea55c70dcb2fc1a2069dfea5ebc967a"
+      },
+      {
+        "path": "/ru/",
+        "userAgent": "Python-urllib/3.9",
+        "status": 200,
+        "sha256": "6d142d4216f090a0dd636ba955a95b867ea55c70dcb2fc1a2069dfea5ebc967a"
+      }
+    ]
+  },
+  "syntheticHttp": [
+    {
+      "path": "/robots.txt",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "cf-cache-status": "REVALIDATED"
+      },
+      "sha256": "2feac1f2f1a1523883357bf79642c4c7c17861e45dbefe9dc684eea573741a36"
+    },
+    {
+      "path": "/sitemap-index.xml",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/xml",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "3c985e7c88b890fe01cb9aee1353fc1819bb8c83adfe1994990347fc5685142f"
+    },
+    {
+      "path": "/sitemap-0.xml",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/xml",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "927c2233f228ecce7989ed135a05994d854b08b7a9c0d28496323f77991d5f27"
+    },
+    {
+      "path": "/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "f07531185b9a1d20236f9d084434328071bcbc81ba5cf65d0c692ae8f1e0380a"
+    },
+    {
+      "path": "/ru/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "a33834dda493af383197dfdfb2c61029ef8eaa3171a4859c9093f71d180531d8"
+    },
+    {
+      "path": "/zh-cn/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "ae31aa3a5743eabb8bd6368223230359537a84870fde3830e166b69dcc1fc345"
+    },
+    {
+      "path": "/pt-br/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "afff11e2c5aced85df2a11961873fde5b103faa55e03746d7165c1cac07b3127"
+    },
+    {
+      "path": "/search/?q=city",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "2de1e8cd4ef08f6ef75c8c1a404aff11a06c2707187d34e9c3bec2304ad52df9"
+    },
+    {
+      "path": "/admin/login/",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "no-store",
+        "cf-cache-status": "DYNAMIC",
+        "x-robots-tag": "noindex, nofollow, noarchive"
+      },
+      "sha256": "0a0e1249dd94ba2603f3ede2edd0c01ec72500fecb6c049d7fc1df9b0e1e934d"
+    },
+    {
+      "path": "/api/v1/admin/session",
+      "userAgent": "SiteAuditBot",
+      "status": 401,
+      "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "1ea0ca13adaba22808e95a6c823fbedc67904880f1bd9f6f52376a8669928833"
+    },
+    {
+      "path": "/health/ready",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288"
+    },
+    {
+      "path": "/llms.txt",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "0a04187ea3884514548b451d476a570cc7435d8fe6f8032a61cf3f9c4c66a100"
+    },
+    {
+      "path": "/_astro/CookieConsent.CrE5gePH.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "6a40d46398eba31a742c1a01f9419bdefd7287243c201ab217208b9cb3cec2fa"
+    },
+    {
+      "path": "/_astro/FAQ.CqInVBCA.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "509adad09a2a50c96c6497c09b63cd95e5d85669c016af788401ddb4907b6835"
+    },
+    {
+      "path": "/_astro/Header.Cq0C2XgS.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "ec0e91792973ec62b87b979c69dab2379d90aa227a7a5d39fb9280ce56b85836"
+    },
+    {
+      "path": "/_astro/client.ypqWw5DA.js",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "c24cf1f8d90d590c2db8750f08c8bb3d1ec94d320d7a6bd0fc41d1b3f180a601"
+    },
+    {
+      "path": "/_astro/index.C5zVWDtW.css",
+      "userAgent": "SiteAuditBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/css",
+        "cache-control": "public, max-age=31536000, immutable",
+        "cf-cache-status": "HIT"
+      },
+      "sha256": "166f8bff436582b856b11e5f9e2c47bbd488b7efaf6ec255bd4540e1f13c63cb"
+    },
+    {
+      "path": "/ru/",
+      "userAgent": "SemrushBot",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "6aecac7dbca03b65127c444dc81314e0404927ad1dcea7d26237f2131ebd0c8b"
+    },
+    {
+      "path": "/ru/",
+      "userAgent": "curl/8.7.1",
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "cf-cache-status": "DYNAMIC"
+      },
+      "sha256": "035938ec326f705e0ae94effd021e77573d6a5be380dc43fb7888454e570aa84"
+    },
+    {
+      "path": "/ru/",
+      "userAgent": "Python-urllib/3.9",
+      "status": 403,
+      "headers": {
+        "content-type": "text/plain; charset=UTF-8",
+        "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
+      },
+      "sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+    }
+  ],
+  "syntheticHttpNote": "Requests use the local machine IP; user-agent probes do not prove access from real crawler IPs."
+}
