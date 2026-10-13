@@ -53,6 +53,17 @@ test('desktop activates only visible 3D and reduced motion keeps the poster', as
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.reload();
   await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'ready', { timeout: 45000 });
+  const viewer = page.locator('model-viewer');
+  const before = await viewer.evaluate((element) => (element as ModelViewerElement).getCameraOrbit().theta);
+  const bounds = (await viewer.boundingBox())!;
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width / 2 + 80, bounds.y + bounds.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(() => viewer.evaluate((element) => (element as ModelViewerElement).getCameraOrbit().theta)
+    .then((value) => Math.abs(value - before))).toBeGreaterThan(.02);
+  await page.getByRole('button', { name: designCopy.en.reset, exact: true }).click();
+  await expect.poll(() => viewer.evaluate((element) => (element as ModelViewerElement).getCameraOrbit().theta)).toBeCloseTo(before, 2);
   await page.locator('.hero').screenshot({ path: testInfo.outputPath('scene-desktop-1440.png') });
 });
 

@@ -45,6 +45,9 @@ export default function DeviceScene({ locale, desktop, mobile, title, descriptio
       viewer.exposure = 1;
       viewer.setAttribute('touch-action', 'pan-y');
       viewer.setAttribute('disable-pan', '');
+      const panTarget = document.createElement('span');
+      panTarget.slot = 'pan-target'; panTarget.hidden = true;
+      viewer.append(panTarget);
       viewer.setAttribute('disable-zoom', '');
       viewer.setAttribute('interaction-prompt', 'none');
       viewer.setAttribute('min-camera-orbit', '-35deg 55deg auto');
