@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { origin, parsePage, parseSitemap, validatePages, wordCount } from '../scripts/seo-validation';
+import { origin, parsePage, parseSitemap, validatePages, validateRobots, wordCount } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
 async function localizedPages(fallback = '') {
@@ -72,4 +72,45 @@ test('strict sitemap XML decodes URLs and rejects malformed structure', () => {
 
 test('Chinese content is segmented into words without inserting spaces', () => {
   expect(wordCount('选择适合手机屏幕的壁纸，并在下载前查看原始图片尺寸。', 'zh-CN')).toBeGreaterThan(10);
+});
+
+const publicRobots = `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Sitemap: ${origin}/sitemap-index.xml
+`;
+
+test('robots accepts the public sitemap and rejects managed directives', () => {
+  expect(() => validateRobots(publicRobots)).not.toThrow();
+  expect(() => validateRobots(publicRobots + 'Content-Signal: search=yes\n')).toThrow(/directive/);
+});
+
+test('private exclusions must belong to the wildcard crawler group', () => {
+  const misplaced = publicRobots.replace('Disallow: /admin/\nDisallow: /api/\n', '') + 'User-agent: ExampleCrawler\nDisallow: /admin/\nDisallow: /api/\n';
+  expect(() => validateRobots(misplaced)).toThrow(/wildcard/);
+});
+
+test('crawler block groups cannot contain a more permissive path rule', () => {
+  expect(() => validateRobots(publicRobots + 'User-agent: ExampleCrawler\nDisallow: /\n')).not.toThrow();
+  expect(() => validateRobots(publicRobots + 'User-agent: ExampleCrawler\nDisallow: /\nAllow: /collections/\n')).toThrow(/block/);
+});
+
+test('published robots preserves every crawler block from the public edge baseline', async () => {
+  const before = await Bun.file(new URL('../../docs/seo/2026-10-13-robots-before.txt', import.meta.url)).text();
+  const robots = await Bun.file(new URL('../public/robots.txt', import.meta.url)).text();
+  const agents = (text: string) => [...text.matchAll(/^User-agent:\s*(\S+)\s*$/gim)].map((match) => match[1]!.toLowerCase()).filter((name) => name !== '*').sort();
+  expect(agents(before)).toHaveLength(47);
+  expect(agents(robots)).toEqual(agents(before));
+  expect(() => validateRobots(robots)).not.toThrow();
+});
+
+test('robots rejects missing, repeated and foreign sitemap locations', () => {
+  for (const robots of [publicRobots.replace(`Sitemap: ${origin}/sitemap-index.xml\n`, ''), publicRobots + `Sitemap: ${origin}/sitemap-index.xml\n`, publicRobots.replace(origin, 'https://example.org')]) expect(() => validateRobots(robots)).toThrow(/sitemap/);
+});
+
+test('robots accepts comments and CRLF but rejects ungrouped rules and mixed wildcard agents', () => {
+  expect(() => validateRobots('# Public policy\r\n' + publicRobots.replaceAll('\n', '\r\n'))).not.toThrow();
+  expect(() => validateRobots('Disallow: /\n' + publicRobots)).toThrow(/group/);
+  expect(() => validateRobots(publicRobots.replace('User-agent: *', 'User-agent: *\nUser-agent: ExampleCrawler'))).toThrow(/wildcard/);
 });

@@ -174,6 +174,22 @@ else:
         result = self.resolve()
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_protection_timestamp_without_timezone_is_rejected(self):
+        self.responses['rulesets/24392512']['updated_at'] = '2026-10-02T21:38:23.060'
+        result = self.resolve()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, '')
+        self.assertIn('Release protection timestamp needs a timezone', result.stderr)
+
+    def test_malformed_protection_timestamps_are_rejected(self):
+        for value in ['not-a-timestamp', '2026-10-02T21:38:23.060z', '2026-10-02T21:38:23.060+00:00Z', None]:
+            with self.subTest(value=value):
+                self.responses['rulesets/24392512']['updated_at'] = value
+                result = self.resolve()
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, '')
+                self.assertIn('Malformed or unavailable release evidence', result.stderr)
+
     def test_successful_run_with_skipped_full_verification_is_rejected(self):
         self.responses['actions/runs/73/attempts/1/jobs?per_page=100'] = [{'jobs': [{'name': 'Full UI', 'conclusion': 'skipped'}]}]
         self.assertNotEqual(self.resolve().returncode, 0)
