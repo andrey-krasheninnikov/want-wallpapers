@@ -20,6 +20,8 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
     const ui = copy[locale], text = interfaceCopy[locale];
     await page.goto(localPath(locale, '/'));
     await expect(page.getByRole('button', { name: ui.acceptAll, exact: true })).toBeVisible();
+    const actions = page.getByRole('region', { name: ui.cookieSettings, exact: true }).getByRole('button');
+    await expect(actions).toHaveText([ui.cookieSettings, ui.essentialOnly, ui.acceptAll]);
     for (const [width, analytics, advertising] of [[320, false, true], [768, true, false], [1024, true, true], [1440, false, false]] as const) {
       await page.setViewportSize({ width, height: 900 });
       const banner = page.getByRole('region', { name: ui.cookieSettings, exact: true });
@@ -84,7 +86,7 @@ test('allow all stores both choices and withdrawal persists in another tab', asy
   const optional: string[] = [];
   page.on('request', (request) => { if (/google-analytics|googletagmanager|firebaseinstallations/.test(request.url())) optional.push(request.url()); });
   await page.goto('/ru/');
-  await page.getByRole('button', { name: 'разрешить все', exact: true }).click();
+  await page.getByRole('button', { name: copy.ru.acceptAll, exact: true }).click();
   const second = await context.newPage();
   await second.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'DE' } }));
   await second.goto('/ru/');

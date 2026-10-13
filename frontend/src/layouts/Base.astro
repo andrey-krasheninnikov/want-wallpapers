@@ -24,7 +24,20 @@ const analyticsAvailable = isAnalyticsConfigured();
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#090911" />
+    <meta name="theme-color" content="#1A1A1A" />
+    {path.startsWith('/wallpapers/') && <script is:inline>
+      document.documentElement.dataset.wallpaperVariant = new URLSearchParams(location.search).get('variant') === 'mobile' ? 'mobile' : 'desktop';
+      function revealWallpaperDirection() {
+        try {
+          const direction = sessionStorage.getItem('want-wallpaper-direction');
+          if (direction) document.documentElement.dataset.wallpaperDirection = direction === 'previous' ? 'previous' : 'next';
+          else if (!document.documentElement.dataset.wallpaperDirection) document.documentElement.dataset.wallpaperDirection = 'next';
+          sessionStorage.removeItem('want-wallpaper-direction');
+        } catch {}
+      }
+      revealWallpaperDirection();
+      window.addEventListener('pagereveal', revealWallpaperDirection);
+    </script>}
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content={path === "/search/" ? "noindex, follow" : "noindex"} />}
     <link rel="canonical" href={canonical.href} />
@@ -50,7 +63,9 @@ const analyticsAvailable = isAnalyticsConfigured();
     <Fragment set:html={"<!--email_off-->"} /><Footer locale={locale} logo={logoUrl} /><Fragment set:html={"<!--/email_off-->"} />
     <script>
       import { initCollectionCovers } from '../lib/collection-cover-player';
+      import { initPageMotion } from '../lib/page-motion';
       initCollectionCovers();
+      initPageMotion();
     </script>
     <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
   </body>

@@ -37,10 +37,10 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         if (await title.count()) {
           const size = await title.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
           const hero = path === '/';
-          expect(size).toBeGreaterThanOrEqual(hero ? 40 : 32);
-          expect(size).toBeLessThanOrEqual(hero ? 80 : 56);
-          if (width === 320) expect(size).toBeCloseTo(hero ? 40 : 32);
-          if (width === 1440) expect(size).toBeCloseTo(hero ? 72 : 56);
+          expect(size).toBeGreaterThanOrEqual(hero ? 32 : 28);
+          expect(size).toBeLessThanOrEqual(hero ? 50 : 40);
+          if (width === 320) expect(size).toBeCloseTo(hero ? 32 : 28);
+          if (width === 1440) expect(size).toBeCloseTo(hero ? 50 : 40);
           expect(await title.evaluate((heading) => getComputedStyle(heading).fontFamily)).toContain('Onest');
           const overflow = await title.evaluate((heading) => ({
             fitsWidth: heading.scrollWidth <= heading.clientWidth + 1,
@@ -51,7 +51,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         const legalTitle = page.locator('.prose h1');
         if (await legalTitle.count()) {
           const size = await legalTitle.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
-          expect(size).toBeCloseTo({ 320: 36, 375: 36, 768: 38.4, 1024: 51.2, 1440: 64 }[width]!);
+          expect(size).toBeCloseTo({ 320: 28, 375: 28, 768: 28, 1024: 32.768, 1440: 40 }[width]!);
         }
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
@@ -251,7 +251,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await page.getByRole('radio', { name: copy.ru.plus, exact: true }).focus();
   await page.keyboard.press('Space');
   await expect(page.getByRole('radio', { name: copy.ru.plus, exact: true })).toBeChecked();
-  await page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true }).fill('Мне нравится этот горизонт.');
+  await page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true }).fill('Мне нравится этот горизонт.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 320, height: 900 });
@@ -268,10 +268,10 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-populated-desktop.png') });
-  await page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true }).fill('Ещё один комментарий.');
+  await page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true }).fill('Ещё один комментарий.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText(copy.ru.commentWait)).toBeVisible();
-  await expect(page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true })).toHaveValue('Ещё один комментарий.');
+  await expect(page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true })).toHaveValue('Ещё один комментарий.');
   await page.getByRole('button', { name: copy.ru.delete, exact: true }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toHaveCount(0);
   const visitor = crypto.randomUUID();
@@ -367,11 +367,8 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
       expect(response.headers()['content-disposition']).toBe(`attachment; filename="${wallpaper}-${variant}.png"`);
       expect(await response.body()).toEqual(bytes);
     }
-    const summary = page.locator('details.original-preview summary');
-    await summary.press('Enter');
-    await expect(page.locator('details.original-preview')).toHaveAttribute('open', '');
-    await expect(page.locator('details.original-preview img')).toBeVisible();
-    await expect(summary).toBeFocused();
+    await expect(page.locator('details.original-preview')).toHaveCount(0);
+    await expect(page.locator('[data-wallpaper-next]')).toHaveAttribute('href', `${localPath(locale, '/wallpapers/contours-of-silence-2/')}?variant=desktop#wallpaper-view`);
     // axe needs JavaScript timers; inspect the same no-script DOM with site scripts removed.
     const html = await new HTMLRewriter().on('script', { element(element) { element.remove(); } }).on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(await page.content())).text();
     const accessibilityContext = await browser.newContext({ viewport: { width: 320, height: 900 } });
@@ -385,7 +382,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await context.close();
   });
 
-  test(`original preview, download event and search history: ${locale}`, async ({ page, request }, testInfo) => {
+  test(`preview variants, download event and search history: ${locale}`, async ({ page, request }, testInfo) => {
     await page.route('https://ipwho.is/**', (route) => route.abort());
     await page.goto(localPath(locale, `/wallpapers/${wallpaper}/`));
     await dismissCookies(page, locale);
@@ -393,17 +390,15 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await page.evaluate(() => window.addEventListener('want:download', (event) => { document.body.dataset.lastDownload = JSON.stringify((event as CustomEvent).detail); }));
     for (const variant of ['desktop', 'mobile'] as const) {
       await page.getByRole('tab', { name: copy[locale][variant], exact: true }).click();
-      const summary = page.locator('details.original-preview summary');
-      await summary.press('Enter');
-      await expect(summary).toBeFocused();
-      await expect(page.locator('details.original-preview img')).toHaveAttribute('src', `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-${variant}.png`);
-      await expect(page.locator('details.original-preview img')).toBeVisible();
-      await expect.poll(() => page.locator('details.original-preview img').evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      await expect(page.locator('details.original-preview')).toHaveCount(0);
+      await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${wallpaper}-${variant}.webp`);
+      await expect(page.locator('#detail-image')).toBeVisible();
+      await expect.poll(() => page.locator('#detail-image').evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
       for (const width of [320, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
-        await page.screenshot({ path: testInfo.outputPath(`original-${variant}-${width}.png`), fullPage: true });
+        await page.screenshot({ path: testInfo.outputPath(`preview-${variant}-${width}.png`), fullPage: true });
       }
       const waiting = page.waitForEvent('download');
       await page.locator('#download-link').focus();

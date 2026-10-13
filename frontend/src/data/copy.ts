@@ -68,7 +68,7 @@ export const copy = {
     privacy: 'Конфиденциальность', terms: 'Условия', cookies: 'Cookie', license: 'Лицензия', contact: 'Контакты',
     cookieSettings: 'Настройки cookie', cookieTitle: 'Ваш экран, ваш выбор',
     cookieText: 'Аналитика и реклама включены по умолчанию вне ЕЭЗ. В ЕЭЗ и при неизвестной стране ждём вашего выбора.',
-    essentialOnly: 'Только необходимые', acceptAll: 'разрешить все', analyticsLabel: 'Аналитика', advertisingLabel: 'Реклама',
+    essentialOnly: 'Только необходимые', acceptAll: 'Разрешить все', analyticsLabel: 'Аналитика', advertisingLabel: 'Реклама',
     cookieSaved: 'Настройки cookie сохранены.',
     serviceError: 'Не удалось подключиться. Попробуйте ещё раз.', loading: 'Загрузка…',
     owner: 'Andrey Krasheninnikov',

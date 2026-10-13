@@ -17,12 +17,14 @@ const dimensions = await Promise.all(designs.map(async (item) => ({ item, sizes:
 const topics = [...new Set(designs.flatMap((item) => item.tags))];
 ---
 <section class="shell section-space" data-editorial>
-  <div class="editorial">
-    <h2>{storyCollection ? text.story : text.title}</h2>
-    {stories.map(({ item, paragraphs }) => <><h3><a href={localPath(locale, `/collections/${item.slug}/`)}>{item.title[locale]}</a></h3>{paragraphs.map((paragraph) => <p>{paragraph}</p>)}</>)}
-    {collection && <><h3>{text.works}</h3><ul>{designs.map((item) => <li><a href={localPath(locale, `/wallpapers/${item.slug}/`)}>{item.title[locale]}</a>: {item.description[locale]}</li>)}</ul></>}
-    {dimensions.length > 0 && <><h3>{text.sizes}</h3><p>{text.files}</p><ul>{dimensions.map(({ item, sizes }) => <li>{item.title[locale]}: {copy[locale].desktop} {sizes.desktop.originalWidth} × {sizes.desktop.originalHeight}; {copy[locale].mobile} {sizes.mobile.originalWidth} × {sizes.mobile.originalHeight} · PNG</li>)}</ul></>}
-    <h3>{text.license}</h3><p>{text.licenseText} <a href={localPath(locale, '/license/')}>{copy[locale].license}</a></p>
-    {topics.length > 0 && <nav aria-label={text.topics}><h3>{text.topics}</h3><p>{topics.map((tag, index) => <><a href={localPath(locale, `/search/?q=${encodeURIComponent(tagLabels[tag][locale])}`)}>{tagLabels[tag][locale]}</a>{index < topics.length - 1 ? ' · ' : ''}</>)}</p></nav>}
+  <div class="reading-surface">
+    <h2 class="section-title">{storyCollection ? text.story : text.title}</h2>
+    <div class="reading-sections">
+      {stories.map(({ item, paragraphs }, index) => <section class:list={['reading-section', index === 0 && 'reading-section-wide']}><h3><a href={localPath(locale, `/collections/${item.slug}/`)}>{item.title[locale]}</a></h3>{paragraphs.map((paragraph) => <p>{paragraph}</p>)}</section>)}
+      {collection && <section class="reading-section reading-section-wide"><h3>{text.works}</h3><ul class="work-index">{designs.map((item) => <li><a href={localPath(locale, `/wallpapers/${item.slug}/`)}><span class="work-number">{item.number.toLocaleString(locale)}</span><span>{item.title[locale]}<small>{item.description[locale]}</small></span></a></li>)}</ul></section>}
+      {dimensions.length > 0 && <section class="reading-section reading-section-wide"><h3>{text.sizes}</h3><p>{text.files}</p><dl class="format-index mt-4">{dimensions.map(({ item, sizes }) => <div><dt>{item.title[locale]}</dt><dd>{copy[locale].desktop} {sizes.desktop.originalWidth} × {sizes.desktop.originalHeight}</dd><dd>{copy[locale].mobile} {sizes.mobile.originalWidth} × {sizes.mobile.originalHeight} · PNG</dd></div>)}</dl></section>}
+      <section class="reading-section reading-note"><h3>{text.license}</h3><p>{text.licenseText} <a href={localPath(locale, '/license/')}>{copy[locale].license}</a></p></section>
+      {topics.length > 0 && <nav class="reading-section" aria-label={text.topics}><h3>{text.topics}</h3><div class="topic-links">{topics.map((tag) => <a href={localPath(locale, `/search/?q=${encodeURIComponent(tagLabels[tag][locale])}`)}>{tagLabels[tag][locale]}</a>)}</div></nav>}
+    </div>
   </div>
 </section>

@@ -22,7 +22,7 @@ export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardD
   return <article className="min-w-0" data-wallpaper-card={item.id}>
     <Card className="group gallery-card">
       <a href={item.href} className="block h-full rounded-xl">
-        <div className="overflow-hidden bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
+        <div className="reveal-media bg-background" data-reveal><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
         <CardContent className="flex items-start justify-between gap-4 p-4 sm:p-5">
           <div className="min-w-0"><Heading className="text-base leading-snug font-semibold">{item.title}</Heading><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.collectionTitle}</p></div>
           <span className="pt-0.5 text-sm text-muted-foreground tabular-nums" aria-hidden="true">{String(item.number).padStart(2, '0')}</span>

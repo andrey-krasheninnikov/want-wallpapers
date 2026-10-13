@@ -5,7 +5,7 @@ import type { Locale } from '@/data/catalog';
 import { interfaceCopy } from '@/data/interface-copy';
 
 export function CoverMedia({ image, alt, src, priority = false }: { image: Preview; alt: string; src?: string; priority?: boolean }) {
-  return <div className="relative overflow-hidden">
+  return <div className="reveal-media" data-reveal>
     <img src={image.src} width={image.width} height={image.height} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} className="gallery-image" />
     {src && <video data-cover-video data-src={src} muted playsInline loop preload="none" aria-hidden="true" hidden className="absolute inset-0 size-full object-cover" />}
   </div>;

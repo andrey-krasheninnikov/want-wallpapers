@@ -1,11 +1,11 @@
-# Screen Objects
+# Graphite Gallery
 
-A screen is an object held, carried and returned to throughout the day. Its image deserves a clear setting. Quiet dark space surrounds the picture, while the outline of a device gives it scale. The composition makes the relationship between wallpaper and screen immediately visible.
+A wallpaper needs room around it. The gallery uses a quiet graphite ground and broad media planes so the picture carries the visual weight. Devices give the image a familiar scale. The composition stays readable before any optional scene starts.
 
-The palette stays close to the existing identity. Deep blue-black supports charcoal surfaces; pale text carries the information. Violet marks an action or a selected state. Images retain their own colours. Careful colour calibration keeps the interface separate from the artwork without competing with it.
+Surfaces establish depth through their fills. Page, panel and inset control have distinct values; spacing makes their relationship clear. Violet identifies the main action or a selected mark. Artwork keeps its own colors, while supporting text uses a legible neutral.
 
-Forms are generous and rounded, with each curve assigned a purpose. Broad panels group a task, smaller radii frame an image, and capsules invite a press. Fine contours reveal boundaries. The precision of the edge, the gap and the alignment provides the finish; ornament has little room here.
+Compact headings give each section a clear entry. Long text has a measured reading width and enough leading. Stories, formats, licensing and topics each have a place in the composition. Legal explanations continue inside the same reading surface.
 
-Type follows a controlled rhythm. Compact, expressive headings sit beside clear interface text. Large pictures carry most of the visual weight, and short labels identify what can be explored or downloaded. Every line has enough space to remain readable in a narrow viewport and in a different language.
+Controls belong to the task they serve. A writing surface holds the feedback form; linked rows hold contact actions; a compact feed holds comments. Corners follow the size and purpose of the surface. Keyboard focus changes fill and text together without a decorative contour.
 
-Depth belongs to the devices and to a small number of functional surfaces. Movement responds to a person's action and stops when it is unnecessary. The same composition remains useful as a still image. A second pass refines framing, spacing and contrast until the quiet parts have the same care as the central object.
+Movement explains a change: an image is uncovered, a panel opens, a neighboring wallpaper arrives or a submission receives an answer. Each effect settles quickly. Reduced motion keeps the same information and actions in a still composition. A final visual pass checks spacing, type, contrast and alignment at desktop and mobile sizes.
