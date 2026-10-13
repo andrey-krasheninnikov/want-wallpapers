@@ -11,10 +11,10 @@ function attributeValue(element: { getAttribute(name: string): string | null }, 
 
 export const origin = 'https://wallpapers.want.foundation';
 export function require(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; references: { url: string; tag: string; method?: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
+export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; contextualLinks: string[]; references: { url: string; tag: string; method?: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
 
 export async function parsePage(html: string, path: string): Promise<Page> {
-  const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), references: [], scripts: [], text: '', mainText: '', bytes: Buffer.byteLength(html) };
+  const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), contextualLinks: [], references: [], scripts: [], text: '', mainText: '', bytes: Buffer.byteLength(html) };
   const document = await new HTMLRewriter().on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(html)).text();
   const parser = new HTMLRewriter()
     .on('html', { element(element) { page.lang = attributeValue(element, 'lang') ?? ''; } })
@@ -34,6 +34,7 @@ export async function parsePage(html: string, path: string): Promise<Page> {
       if (element.tagName === 'form' && element.hasAttribute('method')) reference.method = attributeValue(element, 'method') ?? '';
       page.references.push(reference);
     } })
+    .on('main a[href]', { element(element) { page.contextualLinks.push(attributeValue(element, 'href') ?? ''); } })
     .on('script', { element(element) {
       const script = { source: attributeValue(element, 'src'), type: attributeValue(element, 'type'), text: '' };
       page.scripts.push(script);
@@ -166,8 +167,16 @@ export function validateContentMetrics(metrics: ReturnType<typeof pageMetrics>):
   require(metrics.ratio > 10, `${metrics.path}: text/HTML at or below 10%`);
 }
 
-export function validateCityLinks(incoming: Map<string, Set<string>>): void {
-  require((incoming.get('/search/?q=city')?.size ?? 0) >= 2, 'City search needs two contextual source pages');
+export function validateCityLinks(pages: Map<string, Page>): void {
+  const sources = new Set<string>();
+  for (const page of pages.values()) {
+    if (page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'))) continue;
+    for (const link of page.contextualLinks) {
+      const target = internal(link, page.path);
+      if (target?.pathname === '/search/' && target.search === '?q=city' && target.pathname !== page.path.split('?')[0]) sources.add(page.path);
+    }
+  }
+  require(sources.size >= 2, 'City search needs two contextual source pages');
 }
 
 export function validateLocalizedContent(page: Page): void {

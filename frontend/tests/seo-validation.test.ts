@@ -301,11 +301,15 @@ test('localized stories must be in the main content, not metadata or hidden mark
   }
 });
 
-test('city search needs distinct contextual source pages', async () => {
-  const pages = await localizedPages('<a href="/search/?q=city">City</a><a href="/search/?q=city">City again</a>');
-  const search = await parsePage(`<html lang="en"><head><link rel="canonical" href="${origin}/search/"><meta property="og:url" content="${origin}/search/"><meta name="robots" content="noindex, follow"></head><body></body></html>`, '/search/');
-  pages.set(search.path, search);
-  expect(() => validateCityLinks(validatePages(pages, new Set()))).toThrow(/two contextual/);
-  pages.get('/ru/')!.references.push({ tag: 'a', url: '/search/?q=city' });
-  expect(() => validateCityLinks(validatePages(pages, new Set()))).not.toThrow();
+test('city search needs distinct contextual source pages, excluding navigation and self-links', async () => {
+  const first = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a><a href="/search/?q=city">City again</a></main></body></html>', '/collections/path-to-the-light/');
+  const navigation = await parsePage('<html lang="en"><body><nav><a href="/search/?q=city">City</a></nav><main>Gallery</main><footer><a href="/search/?q=city">City</a></footer></body></html>', '/collections/');
+  const search = await parsePage('<html lang="en"><head><meta name="robots" content="noindex, follow"></head><body><main><a href="#main">City</a></main></body></html>', '/search/?q=city');
+  const pages = new Map([first, navigation, search].map(page => [page.path, page]));
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  search.robots = [];
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  const second = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a></main></body></html>', '/wallpapers/path-to-the-light-1/');
+  pages.set(second.path, second);
+  expect(() => validateCityLinks(pages)).not.toThrow();
 });

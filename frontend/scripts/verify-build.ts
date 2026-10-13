@@ -38,8 +38,8 @@ async function scan(directory: string) {
   }
 }
 await scan(root);
-const incoming = validatePages(pages, files);
-validateCityLinks(incoming);
+validatePages(pages, files);
+validateCityLinks(pages);
 const indexed = new Set([...pages.values()].filter((page) => !page.robots.some((value) => value.includes('noindex'))).map((page) => origin + page.path));
 const sitemapPages = new Set<string>();
 const index = parseSitemap(await readFile(join(root, 'sitemap-index.xml'), 'utf8'));
