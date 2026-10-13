@@ -32,6 +32,7 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   await expect(page.getByRole('button', { name: 'Open sheet', exact: true })).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
+  await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({ path: testInfo.outputPath(`ui-kit-${width}.png`), fullPage: true });
   expect(errors).toEqual([]);
 });

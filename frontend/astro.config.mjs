@@ -12,5 +12,6 @@ export default defineConfig({
     } },
   }, sitemap({ filter: (page) => !new URL(page).pathname.endsWith('/404/') && !new URL(page).pathname.endsWith('/search/') && !new URL(page).pathname.startsWith('/admin/') })],
   vite: { resolve: { alias: { 'three/examples/jsm/libs/meshopt_decoder.module.js': new URL('./src/lib/uncompressed-model.ts', import.meta.url).pathname } }, plugins: [tailwindcss()], build: { assetsInlineLimit: 0 }, server: { proxy: { '/api': 'http://127.0.0.1:8080' } } },
+  devToolbar: { enabled: false },
   output: 'static',
 });

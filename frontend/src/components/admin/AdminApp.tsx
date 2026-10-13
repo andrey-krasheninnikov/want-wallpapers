@@ -26,7 +26,7 @@ export default function AdminApp() {
   function navigate(next: Section) { setSection(next); history.replaceState(null, '', `/admin/?section=${next}`); }
   return <div className="admin-shell mx-auto min-h-dvh max-w-[1440px] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
     <aside className="admin-sidebar p-5 lg:sticky lg:p-7">
-      <a href="/admin/" className="block text-lg font-semibold tracking-tight">Want Wallpapers</a><p className="mt-1 text-xs text-muted-foreground">Управление сайтом</p>
+      <a href="/admin/" className="block text-lg font-semibold tracking-tight">Want Wallpapers</a><p className="mt-1 text-sm text-muted-foreground">Управление сайтом</p>
       <nav aria-label="Разделы управления" className="mt-6 grid grid-cols-2 gap-2 pb-2 sm:flex sm:flex-wrap lg:flex-col">
         {sections.map(({ id, label, icon: Icon }) => <Button key={id} variant={section === id ? 'secondary' : 'ghost'} className="justify-start px-2 sm:px-3" aria-current={section === id ? 'page' : undefined} onClick={() => navigate(id)}><Icon aria-hidden="true" />{label}</Button>)}
       </nav>
