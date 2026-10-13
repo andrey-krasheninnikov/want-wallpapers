@@ -22,7 +22,7 @@ for (const locale of locales) {
         await expect(page.locator('.wallpaper-card-title').first()).toHaveCSS('font-size', '16px');
         if (path!.startsWith('/wallpapers/')) {
           await expect(page.locator('[data-wallpaper-detail]')).toHaveCSS('display', 'grid');
-          await expect(page.locator('.wallpaper-detail-frame')).toHaveCSS('padding-left', width < 768 ? '8px' : '12px');
+          await expect(page.locator('.wallpaper-detail-frame')).toHaveCSS('padding-left', '0px');
           await expect(page.locator('.wallpaper-variant-trigger').first()).toHaveCSS('min-height', '48px');
           await expect(page.locator('.wallpaper-tag-link').first()).toHaveCSS('padding-top', '8px');
           const tag = page.locator('.wallpaper-tag-link').first();
