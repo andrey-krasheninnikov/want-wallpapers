@@ -17,20 +17,20 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
     { href: '/search/', title: ui.search, active: path === '/search/' },
     { href: '/feedback/', title: ui.feedback, active: path === '/feedback/' },
   ];
-  return <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 backdrop-blur-md">
-    <div className="shell flex min-h-16 items-center justify-between gap-4 lg:min-h-20">
+  return <header className="site-header sticky top-0 z-30">
+    <div className="shell header-bar flex min-h-16 items-center justify-between gap-3 lg:min-h-20">
       <a href={localPath(locale)} aria-label="Want Wallpapers" className="inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg">
         <img src={logo} alt="" width={32} height={32} className="size-8" />
         <span className="text-xl font-bold tracking-tight">Want<span className="ml-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
       </a>
       <NavigationMenu className="hidden lg:flex" aria-label={ui.menu}>
-        <NavigationMenuList className="gap-2">{links.map((link) => <NavigationMenuItem key={link.href}>
+        <NavigationMenuList className="gap-1 rounded-pill bg-secondary p-1">{links.map((link) => <NavigationMenuItem key={link.href}>
           <NavigationMenuLink asChild active={link.active} className="min-h-11 justify-center px-4 text-sm"><a href={localPath(locale, link.href)} aria-current={link.active ? 'page' : undefined}>{link.title}</a></NavigationMenuLink>
         </NavigationMenuItem>)}</NavigationMenuList>
       </NavigationMenu>
       <div className="flex shrink-0 items-center gap-2">
         <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
-          <SelectTrigger aria-label={text.language} className="h-11! w-auto min-w-24 gap-2 border-transparent bg-transparent shadow-none hover:bg-accent">
+          <SelectTrigger aria-label={text.language} className="h-11! w-auto min-w-24 gap-2 rounded-pill border-transparent bg-secondary shadow-none hover:bg-accent">
             <Globe className="size-4 text-muted-foreground" aria-hidden="true" /><SelectValue>{locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
           </SelectTrigger>
           <SelectContent>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11">{title}</SelectItem>)}</SelectContent>

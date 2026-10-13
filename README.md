@@ -83,3 +83,9 @@ Analytics включается только с measurement ID, согласие�
 Workflow Checks выполняет лёгкие static/type/format и unit/API проверки на ветках, PR и ручных запусках. Только main исходного репозитория проходит audit, полный UI и native production runtime PostgreSQL 18/TLS на amd64/arm64 и публикует те же проверенные images без rebuild. OCI index и долговечный release record содержат source SHA, platform digests/revisions и run/attempt. Защищённый annotated v* тег проходит отдельный read-only gate; ранний тег ожидает main publication до 90 минут. Для повторения требуется исходный digest. [CI и допуск релиза](docs/ci-releases.md) описывает event matrix, контракт и outputs. [Production deployment](docs/production-deployments.md) описывает автоматический запуск, private backup worker, первоначальную установку и supervised acceptance.
 
 Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.
+
+## Visual system and UI kit
+
+See [DESIGN.md](DESIGN.md) for visual tokens, typography, component composition and responsive rules. The design philosophy and direction board live in [docs/design](docs/design/).
+
+Run `bun run dev` and open `http://127.0.0.1:4321/ui-kit/` to browse the installed components and their states. The UI-kit route is development-only. Rebuild the local device scene with `bun frontend/scripts/device-scene.ts` after syncing previews.

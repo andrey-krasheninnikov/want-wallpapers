@@ -18,7 +18,7 @@ async function dismissCookies(page: Page, locale: Locale) {
 
 const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
-  for (const width of [320, 768, 1024, 1440] as const) {
+  for (const width of [320, 375, 768, 1024, 1440] as const) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 900 });
       const errors: string[] = [];
@@ -36,10 +36,12 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         const title = page.locator('h1.display-title');
         if (await title.count()) {
           const size = await title.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
-          expect(size).toBeGreaterThanOrEqual(32);
-          expect(size).toBeLessThanOrEqual(56);
-          if (width === 320) expect(size).toBeCloseTo(32);
-          if (width === 1440) expect(size).toBeCloseTo(56);
+          const hero = path === '/';
+          expect(size).toBeGreaterThanOrEqual(hero ? 40 : 32);
+          expect(size).toBeLessThanOrEqual(hero ? 80 : 56);
+          if (width === 320) expect(size).toBeCloseTo(hero ? 40 : 32);
+          if (width === 1440) expect(size).toBeCloseTo(hero ? 72 : 56);
+          expect(await title.evaluate((heading) => getComputedStyle(heading).fontFamily)).toContain('Onest');
           const overflow = await title.evaluate((heading) => ({
             fitsWidth: heading.scrollWidth <= heading.clientWidth + 1,
             unclipped: getComputedStyle(heading).overflowY === 'visible' || heading.scrollHeight <= heading.clientHeight + 1,
@@ -49,7 +51,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         const legalTitle = page.locator('.prose h1');
         if (await legalTitle.count()) {
           const size = await legalTitle.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
-          expect(size).toBeCloseTo({ 320: 36, 768: 38.4, 1024: 51.2, 1440: 64 }[width]!);
+          expect(size).toBeCloseTo({ 320: 36, 375: 36, 768: 38.4, 1024: 51.2, 1440: 64 }[width]!);
         }
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);

@@ -9,5 +9,5 @@ const { locale } = Astro.props;
 const text = interfaceCopy[locale];
 ---
 <Base locale={locale} title={locale === 'en' ? 'Page not found' : text.notFoundTitle} description={text.notFoundText} path="/404/" noindex>
-  <div class="shell page-heading"><p class="eyebrow">404</p><h1 class="display-title mt-4">{text.notFoundTitle}</h1><p class="my-6 text-base leading-relaxed text-muted-foreground">{text.notFoundText}</p><ActionLink href={localPath(locale)} label={text.back} /></div>
+  <div class="shell page-heading info-panel mt-8"><p class="eyebrow">404</p><h1 class="display-title mt-4">{text.notFoundTitle}</h1><p class="my-6 text-base leading-relaxed text-muted-foreground">{text.notFoundText}</p><ActionLink href={localPath(locale)} label={text.back} /></div>
 </Base>

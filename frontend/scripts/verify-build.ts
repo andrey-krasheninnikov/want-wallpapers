@@ -35,6 +35,7 @@ async function scan(directory: string) {
   }
 }
 await scan(root);
+require(![...files].some((name) => name.startsWith('ui-kit/')), 'Development UI kit must not ship in production');
 const incoming = validatePages(pages, files);
 require((incoming.get('/search/?q=city')?.size ?? 0) >= 2, 'City search needs two contextual source pages');
 const indexed = new Set([...pages.values()].filter((page) => !page.robots.some((value) => value.includes('noindex'))).map((page) => origin + page.path));

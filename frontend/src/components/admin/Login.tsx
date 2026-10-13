@@ -21,13 +21,13 @@ export default function Login() {
   }
   return <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-8 px-6 py-12">
     <a href="/" className="w-fit text-sm text-muted-foreground hover:text-foreground">Want Wallpapers</a>
-    <div><LockKeyhole className="mb-4 size-7 text-primary" aria-hidden="true" /><h1 className="text-3xl font-semibold tracking-tight">Вход в управление</h1><p className="mt-3 text-muted-foreground">Каталог, комментарии и обращения.</p></div>
+    <div className="admin-login space-y-8"><div><LockKeyhole className="mb-4 size-7 text-primary" aria-hidden="true" /><h1 className="text-3xl font-semibold tracking-tight">Вход в управление</h1><p className="mt-3 text-muted-foreground">Каталог, комментарии и обращения.</p></div>
     <form className="space-y-5" onSubmit={submit} aria-busy={busy}>
       <Field><FieldLabel htmlFor="username">Логин</FieldLabel><Input id="username" name="username" autoComplete="username" required maxLength={100} autoFocus /></Field>
       <Field><FieldLabel htmlFor="password">Пароль</FieldLabel><Input id="password" name="password" type="password" autoComplete="current-password" required maxLength={1024} /></Field>
       <Field><FieldLabel htmlFor="code">Код аутентификатора</FieldLabel><Input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required /><FieldDescription>Шесть цифр из приложения аутентификатора.</FieldDescription></Field>
       <FieldError>{error}</FieldError><Button type="submit" className="w-full" disabled={busy}>{busy ? 'Проверяем…' : 'Войти'}</Button>
       <RecaptchaNotice locale="ru" />
-    </form>
+    </form></div>
   </main>;
 }
