@@ -45,22 +45,16 @@ for (const locale of locales) {
       await page.setViewportSize({ width, height: 900 });
       const placements = page.getByRole('complementary', { name: interfaceCopy[locale].advertisement });
       await expect(placements).toHaveCount(2);
-      const centre = await page.locator('.wallpaper-advertising-layout').boundingBox();
-      expect(centre!.width).toBe(1280);
-      for (const side of ['left', 'right']) {
-        const box = await page.locator(`.wallpaper-advertisement[data-side="${side}"]`).boundingBox();
-        expect(box!.width).toBe(160); expect(box!.x).toBeGreaterThanOrEqual(32);
-        expect(box!.x + box!.width).toBeLessThanOrEqual(width - 32);
-        expect(side === 'left' ? centre!.x - (box!.x + box!.width) : box!.x - (centre!.x + centre!.width)).toBe(24);
-      }
-      await page.evaluate(() => { document.documentElement.style.fontSize = '20px'; });
-      const enlargedCentre = await page.locator('.wallpaper-advertising-layout').boundingBox();
-      expect(enlargedCentre!.width).toBe(1280);
-      for (const side of ['left', 'right']) {
-        const box = await page.locator(`.wallpaper-advertisement[data-side="${side}"]`).boundingBox();
-        expect(box!.x).toBeGreaterThanOrEqual(32);
-        expect(box!.x + box!.width).toBeLessThanOrEqual(width - 32);
-        expect(side === 'left' ? enlargedCentre!.x - (box!.x + box!.width) : box!.x - (enlargedCentre!.x + enlargedCentre!.width)).toBe(24);
+      for (const fontSize of ['', '20px']) {
+        await page.evaluate((value) => { document.documentElement.style.fontSize = value; }, fontSize);
+        const centre = await page.locator('.wallpaper-advertising-layout').boundingBox();
+        expect(centre!.width).toBe(1280);
+        for (const side of ['left', 'right']) {
+          const box = await page.locator(`.wallpaper-advertisement[data-side="${side}"]`).boundingBox();
+          expect(box!.width).toBe(160); expect(box!.x).toBeGreaterThanOrEqual(32);
+          expect(box!.x + box!.width).toBeLessThanOrEqual(width - 32);
+          expect(side === 'left' ? centre!.x - (box!.x + box!.width) : box!.x - (centre!.x + centre!.width)).toBe(24);
+        }
       }
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
