@@ -5,7 +5,8 @@ export type Locale = (typeof locales)[number];
 export type Localized = Record<Locale, string>;
 const t = (en: string, ru: string, zh: string, pt: string): Localized => ({ en, ru, 'zh-cn': zh, 'pt-br': pt });
 
-export type Collection = { id: string; slug: string; count: number; title: Localized; description: Localized };
+export type VideoCover = { src: string; poster: string };
+export type Collection = { videoCover?: VideoCover; id: string; slug: string; count: number; title: Localized; description: Localized };
 const seedCollections: Collection[] = [
   {
     id: '0001-contours-of-silence', slug: 'contours-of-silence', count: 15,

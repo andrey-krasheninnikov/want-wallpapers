@@ -47,6 +47,10 @@ const analyticsAvailable = isAnalyticsConfigured();
     <Header locale={locale} path={path} logo={logoUrl} client:load />
     <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
     <Fragment set:html={"<!--email_off-->"} /><Footer locale={locale} logo={logoUrl} /><Fragment set:html={"<!--/email_off-->"} />
+    <script>
+      import { initCollectionCovers } from '../lib/collection-cover-player';
+      initCollectionCovers();
+    </script>
     <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
   </body>
 </html>
