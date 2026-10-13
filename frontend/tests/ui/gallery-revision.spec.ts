@@ -3,6 +3,8 @@ import { copy } from '../../src/data/copy';
 import { designCopy } from '../../src/data/design-copy';
 import type { ModelViewerElement } from '@google/model-viewer';
 
+declare global { interface Window { revisionDocument?: number } }
+
 const social = { counts: { cringe: 0, minus: 0, plus: 0, imba: 0 }, ownRating: '', ownUid: null, comments: Array.from({ length: 10 }, (_, index) => ({ id: `comment-${index}`, uid: 'guest', text: index ? `Recent comment ${index}` : 'A longer comment. '.repeat(35), createdAt: Date.UTC(2026, 9, 13, 12, 10 - index) })) };
 
 test.beforeEach(async ({ page }) => {
@@ -17,7 +19,7 @@ for (const width of [320, 1440]) test(`stable two-column gallery, client slides,
   await page.goto('/wallpapers/contours-of-silence-1/');
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
-  const token = await page.evaluate(() => { const value = Math.random(); (window as Window & { revisionDocument: number }).revisionDocument = value; return value; });
+  const token = await page.evaluate(() => { const value = Math.random(); window.revisionDocument = value; return value; });
   const mobile = page.getByRole('tab', { name: copy.en.mobile, exact: true });
   await mobile.scrollIntoViewIfNeeded();
   const before = (await page.locator('#wallpaper-view').boundingBox())!;
@@ -42,7 +44,7 @@ for (const width of [320, 1440]) test(`stable two-column gallery, client slides,
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
     const nextFrame = (await page.locator('#wallpaper-view').boundingBox())!;
     expect(nextFrame.y).toBeCloseTo(frame.y, 0); expect(nextFrame.height).toBeCloseTo(frame.height, 0);
-    expect(await page.evaluate(() => (window as Window & { revisionDocument: number }).revisionDocument)).toBe(token);
+    expect(await page.evaluate(() => window.revisionDocument)).toBe(token);
     await expect(page.locator('#detail-image')).toHaveAttribute('src', /-mobile.webp$/);
     previousUrl = page.url();
   }
