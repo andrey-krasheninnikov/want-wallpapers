@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve, basename } from 'node:path';
 import { tmpdir } from 'node:os';
-import { origin, parsePage, parseSitemap, pagePath, validatePages, wordCount, require, type Page } from './seo-validation';
+import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, wordCount, require, type Page } from './seo-validation';
 
 const root = resolve(import.meta.dir, '../dist');
 const hashes = JSON.parse(await readFile(join(root, 'csp-hashes.json'), 'utf8')) as Record<string, string[]>;
@@ -53,8 +53,7 @@ for (const location of index.locations) {
 }
 require(sitemapPages.size === indexed.size, 'Sitemap omits indexable pages');
 const robots = await readFile(join(root, 'robots.txt'), 'utf8');
-for (const line of robots.split('\n').map((line) => line.trim()).filter((line) => line && !line.startsWith('#'))) require(/^(User-agent|Allow|Disallow|Sitemap):\s*\S+/i.test(line), `Invalid origin robots directive: ${line}`);
-require(robots.includes(`${origin}/sitemap-index.xml`) && robots.includes('Disallow: /admin/') && robots.includes('Disallow: /api/'), 'Invalid robots.txt');
+validateRobots(robots);
 const llms = await readFile(join(root, 'llms.txt'), 'utf8');
 require(llms.startsWith('# Want Wallpapers\n\n> ') && llms.includes('## Usage license'), 'Invalid llms.txt structure');
 for (const locale of ['en', 'ru', 'zh-cn', 'pt-br']) require(llms.includes(`## ${locale}\n`), `llms.txt missing ${locale}`);

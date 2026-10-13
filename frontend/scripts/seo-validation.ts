@@ -141,3 +141,32 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
 export function wordCount(text: string, locale: string): number {
   return [...new Intl.Segmenter(locale, { granularity: 'word' }).segment(text)].filter((part) => part.isWordLike).length;
 }
+
+export function validateRobots(robots: string): void {
+  const groups: { agents: string[]; rules: string[] }[] = [];
+  const sitemaps: string[] = [];
+  for (const raw of robots.split('\n')) {
+    const line = raw.split('#')[0]!.trim();
+    if (!line) continue;
+    const directive = /^(User-agent|Allow|Disallow|Sitemap):\s*(\S+)$/i.exec(line);
+    require(directive, `Invalid origin robots directive: ${line}`);
+    const name = directive[1]!.toLowerCase();
+    const value = directive[2]!;
+    if (name === 'sitemap') { sitemaps.push(value); continue; }
+    let group = groups.at(-1);
+    if (name === 'user-agent') {
+      require(value === '*' || /^[a-z0-9_-]+$/i.test(value), 'Invalid robots user-agent');
+      if (!group || group.rules.length) { group = { agents: [], rules: [] }; groups.push(group); }
+      group.agents.push(value.toLowerCase());
+    } else {
+      require(group && value.startsWith('/'), 'Robots rule needs a crawler group and an absolute path');
+      group.rules.push(`${name}:${value}`);
+    }
+  }
+  const wildcard = groups.filter((group) => group.agents.includes('*'));
+  require(wildcard.length === 1 && wildcard[0]!.agents.length === 1, 'Robots needs one separate wildcard group');
+  const rules = wildcard[0]!.rules;
+  require(rules.length === 3 && ['allow:/', 'disallow:/admin/', 'disallow:/api/'].every((rule) => rules.includes(rule)), 'Invalid wildcard public/private robots policy');
+  for (const group of groups) if (!group.agents.includes('*')) require(group.rules.length === 1 && group.rules[0] === 'disallow:/', 'Crawler-specific groups must block the whole site');
+  require(sitemaps.length === 1 && sitemaps[0] === `${origin}/sitemap-index.xml`, 'Invalid robots sitemap');
+}
