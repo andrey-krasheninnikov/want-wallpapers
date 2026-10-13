@@ -91,3 +91,40 @@ test('invalid variant falls back and native slider links remain usable without J
   await expect(native.locator('h1')).toHaveText(first.title.ru);
   await context.close();
 });
+
+
+type SliderMotion = { status: string; animations?: string[]; finished?: boolean; error?: string };
+declare global { interface Window { sliderMotion: SliderMotion } }
+
+test('native slides capture both previews before hydration and finish without errors', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.addInitScript(() => {
+    window.sliderMotion = { status: 'pending' };
+    window.addEventListener('pagereveal', (event) => {
+      const transition = (event as Event & { viewTransition: { ready: Promise<void>; finished: Promise<void> } | null }).viewTransition;
+      if (!transition) { window.sliderMotion = { status: 'none' }; return; }
+      transition.ready.then(() => {
+        window.sliderMotion = { status: 'ready', animations: document.getAnimations().map((animation) => (animation as CSSAnimation).animationName) };
+      }, (error) => { window.sliderMotion = { status: 'skipped', error: error.message }; });
+      void transition.finished.then(() => { window.sliderMotion.finished = true; });
+    });
+  });
+  await page.goto(`${localPath('ru', `/wallpapers/${first.slug}/`)}?variant=mobile#wallpaper-view`);
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+  for (const direction of ['previous', 'next', 'previous'] as const) {
+    const before = page.url();
+    await page.locator(`[data-wallpaper-${direction}]`).click();
+    await page.waitForURL((url) => url.href !== before);
+    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await page.waitForFunction(() => window.sliderMotion.status !== 'pending');
+    const motion = await page.evaluate(() => window.sliderMotion);
+    expect(motion.status, JSON.stringify(motion)).toBe('ready');
+    expect(motion.animations).toEqual(expect.arrayContaining(['want-slide-in', 'want-slide-out']));
+    await expect(page.locator('html')).toHaveAttribute('data-wallpaper-direction', direction);
+    await expect(page.locator('html')).toHaveAttribute('data-wallpaper-variant', 'mobile');
+    await page.waitForFunction(() => window.sliderMotion.finished);
+  }
+  expect(errors).toEqual([]);
+});

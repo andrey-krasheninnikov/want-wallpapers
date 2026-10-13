@@ -65,7 +65,7 @@ There is no original-preview section. Native PNG download forms and the no-scrip
 
 Control feedback takes 160 ms. State changes take about 260 ms. The first-screen sequence settles within 450 ms. Gallery media uses a one-time 420 ms cover reveal, enabled only when the observer is available. Dynamic results without an observer remain visible. Motion responds to actions and never intercepts scrolling.
 
-Same-origin wallpaper navigation uses native cross-document View Transitions when supported, with a 280 ms directional image transition. Ordinary links remain the fallback. Reduced motion displays final states immediately and disables view transitions. Keep animation properties explicit; avoid decorative loops and custom cursors.
+Same-origin wallpaper navigation uses native cross-document View Transitions when supported, with a 280 ms directional image transition. The opt-in rule is in the document head. Wallpaper pages wait for the viewer element before the first transition snapshot. Ordinary links remain the fallback. Reduced motion displays final states immediately and disables view transitions. Keep animation properties explicit; avoid decorative loops and custom cursors.
 
 Content columns collapse below 768 px. Prevent page overflow at 320 px and preserve image proportions, translated wrapping, 44 px targets and safe areas. Legal sections align headings and reading columns on desktop and become a single sequence on mobile. Sticky surfaces must not cover focus.
 

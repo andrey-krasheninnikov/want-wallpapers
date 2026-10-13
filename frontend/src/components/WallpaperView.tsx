@@ -41,6 +41,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     window.history.replaceState(window.history.state, '', url);
   }
   function direction(value: 'previous' | 'next') {
+    document.documentElement.dataset.wallpaperDirection = value;
     try { window.sessionStorage.setItem('want-wallpaper-direction', value); } catch {}
   }
   function navigate(value: 'previous' | 'next') {

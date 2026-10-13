@@ -205,7 +205,8 @@
   .device-phone::after { content: ''; position: absolute; top: 6px; left: 35%; width: 30%; height: 5px; border-radius: 99px; background: var(--background); }
   .device-model { position: absolute; inset: 0; }
   .device-model[data-ready="false"] { visibility: hidden; opacity: 0; pointer-events: none; }
-  .device-model model-viewer { display: block; width: 100%; height: 100%; background: var(--media-ground); --progress-bar-color: var(--ring); --progress-bar-height: 2px; }
+  .device-model model-viewer { display: block; width: 100%; height: 100%; background: var(--media-ground); }
+  .device-model model-viewer::part(default-progress-bar) { display: none; }
   .device-caption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; padding: 1rem 1.25rem 1.25rem; }
   .device-caption > a { min-height: 44px; display: flex; align-items: center; font-size: .875rem; font-weight: 500; }
   .device-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
@@ -266,7 +267,7 @@
   .gallery-card svg, .contact-link .contact-arrow { transition: transform var(--motion-normal) var(--motion-ease); }
   .gallery-card:hover svg, .contact-link:hover .contact-arrow { transform: translate(2px, -2px); }
   .display-title { animation: want-enter 360ms var(--motion-ease) both; }
-  .hero-copy > p, .hero-action, .hero-meta { animation: want-enter 400ms var(--motion-ease) both; }
+  .hero-copy > p, .hero-action, .hero-meta { animation: want-enter 300ms var(--motion-ease) both; }
   .hero-copy > p { animation-delay: 50ms; }
   .hero-action { animation-delay: 100ms; }
   .hero-meta { animation-delay: 150ms; }
@@ -384,7 +385,6 @@ html[data-wallpaper-variant="mobile"] .wallpaper-preview [data-variant="mobile"]
   :focus-visible { outline: 2px solid Highlight; outline-offset: 3px; }
 }
 
-@view-transition { navigation: auto; }
 .wallpaper-preview { view-transition-name: wallpaper-preview; }
 .wallpaper-preview:focus-visible { outline: none; background: var(--foreground); }
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
@@ -394,7 +394,6 @@ html[data-wallpaper-direction="previous"] { --slide-distance: -24px; }
 html[data-wallpaper-direction="next"] { --slide-distance: 24px; }
 @keyframes want-slide-out { to { opacity: 0; transform: translateX(calc(var(--slide-distance, 24px) * -1)); } }
 @keyframes want-slide-in { from { opacity: 0; transform: translateX(var(--slide-distance, 24px)); } }
-@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
 @layer components {
   .legal-section { display: grid; gap: 1rem; }

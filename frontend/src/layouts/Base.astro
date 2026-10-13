@@ -25,6 +25,8 @@ const analyticsAvailable = isAnalyticsConfigured();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1A1A1A" />
+    <style is:inline>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
+    {path.startsWith('/wallpapers/') && <link rel="expect" href="#wallpaper-view" blocking="render" />}
     {path.startsWith('/wallpapers/') && <script is:inline>
       document.documentElement.dataset.wallpaperVariant = new URLSearchParams(location.search).get('variant') === 'mobile' ? 'mobile' : 'desktop';
       function revealWallpaperDirection() {
