@@ -23,7 +23,7 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   await page.getByRole('tab', { name: 'Mobile', exact: true }).click();
   await expect(page.getByText('Portrait wallpaper preview.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'How do downloads work?', exact: true }).press('Enter');
-  await expect(page.getByText('Original PNG downloads use a native link or form.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Original PNG downloads use a native download link.', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Open dialog', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Wallpaper details', exact: true })).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'Wallpaper details', exact: true })).toHaveCSS('animation-name', 'none');
