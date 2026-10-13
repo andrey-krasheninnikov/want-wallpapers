@@ -71,6 +71,16 @@ export function parseCollectionManifest(value: unknown): CollectionManifest {
   return value as CollectionManifest;
 }
 
+export function parsePublicationDates(value: unknown, wallpapers: readonly Pick<Wallpaper, 'id'>[]): Record<string, string> {
+  if (value === undefined) return {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Publication dates must be an object.');
+  const ids = new Set(wallpapers.map((item) => item.id));
+  for (const [id, date] of Object.entries(value)) {
+    if (!ids.has(id) || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 19) !== date.slice(0, 19)) throw new Error('Invalid catalogue publication date. Keeping the current snapshot.');
+  }
+  return value as Record<string, string>;
+}
+
 export async function addCollection(input: CollectionManifest): Promise<'created' | 'unchanged'> {
   const manifest = parseCollectionManifest(input);
   const result = await catalogRequest<{ result: 'created' | 'unchanged' }>('/import', manifest);

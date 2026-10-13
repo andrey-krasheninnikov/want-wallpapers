@@ -18,7 +18,7 @@ async function dismissCookies(page: Page, locale: Locale) {
 
 const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
-  for (const width of [320, 768, 1024, 1440] as const) {
+  for (const width of [320, 375, 768, 1024, 1440] as const) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 900 });
       const errors: string[] = [];
@@ -36,10 +36,12 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         const title = page.locator('h1.display-title');
         if (await title.count()) {
           const size = await title.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
-          expect(size).toBeGreaterThanOrEqual(32);
-          expect(size).toBeLessThanOrEqual(56);
-          if (width === 320) expect(size).toBeCloseTo(32);
-          if (width === 1440) expect(size).toBeCloseTo(56);
+          const hero = path === '/';
+          expect(size).toBeGreaterThanOrEqual(hero ? 32 : 28);
+          expect(size).toBeLessThanOrEqual(hero ? 50 : 40);
+          if (width === 320) expect(size).toBeCloseTo(hero ? 32 : 28);
+          if (width === 1440) expect(size).toBeCloseTo(hero ? 50 : 40);
+          expect(await title.evaluate((heading) => getComputedStyle(heading).fontFamily)).toContain('Onest');
           const overflow = await title.evaluate((heading) => ({
             fitsWidth: heading.scrollWidth <= heading.clientWidth + 1,
             unclipped: getComputedStyle(heading).overflowY === 'visible' || heading.scrollHeight <= heading.clientHeight + 1,
@@ -49,7 +51,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         const legalTitle = page.locator('.prose h1');
         if (await legalTitle.count()) {
           const size = await legalTitle.evaluate((heading) => Number.parseFloat(getComputedStyle(heading).fontSize));
-          expect(size).toBeCloseTo({ 320: 36, 768: 38.4, 1024: 51.2, 1440: 64 }[width]!);
+          expect(size).toBeCloseTo({ 320: 28, 375: 28, 768: 28, 1024: 32.768, 1440: 40 }[width]!);
         }
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
@@ -181,13 +183,13 @@ test('variant selection and downloads survive a failed region lookup', async ({ 
   await expect(page.locator('[data-social-panel]')).toBeVisible();
   await page.getByRole('tab', { name: copy.ru.mobile }).click();
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${wallpaper}-mobile.webp`);
-  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpaper}-mobile.png`);
+  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-mobile.png`);
   expect(await page.locator('#detail-image').evaluate((image: HTMLImageElement) => ({ fit: getComputedStyle(image).objectFit, width: image.width, naturalWidth: image.naturalWidth }))).toMatchObject({ fit: 'contain' });
   const download = page.waitForEvent('download');
   await page.locator('#download-link').click();
   expect((await download).suggestedFilename()).toBe(`${wallpaper}-mobile.png`);
   await page.getByRole('tab', { name: copy.ru.desktop }).click();
-  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpaper}-desktop.png`);
+  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-desktop.png`);
 });
 
 test('search URLs, filters, empty state and reset', async ({ page }) => {
@@ -249,9 +251,10 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await page.getByRole('radio', { name: copy.ru.plus, exact: true }).focus();
   await page.keyboard.press('Space');
   await expect(page.getByRole('radio', { name: copy.ru.plus, exact: true })).toBeChecked();
-  await page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true }).fill('Мне нравится этот горизонт.');
+  await page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true }).fill('Мне нравится этот горизонт.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-comment] .comment-text')).toHaveCSS('font-size', '16px');
   await page.setViewportSize({ width: 320, height: 900 });
   const commentFits = await page.locator('[data-comment]').evaluate((card) => {
     const bounds = card.getBoundingClientRect();
@@ -266,10 +269,10 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-populated-desktop.png') });
-  await page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true }).fill('Ещё один комментарий.');
+  await page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true }).fill('Ещё один комментарий.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText(copy.ru.commentWait)).toBeVisible();
-  await expect(page.getByRole('textbox', { name: interfaceCopy.ru.ownComment, exact: true })).toHaveValue('Ещё один комментарий.');
+  await expect(page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true })).toHaveValue('Ещё один комментарий.');
   await page.getByRole('button', { name: copy.ru.delete, exact: true }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toHaveCount(0);
   const visitor = crypto.randomUUID();
@@ -313,8 +316,8 @@ test('catalogue, metadata and both PNG links render with JavaScript disabled', a
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:4322/ru/wallpapers/${wallpaper}/`);
   await expect(page.locator('h1')).toHaveText('Фиолетовый горизонт');
-  await expect(page.locator(`form[action="/downloads/${wallpaper}-desktop.png"] button`)).toBeVisible();
-  await expect(page.locator(`form[action="/downloads/${wallpaper}-mobile.png"] button`)).toBeVisible();
+  await expect(page.locator(`a[download][href="/downloads/${wallpaper}-desktop.png"]`)).toBeVisible();
+  await expect(page.locator(`a[download][href="/downloads/${wallpaper}-mobile.png"]`)).toBeVisible();
   expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}')['@type']).toBe('ImageObject');
   await expect(page.locator('main noscript p')).toHaveText(interfaceCopy.ru.javascriptRequired);
   await expect(page.locator('main noscript p')).toBeVisible();
@@ -352,10 +355,13 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await page.goto(`http://127.0.0.1:4322${localPath(locale, `/wallpapers/${wallpaper}/`)}`);
     await expect(page.locator('footer a[href="mailto:wallpapers@want.foundation"]')).toBeVisible();
     for (const variant of ['desktop', 'mobile'] as const) {
-      const form = page.locator(`form[action="/downloads/${wallpaper}-${variant}.png"]`);
-      await expect(form).toHaveAttribute('method', 'get');
+      const form = page.locator(`a[download][href="/downloads/${wallpaper}-${variant}.png"]`);
+      expect(await form.getAttribute('download')).not.toBeNull();
+      const name = variant === 'desktop' ? `${copy[locale].download} · ${copy[locale].desktop}` : `${copy[locale].mobile} · ${copy[locale].download}`;
+      const button = page.getByRole('link', { name, exact: true });
+      await expect(button).toBeVisible();
       const waiting = page.waitForEvent('download');
-      await form.getByRole('button').click();
+      await button.click();
       const download = await waiting;
       expect(download.suggestedFilename()).toBe(`${wallpaper}-${variant}.png`);
       const bytes = await readFile((await download.path())!);
@@ -365,11 +371,8 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
       expect(response.headers()['content-disposition']).toBe(`attachment; filename="${wallpaper}-${variant}.png"`);
       expect(await response.body()).toEqual(bytes);
     }
-    const summary = page.locator('details.original-preview summary');
-    await summary.press('Enter');
-    await expect(page.locator('details.original-preview')).toHaveAttribute('open', '');
-    await expect(page.locator('details.original-preview img')).toBeVisible();
-    await expect(summary).toBeFocused();
+    await expect(page.locator('details.original-preview')).toHaveCount(0);
+    await expect(page.locator('[data-wallpaper-next]')).toHaveAttribute('href', `${localPath(locale, '/wallpapers/a-night-beneath-the-ice-5/')}?variant=desktop#wallpaper-view`);
     // axe needs JavaScript timers; inspect the same no-script DOM with site scripts removed.
     const html = await new HTMLRewriter().on('script', { element(element) { element.remove(); } }).on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(await page.content())).text();
     const accessibilityContext = await browser.newContext({ viewport: { width: 320, height: 900 } });
@@ -383,7 +386,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await context.close();
   });
 
-  test(`original preview, download event and search history: ${locale}`, async ({ page, request }, testInfo) => {
+  test(`preview variants, download event and search history: ${locale}`, async ({ page, request }, testInfo) => {
     await page.route('https://ipwho.is/**', (route) => route.abort());
     await page.goto(localPath(locale, `/wallpapers/${wallpaper}/`));
     await dismissCookies(page, locale);
@@ -391,17 +394,15 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await page.evaluate(() => window.addEventListener('want:download', (event) => { document.body.dataset.lastDownload = JSON.stringify((event as CustomEvent).detail); }));
     for (const variant of ['desktop', 'mobile'] as const) {
       await page.getByRole('tab', { name: copy[locale][variant], exact: true }).click();
-      const summary = page.locator('details.original-preview summary');
-      await summary.press('Enter');
-      await expect(summary).toBeFocused();
-      await expect(page.locator('details.original-preview img')).toHaveAttribute('src', `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-${variant}.png`);
-      await expect(page.locator('details.original-preview img')).toBeVisible();
-      await expect.poll(() => page.locator('details.original-preview img').evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      await expect(page.locator('details.original-preview')).toHaveCount(0);
+      await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${wallpaper}-${variant}.webp`);
+      await expect(page.locator('#detail-image')).toBeVisible();
+      await expect.poll(() => page.locator('#detail-image').evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
       for (const width of [320, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
-        await page.screenshot({ path: testInfo.outputPath(`original-${variant}-${width}.png`), fullPage: true });
+        await page.screenshot({ path: testInfo.outputPath(`preview-${variant}-${width}.png`), fullPage: true });
       }
       const waiting = page.waitForEvent('download');
       await page.locator('#download-link').focus();
@@ -449,4 +450,26 @@ test('feedback waits for hydration before accepting input', async ({ page }) => 
   await page.getByLabel(copy.ru.message).fill('Сообщение после подключения обработчиков.');
   await page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true }).click();
   await expect(page.getByText(copy.ru.feedbackThanks)).toBeVisible();
+});
+
+
+test('public pages share a cacheable hydration bootstrap under the existing CSP', async ({ request }) => {
+  let shared = '';
+  for (const path of ['/ru/feedback/', '/ru/wallpapers/contours-of-silence-1/']) {
+    const response = await request.get(path);
+    const html = await response.text();
+    expect(response.headers()['content-security-policy']).toContain("script-src 'self'");
+    expect([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].some((match) => match[1]!.includes('customElements.define("astro-island",'))).toBe(false);
+    const assets = [...html.matchAll(/<script defer src="(\/_astro\/island\.[a-f0-9]{64}\.js)"><\/script>/g)].map((match) => match[1]!);
+    expect(assets).toHaveLength(1);
+    if (shared) expect(assets[0]).toBe(shared);
+    shared = assets[0]!;
+  }
+  const runtime = await request.get(shared);
+  expect(runtime.status()).toBe(200);
+  expect(runtime.headers()['content-type']).toContain('javascript');
+  expect(runtime.headers()['cache-control']).toContain('immutable');
+  const bytes = await runtime.body();
+  expect(shared).toBe(`/_astro/island.${createHash('sha256').update(bytes).digest('hex')}.js`);
+  expect(bytes.toString()).toContain('customElements.define("astro-island",');
 });

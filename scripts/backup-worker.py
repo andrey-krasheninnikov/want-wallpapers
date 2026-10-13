@@ -233,7 +233,8 @@ def verify_backup_policy(policy):
             'backup-prefix-policy-not-verified')
     media = {'Sid': 'PrizmaxisPublicProductionMedia', 'Effect': 'Allow', 'Principal': '*',
              'Action': 's3:GetObject', 'Resource': 'arn:aws:s3:::want-foundation/prizmaxis/production/media/*'}
-    others = [entry for entry in statements if entry.get('Sid') != 'PublicReadGetObject_v1']
+    others = [entry for entry in statements if entry.get('Sid') != 'PublicReadGetObject_v1'
+              and entry.get('Effect') != 'Deny']
     require(others in ([], [media]), 'backup-prefix-policy-not-verified')
 
 

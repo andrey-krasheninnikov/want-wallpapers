@@ -60,7 +60,7 @@ pub async fn read(
             .bind(visitor)
             .fetch_optional(&state.pool)
             .await?;
-    let comments=sqlx::query("SELECT id,visitor_id,text,(extract(epoch FROM created_at)*1000)::bigint AS timestamp FROM comments WHERE wallpaper_id=$1 AND NOT hidden ORDER BY created_at DESC,id DESC LIMIT 50").bind(&id).fetch_all(&state.pool).await?;
+    let comments=sqlx::query("SELECT id,visitor_id,text,(extract(epoch FROM created_at)*1000)::bigint AS timestamp FROM comments WHERE wallpaper_id=$1 AND NOT hidden ORDER BY created_at DESC,id DESC LIMIT 10").bind(&id).fetch_all(&state.pool).await?;
     Ok(Json(
         json!({"counts":counts,"ownUid":visitor,"ownRating":own.unwrap_or_default(),"comments":comments.into_iter().map(|r|json!({"id":r.get::<Uuid,_>("id"),"uid":r.get::<Uuid,_>("visitor_id"),"text":r.get::<String,_>("text"),"createdAt":r.get::<i64,_>("timestamp")})).collect::<Vec<_>>()}),
     ))

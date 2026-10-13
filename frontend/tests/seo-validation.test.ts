@@ -1,8 +1,9 @@
 import { test, expect } from 'bun:test';
 import type { APIContext } from 'astro';
 import { GET } from '../src/pages/llms.txt';
-import { collections } from '../src/data/catalog';
-import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount } from '../scripts/seo-validation';
+import { collections, locales } from '../src/data/catalog';
+import { collectionStories, editorialCopy } from '../src/data/editorial';
+import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
 async function localizedPages(fallback = '') {
@@ -116,6 +117,34 @@ test('ordinary PNG navigation is rejected while a native GET action is allowed',
   expect(() => validatePages(pages, files)).toThrow(/PNG/);
 });
 
+test('PNG page links are rejected after URL and HTML decoding, including no-script markup', async () => {
+  for (const url of ['/downloads/picture.png', '/downloads/picture.PNG?view=1&amp;size=2#original', '/downloads/picture.%70%6e%67', '/downloads/picture%2Epng', 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-desktop.png?view=1#original']) {
+    const pages = await localizedPages(`<a href="${url}">View original</a>`);
+    expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/PNG formatted as a page link/);
+  }
+});
+
+test('PNG images and native GET downloads retain resource semantics', async () => {
+  for (const method of ['', 'method="get"', 'method="GET"', 'method=""', 'method="unknown"']) {
+    const pages = await localizedPages(`<img src="https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/1-desktop.png" alt="Dark dunes"><form ${method} action="/downloads/picture.%70%6e%67?source=gallery"><button type="submit">Download PNG</button></form>`);
+    expect(() => validatePages(pages, new Set(['downloads/picture.png']))).not.toThrow();
+  }
+});
+
+test('PNG downloads reject POST and dialog forms, including encoded targets', async () => {
+  for (const method of ['post', 'POST', 'dialog', 'DIALOG']) {
+    for (const url of ['/downloads/picture.png', '/downloads/picture.%70%6e%67']) {
+      const pages = await localizedPages(`<form method="${method}" action="${url}"><button type="submit">Download PNG</button></form>`);
+      expect(() => validatePages(pages, new Set(['downloads/picture.png']))).toThrow(/PNG download must use GET/);
+    }
+  }
+});
+
+test('non-PNG page links and forms retain existing behavior', async () => {
+  const pages = await localizedPages('<a href="/?image=picture.png#main">Gallery</a><form method="post" action="/"><button>Search</button></form>');
+  expect(() => validatePages(pages, new Set())).not.toThrow();
+});
+
 test('strict sitemap XML decodes URLs and rejects malformed structure', () => {
   const xml = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${origin}/</loc></url></urlset>`;
   expect(parseSitemap(xml)).toEqual({ kind: 'urlset', locations: [origin + '/'] });
@@ -226,4 +255,74 @@ test('llms build validation requires current public catalog links in their local
     text + `- [Private](${origin}/api/v1/catalog)\n`,
   ];
   for (const invalid of invalidFiles) expect(() => validateLlms(invalid, indexed)).toThrow();
+});
+
+
+test('content metrics use UTF-8 bytes and compare ratios before rounding', async () => {
+  const page = await parsePage('<html lang="zh-CN"><body><main>蓝色光线壁纸图</main></body></html>', '/zh-cn/');
+  page.bytes = 209;
+  const metrics = pageMetrics(page);
+  expect(metrics.textBytes).toBe(21);
+  expect(metrics.ratio).toBeCloseTo(21 / 209 * 100, 10);
+  expect(metrics.ratio).toBeGreaterThan(10);
+  expect(Math.round(metrics.ratio * 10) / 10).toBe(10);
+  expect(() => validateContentMetrics({ ...metrics, words: 200 })).not.toThrow();
+  expect(() => validateContentMetrics({ ...metrics, words: 200, ratio: 10 })).toThrow(/text\/HTML/);
+});
+
+test('content validation keeps the 200-word boundary and reports noindex pages', async () => {
+  const page = await parsePage('<html lang="en"><body><main>' + 'word '.repeat(200) + '</main></body></html>', '/');
+  const metrics = pageMetrics(page);
+  expect(metrics.words).toBe(200);
+  expect(() => validateContentMetrics(metrics)).not.toThrow();
+  expect(() => validateContentMetrics({ ...metrics, words: 199 })).toThrow(/200/);
+  page.path = '/search/';
+  page.robots = ['noindex, follow'];
+  page.text = 'Search';
+  const search = pageMetrics(page);
+  expect(search.indexable).toBe(false);
+  expect(search.words).toBe(1);
+  expect(search.ratio).toBeLessThan(10);
+  expect(() => validateContentMetrics(search)).not.toThrow();
+});
+
+test('localized stories must be in the main content, not metadata or hidden markup', async () => {
+  for (const locale of locales) {
+    const path = (locale === 'en' ? '' : '/' + locale) + '/collections/';
+    const title = editorialCopy[locale].title;
+    const paragraphs = collections.map(collection => collectionStories[collection.slug]![locale][0]!);
+    const content = [title, editorialCopy[locale].licenseText, ...paragraphs].join(' ');
+    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
+    const page = await parsePage(`<html lang="${lang}"><body><main>${content}</main></body></html>`, path);
+    expect(() => validateLocalizedContent(page)).not.toThrow();
+    const missing = await parsePage(`<html lang="${lang}"><head><meta name="description" content="${content}"></head><body><nav>${content}</nav><main>English fallback<p hidden>${content}</p><script>${content}</script></main></body></html>`, path);
+    expect(missing.mainText).toBe('English fallback');
+    expect(() => validateLocalizedContent(missing)).toThrow(/localized main content/);
+  }
+});
+
+test('city search needs distinct contextual source pages, excluding navigation and self-links', async () => {
+  const first = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a><a href="/search/?q=city">City again</a></main></body></html>', '/collections/path-to-the-light/');
+  const navigation = await parsePage('<html lang="en"><body><nav><a href="/search/?q=city">City</a></nav><main>Gallery</main><footer><a href="/search/?q=city">City</a></footer></body></html>', '/collections/');
+  const search = await parsePage('<html lang="en"><head><meta name="robots" content="noindex, follow"></head><body><main><a href="#main">City</a></main></body></html>', '/search/?q=city');
+  const pages = new Map([first, navigation, search].map(page => [page.path, page]));
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  search.robots = [];
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  const hidden = await parsePage('<html lang="en"><body><main><p hidden><a href="/search/?q=city">City</a></p><p aria-hidden="true"><a href="/search/?q=city">City</a></p></main></body></html>', '/wallpapers/path-to-the-light-1/');
+  pages.set(hidden.path, hidden);
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  const second = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a></main></body></html>', '/wallpapers/path-to-the-light-1/');
+  pages.set(second.path, second);
+  expect(() => validateCityLinks(pages)).not.toThrow();
+});
+
+
+test('same-origin PNG download anchors retain download semantics', async () => {
+  const files = new Set(['downloads/picture.png']);
+  const pages = await localizedPages('<a href="/downloads/picture.png" download="picture.png">Download PNG</a>');
+  expect(pages.get('/')!.references).toContainEqual({ tag: 'a', url: '/downloads/picture.png', download: true });
+  expect(() => validatePages(pages, files)).not.toThrow();
+  const external = await localizedPages('<a href="https://example.com/picture.png" download>Download PNG</a>');
+  expect(() => validatePages(external, files)).toThrow(/PNG formatted as a page link/);
 });

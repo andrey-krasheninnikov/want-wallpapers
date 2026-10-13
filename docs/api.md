@@ -4,7 +4,7 @@
 
 ## Посетители
 
-`POST /session` с точным `Origin` создаёт или возвращает анонимную сессию: `{uid,csrf}`. Cookie `__Host-want-visitor` в production (`want-visitor` в development) — HttpOnly, SameSite=Strict, Secure в production, срок до года. Публичный `GET /wallpapers/{id}/social` возвращает `{counts,ownRating,ownUid,comments}`; последние 50 видимых комментариев, даты в миллисекундах Unix. Региональные ограничения отсутствуют. Страна и настройки optional tracking не дают авторизацию и не блокируют оценки, комментарии или обращения.
+`POST /session` с точным `Origin` создаёт или возвращает анонимную сессию: `{uid,csrf}`. Cookie `__Host-want-visitor` в production (`want-visitor` в development) — HttpOnly, SameSite=Strict, Secure в production, срок до года. Публичный `GET /wallpapers/{id}/social` возвращает `{counts,ownRating,ownUid,comments}`; последние 10 видимых комментариев, даты в миллисекундах Unix. Региональные ограничения отсутствуют. Страна и настройки optional tracking не дают авторизацию и не блокируют оценки, комментарии или обращения.
 
 Все изменения требуют cookie, `Origin`, `X-CSRF-Token` и свежий `X-ReCAPTCHA-Token`:
 
@@ -36,7 +36,7 @@ Production требует CAPTCHA и credentials. RECAPTCHA_ENABLED=false раз
 
 ## Каталог
 
-`GET /catalog` публично возвращает `{collections,wallpapers}` только активных записей; count вычисляется по активным обоям. Порядок: ID коллекции, номер обоев. Экспорт читает согласованный snapshot одной транзакции.
+`GET /catalog` публично возвращает `{collections,wallpapers,publicationDates}` только активных записей; count вычисляется по активным обоям. Порядок: ID коллекции, номер обоев. Экспорт читает согласованный snapshot одной транзакции. `publicationDates` содержит UTC ISO-дату первой публикации по ID обоев. Редактирование, повторный импорт и архив/restore не меняют дату. Для 35 исторических ID дата соответствует первому публичному релизу каталога (v1.0.0, v1.2.0 или v1.3.0); она не подтверждает время production-деплоя. У записей без подтверждённой истории ключ отсутствует. Новые записи получают время транзакции создания. Поиск и просмотр соседних обоев используют даты по убыванию, затем ID коллекции и номер по убыванию; неизвестные даты идут последними. Формат импорта прежний.
 
 Защищённые операции доступны администратору с cookie/CSRF/Origin или `Authorization: Bearer <token>` без cookie. Токен не даёт доступ к сессиям, модерации и обращениям. Неверный Authorization никогда не заменяется авторизацией cookie.
 

@@ -4,6 +4,8 @@ import sharp from 'sharp';
 import { prepareCollectionCover } from '../scripts/collection-covers';
 import { initialCatalog } from '../src/data/catalog';
 
+// Two sequential media processes each have a 30-second timeout.
+const mediaTimeout = 70000;
 const collection = { ...initialCatalog.collections[0]!, videoCover: { src: 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/cover.mp4', poster: 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0001-contours-of-silence/cover.png' } };
 const poster = await sharp({ create: { width: 640, height: 512, channels: 3, background: '#5b4fff' } }).png().toBuffer();
 const boundary: { fetch: (input: RequestInfo | URL, options?: RequestInit) => Promise<Response> } = globalThis;
@@ -27,12 +29,12 @@ test('a real silent H.264 MP4 and PNG poster produce a decoded static preview', 
   const prepared = await prepareCollectionCover(collection);
   expect(prepared?.width).toBe(640); expect(prepared?.height).toBe(512);
   expect((await sharp(prepared!.bytes).metadata()).format).toBe('webp');
-});
+}, mediaTimeout);
 for (const fixture of ['audio.mp4', 'long.mp4', 'codec.mp4']) {
   test(`build rejects ${fixture}`, async () => {
     await cdn(fixture);
     await expect(prepareCollectionCover(collection)).rejects.toThrow('MP4/H.264');
-  });
+  }, mediaTimeout);
 }
 test('build rejects broken media and an invalid or undersized required poster', async () => {
   await cdn('valid.mp4', new Uint8Array([1, 2, 3]));
@@ -41,7 +43,7 @@ test('build rejects broken media and an invalid or undersized required poster', 
   await expect(prepareCollectionCover(collection)).rejects.toThrow('at least 500'); mocked!.mockRestore();
   mocked = spyOn(boundary, 'fetch').mockResolvedValue(new Response(new Uint8Array([1, 2, 3]), { headers: { 'Content-Type': 'video/mp4' } }));
   await expect(prepareCollectionCover(collection)).rejects.toThrow();
-});
+}, mediaTimeout);
 test('build rejects unavailable assets, redirects and oversize bodies before release', async () => {
   for (const response of [new Response(null, { status: 404 }), new Response(null, { status: 302, headers: { location: 'http://127.0.0.1/' } }), new Response('x', { headers: { 'Content-Type': 'video/mp4', 'Content-Length': String(8 * 1024 * 1024 + 1) } }), new Response(new Uint8Array(8 * 1024 * 1024 + 1), { headers: { 'Content-Type': 'video/mp4' } })]) {
     mocked?.mockRestore(); mocked = spyOn(boundary, 'fetch').mockResolvedValue(response);
@@ -76,4 +78,4 @@ test('validated cover data reaches the static view model and SSR without an eage
     expect(html).toContain('Остановить анимацию');
     expect(html).not.toMatch(/<video[^>]*\ssrc=/);
   } finally { if (original) await writeFile(path, original); else await unlink(path); }
-});
+}, mediaTimeout);

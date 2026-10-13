@@ -1,23 +1,21 @@
 import { useEffect, useState, type SubmitEvent } from 'react';
-import { Check, Flag, Trash2 } from 'lucide-react';
+import { Check, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import RecaptchaNotice from '@/components/RecaptchaNotice';
+import CommentFeed from '@/components/CommentFeed';
 import { copy, mutationError } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { ratingValues, ratingEmoji, type Rating } from '@/data/ratings';
 import type { Comment, SocialData } from '@/lib/wallpaper-client';
 import type { Locale } from '@/data/catalog';
 
-export default function SocialPanel({ id, locale }: { id: string; locale: Locale }) {
+export function useWallpaperSocial(id: string, locale: Locale) {
   const ui = copy[locale];
   const text = interfaceCopy[locale];
   const [data, setData] = useState<SocialData | null>(null);
@@ -27,6 +25,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   const [busy, setBusy] = useState(false);
   const [comment, setComment] = useState('');
   const [reported, setReported] = useState<string[]>([]);
+  const [noticeTarget, setNoticeTarget] = useState<'ratings' | 'comments'>('comments');
   async function refresh() {
     setLoading(true); setError('');
     try { const service = await import('@/lib/wallpaper-client'); setData(await service.readSocial(id)); }
@@ -41,6 +40,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   }, [id, ui.serviceError]);
   async function rate(value: string) {
     if (busy || !ratingValues.includes(value as Rating)) return;
+    setNoticeTarget('ratings');
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client'); await service.saveRating(id, value as Rating);
@@ -51,6 +51,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    setNoticeTarget('comments');
     if (comment.trim().length < 2) { setError(ui.required); return; }
     setBusy(true); setError(''); setStatus('');
     try {
@@ -61,6 +62,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   }
   async function action(item: Comment) {
     if (busy) return;
+    setNoticeTarget('comments');
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client');
@@ -69,30 +71,48 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
     } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
-  return <div className="grid gap-6" data-social-panel>
-    {error && <Alert variant="destructive" role="alert"><AlertDescription>{error}<Button type="button" variant="outline" className="mt-3 w-fit" disabled={busy || loading} onClick={() => void refresh()}>{text.retry}</Button></AlertDescription></Alert>}
-    <section aria-labelledby="ratings-title"><h2 id="ratings-title" className="text-2xl font-semibold tracking-tight">{ui.ratings}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{ui.ratingHint}</p>
-      {loading && !data ? <div role="status" className="mt-6 grid grid-cols-4 gap-2 sm:gap-4" aria-label={ui.loading} aria-busy="true">{ratingValues.map((value) => <Skeleton key={value} className="h-24" />)}</div> : <RadioGroup value={data?.ownRating ?? ''} onValueChange={(value) => void rate(value)} disabled={busy || !data} aria-label={ui.ratings} className="mt-6 grid grid-cols-4 gap-2 sm:gap-4">
-        {ratingValues.map((value) => <Label key={value} htmlFor={`rating-${value}`} title={ui[value]} className="relative flex min-h-24 min-w-0 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border bg-card px-2 py-4 transition-colors has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:disabled]:cursor-default has-[:disabled]:opacity-60">
-          <RadioGroupItem id={`rating-${value}`} value={value} aria-label={ui[value]} aria-describedby={`rating-count-${value}`} className="absolute inset-0 size-full rounded-lg border-0 opacity-0" /><span aria-hidden="true" className="pointer-events-none text-3xl leading-none">{ratingEmoji[value]}</span>{data?.ownRating === value && <Check aria-hidden="true" className="pointer-events-none absolute top-2 right-2 size-3.5 text-link" />}<span id={`rating-count-${value}`} className="pointer-events-none text-center text-sm text-muted-foreground tabular-nums wrap-anywhere"><span className="sr-only">{text.votes}: </span>{data?.counts[value].toLocaleString(locale) ?? '…'}</span>
-        </Label>)}
-      </RadioGroup>}
-    </section>
+  return { data, loading, error, status, busy, comment, reported, noticeTarget, setComment, refresh, rate, submit, action };
+}
+
+type SocialState = ReturnType<typeof useWallpaperSocial>;
+
+function SocialNotice({ locale, social, target }: { locale: Locale; social: SocialState; target: SocialState['noticeTarget'] }) {
+  const active = social.noticeTarget === target;
+  return <>
+    {active && social.error && <Alert variant="destructive" role="alert"><AlertDescription>{social.error}<Button type="button" variant="outline" className="mt-3 w-fit" disabled={social.busy || social.loading} onClick={() => void social.refresh()}>{interfaceCopy[locale].retry}</Button></AlertDescription></Alert>}
+    <p className="comment-social-status text-sm leading-relaxed text-link" role="status">{active ? social.status : ''}</p>
+  </>;
+}
+
+export function WallpaperRatings({ locale, social }: { locale: Locale; social: SocialState }) {
+  const ui = copy[locale], text = interfaceCopy[locale];
+  const { data, loading, busy } = social;
+  return <section className="wallpaper-ratings grid gap-3" aria-labelledby="ratings-title" data-wallpaper-ratings>
+    <h2 id="ratings-title">{ui.ratings}</h2><p className="text-sm leading-relaxed text-muted-foreground">{ui.ratingHint}</p>
+    {loading && !data ? <div role="status" className="grid grid-cols-4 gap-2" aria-label={ui.loading} aria-busy="true">{ratingValues.map((value) => <Skeleton key={value} className="h-14" />)}</div> : <RadioGroup value={data?.ownRating ?? ''} onValueChange={(value) => void social.rate(value)} disabled={busy || !data} aria-label={ui.ratings} className="grid grid-cols-4 gap-2">
+      {ratingValues.map((value) => <Label key={value} htmlFor={`rating-${value}`} title={ui[value]} className="rating-tile">
+        <RadioGroupItem id={`rating-${value}`} value={value} aria-label={ui[value]} aria-describedby={`rating-count-${value}`} className="absolute inset-0 size-full rounded-lg border-0 opacity-0" /><span aria-hidden="true" className="pointer-events-none text-xl leading-none">{ratingEmoji[value]}</span>{data?.ownRating === value && <Check aria-hidden="true" className="pointer-events-none absolute top-1 right-1 size-3 text-link" />}<span id={`rating-count-${value}`} className="pointer-events-none text-center text-sm text-muted-foreground tabular-nums wrap-anywhere"><span className="sr-only">{text.votes}: </span>{data?.counts[value].toLocaleString(locale) ?? '…'}</span>
+      </Label>)}
+    </RadioGroup>}
+    <SocialNotice locale={locale} social={social} target="ratings" />
+  </section>;
+}
+
+export function WallpaperComments({ locale, social }: { locale: Locale; social: SocialState }) {
+  const ui = copy[locale], text = interfaceCopy[locale];
+  const { data, loading, busy, comment, reported } = social;
+  return <section aria-labelledby="comments-title" className="wallpaper-comments grid gap-4" data-social-panel>
+    <h2 id="comments-title" className="section-title">{ui.comments}</h2>
+    <SocialNotice locale={locale} social={social} target="comments" />
+    <form className="comment-composer" onSubmit={(event) => void social.submit(event)} aria-busy={busy}>
+      <FieldGroup><Field data-disabled={busy || !data}>
+        <div className="comment-compose-row"><span className="comment-avatar" data-own="true" aria-hidden="true"><UserRound /></span><FieldLabel htmlFor="comment-text">{text.commentTitle}</FieldLabel></div>
+        <p id="comment-hint" className="text-sm leading-relaxed text-muted-foreground">{text.commentPublic}</p>
+        <Textarea id="comment-text" name="comment" value={comment} onChange={(event) => social.setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy || !data} aria-describedby="comment-hint" />
+      </Field></FieldGroup>
+      <div className="comment-compose-footer"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><Button type="submit" disabled={busy || !data}>{busy ? ui.loading : ui.commentSubmit}</Button></div>
+    </form>
+    <div aria-busy={loading}>{loading && !data ? <div role="status" aria-label={ui.loading} className="grid gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /></div> : <CommentFeed locale={locale} comments={data?.comments ?? []} ownUid={data?.ownUid ?? null} reported={reported} busy={busy} onAction={(item) => void social.action(item)} />}</div>
     <RecaptchaNotice locale={locale} />
-    <p className="min-h-6 text-sm text-link" role="status">{status}</p>
-    <Separator />
-    <section aria-labelledby="comments-title" className="grid gap-6"><h2 id="comments-title" className="text-2xl font-semibold tracking-tight">{ui.comments}</h2>
-      <Card className="gap-0 py-0 shadow-none"><form onSubmit={(event) => void submit(event)} aria-busy={busy}>
-        <CardHeader className="p-6"><CardTitle className="text-lg tracking-tight">{text.commentTitle}</CardTitle><CardDescription id="comment-hint" className="leading-relaxed">{text.commentPublic}</CardDescription></CardHeader>
-        <CardContent className="px-6 pb-4"><FieldGroup><Field data-disabled={busy}><FieldLabel htmlFor="comment-text" className="sr-only">{text.ownComment}</FieldLabel><Textarea id="comment-text" name="comment" value={comment} onChange={(event) => setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy} aria-describedby="comment-hint" className="min-h-32" /></Field></FieldGroup></CardContent>
-        <CardFooter className="flex-wrap justify-between gap-4 px-6 pb-6"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><Button type="submit" disabled={busy} className="w-full sm:w-auto">{busy ? ui.loading : ui.commentSubmit}</Button></CardFooter>
-      </form></Card>
-      <div className="grid gap-4" aria-busy={loading}>
-        {loading && !data ? <><Skeleton className="h-24" /><Skeleton className="h-24" /></> : data?.comments.length === 0 ? <p className="px-2 py-4 text-sm leading-relaxed text-muted-foreground">{ui.commentEmpty}</p> : data?.comments.map((item) => <Card key={item.id} className="gap-4 py-0 shadow-none" data-comment={item.id}>
-          <CardHeader className="items-center px-5 pt-4"><CardDescription className="flex flex-wrap items-center gap-2">{item.createdAt && <time dateTime={new Date(item.createdAt).toISOString()}>{new Date(item.createdAt).toLocaleDateString(locale)}</time>}{item.uid === data.ownUid && <Badge variant="outline">{text.ownComment}</Badge>}</CardDescription><CardAction><Button type="button" variant="ghost" size="sm" disabled={busy || reported.includes(item.id)} onClick={() => void action(item)}>{item.uid === data.ownUid ? <Trash2 data-icon="inline-start" /> : reported.includes(item.id) ? <Check data-icon="inline-start" /> : <Flag data-icon="inline-start" />}{item.uid === data.ownUid ? ui.delete : reported.includes(item.id) ? text.saved : ui.report}</Button></CardAction></CardHeader>
-          <CardContent className="px-5 pb-5"><p className="whitespace-pre-wrap text-base leading-relaxed wrap-anywhere">{item.text}</p></CardContent>
-        </Card>)}
-      </div>
-    </section>
-  </div>;
+  </section>;
 }
