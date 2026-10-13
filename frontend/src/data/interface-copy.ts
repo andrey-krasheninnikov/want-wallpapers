@@ -2,6 +2,7 @@ import type { Locale } from './catalog';
 
 export const interfaceCopy = {
   en: {
+    advertisement: 'Advertisement',
     pauseCover: 'Pause animation', playCover: 'Play animation',
     skip: 'Skip to content', language: 'Language', legal: 'Information', close: 'Close',
     catalogue: 'The catalogue', reset: 'Reset filters', retry: 'Try again', saved: 'Saved',
@@ -37,6 +38,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Nothing here yet.', notFoundText: 'This page is not in the collection.', back: 'Back to the wallpapers',
   },
   ru: {
+    advertisement: 'Реклама',
     pauseCover: 'Остановить анимацию', playCover: 'Включить анимацию',
     skip: 'Перейти к содержимому', language: 'Язык', legal: 'Информация', close: 'Закрыть',
     catalogue: 'Каталог', reset: 'Сбросить фильтры', retry: 'Попробовать ещё раз', saved: 'Сохранено',
@@ -72,6 +74,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Пока пусто.', notFoundText: 'Этой страницы нет в коллекции.', back: 'Вернуться к обоям',
   },
   'zh-cn': {
+    advertisement: '广告',
     pauseCover: '暂停动画', playCover: '播放动画',
     skip: '跳到正文', language: '语言', legal: '网站信息', close: '关闭',
     catalogue: '壁纸目录', reset: '重置筛选', retry: '重试', saved: '已保存',
@@ -107,6 +110,7 @@ export const interfaceCopy = {
     notFoundTitle: '这里暂时没有内容。', notFoundText: '这个页面不在系列中。', back: '返回壁纸',
   },
   'pt-br': {
+    advertisement: 'Publicidade',
     pauseCover: 'Pausar animação', playCover: 'Reproduzir animação',
     skip: 'Ir para o conteúdo', language: 'Idioma', legal: 'Informações', close: 'Fechar',
     catalogue: 'O catálogo', reset: 'Limpar filtros', retry: 'Tentar novamente', saved: 'Salvo',

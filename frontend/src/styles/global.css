@@ -184,3 +184,11 @@
 
 [data-cover-video][hidden], [data-cover-control][hidden] { display: none; }
 [data-cover-control][data-playing="false"] [data-cover-pause], [data-cover-control][data-playing="true"] [data-cover-play] { display: none; }
+
+.wallpaper-advertising-layout { position: relative; }
+.wallpaper-advertisement { display: none; position: absolute; top: 0; width: 160px; }
+.wallpaper-advertisement[data-side="left"] { right: calc(100% + 24px); }
+.wallpaper-advertisement[data-side="right"] { left: calc(100% + 24px); }
+@media (min-width: 1712px) {
+  .wallpaper-advertisement { display: block; }
+}
