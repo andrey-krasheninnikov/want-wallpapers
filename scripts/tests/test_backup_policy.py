@@ -30,10 +30,21 @@ class BackupPolicy(unittest.TestCase):
         policy['Statement'].reverse()
         worker.verify_backup_policy(policy)
 
+    def test_restrictive_rules_preserve_backup_privacy_and_input(self):
+        deny = {'Sid': 'PrivateObjects', 'Effect': 'Deny', 'Principal': '*',
+                'Action': 's3:*', 'Resource': 'arn:aws:s3:::want-foundation/prizmaxis/stage/*'}
+        for statements in [[PUBLIC, deny], [PUBLIC, MEDIA, deny], [PUBLIC, {**MEDIA, 'Effect': 'Deny'}]]:
+            policy = {'Statement': copy.deepcopy(statements)}
+            before = copy.deepcopy(policy)
+            worker.verify_backup_policy(policy)
+            self.assertEqual(policy, before)
+        with self.assertRaises(DeployError):
+            worker.verify_backup_policy({'Statement': [PUBLIC, MEDIA, deny, {**MEDIA, 'Sid': 'UnknownAllow'}]})
+
     def test_unreviewed_or_broadened_media_rules_are_rejected(self):
         for field, value in [('Sid', 'Unreviewed'), ('Resource', 'arn:aws:s3:::want-foundation/*'),
                              ('Resource', 'arn:aws:s3:::want-foundation/wallpapers-backups/*'),
-                             ('Action', 's3:*'), ('Principal', {'AWS': '*'}), ('Effect', 'Deny')]:
+                             ('Action', 's3:*'), ('Principal', {'AWS': '*'})]:
             with self.subTest(field=field, value=value):
                 media = {**MEDIA, field: value}
                 with self.assertRaises(DeployError):
