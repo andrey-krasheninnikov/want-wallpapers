@@ -100,6 +100,16 @@
   .ui-card-header { container-type: inline-size; container-name: card-header; @apply grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6; }
   .ui-card-footer { @apply flex items-center px-6; }
   .gallery-card { @apply h-full gap-0 overflow-hidden py-0 shadow-none transition-colors; }
+  .wallpaper-card-content { @apply flex items-start justify-between gap-4; }
+  .wallpaper-card-title { @apply text-base leading-snug font-semibold; }
+  .wallpaper-card-collection { @apply mt-2 text-sm leading-relaxed text-muted-foreground; }
+  .wallpaper-card-number { @apply pt-0.5 text-sm text-muted-foreground; }
+  .wallpaper-detail-grid { @apply grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-8; }
+  .wallpaper-detail-frame { @apply flex aspect-[4/3] max-h-[70dvh] items-center justify-center overflow-hidden rounded-xl border bg-card p-4 sm:p-6; }
+  .wallpaper-detail-variant { @apply m-0 flex h-full w-full items-center justify-center; }
+  .wallpaper-variant-trigger { @apply min-h-12 gap-2 whitespace-normal px-2 py-2 leading-snug; }
+  .wallpaper-tag-link { @apply min-h-11 px-3 py-2 text-sm; }
+
   .original-preview summary { @apply min-h-11 cursor-pointer rounded-md border px-4 py-3 text-sm text-link; }
   .original-preview img { @apply mt-3 h-auto w-full rounded-md; }
   .footer-link { @apply h-auto min-h-11 justify-start px-4 py-2 text-left whitespace-normal; }
@@ -192,3 +202,5 @@
 @media (min-width: 1712px) {
   .wallpaper-advertisement { display: block; }
 }
+
+@utility wallpaper-tag-link { &:hover { @apply bg-accent; } }

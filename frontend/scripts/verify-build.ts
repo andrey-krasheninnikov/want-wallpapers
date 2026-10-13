@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve, basename } from 'node:path';
 import { tmpdir } from 'node:os';
-import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, validateLlms, wordCount, require, type Page } from './seo-validation';
+import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, validateLlms, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks, require, type Page } from './seo-validation';
 
 const root = resolve(import.meta.dir, '../dist');
 const hashes = JSON.parse(await readFile(join(root, 'csp-hashes.json'), 'utf8')) as Record<string, string[]>;
@@ -38,8 +38,8 @@ async function scan(directory: string) {
   }
 }
 await scan(root);
-const incoming = validatePages(pages, files);
-require((incoming.get('/search/?q=city')?.size ?? 0) >= 2, 'City search needs two contextual source pages');
+validatePages(pages, files);
+validateCityLinks(pages);
 const indexed = new Set([...pages.values()].filter((page) => !page.robots.some((value) => value.includes('noindex'))).map((page) => origin + page.path));
 const sitemapPages = new Set<string>();
 const index = parseSitemap(await readFile(join(root, 'sitemap-index.xml'), 'utf8'));
@@ -59,8 +59,14 @@ const robots = await readFile(join(root, 'robots.txt'), 'utf8');
 validateRobots(robots);
 const llms = await readFile(join(root, 'llms.txt'), 'utf8');
 validateLlms(llms, indexed);
-const content = [...pages.values()].filter((page) => !page.robots.some((value) => value.includes('noindex')));
-const metrics = content.map((page) => ({ path: page.path, words: wordCount(page.text, page.lang), ratio: Math.round(Buffer.byteLength(page.text) / page.bytes * 1000) / 10, htmlBytes: page.bytes }));
+const content = [...pages.values()].filter((page) => !page.path.startsWith('/admin/'));
+const metrics = content.map((page) => {
+  validateLocalizedContent(page);
+  const metrics = pageMetrics(page);
+  validateContentMetrics(metrics);
+  return metrics;
+});
+const indexable = metrics.filter((page) => page.indexable);
 console.log(`Verified links, fragments, canonical, reciprocal hreflang, sitemap, robots, llms and CSP for ${pages.size} HTML pages.`);
-console.log(`Local text metrics: ${metrics.filter((page) => page.words < 200).length} pages below 200 segmented words; ${metrics.filter((page) => page.ratio <= 10).length} at or below 10% text/HTML. These estimates are not a production audit.`);
+console.log(`Local text metrics: ${indexable.length} indexable pages pass 200 segmented words and more than 10% text/HTML; ${metrics.length - indexable.length} noindex public pages remain in the report. These estimates are not a production audit.`);
 await Bun.write(join(tmpdir(), `${basename(resolve(root, '../..'))}-seo-metrics.json`), JSON.stringify(metrics, null, 2) + '\n');
