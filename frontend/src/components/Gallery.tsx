@@ -21,7 +21,7 @@ export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardD
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return <article className="min-w-0" data-wallpaper-card={item.id}>
     <Card className="group gallery-card">
-      <a href={item.href} className="block h-full rounded-xl">
+      <a href={item.href} className="flex h-full flex-col rounded-xl">
         <div className="media-frame bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
         <CardContent className="wallpaper-card-content p-4 sm:p-5">
           <div className="min-w-0"><Heading className="wallpaper-card-title">{item.title}</Heading><p className="wallpaper-card-collection">{item.collectionTitle}</p></div>

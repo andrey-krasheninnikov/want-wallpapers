@@ -1,4 +1,5 @@
 export function initPageMotion() {
+  let cleanup = () => {};
   const root = document.documentElement;
   const control = document.querySelector<HTMLButtonElement>('[data-background-toggle]');
   if (root.hasAttribute('data-pixel-background') && control) {
@@ -12,14 +13,17 @@ export function initPageMotion() {
       control.hidden = !allowed;
       control.textContent = paused ? control.dataset.playLabel! : control.dataset.pauseLabel!;
     };
-    control.addEventListener('click', () => {
+    const toggle = () => {
       paused = !paused;
       try { localStorage.setItem('want-background-motion', paused ? 'paused' : 'running'); } catch {}
       update();
-    });
+    };
+    control.addEventListener('click', toggle);
     document.addEventListener('visibilitychange', update);
     reduced.addEventListener('change', update);
     forced.addEventListener('change', update);
     update();
+    cleanup = () => { control.removeEventListener('click', toggle); document.removeEventListener('visibilitychange', update); reduced.removeEventListener('change', update); forced.removeEventListener('change', update); };
   }
+  return cleanup;
 }

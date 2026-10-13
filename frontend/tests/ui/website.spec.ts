@@ -183,13 +183,13 @@ test('variant selection and downloads survive a failed region lookup', async ({ 
   await expect(page.locator('[data-social-panel]')).toBeVisible();
   await page.getByRole('tab', { name: copy.ru.mobile }).click();
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${wallpaper}-mobile.webp`);
-  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpaper}-mobile.png`);
+  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-mobile.png`);
   expect(await page.locator('#detail-image').evaluate((image: HTMLImageElement) => ({ fit: getComputedStyle(image).objectFit, width: image.width, naturalWidth: image.naturalWidth }))).toMatchObject({ fit: 'contain' });
   const download = page.waitForEvent('download');
   await page.locator('#download-link').click();
   expect((await download).suggestedFilename()).toBe(`${wallpaper}-mobile.png`);
   await page.getByRole('tab', { name: copy.ru.desktop }).click();
-  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpaper}-desktop.png`);
+  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpaper}-desktop.png`);
 });
 
 test('search URLs, filters, empty state and reset', async ({ page }) => {
@@ -316,8 +316,8 @@ test('catalogue, metadata and both PNG links render with JavaScript disabled', a
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:4322/ru/wallpapers/${wallpaper}/`);
   await expect(page.locator('h1')).toHaveText('Фиолетовый горизонт');
-  await expect(page.locator(`form[action="/downloads/${wallpaper}-desktop.png"] button`)).toBeVisible();
-  await expect(page.locator(`form[action="/downloads/${wallpaper}-mobile.png"] button`)).toBeVisible();
+  await expect(page.locator(`a[download][href="/downloads/${wallpaper}-desktop.png"]`)).toBeVisible();
+  await expect(page.locator(`a[download][href="/downloads/${wallpaper}-mobile.png"]`)).toBeVisible();
   expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}')['@type']).toBe('ImageObject');
   await expect(page.locator('main noscript p')).toHaveText(interfaceCopy.ru.javascriptRequired);
   await expect(page.locator('main noscript p')).toBeVisible();
@@ -355,10 +355,10 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await page.goto(`http://127.0.0.1:4322${localPath(locale, `/wallpapers/${wallpaper}/`)}`);
     await expect(page.locator('footer a[href="mailto:wallpapers@want.foundation"]')).toBeVisible();
     for (const variant of ['desktop', 'mobile'] as const) {
-      const form = page.locator(`form[action="/downloads/${wallpaper}-${variant}.png"]`);
-      await expect(form).toHaveAttribute('method', 'get');
+      const form = page.locator(`a[download][href="/downloads/${wallpaper}-${variant}.png"]`);
+      expect(await form.getAttribute('download')).not.toBeNull();
       const name = variant === 'desktop' ? `${copy[locale].download} · ${copy[locale].desktop}` : `${copy[locale].mobile} · ${copy[locale].download}`;
-      const button = form.getByRole('button', { name, exact: true });
+      const button = page.getByRole('link', { name, exact: true });
       await expect(button).toBeVisible();
       const waiting = page.waitForEvent('download');
       await button.click();

@@ -18,11 +18,11 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) test(`catalogue
   await expect(page.locator('#wallpaper-view')).toBeFocused();
   await expect(page.locator('#wallpaper-view')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
   await page.keyboard.press('ArrowLeft');
-  await expect(page).toHaveURL(`http://127.0.0.1:4322${localPath(locale, `/wallpapers/${last.slug}/`)}?variant=mobile#wallpaper-view`);
+  await expect(page).toHaveURL(`http://127.0.0.1:4322${localPath(locale, `/wallpapers/${last.slug}/`)}?variant=mobile`);
   await expect(page.locator('[data-wallpaper-detail]')).toHaveAttribute('data-wallpaper-detail', last.id);
   await expect(page.locator('h1')).toHaveText(last.title[locale]);
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${last.slug}-mobile.webp`);
-  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${last.slug}-mobile.png`);
+  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${last.slug}-mobile.png`);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, `/wallpapers/${last.slug}/`)}`);
   await expect(page.locator('#wallpaper-view')).toBeFocused();
   await expect(page.locator('#wallpaper-view')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
@@ -33,7 +33,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) test(`catalogue
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${first.slug}-desktop.webp`);
   await page.locator('[data-wallpaper-next]').click();
   await expect(page.locator('h1')).toHaveText(wallpapers[1]!.title[locale]);
-  await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${wallpapers[1]!.slug}-desktop.png`);
+  await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/${wallpapers[1]!.slug}-desktop.png`);
   await page.goBack();
   await expect(page.locator('h1')).toHaveText(first.title[locale]);
   await expect(page.getByRole('tab', { name: copy[locale].desktop, exact: true })).toHaveAttribute('aria-selected', 'true');
@@ -98,42 +98,22 @@ test('invalid variant falls back and native slider links remain usable without J
 });
 
 
-type SliderMotion = { status: string; animations?: string[]; finished?: boolean; error?: string };
-declare global { interface Window { sliderMotion: SliderMotion } }
-
-test('native slides capture both previews before hydration and finish without errors', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(() => {
-    window.sliderMotion = { status: 'pending' };
-    window.addEventListener('pagereveal', (event) => {
-      const transition = (event as Event & { viewTransition: { ready: Promise<void>; finished: Promise<void> } | null }).viewTransition;
-      if (!transition) { window.sliderMotion = { status: 'none' }; return; }
-      transition.ready.then(() => {
-        window.sliderMotion = { status: 'ready', animations: document.getAnimations().map((animation) => (animation as CSSAnimation).animationName) };
-      }, (error) => { window.sliderMotion = { status: 'skipped', error: error.message }; });
-      void transition.finished.then(() => { window.sliderMotion.finished = true; });
-    });
-  });
-  await page.goto(`${localPath('ru', `/wallpapers/${first.slug}/`)}?variant=mobile#wallpaper-view`);
+test('slides update within the document and preserve the viewer position', async ({ page }) => {
+  await page.goto(`/ru/wallpapers/${first.slug}/?variant=mobile#wallpaper-view`);
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+  await page.evaluate(() => { document.body.dataset.documentMarker = 'unchanged'; });
+  const before = await page.locator('#wallpaper-view').boundingBox();
   for (const direction of ['previous', 'next', 'previous'] as const) {
-    const before = page.url();
+    const url = page.url();
     await page.locator(`[data-wallpaper-${direction}]`).click();
-    await page.waitForURL((url) => url.href !== before);
+    await page.waitForURL(value => value.href !== url);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
-    await page.waitForFunction(() => window.sliderMotion.status !== 'pending');
-    const motion = await page.evaluate(() => window.sliderMotion);
-    expect(motion.status, JSON.stringify(motion)).toBe('ready');
-    expect(motion.animations).toEqual(expect.arrayContaining(['want-slide-in', 'want-slide-out']));
-    await expect(page.locator('html')).toHaveAttribute('data-wallpaper-direction', direction);
-    await expect(page.locator('html')).toHaveAttribute('data-wallpaper-variant', 'mobile');
-    await page.waitForFunction(() => window.sliderMotion.finished);
+    expect(await page.evaluate(() => performance.getEntriesByType('navigation').length)).toBe(1);
+    const after = (await page.locator('#wallpaper-view').boundingBox())!;
+    expect(after.y).toBeCloseTo(before!.y, 0); expect(after.height).toBeCloseTo(before!.height, 0);
+    await expect(page.locator('#detail-image')).toHaveAttribute('src', /-mobile.webp$/);
   }
-  expect(errors).toEqual([]);
 });
-
 
 test('page arrows work outside the viewer and preserve editing and open dialogs', async ({ page }) => {
   await page.goto(`/wallpapers/${first.slug}/`);

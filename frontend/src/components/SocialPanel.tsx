@@ -114,6 +114,5 @@ export function WallpaperComments({ locale, social }: { locale: Locale; social: 
     </form>
     <div aria-busy={loading}>{loading && !data ? <div role="status" aria-label={ui.loading} className="grid gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /></div> : <CommentFeed locale={locale} comments={data?.comments ?? []} ownUid={data?.ownUid ?? null} reported={reported} busy={busy} onAction={(item) => void social.action(item)} />}</div>
     <RecaptchaNotice locale={locale} />
-    <noscript><p className="text-sm leading-relaxed text-muted-foreground">{text.javascriptRequired}</p></noscript>
   </section>;
 }

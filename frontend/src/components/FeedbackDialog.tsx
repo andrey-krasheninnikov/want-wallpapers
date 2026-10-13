@@ -7,8 +7,7 @@ import { interfaceCopy } from '@/data/interface-copy';
 import type { Locale } from '@/data/catalog';
 
 export function mountFeedback(locale: Locale) {
-  const host = document.createElement('div');
-  document.body.append(host);
+  const host = document.getElementById('feedback-root') ?? document.body.appendChild(document.createElement('div'));
   let show: ((value: boolean) => void) | undefined;
   let trigger: HTMLElement | null = null;
   function FeedbackDialog() {

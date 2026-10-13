@@ -1504,3 +1504,48 @@ async fn publication_dates_survive_edits_imports_and_archive(pool: PgPool) {
     .unwrap();
     assert!(legacy.starts_with("2026-10-05 04:04:04"));
 }
+
+#[sqlx::test(migrations = "./migrations")]
+async fn public_social_returns_only_latest_ten_visible_comments(pool: PgPool) {
+    let visitor = Uuid::new_v4();
+    sqlx::query("INSERT INTO visitors(id) VALUES($1)")
+        .bind(visitor)
+        .execute(&pool)
+        .await
+        .unwrap();
+    for index in 0..13 {
+        sqlx::query("INSERT INTO comments(id,wallpaper_id,visitor_id,text,created_at,hidden) VALUES($1,'contours-of-silence-1',$2,$3,'2026-10-01'::timestamptz + $4::integer * interval '1 minute',$5)")
+            .bind(Uuid::new_v4())
+            .bind(visitor)
+            .bind(format!("Comment {index}"))
+            .bind(index)
+            .bind(index == 12)
+            .execute(&pool)
+            .await
+            .unwrap();
+    }
+    let app = router(state(pool.clone()));
+    let (status, data, _) = request(
+        &app,
+        "GET",
+        "/api/v1/wallpapers/contours-of-silence-1/social",
+        None,
+        None,
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let comments = data["comments"].as_array().unwrap();
+    assert_eq!(comments.len(), 10);
+    for (index, comment) in comments.iter().enumerate() {
+        assert_eq!(comment["text"], format!("Comment {}", 11 - index));
+    }
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT count(*) FROM comments")
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+        13
+    );
+}

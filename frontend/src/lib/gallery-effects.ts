@@ -2,45 +2,22 @@ export function initGalleryEffects() {
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const pointer = matchMedia('(hover: hover) and (pointer: fine)');
   const colors = matchMedia('(forced-colors: active)');
-  let active: HTMLElement | null = null;
-  let frame = 0;
   let lastSpark = 0;
   let sparks = 0;
   let burst = false;
-  const reset = () => {
-    if (frame) cancelAnimationFrame(frame);
-    frame = 0;
-    for (const property of ['--tilt-x', '--tilt-y', '--shift-x', '--shift-y', '--image-scale']) active?.style.removeProperty(property);
-    active = null;
-  };
   document.addEventListener('pointermove', (event) => {
-    if (motion.matches || !pointer.matches || colors.matches || event.buttons) { reset(); return; }
+    if (motion.matches || !pointer.matches || colors.matches || event.buttons) return;
     const target = event.target instanceof Element ? event.target : null;
-    const card = target?.closest<HTMLElement>('.gallery-card') ?? null;
-    if (active !== card) { reset(); active = card; }
-    if (card) {
-      if (frame) cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const rect = card.getBoundingClientRect();
-        const x = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
-        const y = Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1));
-        card.style.setProperty('--tilt-x', `${-y * 1.5}deg`); card.style.setProperty('--tilt-y', `${x * 1.5}deg`);
-        card.style.setProperty('--shift-x', `${x * 3}px`); card.style.setProperty('--shift-y', `${y * 3}px`);
-        card.style.setProperty('--image-scale', '1.015'); frame = 0;
-      });
-    }
-    if (!target?.closest('[data-long-copy]') || window.getSelection()?.toString() || sparks >= 6 || performance.now() - lastSpark < 90) return;
+    const text = target?.closest('p, h1, h2, h3, h4, h5, h6, a, button, label, summary, span, strong, small, li, dt, dd, time, output, figcaption');
+    if (!text?.textContent?.trim() || target?.closest('input, textarea, [contenteditable], img, svg, model-viewer') || window.getSelection()?.toString() || sparks >= 8 || performance.now() - lastSpark < 55) return;
     lastSpark = performance.now(); sparks++;
     const spark = document.createElement('span'); spark.className = 'wand-spark'; spark.setAttribute('aria-hidden', 'true');
-    spark.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20 15 9m-1-3 4 4M18 2v4m-2-2h4M6 5v4M4 7h4"/></svg>';
-    spark.style.left = `${event.clientX + 12}px`; spark.style.top = `${event.clientY - 24}px`;
+    spark.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20 15 9m-1-3 4 4M18 2v4m-2-2h4M6 5v4M4 7h4"/></svg>';
+    spark.style.left = `${event.clientX + 18}px`; spark.style.top = `${event.clientY - 32}px`;
     document.body.append(spark);
-    const animation = spark.animate([{ opacity: .8, transform: 'translateY(0) scale(.8)' }, { opacity: 0, transform: 'translateY(-8px) scale(1)' }], { duration: 350 });
+    const animation = spark.animate([{ opacity: .95, transform: 'translateY(0) rotate(-8deg) scale(.9)' }, { opacity: 1, transform: 'translateY(-7px) rotate(4deg) scale(1.15)', offset: .3 }, { opacity: 0, transform: 'translateY(-20px) rotate(12deg) scale(1.25)' }], { duration: 650 });
     void animation.finished.catch(() => {}).finally(() => { spark.remove(); sparks--; });
   }, { passive: true });
-  document.addEventListener('pointerout', (event) => { if (!event.relatedTarget) reset(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
-  motion.addEventListener('change', reset);
   window.addEventListener('want:download', () => {
     if (motion.matches || !pointer.matches || colors.matches || burst) return;
     const button = document.getElementById('download-link'); if (!button) return;

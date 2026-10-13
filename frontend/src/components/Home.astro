@@ -16,7 +16,7 @@ const ui = copy[locale];
 const text = interfaceCopy[locale];
 const hero = wallpapers.find((item) => item.slug === 'contours-of-silence-11')!;
 const image = await previewData(hero, 'desktop');
-const mobileImage = await previewData(hero, 'mobile');
+const sceneItems = await Promise.all(wallpapers.map(async (item) => ({ id: item.id, desktop: await previewData(item, 'desktop'), mobile: await previewData(item, 'mobile'), title: item.title[locale], description: item.description[locale], href: localPath(locale, `/wallpapers/${item.slug}/`) })));
 const highlights = [wallpapers[0], wallpapers[4], wallpapers[15], wallpapers[18], wallpapers[20], wallpapers[22]].filter(Boolean);
 const collectionCards = await Promise.all(collections.map((item) => collectionCard(item, locale)));
 const wallpaperCards = await Promise.all(highlights.map(async (item, index) => {
@@ -33,7 +33,7 @@ const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Wa
       <div class="hero-action"><ActionLink href="#collections" label={ui.explore} /></div>
       <div class="hero-meta"><span>{`${collections.length} ${ui.collections.toLocaleLowerCase(locale)}`}</span><span>{`${wallpapers.length} ${ui.wallpapers}`}</span><span>{`${ui.desktop} + ${ui.mobile}`}</span></div>
     </div>
-    <DeviceScene locale={locale} desktop={image} mobile={mobileImage} title={hero.title[locale]} description={hero.description[locale]} href={localPath(locale, `/wallpapers/${hero.slug}/`)} client:load />
+    <DeviceScene locale={locale} items={sceneItems} initialId={hero.id} client:load />
   </section>
   <section class="shell section-space" id="collections"><div class="section-heading"><div><h2 class="section-title">{ui.allCollections}</h2><p class="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">{ui.allCollectionsText}</p></div><ActionLink href={localPath(locale, '/collections/')} label={ui.explore} variant="ghost" /></div><CollectionCarousel items={collectionCards} locale={locale} client:load /></section>
   <section class="shell section-space"><div class="section-heading"><h2 class="section-title">{ui.latest}</h2><ActionLink href={localPath(locale, '/search/')} label={ui.viewAll} variant="ghost" /></div><div class="home-mosaic">{wallpaperCards.map((item) => <WallpaperCard item={item} />)}</div></section>

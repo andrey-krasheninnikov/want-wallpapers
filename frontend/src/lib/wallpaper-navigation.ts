@@ -17,3 +17,34 @@ export function selectedWallpaperVariant(search: string): 'desktop' | 'mobile' {
 export function wallpaperSlideHref(href: string, variant: 'desktop' | 'mobile') {
   return `${href}?variant=${variant}#wallpaper-view`;
 }
+
+
+export function initWallpaperNavigation() {
+  let viewportTop: number | undefined;
+  let focus: 'previous' | 'next' | undefined;
+  document.addEventListener('astro:before-preparation', (event) => {
+    viewportTop = event.info?.wallpaperSlide ? document.getElementById('wallpaper-view')?.getBoundingClientRect().top : undefined;
+    focus = document.activeElement?.hasAttribute('data-wallpaper-next') ? 'next' : document.activeElement?.hasAttribute('data-wallpaper-previous') ? 'previous' : undefined;
+    if (!event.info?.wallpaperSlide) return;
+    const load = event.loader;
+    event.loader = async () => {
+      await load();
+      if (event.signal.aborted || event.defaultPrevented) return;
+      const variant = selectedWallpaperVariant(event.to.search);
+      const src = event.newDocument.querySelector<HTMLImageElement>(`[data-wallpaper-image="${variant}"]`)?.getAttribute('src');
+      if (src) { const image = new Image(); image.src = src; await image.decode().catch(() => {}); }
+    };
+  });
+  document.addEventListener('astro:before-swap', (event) => {
+    event.newDocument.documentElement.dataset.wallpaperVariant = selectedWallpaperVariant(event.to.search);
+    event.newDocument.documentElement.dataset.backgroundMotion = document.documentElement.dataset.backgroundMotion;
+  });
+  document.addEventListener('astro:after-swap', () => {
+    const viewer = document.getElementById('wallpaper-view');
+    if (viewportTop !== undefined && viewer) {
+      scrollTo({ top: scrollY + viewer.getBoundingClientRect().top - viewportTop, left: scrollX, behavior: 'instant' });
+      (focus ? document.querySelector<HTMLElement>(`[data-wallpaper-${focus}]`) : viewer)?.focus({ preventScroll: true });
+    }
+    viewportTop = undefined;
+  });
+}

@@ -25,7 +25,7 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       </a>
       <NavigationMenu className="hidden lg:flex" aria-label={ui.menu}>
         <NavigationMenuList className="gap-1 rounded-pill bg-secondary p-1">{links.map((link) => <NavigationMenuItem key={link.href}>
-          <NavigationMenuLink asChild active={link.active} className="min-h-11 justify-center px-4 text-sm"><a href={localPath(locale, link.href)} aria-current={link.active ? 'page' : undefined}>{link.title}</a></NavigationMenuLink>
+          <NavigationMenuLink asChild active={link.active} className="min-h-11 justify-center px-4 text-sm"><a href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined} aria-current={link.active ? 'page' : undefined}>{link.title}</a></NavigationMenuLink>
         </NavigationMenuItem>)}</NavigationMenuList>
       </NavigationMenu>
       <div className="flex shrink-0 items-center gap-2">
@@ -39,11 +39,11 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
           <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" data-menu-trigger aria-label={ui.menu}><Menu /></Button></SheetTrigger>
           <SheetContent closeLabel={text.close} className="w-full max-w-sm bg-card">
             <SheetHeader className="px-6 pt-8"><SheetTitle>{ui.menu}</SheetTitle><SheetDescription>Want Wallpapers</SheetDescription></SheetHeader>
-            <nav className="grid gap-2 px-4" aria-label={ui.menu}>{links.map((link) => <Button key={link.href} asChild variant={link.active ? 'secondary' : 'ghost'} className="justify-start"><a href={localPath(locale, link.href)} aria-current={link.active ? 'page' : undefined} onClick={() => setOpen(false)}>{link.title}</a></Button>)}</nav>
+            <nav className="grid gap-2 px-4" aria-label={ui.menu}>{links.map((link) => <Button key={link.href} asChild variant={link.active ? 'secondary' : 'ghost'} className="justify-start"><a href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined} aria-current={link.active ? 'page' : undefined} onClick={() => setOpen(false)}>{link.title}</a></Button>)}</nav>
           </SheetContent>
         </Sheet>
       </div>
     </div>
-    <noscript><nav aria-label={ui.menu} className="shell flex flex-wrap gap-x-6 pb-4 lg:hidden">{links.map((link) => <a key={link.href} className="py-2 text-sm text-link" href={localPath(locale, link.href)}>{link.title}</a>)}</nav><div className="shell flex flex-wrap gap-4 pb-4">{Object.entries(languageLabels).map(([value, title]) => <a key={value} href={localPath(value as Locale, path)} lang={value}><span aria-hidden="true">{languageFlags[value as Locale]}</span> {title}</a>)}</div></noscript>
+    <noscript><nav aria-label={ui.menu} className="shell flex flex-wrap gap-x-6 pb-4 lg:hidden">{links.map((link) => <a key={link.href} className="py-2 text-sm text-link" href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined}>{link.title}</a>)}</nav><div className="shell flex flex-wrap gap-4 pb-4">{Object.entries(languageLabels).map(([value, title]) => <a key={value} href={localPath(value as Locale, path)} lang={value}><span aria-hidden="true">{languageFlags[value as Locale]}</span> {title}</a>)}</div></noscript>
   </header>;
 }

@@ -33,27 +33,19 @@ for (const locale of locales) test(`wallpaper composition, portrait fit and lang
       await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/contours-of-silence-1-${variant}.webp`);
       const viewer = page.locator('#wallpaper-view');
       await expect(viewer).toHaveCSS('background-color', 'rgb(16, 16, 16)');
-      const ratio = await page.locator('#detail-image').evaluate(image => Number(image.getAttribute('width')) / Number(image.getAttribute('height')));
-      await expect.poll(() => viewer.evaluate(element => { const box = element.getBoundingClientRect(); return box.width / box.height; })).toBeCloseTo(ratio, 2);
       expect(await page.locator('.wallpaper-dock [role=tablist]').evaluate(list => {
         const bounds = list.getBoundingClientRect();
         return [...list.querySelectorAll('[role=tab]')].every(tab => { const box = tab.getBoundingClientRect(); return box.top >= bounds.top && box.bottom <= bounds.bottom; });
       })).toBe(true);
       const positions = await page.evaluate(() => {
         const box = (selector: string) => { const b = document.querySelector(selector)!.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height }; };
-        return { viewer: box('#wallpaper-view'), stage: box('.wallpaper-stage'), controls: box('.wallpaper-dock'), downloads: box('#download-form'), ratings: box('[data-wallpaper-ratings]'), comments: box('[data-social-panel]') };
+        return { viewer: box('#wallpaper-view'), stage: box('.wallpaper-stage'), controls: box('.wallpaper-dock'), downloads: box('#download-link'), ratings: box('[data-wallpaper-ratings]'), comments: box('[data-social-panel]') };
       });
       expect(positions.ratings.top).toBeGreaterThanOrEqual(positions.downloads.bottom);
       expect(positions.comments.top).toBeGreaterThanOrEqual(positions.stage.bottom);
-      expect(await page.locator('[data-editorial]').evaluate(element => element.getBoundingClientRect().bottom)).toBeLessThanOrEqual(positions.comments.top);
-      if (width < 768 || variant === 'mobile') expect(positions.controls.top).toBeGreaterThanOrEqual(positions.viewer.bottom);
-      else expect(positions.controls.top).toBeCloseTo(positions.viewer.bottom - 32, 0);
-      if (variant === 'mobile') {
-        expect(positions.viewer.width).toBeLessThanOrEqual(360);
-        expect(positions.viewer.height).toBeLessThanOrEqual(900 * .65 + 1);
-        expect(positions.viewer.height).toBeGreaterThan(positions.viewer.width);
-        expect(positions.viewer.left - positions.stage.left).toBeCloseTo((positions.stage.width - positions.viewer.width) / 2, 0);
-      }
+      expect(await page.locator('[data-editorial]').evaluate(element => element.getBoundingClientRect().top)).toBeGreaterThanOrEqual(positions.comments.bottom);
+      if (width < 1024) expect(positions.controls.top).toBeGreaterThanOrEqual(positions.stage.bottom);
+      else expect(positions.controls.left).toBeGreaterThan(positions.viewer.right);
       await expect(page.locator('#detail-image')).toHaveCSS('object-fit', 'contain');
       await expect(page.locator('.rating-tile').first()).toHaveCSS('min-height', '56px');
       await expect(page.locator('[data-editorial] .long-copy')).toHaveCSS('column-count', '3');

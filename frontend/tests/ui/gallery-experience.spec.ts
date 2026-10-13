@@ -79,10 +79,11 @@ test('search exposes newest works before filters and preserves their order', asy
   expect(filtered.map(id => ids.indexOf(id!))).toEqual([...filtered.map(id => ids.indexOf(id!))].sort((a, b) => a - b));
 });
 
-test('parallax, wand and confetti respect reduced motion and preserve downloads', async ({ page }) => {
+test('glow, wand and confetti respect reduced motion and preserve downloads', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' }); await page.goto('/collections/contours-of-silence/');
   const card = page.locator('.gallery-card').first(); await card.hover({ position: { x: 40, y: 40 } });
-  await expect.poll(() => card.evaluate(el => el.getAttribute('style'))).toContain('--tilt');
+  await expect(card).toHaveCSS('transform', 'none');
+  await expect.poll(() => card.evaluate(el => getComputedStyle(el, '::after').opacity)).toBe('1');
   await page.locator('[data-long-copy] p').first().hover();
   await expect(page.locator('.wand-spark').first()).toBeVisible();
   await page.emulateMedia({ reducedMotion: 'reduce' }); await card.hover();

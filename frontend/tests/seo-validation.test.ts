@@ -316,3 +316,13 @@ test('city search needs distinct contextual source pages, excluding navigation a
   pages.set(second.path, second);
   expect(() => validateCityLinks(pages)).not.toThrow();
 });
+
+
+test('same-origin PNG download anchors retain download semantics', async () => {
+  const files = new Set(['downloads/picture.png']);
+  const pages = await localizedPages('<a href="/downloads/picture.png" download="picture.png">Download PNG</a>');
+  expect(pages.get('/')!.references).toContainEqual({ tag: 'a', url: '/downloads/picture.png', download: true });
+  expect(() => validatePages(pages, files)).not.toThrow();
+  const external = await localizedPages('<a href="https://example.com/picture.png" download>Download PNG</a>');
+  expect(() => validatePages(external, files)).toThrow(/PNG formatted as a page link/);
+});

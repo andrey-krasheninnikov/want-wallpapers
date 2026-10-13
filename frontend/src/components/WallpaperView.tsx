@@ -41,15 +41,11 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     url.searchParams.set('variant', value);
     window.history.replaceState(window.history.state, '', url);
   }
-  function direction(value: 'previous' | 'next') {
-    document.documentElement.dataset.wallpaperDirection = value;
-    try { window.sessionStorage.setItem('want-wallpaper-direction', value); } catch {}
-  }
   function navigate(value: 'previous' | 'next') {
     const item = navigation[value];
     if (!item) return;
-    direction(value);
-    window.location.assign(wallpaperSlideHref(item.href, variant));
+    const href = wallpaperSlideHref(item.href, variant);
+    void import('astro:transitions/client').then(({ navigate }) => navigate(href.split('#')[0], { info: { wallpaperSlide: true } }));
   }
   useEffect(() => {
     function keydown(event: KeyboardEvent) {
@@ -57,7 +53,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
       if (event.defaultPrevented || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       if (document.querySelector('[role="dialog"][data-state="open"]') || window.getSelection()?.toString()) return;
-      if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="tab"], [role="radio"], [role="slider"], [role="combobox"], [role="listbox"], [role="menu"]')) return;
+      if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="tab"], [role="radio"], [role="slider"], [role="combobox"], [role="listbox"], [role="menu"], [data-comment-carousel]')) return;
       event.preventDefault(); navigate(event.key === 'ArrowLeft' ? 'previous' : 'next');
     }
     window.addEventListener('keydown', keydown);
@@ -65,7 +61,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
   }, [variant, navigation]);
   const image = variants[variant];
   return <Tabs value={variant} onValueChange={changeVariant} className="block"><div className="wallpaper-detail-grid" data-wallpaper-detail={id}>
-    <div className="wallpaper-stage" style={{ "--desktop-ratio": variants.desktop.width / variants.desktop.height, "--mobile-ratio": variants.mobile.width / variants.mobile.height } as React.CSSProperties}>
+    <div className="wallpaper-stage">
       <div id="wallpaper-view" className="wallpaper-preview wallpaper-detail-frame" role="region" tabIndex={0} aria-label={text.gallery}
         onPointerDown={(event) => {
           if (event.button !== 0 || !event.isPrimary) return;
@@ -79,33 +75,34 @@ export default function WallpaperView({ locale, id, description, variants, tags,
           if (Math.abs(x) < 48 || Math.abs(x) < Math.abs(y) * 1.5) return;
           navigate(x < 0 ? 'next' : 'previous');
         }}>
-        {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
+        {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img className="wallpaper-backdrop" src={variants[value].src} alt="" aria-hidden="true" draggable={false} /><img className="wallpaper-image" id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
       </div>
-      <div className="wallpaper-dock glass-surface">
+      <nav className="wallpaper-nav" aria-label={text.gallery}>
+        {navigation.previous && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.previous.href, variant)} data-wallpaper-previous aria-label={`${text.previous}: ${navigation.previous.title}`} onClick={(event) => { if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate('previous'); } }}><ArrowLeft aria-hidden="true" /></a></Button>}
+        <span className="wallpaper-position" aria-live="polite">{navigation.position.toLocaleString(locale)} / {navigation.total.toLocaleString(locale)}</span>
+        {navigation.next && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.next.href, variant)} data-wallpaper-next aria-label={`${text.next}: ${navigation.next.title}`} onClick={(event) => { if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate('next'); } }}><ArrowRight aria-hidden="true" /></a></Button>}
+      </nav>
+    </div>
+    <aside className="wallpaper-sidebar glass-surface">
+      <div className="wallpaper-dock">
         <div className="wallpaper-dock-controls">
           <TabsList className="grid h-auto! w-full grid-cols-2 gap-1 bg-background p-1">
             <TabsTrigger value="desktop" className="wallpaper-variant-trigger"><Monitor aria-hidden="true" />{ui.desktop}</TabsTrigger>
             <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone aria-hidden="true" />{ui.mobile}</TabsTrigger>
           </TabsList>
           <div className="grid gap-3">
-            <form id="download-form" method="get" action={image.download} onSubmit={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Button id="download-link" type="submit" size="lg" className="w-full"><Download data-icon="inline-start" aria-hidden="true" />{ui.download} · {ui[variant]}</Button></form>
-            <noscript><form method="get" action={variants.mobile.download}><Button type="submit" variant="outline" className="w-full">{ui.mobile} · {ui.download}</Button></form></noscript>
+            <Button asChild size="lg" className="w-full"><a id="download-link" href={image.download} download={image.download.split('/').at(-1)} onClick={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Download data-icon="inline-start" aria-hidden="true" />{ui.download} · {ui[variant]}</a></Button>
           </div>
         </div>
         <WallpaperRatings locale={locale} social={social} />
       </div>
-      <nav className="wallpaper-nav" aria-label={text.gallery}>
-        {navigation.previous && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.previous.href, variant)} data-wallpaper-previous aria-label={`${text.previous}: ${navigation.previous.title}`} onClick={() => direction('previous')}><ArrowLeft aria-hidden="true" /></a></Button>}
-        <span className="wallpaper-position" aria-live="polite">{navigation.position.toLocaleString(locale)} / {navigation.total.toLocaleString(locale)}</span>
-        {navigation.next && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.next.href, variant)} data-wallpaper-next aria-label={`${text.next}: ${navigation.next.title}`} onClick={() => direction('next')}><ArrowRight aria-hidden="true" /></a></Button>}
-      </nav>
       <div className="wallpaper-caption">
         <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
         <p className="text-sm leading-relaxed text-muted-foreground">{ui.formatHint}. <a className="text-link underline" href={localPath(locale, '/license/')}>{ui.license}</a></p>
         <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
       </div>
-    </div>
-    {children}
+    </aside>
     <WallpaperComments locale={locale} social={social} />
+    {children}
   </div></Tabs>;
 }

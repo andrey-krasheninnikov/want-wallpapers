@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import '@fontsource-variable/manrope';
 import '@fontsource-variable/onest';
 import '../styles/global.css';
@@ -25,20 +26,11 @@ const analyticsAvailable = isAnalyticsConfigured();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#141414" />
+    {path.startsWith('/wallpapers/') && <ClientRouter fallback="swap" />}
     <style is:inline>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>
     {path.startsWith('/wallpapers/') && <link rel="expect" href="#wallpaper-view" blocking="render" />}
-    {path.startsWith('/wallpapers/') && <script is:inline>
+    {path.startsWith('/wallpapers/') && <script is:inline data-astro-rerun>
       document.documentElement.dataset.wallpaperVariant = new URLSearchParams(location.search).get('variant') === 'mobile' ? 'mobile' : 'desktop';
-      function revealWallpaperDirection() {
-        try {
-          const direction = sessionStorage.getItem('want-wallpaper-direction');
-          if (direction) document.documentElement.dataset.wallpaperDirection = direction === 'previous' ? 'previous' : 'next';
-          else if (!document.documentElement.dataset.wallpaperDirection) document.documentElement.dataset.wallpaperDirection = 'next';
-          sessionStorage.removeItem('want-wallpaper-direction');
-        } catch {}
-      }
-      revealWallpaperDirection();
-      window.addEventListener('pagereveal', revealWallpaperDirection);
     </script>}
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content={path === "/search/" ? "noindex, follow" : "noindex"} />}
@@ -61,20 +53,31 @@ const analyticsAvailable = isAnalyticsConfigured();
   </head>
   <body data-locale={locale}>
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
-    <Header locale={locale} path={path} logo={logoUrl} client:load />
+    <Header locale={locale} path={path} logo={logoUrl} client:load transition:persist="header" />
     <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
     <Fragment set:html={"<!--email_off-->"} /><Footer locale={locale} logo={logoUrl} /><Fragment set:html={"<!--/email_off-->"} />
+    <div id="feedback-root" transition:persist="feedback-root"></div>
     <script>
       import { initCollectionCovers } from '../lib/collection-cover-player';
       import { initPageMotion } from '../lib/page-motion';
-      initCollectionCovers();
-      initPageMotion();
+      let cleanup = () => {};
+      function initializePage() {
+        cleanup();
+        const motion = initPageMotion();
+        const covers = initCollectionCovers();
+        cleanup = () => { motion(); covers(); };
+      }
+      document.addEventListener('astro:before-swap', () => cleanup());
+      document.addEventListener('astro:page-load', initializePage);
+      initializePage();
       import { initFeedbackDialog } from '../lib/feedback-dialog';
+      import { initWallpaperNavigation } from '../lib/wallpaper-navigation';
+      initWallpaperNavigation();
       import { initGalleryEffects } from '../lib/gallery-effects';
       const locale = document.body.dataset.locale as import('../data/catalog').Locale;
       initFeedbackDialog(locale);
       initGalleryEffects();
     </script>
-    <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
+    <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load transition:persist="cookies" />
   </body>
 </html>
