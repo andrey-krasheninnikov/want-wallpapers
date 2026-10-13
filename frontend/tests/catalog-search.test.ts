@@ -62,3 +62,18 @@ test('migrated source PNG names preserve local download and preview URLs', () =>
     }
   }
 });
+
+
+test('publication order handles late additions, ties and missing history without mutating the catalogue', async () => {
+  const { newestWallpapers } = await import('../src/lib/catalog-order');
+  const old = { ...wallpapers[0]!, id: 'old' };
+  const late = { ...old, id: 'late', number: 16 };
+  const recent = { ...wallpapers.at(-1)!, id: 'recent' };
+  const unknown = { ...recent, id: 'unknown' };
+  const items = [old, late, recent, unknown];
+  const dates = { old: '2026-10-02T21:44:58Z', late: '2026-10-13T12:00:00Z', recent: '2026-10-05T04:04:04Z' };
+  expect(newestWallpapers(items, dates).map(item => item.id)).toEqual(['late', 'recent', 'old', 'unknown']);
+  expect(items.map(item => item.id)).toEqual(['old', 'late', 'recent', 'unknown']);
+  expect(newestWallpapers([old, late], { old: dates.old, late: dates.old }).map(item => item.id)).toEqual(['late', 'old']);
+  expect(newestWallpapers([old, unknown], {}).map(item => item.id)).toEqual(['unknown', 'old']);
+});

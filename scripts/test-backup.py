@@ -32,7 +32,7 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
     try:
         import time
         for attempt in range(60):
-            ready = subprocess.run(['docker', 'exec', name, 'pg_isready', '-U', 'postgres'],
+            ready = subprocess.run(['docker', 'exec', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'wallpapers_restore', '-Atc', 'SELECT 1'],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
             if ready.returncode == 0:
                 break
@@ -57,8 +57,7 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
         require(not cipher.read_bytes().startswith(b'PGDMP'), 'backup-not-encrypted')
         restored = worker.restore(cipher, identity)
         require(restored == expected, 'restored-metadata-mismatch')
-        require(len(restored['history']) == 2 and restored['history'][0]['version'] == 202610040001
-                and restored['history'][1]['version'] == 202610040002, 'restored-migration-history-mismatch')
+        require([entry['version'] for entry in restored['history']] == [int(path.name.split('_')[0]) for path in migrations], 'restored-migration-history-mismatch')
         run(['docker', 'exec', '--interactive', name, 'psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1',
              '-U', 'postgres', '-d', 'wallpapers_restore'],
             input='DROP INDEX public.fingerprint_context_order_idx;\n'

@@ -68,7 +68,7 @@ export const copy = {
     privacy: 'Конфиденциальность', terms: 'Условия', cookies: 'Cookie', license: 'Лицензия', contact: 'Контакты',
     cookieSettings: 'Настройки cookie', cookieTitle: 'Ваш экран, ваш выбор',
     cookieText: 'Аналитика и реклама включены по умолчанию вне ЕЭЗ. В ЕЭЗ и при неизвестной стране ждём вашего выбора.',
-    essentialOnly: 'Только необходимые', acceptAll: 'разрешить все', analyticsLabel: 'Аналитика', advertisingLabel: 'Реклама',
+    essentialOnly: 'Только необходимые', acceptAll: 'Разрешить все', analyticsLabel: 'Аналитика', advertisingLabel: 'Реклама',
     cookieSaved: 'Настройки cookie сохранены.',
     serviceError: 'Не удалось подключиться. Попробуйте ещё раз.', loading: 'Загрузка…',
     owner: 'Andrey Krasheninnikov',
@@ -150,6 +150,8 @@ export const copy = {
 export const ui = (locale: Locale) => copy[locale];
 export const localePrefix = (locale: Locale) => locale === 'en' ? '' : `/${locale}`;
 export const localPath = (locale: Locale, path = '/') => `${localePrefix(locale)}${path === '/' ? '/' : path}`;
+export const languageFlags: Record<Locale, string> = { en: '🇬🇧', ru: '🇷🇺', 'zh-cn': '🇨🇳', 'pt-br': '🇧🇷' };
+
 export const languageLabels: Record<Locale, string> = {
   en: 'English', ru: 'Русский', 'zh-cn': '简体中文', 'pt-br': 'Português',
 };

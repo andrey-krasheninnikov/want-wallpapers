@@ -11,7 +11,7 @@ function attributeValue(element: { getAttribute(name: string): string | null }, 
 
 export const origin = 'https://wallpapers.want.foundation';
 export function require(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; contextualLinks: string[]; references: { url: string; tag: string; method?: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
+export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; contextualLinks: string[]; references: { url: string; tag: string; method?: string; download?: boolean }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
 
 export async function parsePage(html: string, path: string): Promise<Page> {
   const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), contextualLinks: [], references: [], scripts: [], text: '', mainText: '', bytes: Buffer.byteLength(html) };
@@ -32,6 +32,7 @@ export async function parsePage(html: string, path: string): Promise<Page> {
       const attribute = element.tagName === 'form' ? 'action' : ['img', 'script'].includes(element.tagName) ? 'src' : 'href';
       const reference: Page['references'][number] = { url: attributeValue(element, attribute) ?? '', tag: element.tagName };
       if (element.tagName === 'form' && element.hasAttribute('method')) reference.method = attributeValue(element, 'method') ?? '';
+      if (element.tagName === 'a' && element.hasAttribute('download')) reference.download = true;
       page.references.push(reference);
     } })
     .on('script', { element(element) {
@@ -132,7 +133,7 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     for (const reference of page.references) {
       const png = decodeURIComponent(new URL(reference.url, origin + page.path).pathname).toLowerCase().endsWith('.png');
       if (png) {
-        require(reference.tag !== 'a', `${page.path}: PNG formatted as a page link`);
+        require(reference.tag !== 'a' || (reference.download && new URL(reference.url, origin + page.path).origin === origin), `${page.path}: PNG formatted as a page link`);
         if (reference.tag === 'form') require(!['post', 'dialog'].includes(reference.method?.toLowerCase() ?? 'get'), `${page.path}: PNG download must use GET`);
       }
       const target = internal(reference.url, page.path);

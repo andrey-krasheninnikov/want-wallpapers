@@ -59,7 +59,7 @@ for (const locale of locales) {
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
-      if (locale === 'ru') await page.screenshot({ path: testInfo.outputPath(`advertising-${width}.png`), fullPage: true });
+      if (locale === 'ru') await page.screenshot({ path: testInfo.outputPath(`advertising-${width}.png`) });
     }
     expect(await page.evaluate(() => window.advertisingFixture.calls)).toEqual(['yandex:left', 'yandex:right']);
     await page.setViewportSize({ width: 1440, height: 900 });

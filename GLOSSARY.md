@@ -12,6 +12,7 @@ One catalogue contains collections. Each collection contains wallpapers.
 - **Feedback**: a private message for the site owner. A closed message is deleted one year after closure by scheduled cleanup.
 
 - **Archive**: hides a collection or wallpaper from the next public catalogue export while keeping its identity and social data.
+- **Catalogue publication date**: immutable UTC metadata for a wallpaper becoming part of the public catalogue. New records use the first public API insertion time; known historical records use their first public catalogue release. Static website pages update after snapshot export and build.
 - **Snapshot**: validated catalogue JSON used to build public pages and search.
 - **Administrator**: the single account protected by password and TOTP; its session is separate from anonymous visitors.
 

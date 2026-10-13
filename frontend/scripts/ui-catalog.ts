@@ -33,7 +33,7 @@ try {
           assert(!saved.archived);
           assert.deepStrictEqual(saved.data, wallpaper, 'Initial UI wallpaper differs from the build snapshot.');
         } else {
-          const inserted = await transaction<{ data: unknown }[]>`INSERT INTO wallpapers(id,collection_id,number,data) VALUES(${wallpaper.id},${wallpaper.collectionId},${wallpaper.number},${wallpaper}::jsonb) RETURNING data`;
+          const inserted = await transaction<{ data: unknown }[]>`INSERT INTO wallpapers(id,collection_id,number,data,published_at) VALUES(${wallpaper.id},${wallpaper.collectionId},${wallpaper.number},${wallpaper}::jsonb,COALESCE(initial_wallpaper_publication(${wallpaper.id}),transaction_timestamp())) RETURNING data`;
           assert.deepStrictEqual(inserted[0]?.data, wallpaper);
         }
       }

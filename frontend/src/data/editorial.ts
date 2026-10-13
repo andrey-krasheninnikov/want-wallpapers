@@ -157,7 +157,7 @@ export const supportCopy = {
       'Cookie settings are available in the footer. Declining optional analytics and advertising does not prevent browsing or downloading. Ratings, comments and feedback are separate interactive actions and use the essential storage and security checks described in the privacy and cookie pages. Public comments are visible to other visitors; feedback is sent through the feedback form. Before using an image outside personal wallpaper use, read the license and contact us with the intended use.'],
     feedback: ['Describe a detail we can check',
       'Start with a short topic that identifies your suggestion or problem. In the message, include the affected page link or wallpaper title and explain the result you expected. If you mean a particular file, say whether it is the desktop or mobile PNG. The collection name helps when several designs have similar colours or shapes. Suggestions for future collections can describe a theme, colour palette or screen orientation.',
-      'For a technical problem, include your browser, device type and the steps that reproduce it. Say whether the issue occurs during browsing, after clicking download, while viewing the original or when setting the saved image as a wallpaper. You can try the other orientation and compare the dimensions shown on the page with your screen. Those checks help separate a crop setting from a file or page problem. If submitting the form fails, the message stays in the form so you can retry.',
+      'For a technical problem, include your browser, device type and the steps that reproduce it. Say whether the issue occurs during browsing, after clicking download or when setting the saved image as a wallpaper. You can try the other orientation and compare the dimensions shown on the page with your screen. Those checks help separate a crop setting from a file or page problem. If submitting the form fails, the message stays in the form so you can retry.',
       'The email field is optional. Use the direct email link if you prefer to write from your mail application or if JavaScript is unavailable. A feedback message is different from a public comment on a wallpaper. Questions about permissions for another use should describe the intended project and refer to the current license. Downloads remain available regardless of optional cookie preferences.'],
   },
   ru: {
@@ -175,7 +175,7 @@ export const supportCopy = {
       'Настройки cookie находятся внизу страницы. Отказ от необязательной аналитики и рекламы не мешает просмотру и скачиванию. Оценки, комментарии и обращения — отдельные интерактивные действия. Они используют необходимое хранение и проверки защиты, описанные на страницах конфиденциальности и cookie. Публичные комментарии видны другим посетителям, а обращение отправляется через форму обратной связи. Перед применением изображения за пределами личных обоев прочитайте лицензию и напишите нам о предполагаемом использовании.'],
     feedback: ['Опишите деталь, которую можно проверить',
       'Начните с короткой темы, которая обозначает предложение или проблему. В сообщении укажите ссылку на страницу или название обоев и объясните ожидаемый результат. Если речь о файле, уточните вариант PNG: для компьютера или телефона. Название коллекции помогает различить работы с похожими цветами и формами. В предложении будущей коллекции можно описать сюжет, палитру или нужную ориентацию экрана.',
-      'Для технической проблемы укажите браузер, тип устройства и шаги воспроизведения. Уточните, когда она возникает: при просмотре страницы, после нажатия на скачивание, при раскрытии оригинала или при установке сохранённой картинки. Можно сравнить другой вариант и сверить размеры со своим экраном. Так проще отличить настройку кадрирования от проблемы файла или страницы. Если отправить форму не получилось, текст остаётся в полях, чтобы можно было повторить попытку.',
+      'Для технической проблемы укажите браузер, тип устройства и шаги воспроизведения. Уточните, когда она возникает: при просмотре страницы, после нажатия на скачивание или при установке сохранённой картинки. Можно сравнить другой вариант и сверить размеры со своим экраном. Так проще отличить настройку кадрирования от проблемы файла или страницы. Если отправить форму не получилось, текст остаётся в полях, чтобы можно было повторить попытку.',
       'Поле электронной почты необязательное. Прямая ссылка email подходит для письма из почтового приложения и для случая, когда JavaScript недоступен. Сообщение обратной связи отличается от публичного комментария под обоями. Вопрос о разрешении на другое использование лучше сопроводить описанием проекта и ссылкой на действующую лицензию. Выбор необязательных cookie не влияет на доступность скачивания.'],
   },
   'zh-cn': {
@@ -193,7 +193,7 @@ export const supportCopy = {
       'Cookie 设置入口位于页面底部。拒绝可选分析与广告不会阻止浏览或下载。评分、评论与反馈是独立的互动操作，会使用隐私与 Cookie 页面说明的必要存储和安全检查。公开评论可以被其他访客看到，反馈消息通过反馈表单发送。准备在个人壁纸之外使用图片时，请先阅读许可，并联系我们说明预期用途。'],
     feedback: ['描述可以核查的细节',
       '先用简短主题说明建议或问题，再在消息中附上相关页面链接或壁纸标题，并解释原本期望的结果。如果涉及具体文件，请说明是电脑版还是手机版 PNG。对于颜色或构图相近的作品，系列名称可以帮助分辨。建议新系列时，可以描述希望看到的主题、配色或屏幕方向。',
-      '技术问题请包含浏览器、设备类型与复现步骤，并说明发生阶段：浏览页面、点击下载、展开原图，或将保存的图片设置为壁纸。你可以试试另一个方向，并比较页面标注的尺寸与设备屏幕。这样有助于区分裁切设置与文件或页面问题。如果提交表单失败，已输入的消息会留在表单中，方便再次尝试。',
+      '技术问题请包含浏览器、设备类型与复现步骤，并说明发生阶段：浏览页面、点击下载，或将保存的图片设置为壁纸。你可以试试另一个方向，并比较页面标注的尺寸与设备屏幕。这样有助于区分裁切设置与文件或页面问题。如果提交表单失败，已输入的消息会留在表单中，方便再次尝试。',
       '电子邮件字段可以留空。如果更喜欢从邮件应用发信，或浏览器无法使用 JavaScript，可以使用直接邮件链接。反馈消息与壁纸下方的公开评论是不同的操作。询问其他用途的许可时，请说明项目，并参考现行许可。无论怎样选择可选 Cookie，壁纸下载都保持可用。请不要在反馈中填写密码、付款信息或访问令牌；描述公开页面和操作步骤就足够了。'],
   },
   'pt-br': {
@@ -211,7 +211,34 @@ export const supportCopy = {
       'As configurações de cookies ficam no rodapé. Recusar análise e publicidade opcionais não impede navegar ou baixar imagens. Avaliações, comentários e feedback são ações interativas separadas, com armazenamento essencial e verificações de segurança descritos nas páginas de privacidade e cookies. Comentários públicos ficam visíveis a outros visitantes; mensagens de feedback são enviadas pelo formulário. Antes de usar uma imagem além de um papel de parede pessoal, leia a licença e escreva sobre o uso pretendido.'],
     feedback: ['Descreva um detalhe que possamos conferir',
       'Comece com um assunto curto que identifique a sugestão ou problema. Na mensagem, inclua o link da página ou o título da imagem e explique o resultado esperado. Para um arquivo específico, diga se é o PNG para computador ou celular. O nome da coleção ajuda a distinguir desenhos com cores ou formas parecidas. Sugestões de futuras coleções podem descrever um tema, uma paleta ou uma orientação de tela.',
-      'Para um problema técnico, inclua navegador, tipo de aparelho e os passos para reproduzir. Diga se ocorre ao navegar, clicar no download, expandir o original ou definir a imagem salva como papel de parede. Experimente a outra orientação e compare as dimensões indicadas com a tela. Isso ajuda a separar uma configuração de recorte de um problema de arquivo ou página. Se o envio falhar, a mensagem permanece no formulário para uma nova tentativa.',
+      'Para um problema técnico, inclua navegador, tipo de aparelho e os passos para reproduzir. Diga se ocorre ao navegar, clicar no download ou definir a imagem salva como papel de parede. Experimente a outra orientação e compare as dimensões indicadas com a tela. Isso ajuda a separar uma configuração de recorte de um problema de arquivo ou página. Se o envio falhar, a mensagem permanece no formulário para uma nova tentativa.',
       'O campo de email é opcional. Use o link direto se preferir escrever pelo seu aplicativo de correio ou se JavaScript estiver indisponível. Uma mensagem de feedback difere de um comentário público na página de uma imagem. Perguntas sobre permissões para outro uso devem descrever o projeto e consultar a licença atual. Downloads continuam disponíveis com qualquer escolha de cookies opcionais.'],
   },
 } satisfies Record<Locale, Record<'contact' | 'license' | 'terms' | 'feedback' | 'cookies', string[]>>;
+
+export const supportTopics = {
+  en: {
+    contact: ['Wallpaper or collection', 'Download or display problem', 'Licensing and data requests'],
+    license: ['File and screen format', 'Sharing and other uses'],
+    terms: ['Finding and downloading', 'Privacy and participation'],
+    feedback: ['Suggestion and context', 'Reproducing a problem', 'Email and other requests'],
+  },
+  ru: {
+    contact: ['Обои и коллекции', 'Скачивание и отображение', 'Лицензия и данные'],
+    license: ['Файл и пропорции экрана', 'Ссылки и другое использование'],
+    terms: ['Поиск и скачивание', 'Приватность и участие'],
+    feedback: ['Предложение и контекст', 'Воспроизведение проблемы', 'Email и другие вопросы'],
+  },
+  'zh-cn': {
+    contact: ['壁纸与系列', '下载与显示问题', '许可与数据请求'],
+    license: ['文件与屏幕比例', '分享链接与其他用途'],
+    terms: ['查找与下载', '隐私与互动'],
+    feedback: ['建议与背景', '复现问题', '邮件与其他请求'],
+  },
+  'pt-br': {
+    contact: ['Papel de parede e coleção', 'Download e exibição', 'Licença e solicitações sobre dados'],
+    license: ['Arquivo e formato da tela', 'Compartilhamento e outros usos'],
+    terms: ['Busca e download', 'Privacidade e participação'],
+    feedback: ['Sugestão e contexto', 'Como reproduzir o problema', 'Email e outras solicitações'],
+  },
+} satisfies Record<Locale, Record<Exclude<keyof typeof supportCopy.en, 'cookies'>, string[]>>;

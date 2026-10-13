@@ -38,6 +38,7 @@ async function scan(directory: string) {
   }
 }
 await scan(root);
+require(![...files].some((name) => name.startsWith('ui-kit/')), 'Development UI kit must not ship in production');
 validatePages(pages, files);
 validateCityLinks(pages);
 const indexed = new Set([...pages.values()].filter((page) => !page.robots.some((value) => value.includes('noindex'))).map((page) => origin + page.path));
