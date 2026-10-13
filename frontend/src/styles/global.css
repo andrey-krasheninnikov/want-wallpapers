@@ -110,6 +110,15 @@
   .ui-card-header { container-type: inline-size; container-name: card-header; @apply grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6; }
   .ui-card-footer { @apply flex items-center px-6; }
   .gallery-card { @apply h-full gap-0 overflow-hidden py-0 shadow-none transition-colors; }
+  .wallpaper-card-content { @apply flex items-start justify-between gap-4; }
+  .wallpaper-card-title { @apply text-base leading-snug font-semibold; }
+  .wallpaper-card-collection { @apply mt-2 text-sm leading-relaxed text-muted-foreground; }
+  .wallpaper-card-number { @apply pt-0.5 text-sm text-muted-foreground tabular-nums; }
+  .wallpaper-detail-grid { @apply grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-8; }
+  .wallpaper-detail-frame { @apply p-4 sm:p-6; }
+  .wallpaper-detail-variant { @apply m-0; }
+  .wallpaper-variant-trigger { @apply min-h-12 gap-2 whitespace-normal px-2 py-2 leading-snug; }
+  .wallpaper-tag-link { @apply min-h-11 px-3 py-2 text-sm; }
   .footer-link { @apply h-auto min-h-11 justify-start px-4 py-2 text-left whitespace-normal; }
   .shell { width: min(100% - 2rem, 1280px); margin-inline: auto; }
   .section-space { padding-top: 4rem; }
@@ -340,7 +349,7 @@
   .comment-text { white-space: pre-wrap; line-height: 1.7; overflow-wrap: anywhere; }
   .comment-actions { display: flex; margin: .5rem 0 0 -.75rem; }
   .wallpaper-stage { position: relative; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
-  .wallpaper-preview { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4/3; max-height: 70dvh; overflow: hidden; border-radius: var(--media-radius); background: var(--media-ground); padding: 1rem; touch-action: pan-y; }
+  .wallpaper-preview { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4/3; max-height: 70dvh; overflow: hidden; border-radius: var(--media-radius); background: var(--media-ground); touch-action: pan-y; }
   .wallpaper-preview [data-variant] { height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; }
   .wallpaper-preview [data-variant="mobile"] { display: none; }
   .wallpaper-preview img { width: 100%; height: 100%; object-fit: contain; }
@@ -430,3 +439,5 @@ html[data-wallpaper-direction="next"] { --slide-distance: 24px; }
 @media (min-width: 1712px) {
   .wallpaper-advertisement { display: block; }
 }
+
+@utility wallpaper-tag-link { &:hover { @apply bg-accent; } }

@@ -450,3 +450,25 @@ test('feedback waits for hydration before accepting input', async ({ page }) => 
   await page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true }).click();
   await expect(page.getByText(copy.ru.feedbackThanks)).toBeVisible();
 });
+
+
+test('public pages share a cacheable hydration bootstrap under the existing CSP', async ({ request }) => {
+  let shared = '';
+  for (const path of ['/ru/feedback/', '/ru/wallpapers/contours-of-silence-1/']) {
+    const response = await request.get(path);
+    const html = await response.text();
+    expect(response.headers()['content-security-policy']).toContain("script-src 'self'");
+    expect([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].some((match) => match[1]!.includes('customElements.define("astro-island",'))).toBe(false);
+    const assets = [...html.matchAll(/<script defer src="(\/_astro\/island\.[a-f0-9]{64}\.js)"><\/script>/g)].map((match) => match[1]!);
+    expect(assets).toHaveLength(1);
+    if (shared) expect(assets[0]).toBe(shared);
+    shared = assets[0]!;
+  }
+  const runtime = await request.get(shared);
+  expect(runtime.status()).toBe(200);
+  expect(runtime.headers()['content-type']).toContain('javascript');
+  expect(runtime.headers()['cache-control']).toContain('immutable');
+  const bytes = await runtime.body();
+  expect(shared).toBe(`/_astro/island.${createHash('sha256').update(bytes).digest('hex')}.js`);
+  expect(bytes.toString()).toContain('customElements.define("astro-island",');
+});

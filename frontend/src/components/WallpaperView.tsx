@@ -51,9 +51,9 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     window.location.assign(wallpaperSlideHref(item.href, variant));
   }
   const image = variants[variant];
-  return <Tabs value={variant} onValueChange={changeVariant} className="block"><div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-8" data-wallpaper-detail={id}>
+  return <Tabs value={variant} onValueChange={changeVariant} className="block"><div className="wallpaper-detail-grid" data-wallpaper-detail={id}>
     <div className="wallpaper-stage">
-      <div id="wallpaper-view" className="wallpaper-preview" role="region" tabIndex={0} aria-label={text.gallery}
+      <div id="wallpaper-view" className="wallpaper-preview wallpaper-detail-frame" role="region" tabIndex={0} aria-label={text.gallery}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
           if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
@@ -71,7 +71,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
           if (Math.abs(x) < 48 || Math.abs(x) < Math.abs(y) * 1.5) return;
           navigate(x < 0 ? 'next' : 'previous');
         }}>
-        {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="m-0"><img id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
+        {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
       </div>
       <nav className="wallpaper-nav" aria-label={text.gallery}>
         {navigation.previous && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.previous.href, variant)} data-wallpaper-previous aria-label={`${text.previous}: ${navigation.previous.title}`} onClick={() => direction('previous')}><ArrowLeft aria-hidden="true" /></a></Button>}
@@ -82,15 +82,15 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     <Card className="gap-0 py-0 shadow-none lg:sticky lg:top-28"><CardContent className="grid gap-6 p-5 sm:p-6">
       <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
       <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-background p-1">
-        <TabsTrigger value="desktop" className="min-h-12 gap-2 whitespace-normal px-2 py-2 leading-snug"><Monitor className="size-4 shrink-0" aria-hidden="true" />{ui.desktop}</TabsTrigger>
-        <TabsTrigger value="mobile" className="min-h-12 gap-2 whitespace-normal px-2 py-2 leading-snug"><Smartphone className="size-4 shrink-0" aria-hidden="true" />{ui.mobile}</TabsTrigger>
+        <TabsTrigger value="desktop" className="wallpaper-variant-trigger"><Monitor className="size-4 shrink-0" aria-hidden="true" />{ui.desktop}</TabsTrigger>
+        <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone className="size-4 shrink-0" aria-hidden="true" />{ui.mobile}</TabsTrigger>
       </TabsList>
       <div className="grid gap-3">
         <form id="download-form" method="get" action={image.download} onSubmit={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Button id="download-link" type="submit" size="lg" className="w-full"><Download aria-hidden="true" />{ui.download} · {ui[variant]}</Button></form>
         <noscript><form method="get" action={variants.mobile.download}><Button type="submit" variant="outline" className="w-full">{ui.mobile} · {ui.download}</Button></form></noscript>
       </div>
       <p className="text-sm leading-relaxed text-muted-foreground">{ui.formatHint}. <a className="text-link underline" href={localPath(locale, '/license/')}>{ui.license}</a></p>
-      <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="secondary" className="min-h-11 px-3 py-2 text-sm"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
+      <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
     </CardContent></Card>
   </div></Tabs>;
 }
