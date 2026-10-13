@@ -36,7 +36,7 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
           <SelectContent><SelectGroup>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11"><span aria-hidden="true">{languageFlags[value as Locale]}</span>{title}</SelectItem>)}</SelectGroup></SelectContent>
         </Select>
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" aria-label={ui.menu}><Menu /></Button></SheetTrigger>
+          <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" data-menu-trigger aria-label={ui.menu}><Menu /></Button></SheetTrigger>
           <SheetContent closeLabel={text.close} className="w-full max-w-sm bg-card">
             <SheetHeader className="px-6 pt-8"><SheetTitle>{ui.menu}</SheetTitle><SheetDescription>Want Wallpapers</SheetDescription></SheetHeader>
             <nav className="grid gap-2 px-4" aria-label={ui.menu}>{links.map((link) => <Button key={link.href} asChild variant={link.active ? 'secondary' : 'ghost'} className="justify-start"><a href={localPath(locale, link.href)} aria-current={link.active ? 'page' : undefined} onClick={() => setOpen(false)}>{link.title}</a></Button>)}</nav>

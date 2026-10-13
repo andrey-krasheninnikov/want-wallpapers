@@ -56,10 +56,10 @@ const analyticsAvailable = isAnalyticsConfigured();
     <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
     <title>{fullTitle}</title>
     <link rel="icon" type="image/svg+xml" href={logoUrl} />
-    <noscript><style is:inline>[data-slot="accordion-content"] { display: block !important; }</style></noscript>
+    <noscript><style is:inline>[data-slot="accordion-content"] { display: block !important; } .device-controls { display: none !important; }</style></noscript>
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />}
   </head>
-  <body>
+  <body data-locale={locale}>
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
     <Header locale={locale} path={path} logo={logoUrl} client:load />
     <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
@@ -69,6 +69,11 @@ const analyticsAvailable = isAnalyticsConfigured();
       import { initPageMotion } from '../lib/page-motion';
       initCollectionCovers();
       initPageMotion();
+      import { initFeedbackDialog } from '../lib/feedback-dialog';
+      import { initGalleryEffects } from '../lib/gallery-effects';
+      const locale = document.body.dataset.locale as import('../data/catalog').Locale;
+      initFeedbackDialog(locale);
+      initGalleryEffects();
     </script>
     <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load />
   </body>

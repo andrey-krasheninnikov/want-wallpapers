@@ -3,7 +3,6 @@ import { ArrowLeft, ArrowRight, Download, Monitor, Smartphone } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import { useWallpaperSocial, WallpaperRatings, WallpaperComments } from '@/components/SocialPanel';
 import { copy, localPath } from '@/data/copy';
 import { designCopy } from '@/data/design-copy';
@@ -13,8 +12,8 @@ import type { Locale } from '@/data/catalog';
 
 type Neighbor = { href: string; title: string } | null;
 
-export default function WallpaperView({ locale, id, description, variants, tags, navigation }: {
-  locale: Locale; id: string; description: string;
+export default function WallpaperView({ locale, id, description, variants, tags, navigation, children }: {
+  locale: Locale; id: string; description: string; children?: React.ReactNode;
   variants: Record<'desktop' | 'mobile', WallpaperVariant>; tags: { title: string; href: string }[];
   navigation: { previous: Neighbor; next: Neighbor; position: number; total: number };
 }) {
@@ -52,15 +51,22 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     direction(value);
     window.location.assign(wallpaperSlideHref(item.href, variant));
   }
+  useEffect(() => {
+    function keydown(event: KeyboardEvent) {
+      const target = event.target instanceof Element ? event.target : null;
+      if (event.defaultPrevented || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      if (document.querySelector('[role="dialog"][data-state="open"]') || window.getSelection()?.toString()) return;
+      if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="tab"], [role="radio"], [role="slider"], [role="combobox"], [role="listbox"], [role="menu"]')) return;
+      event.preventDefault(); navigate(event.key === 'ArrowLeft' ? 'previous' : 'next');
+    }
+    window.addEventListener('keydown', keydown);
+    return () => window.removeEventListener('keydown', keydown);
+  }, [variant, navigation]);
   const image = variants[variant];
   return <Tabs value={variant} onValueChange={changeVariant} className="block"><div className="wallpaper-detail-grid" data-wallpaper-detail={id}>
     <div className="wallpaper-stage" style={{ "--desktop-ratio": variants.desktop.width / variants.desktop.height, "--mobile-ratio": variants.mobile.width / variants.mobile.height } as React.CSSProperties}>
       <div id="wallpaper-view" className="wallpaper-preview wallpaper-detail-frame" role="region" tabIndex={0} aria-label={text.gallery}
-        onKeyDown={(event) => {
-          if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-          event.preventDefault(); navigate(event.key === 'ArrowLeft' ? 'previous' : 'next');
-        }}
         onPointerDown={(event) => {
           if (event.button !== 0 || !event.isPrimary) return;
           pointer.current = { x: event.clientX, y: event.clientY, id: event.pointerId };
@@ -75,25 +81,31 @@ export default function WallpaperView({ locale, id, description, variants, tags,
         }}>
         {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
       </div>
+      <div className="wallpaper-dock glass-surface">
+        <div className="wallpaper-dock-controls">
+          <TabsList className="grid h-auto! w-full grid-cols-2 gap-1 bg-background p-1">
+            <TabsTrigger value="desktop" className="wallpaper-variant-trigger"><Monitor aria-hidden="true" />{ui.desktop}</TabsTrigger>
+            <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone aria-hidden="true" />{ui.mobile}</TabsTrigger>
+          </TabsList>
+          <div className="grid gap-3">
+            <form id="download-form" method="get" action={image.download} onSubmit={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Button id="download-link" type="submit" size="lg" className="w-full"><Download data-icon="inline-start" aria-hidden="true" />{ui.download} · {ui[variant]}</Button></form>
+            <noscript><form method="get" action={variants.mobile.download}><Button type="submit" variant="outline" className="w-full">{ui.mobile} · {ui.download}</Button></form></noscript>
+          </div>
+        </div>
+        <WallpaperRatings locale={locale} social={social} />
+      </div>
       <nav className="wallpaper-nav" aria-label={text.gallery}>
         {navigation.previous && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.previous.href, variant)} data-wallpaper-previous aria-label={`${text.previous}: ${navigation.previous.title}`} onClick={() => direction('previous')}><ArrowLeft aria-hidden="true" /></a></Button>}
         <span className="wallpaper-position" aria-live="polite">{navigation.position.toLocaleString(locale)} / {navigation.total.toLocaleString(locale)}</span>
         {navigation.next && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.next.href, variant)} data-wallpaper-next aria-label={`${text.next}: ${navigation.next.title}`} onClick={() => direction('next')}><ArrowRight aria-hidden="true" /></a></Button>}
       </nav>
-    </div>
-    <div className="wallpaper-sidebar"><Card className="gap-0 py-0 shadow-none"><CardContent className="grid gap-6 p-5 sm:p-6">
-      <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
-      <TabsList className="grid h-auto! w-full grid-cols-2 gap-1 bg-background p-1">
-        <TabsTrigger value="desktop" className="wallpaper-variant-trigger"><Monitor className="size-4 shrink-0" aria-hidden="true" />{ui.desktop}</TabsTrigger>
-        <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone className="size-4 shrink-0" aria-hidden="true" />{ui.mobile}</TabsTrigger>
-      </TabsList>
-      <div className="grid gap-3">
-        <form id="download-form" method="get" action={image.download} onSubmit={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Button id="download-link" type="submit" size="lg" className="w-full"><Download aria-hidden="true" />{ui.download} · {ui[variant]}</Button></form>
-        <noscript><form method="get" action={variants.mobile.download}><Button type="submit" variant="outline" className="w-full">{ui.mobile} · {ui.download}</Button></form></noscript>
+      <div className="wallpaper-caption">
+        <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{ui.formatHint}. <a className="text-link underline" href={localPath(locale, '/license/')}>{ui.license}</a></p>
+        <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
       </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">{ui.formatHint}. <a className="text-link underline" href={localPath(locale, '/license/')}>{ui.license}</a></p>
-      <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
-    </CardContent></Card><WallpaperRatings locale={locale} social={social} /></div>
+    </div>
+    {children}
     <WallpaperComments locale={locale} social={social} />
   </div></Tabs>;
 }

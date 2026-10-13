@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
-  test(`mobile 3D activation and keyboard controls: ${locale}`, async ({ page }, testInfo) => {
+  test(`automatic mobile 3D and keyboard controls: ${locale}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 375, height: 812 });
     const models: string[] = [];
     const errors: string[] = [];
@@ -20,10 +20,6 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await page.goto(localPath(locale));
     await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
     const scene = page.locator('.device-stage');
-    await expect(scene).toHaveAttribute('data-scene-state', 'poster');
-    await expect(page.locator('model-viewer')).toHaveCount(0);
-    expect(models).toEqual([]);
-    await page.getByRole('button', { name: designCopy[locale].view, exact: true }).press('Enter');
     await expect(scene).toHaveAttribute('data-scene-state', 'ready', { timeout: 45000 });
     const viewer = page.locator('model-viewer');
     await expect(viewer).toBeVisible();
@@ -44,19 +40,22 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
   });
 }
 
-test('desktop keeps the poster until explicit activation, including motion preference changes', async ({ page }, testInfo) => {
+test('desktop scene respects pause, viewport and motion preferences', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: copy.en.essentialOnly, exact: true }).click();
-  await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'poster');
-  await expect(page.locator('model-viewer')).toHaveCount(0);
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.reload();
-  await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'poster');
-  await expect(page.locator('model-viewer')).toHaveCount(0);
-  await page.getByRole('button', { name: designCopy.en.view, exact: true }).press('Enter');
   await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'ready', { timeout: 45000 });
   const viewer = page.locator('model-viewer');
+  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(false);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(true);
+  await page.getByRole('button', { name: designCopy.en.pauseScene, exact: true }).click();
+  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(false);
+  await page.getByRole('button', { name: designCopy.en.playScene, exact: true }).click();
+  await page.locator('footer').scrollIntoViewIfNeeded();
+  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(false);
+  await page.locator('.device-stage').scrollIntoViewIfNeeded();
+  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(true);
   const before = await viewer.evaluate((element) => (element as ModelViewerElement).getCameraOrbit().theta);
   const bounds = (await viewer.boundingBox())!;
   await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
@@ -75,7 +74,6 @@ test('failed 3D keeps the poster and supports a retry', async ({ page }) => {
   await page.route('**/models/devices.glb', (route) => route.abort());
   await page.goto('/');
   await page.getByRole('button', { name: copy.en.essentialOnly, exact: true }).click();
-  await page.getByRole('button', { name: designCopy.en.view, exact: true }).click();
   await expect(page.locator('.device-stage')).toHaveAttribute('data-scene-state', 'failed');
   await expect(page.locator('.device-poster')).toBeVisible();
   await expect(page.getByText(designCopy.en.failed, { exact: true })).toBeVisible();
@@ -97,4 +95,17 @@ test('scene works under the existing CSP without extra permissions', async ({ re
 test('UI kit does not ship with production pages', async ({ request }) => {
   expect((await request.get('/ui-kit/')).status()).toBe(404);
   expect(await (await request.get('/sitemap-0.xml')).text()).not.toContain('/ui-kit/');
+});
+
+
+test('without JavaScript the home scene stays a useful poster without an endless loading control', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto('http://127.0.0.1:4322/');
+    await expect(page.locator('.device-poster')).toBeVisible();
+    await expect(page.locator('.device-controls')).toBeHidden();
+    await expect(page.locator('model-viewer')).toHaveCount(0);
+    await expect(page.locator('.device-caption a')).toHaveAttribute('href', '/wallpapers/contours-of-silence-11/');
+  } finally { await context.close(); }
 });

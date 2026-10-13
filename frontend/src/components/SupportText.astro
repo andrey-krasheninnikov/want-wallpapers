@@ -7,4 +7,4 @@ const [title, ...paragraphs] = supportCopy[locale][page];
 const topics = page === 'cookies' ? [] : supportTopics[locale][page];
 if (topics.length && topics.length !== paragraphs.length) throw new Error(`Missing support topic: ${locale}/${page}`);
 ---
-<section class="support-surface" data-support-text><h2>{title}</h2><div class="support-topics">{paragraphs.map((paragraph, index) => topics[index] ? <section class="support-topic"><h3>{topics[index]}</h3><p>{paragraph}</p></section> : <p>{paragraph}</p>)}</div></section>
+<section class="support-surface" data-support-text><h2>{title}</h2><div class="support-topics" data-long-copy>{paragraphs.map((paragraph, index) => topics[index] ? <section class="support-topic"><h3>{topics[index]}</h3><p>{paragraph}</p></section> : <p>{paragraph}</p>)}</div></section>

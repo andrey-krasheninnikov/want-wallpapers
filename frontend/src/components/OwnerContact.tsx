@@ -8,6 +8,7 @@ export default function OwnerContact({ locale }: { locale: Locale }) {
     { title: 'Telegram', detail: '@andrey_krasheninnikov', href: 'https://t.me/andrey_krasheninnikov', icon: Send, label: 'Telegram Andrey Krasheninnikov' },
     { title: 'Want Foundation', detail: '@want_foundation', href: 'https://t.me/want_foundation', icon: Users, label: 'Telegram Want Foundation' },
     { title: 'GitHub', detail: 'andrey-krasheninnikov', href: 'https://github.com/andrey-krasheninnikov', icon: CodeXml, label: 'GitHub Andrey Krasheninnikov' },
+    { title: 'GitHub Project', detail: 'want-wallpapers', href: 'https://github.com/andrey-krasheninnikov/want-wallpapers', icon: CodeXml, label: 'GitHub Want Wallpapers' },
   ];
   return <div className="contact-card" data-owner-contact>
     <div className="contact-identity"><span className="contact-avatar" aria-hidden="true">{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><div><strong>{name}</strong><small>Want Foundation</small></div></div>

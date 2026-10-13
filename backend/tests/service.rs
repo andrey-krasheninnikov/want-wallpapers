@@ -1458,3 +1458,49 @@ async fn llms_static_response_is_utf8_text_and_missing_file_remains_html() {
     assert_eq!(response.headers()[header::CONTENT_TYPE], "text/html");
     std::fs::remove_dir_all(directory).unwrap();
 }
+
+#[sqlx::test(migrations = "./migrations")]
+async fn publication_dates_survive_edits_imports_and_archive(pool: PgPool) {
+    let initial = catalog::export(&pool).await.unwrap();
+    assert_eq!(initial.publication_dates.len(), 25);
+    assert_eq!(
+        initial.publication_dates["contours-of-silence-1"],
+        "2026-10-02T21:44:58.000000Z"
+    );
+    let input = manifest();
+    catalog::import_manifest(&pool, &input, CatalogActor::Token)
+        .await
+        .unwrap();
+    let imported = catalog::export(&pool).await.unwrap();
+    let date = imported.publication_dates["test-light-1"].clone();
+    assert!(date > initial.publication_dates["contours-of-silence-1"]);
+    assert_eq!(
+        catalog::import_manifest(&pool, &input, CatalogActor::Token)
+            .await
+            .unwrap(),
+        "unchanged"
+    );
+    sqlx::query("UPDATE wallpapers SET archived=true,data=jsonb_set(data,'{category}', '\"abstract\"') WHERE id='test-light-1'").execute(&pool).await.unwrap();
+    assert!(
+        !catalog::export(&pool)
+            .await
+            .unwrap()
+            .publication_dates
+            .contains_key("test-light-1")
+    );
+    sqlx::query("UPDATE wallpapers SET archived=false WHERE id='test-light-1'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    assert_eq!(
+        catalog::export(&pool).await.unwrap().publication_dates["test-light-1"],
+        date
+    );
+    let legacy: String = sqlx::query_scalar(
+        "SELECT initial_wallpaper_publication('a-night-beneath-the-ice-5')::text",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert!(legacy.starts_with("2026-10-05 04:04:04"));
+}

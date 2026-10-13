@@ -77,6 +77,8 @@ pub struct Manifest {
 }
 #[derive(Serialize)]
 pub struct Snapshot {
+    #[serde(rename = "publicationDates")]
+    pub publication_dates: BTreeMap<String, String>,
     pub collections: Vec<Collection>,
     pub wallpapers: Vec<Wallpaper>,
 }

@@ -35,24 +35,19 @@ for (const locale of locales) test(`wallpaper composition, portrait fit and lang
       await expect(viewer).toHaveCSS('background-color', 'rgb(16, 16, 16)');
       const ratio = await page.locator('#detail-image').evaluate(image => Number(image.getAttribute('width')) / Number(image.getAttribute('height')));
       await expect.poll(() => viewer.evaluate(element => { const box = element.getBoundingClientRect(); return box.width / box.height; })).toBeCloseTo(ratio, 2);
-      expect(await page.locator('.wallpaper-sidebar [role=tablist]').evaluate(list => {
+      expect(await page.locator('.wallpaper-dock [role=tablist]').evaluate(list => {
         const bounds = list.getBoundingClientRect();
         return [...list.querySelectorAll('[role=tab]')].every(tab => { const box = tab.getBoundingClientRect(); return box.top >= bounds.top && box.bottom <= bounds.bottom; });
       })).toBe(true);
       const positions = await page.evaluate(() => {
         const box = (selector: string) => { const b = document.querySelector(selector)!.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height }; };
-        return { viewer: box('#wallpaper-view'), stage: box('.wallpaper-stage'), controls: box('.wallpaper-sidebar'), downloads: box('.wallpaper-sidebar [data-slot="card"]'), ratings: box('[data-wallpaper-ratings]'), comments: box('[data-social-panel]') };
+        return { viewer: box('#wallpaper-view'), stage: box('.wallpaper-stage'), controls: box('.wallpaper-dock'), downloads: box('#download-form'), ratings: box('[data-wallpaper-ratings]'), comments: box('[data-social-panel]') };
       });
       expect(positions.ratings.top).toBeGreaterThanOrEqual(positions.downloads.bottom);
-      if (width >= 1280) {
-        expect(positions.comments.right).toBeLessThanOrEqual(positions.stage.left);
-        expect(positions.stage.right).toBeLessThanOrEqual(positions.controls.left);
-      } else if (width >= 768) {
-        expect(positions.comments.top).toBeGreaterThanOrEqual(Math.max(positions.stage.bottom, positions.controls.bottom));
-      } else {
-        expect(positions.controls.top).toBeGreaterThanOrEqual(positions.stage.bottom);
-        expect(positions.comments.top).toBeGreaterThanOrEqual(positions.controls.bottom);
-      }
+      expect(positions.comments.top).toBeGreaterThanOrEqual(positions.stage.bottom);
+      expect(await page.locator('[data-editorial]').evaluate(element => element.getBoundingClientRect().bottom)).toBeLessThanOrEqual(positions.comments.top);
+      if (width < 768 || variant === 'mobile') expect(positions.controls.top).toBeGreaterThanOrEqual(positions.viewer.bottom);
+      else expect(positions.controls.top).toBeCloseTo(positions.viewer.bottom - 32, 0);
       if (variant === 'mobile') {
         expect(positions.viewer.width).toBeLessThanOrEqual(360);
         expect(positions.viewer.height).toBeLessThanOrEqual(900 * .65 + 1);
@@ -61,7 +56,8 @@ for (const locale of locales) test(`wallpaper composition, portrait fit and lang
       }
       await expect(page.locator('#detail-image')).toHaveCSS('object-fit', 'contain');
       await expect(page.locator('.rating-tile').first()).toHaveCSS('min-height', '56px');
-      await expect(page.locator('.wallpaper-story')).toHaveCSS('column-count', width >= 1280 ? '3' : width >= 768 ? '2' : 'auto');
+      await expect(page.locator('[data-editorial] .long-copy')).toHaveCSS('column-count', '3');
+      await expect(page.locator('[data-editorial] .long-copy')).toHaveCSS('column-width', '288px');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       if (width === 375 || width === 1440) await page.locator('[data-wallpaper-detail]').screenshot({ path: testInfo.outputPath(`${locale}-${variant}-${width}.png`) });
     }
@@ -99,8 +95,8 @@ test('dark fields retain draft and focus after social failures and retries', asy
   await expect(comments.getByRole('alert')).toHaveCount(0);
   await expect(input).toHaveValue('Черновик остаётся после ошибки.');
   await page.goto('/ru/feedback/');
-  for (const selector of ['#feedback-topic', '#feedback-message']) {
-    const field = page.locator(selector);
+  for (const label of [copy.ru.topic, copy.ru.message]) {
+    const field = page.getByRole('textbox', { name: label, exact: true });
     await field.fill('Проверка тёмного поля');
     await expect(field).toHaveCSS('background-color', 'rgb(37, 37, 37)');
     await expect(field).toHaveCSS('color', 'rgb(232, 232, 232)');

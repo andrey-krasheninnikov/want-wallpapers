@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { copy, localPath } from '../../src/data/copy';
 import { designCopy } from '../../src/data/design-copy';
-import { wallpapers, type Locale } from '../../src/data/catalog';
+import { wallpapers as catalogue, publicationDates, type Locale } from '../../src/data/catalog';
 
+import { newestWallpapers } from '../../src/lib/catalog-order';
+const wallpapers = newestWallpapers(catalogue, publicationDates);
 const first = wallpapers[0]!, last = wallpapers.at(-1)!;
 test.beforeEach(async ({ page }) => {
   await page.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'GE' } }));
@@ -26,6 +28,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) test(`catalogue
   await expect(page.locator('#wallpaper-view')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('h1')).toHaveText(first.title[locale]);
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
   await page.getByRole('tab', { name: copy[locale].desktop, exact: true }).click();
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${first.slug}-desktop.webp`);
   await page.locator('[data-wallpaper-next]').click();
@@ -62,7 +65,7 @@ test('native touch swipe changes wallpaper while vertical touch scroll stays on 
   await page.setViewportSize({ width: 375, height: 900 });
   const session = await context.newCDPSession(page);
   await session.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
-  await page.goto('/ru/wallpapers/contours-of-silence-1/?variant=mobile#wallpaper-view');
+  await page.goto(`/ru/wallpapers/${first.slug}/?variant=mobile#wallpaper-view`);
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
   let box = (await page.locator('#wallpaper-view').boundingBox())!;
   const x = box.x + box.width * .75, y = box.y + box.height * .5;
@@ -86,7 +89,7 @@ test('invalid variant falls back and native slider links remain usable without J
   await expect(page.locator('#detail-image')).toHaveAttribute('src', '/previews/contours-of-silence-1-desktop.webp');
   const context = await browser.newContext({ javaScriptEnabled: false });
   const native = await context.newPage();
-  await native.goto('http://127.0.0.1:4322/ru/wallpapers/contours-of-silence-1/');
+  await native.goto(`http://127.0.0.1:4322/ru/wallpapers/${first.slug}/`);
   await native.locator('[data-wallpaper-previous]').click();
   await expect(native.locator('h1')).toHaveText(last.title.ru);
   await native.locator('[data-wallpaper-next]').click();
@@ -129,4 +132,19 @@ test('native slides capture both previews before hydration and finish without er
     await page.waitForFunction(() => window.sliderMotion.finished);
   }
   expect(errors).toEqual([]);
+});
+
+
+test('page arrows work outside the viewer and preserve editing and open dialogs', async ({ page }) => {
+  await page.goto(`/wallpapers/${first.slug}/`);
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+  await page.locator('h1').click();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('h1')).toHaveText(wallpapers[1]!.title.en);
+  await page.getByRole('link', { name: copy.en.feedback, exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  const before = page.url();
+  await page.keyboard.press('ArrowLeft');
+  expect(page.url()).toBe(before);
+  await page.keyboard.press('Escape');
 });

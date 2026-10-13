@@ -1,12 +1,13 @@
 import { rename, writeFile } from 'node:fs/promises';
 import type { Collection, Wallpaper } from '../src/data/catalog';
 import { apiOrigin } from './catalog-api';
-import { parseCollection, parseCollectionManifest } from './catalog-add';
+import { parseCollection, parseCollectionManifest, parsePublicationDates } from './catalog-add';
 const response = await fetch(`${apiOrigin()}/api/v1/catalog`, { signal: AbortSignal.timeout(15000) });
 if (!response.ok) throw new Error(`Catalog export failed (HTTP ${response.status}). Keeping the current snapshot.`);
-const snapshot = await response.json() as { collections: Collection[]; wallpapers: Wallpaper[] };
+const snapshot = await response.json() as { collections: Collection[]; wallpapers: Wallpaper[]; publicationDates?: Record<string, string> };
 if (!Array.isArray(snapshot.collections) || !Array.isArray(snapshot.wallpapers) || !snapshot.collections.length || !snapshot.wallpapers.length) throw new Error('Remote catalogue is empty or invalid. Keeping the current snapshot.');
 const { collections, wallpapers } = snapshot;
+const publicationDates = parsePublicationDates(snapshot.publicationDates, wallpapers);
 if (new Set(collections.map((item) => item.id)).size !== collections.length || new Set(wallpapers.map((item) => item.id)).size !== wallpapers.length) throw new Error('Duplicate catalogue identity.');
 for (const collection of collections) {
   parseCollection(collection);
@@ -19,6 +20,6 @@ collections.sort((a, b) => a.id.localeCompare(b.id));
 wallpapers.sort((a, b) => a.collectionId.localeCompare(b.collectionId) || a.number - b.number);
 const path = new URL('../src/data/catalog-live.json', import.meta.url);
 const temporary = new URL('../src/data/catalog-live.json.tmp', import.meta.url);
-await writeFile(temporary, `${JSON.stringify({ collections, wallpapers }, null, 2)}\n`);
+await writeFile(temporary, `${JSON.stringify({ collections, wallpapers, publicationDates }, null, 2)}\n`);
 await rename(temporary, path);
 console.log(`Saved ${collections.length} collections and ${wallpapers.length} wallpapers.`);

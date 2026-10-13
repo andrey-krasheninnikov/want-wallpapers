@@ -101,10 +101,10 @@ test('allow all stores both choices and withdrawal persists in another tab', asy
 test('country timeout never delays feedback and unknown results still allow an explicit choice', async ({ page }) => {
   await page.route('https://ipwho.is/**', () => {});
   await page.goto('/ru/feedback/');
-  await page.locator('#feedback-topic').fill('Проверка доступности');
-  await page.locator('#feedback-message').fill('Форма работает до окончания проверки страны.');
+  await page.getByRole('textbox', { name: copy.ru.topic, exact: true }).fill('Проверка доступности');
+  await page.getByRole('textbox', { name: copy.ru.message, exact: true }).fill('Форма работает до окончания проверки страны.');
   await expect(page.locator('html')).toHaveAttribute('data-country', 'unknown', { timeout: 10000 });
-  await expect(page.locator('#feedback-message')).toHaveValue('Форма работает до окончания проверки страны.');
+  await expect(page.getByRole('textbox', { name: copy.ru.message, exact: true })).toHaveValue('Форма работает до окончания проверки страны.');
   await page.getByRole('button', { name: copy.ru.acceptAll, exact: true }).click();
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), preferenceKey)).toEqual({ analytics: true, advertising: true });
   await expect(page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true })).toBeEnabled();

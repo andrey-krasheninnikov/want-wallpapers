@@ -4,7 +4,7 @@
 
 Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and a faint pixel grid. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity and pixel motif. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and four locales remain authoritative.
 
-The device stage stays beside the home introduction. A prominent collection leads the collection grid. Wallpaper results retain a regular comparison grid. Long supporting content becomes readable sections for stories, works, file formats, licensing and topics. Legal pages place their explanatory continuation inside the same reading surface.
+The device stage stays beside the home introduction. Home collections form a paginated horizontal carousel. Wallpaper results retain a regular comparison grid. Long supporting content becomes readable sections for stories, works, file formats, licensing and topics. Legal pages place their explanatory continuation inside the same reading surface.
 
 The five gallery references remain useful: Unsplash for image priority, Pexels for legible browsing, Cosmos for collection grouping, Are.na for quiet metadata and Backdrops for device context. They supplement the supplied Walletify images and the three project references.
 
@@ -13,16 +13,17 @@ The five gallery references remain useful: Unsplash for image priority, Pexels f
 | Token | Value | Use |
 | --- | --- | --- |
 | background | #141414 | Page ground |
-| foreground | #E8E8E8 | Main text and button focus fill |
+| foreground | #E8E8E8 | Main text |
 | card, muted | #1C1C1C | Grouped content |
 | secondary, popover | #252525 | Nested controls and raised surfaces |
 | accent | #303030 | Interactive surface |
 | media-ground | #101010 | Wallpaper and device stage |
 | muted-foreground | #ADADAD | Supporting text |
-| primary | #6642F5 | Primary action and selected mark |
+| primary | #5B4FFF | Primary action and selected mark |
 | primary-foreground | #FFFFFF | Action labels, including hover |
-| primary-hover / primary-active | #7355F8 / #5634DC | Action feedback |
-| link, ring | #B09AFA | Readable accent text |
+| primary-hover / primary-active | #6357FF / #5549EB | Action feedback |
+| link | #E8E8E8 | Underlined text links |
+| ring | #5B4FFF | Logo-color focus outline with dark backing |
 | destructive | #FF738D | Error text and destructive actions |
 | pixel-grid | #383838 | Decorative grid |
 | border, input | #383838 / #858585 | Compatibility aliases and filled switch/radio indicators |
@@ -45,9 +46,9 @@ Onest Variable carries headings; Manrope Variable carries body text and controls
 
 Use the existing Radix-based shadcn sources and semantic Tailwind v4 tokens. The outline variant remains import-compatible and uses a filled secondary surface. Separator exports remain compatible but display no rule. Do not create a second component library.
 
-Keyboard focus inverts button fills and labels to #E8E8E8 and #141414. Inputs, textareas and the wallpaper viewer keep their dark fills and show a 2 px #B09AFA outline with a 3 px offset. Invalid fields keep their dark error fill during focus. Descendant labels and icons retain readable contrast. Forced colors use the system focus outline. Selected states also have a selection mark or label. Errors have linked text and a filled state, not color alone. Disabled and loading controls retain their dimensions.
+Keyboard focus retains control fills and uses a 2 px logo-color outline, offset by 3 px, with a dark backing. Inputs and textareas remain dark, including invalid states. Forced colors use the system focus outline. Labels, selection marks and error messages retain meaning without color.
 
-Feedback is one writing surface: compact title, topic, optional email, message and a composed action/result area. Validation stays associated with the relevant field. Failed requests preserve input. The direct email action sits beside the form on wide screens; supporting topics continue beneath both columns in the same page composition.
+Feedback opens in one lazy modal on the current page. The form keeps topic, optional email, message and action/result areas. Closing preserves the draft and pending request in memory; failed requests preserve input. The dialog traps focus and returns it to the opening control or mobile menu button. Existing localized /feedback/ routes remain direct-link and no-script fallbacks. Field IDs remain unique across instances.
 
 Owner contact has an initial avatar, identity and three linked action rows. Each row includes a useful icon, destination and outgoing arrow. Keep the existing contact URLs.
 
@@ -57,23 +58,25 @@ Cookie actions appear in both DOM and visual order: settings, necessary only, al
 
 ## Wallpaper composition and navigation
 
-At 1280 px and above, the 1280 px public shell contains comments on the left (248 px), the viewer in the middle and download controls on the right (304 px), with 24 px gaps. At 768–1279 px, the viewer and a 288 px download column share the first row; comments follow across both columns. Phones show the viewer, navigation, downloads, ratings and comments in that order. Compact rating targets are at least 56 px tall and sit below downloads.
+The landscape preview fills the public shell and retains its natural ratio. A neutral glass dock, at most 760 px wide, overlaps the lower edge by 32 px from 768 px. Format selection and download share a row; compact ratings follow below. On phones and for portrait images the dock follows the frame without overlap. Description, license and tags follow, then comments in a centered region up to 900 px wide.
 
-Preview frames follow the selected image ratio, contain the whole image and use a dark media ground. Portrait frames are centered, at most 360 px wide and 65dvh tall; arrows align with the frame. Frame padding is 8 px on phones and 12 px from 768 px. Both image ratios are available before hydration. The long wallpaper story flows through three balanced text columns from 1280 px, two from 768 px and one on phones. Headings stay outside that flow; wording and DOM reading order remain intact.
+Portrait frames remain centered, at most 360 px wide and 65dvh tall. Both image ratios exist before hydration. Frames use dark media ground, 8 px padding on phones and 12 px from 768 px. Native previous/next controls sit below the dock.
+
+Long stories, legal sections and support text use up to three balanced columns with an 18rem minimum and 32 px gaps. The available width and text size determine two or one column. Headings remain outside paragraph flow; comments and form fields keep ordinary reading order. Home stories use native disclosures, initially collapsed, with their full text available on expansion.
 
 Language choices show decorative flags beside their existing labels: en 🇬🇧, ru 🇷🇺, zh-cn 🇨🇳 and pt-br 🇧🇷. Flags appear in the selected control, its options and native fallback links; locale identifiers do not change.
 
-The viewer provides previous/next links across the complete catalog in its existing search order. It wraps at both ends and hides links for a single item. Horizontal swipes and ArrowLeft/ArrowRight while the viewer has focus use the same destinations. Vertical gestures remain page scrolling; tab and text-field keys remain local to their controls.
+The viewer provides previous/next links across the complete catalog in newest-first search order. It wraps at both ends and hides links for a single item. Horizontal swipes and ArrowLeft/ArrowRight on the page outside editing, selection, widgets and open dialogs use the same destinations. Vertical gestures remain page scrolling; tab and text-field keys remain local to their controls.
 
 Links open the neighboring wallpaper route with variant=desktop or variant=mobile and the viewer fragment. Invalid variants default to desktop. Both previews exist in the document; an early page script selects the image before hydration. Canonical URLs, metadata, description, download action and comments belong to the neighboring page. Browser history retains normal navigation behavior.
 
-There is no original-preview section. Native PNG download forms and the no-script mobile download remain. Reading and downloads do not depend on the optional device scene.
+There is no original-preview section. Native PNG download forms and the no-script mobile download remain. Reading and downloads do not depend on the device scene.
 
 ## Motion and responsive behavior
 
 Control feedback takes at most 120 ms. Text, gallery media, menus, dialogs, accordions, cookie panels and form results appear immediately. Hover and active states change fill or color without shifting controls or icons. Loading placeholders are static. Native scrolling remains direct.
 
-Same-origin wallpaper navigation uses native cross-document View Transitions when supported, using a 180 ms directional image transition and a 12 px displacement. The opt-in rule is in the document head. Wallpaper pages wait for the viewer element before the first transition snapshot. Ordinary links remain the fallback. Reduced motion displays final states immediately and disables view transitions. Keep animation properties explicit and avoid custom cursors. The background glow is the only decorative loop.
+Same-origin wallpaper navigation uses native cross-document View Transitions when supported, using a 180 ms directional image transition and a 12 px displacement. The opt-in rule is in the document head. Wallpaper pages wait for the viewer element before the first transition snapshot. Ordinary links remain the fallback. Reduced motion displays final states immediately and disables view transitions. Keep animation properties explicit and preserve the native cursor. The background glow and controlled 3D rotation are the only loops.
 
 Public pages and /ui-kit/ have a fixed decorative background behind the content. The grid uses a 40 px step, or 32 px below 768 px, with sparse filled squares and a fade towards the center. Grid opacity is .12; filled squares use a further .4 opacity. Two CSS layers provide the grid and faint edge light; no Canvas or external resources are needed. The light changes opacity from .02 to .04 over a 24-second cycle. Grid geometry stays still. Administration uses the shared palette without the background layers.
 
@@ -81,7 +84,11 @@ A localized footer button pauses or resumes the glow. Only an explicit choice wr
 
 Content columns collapse below 768 px. Prevent page overflow at 320 px and preserve image proportions, translated wrapping, 44 px targets and safe areas. Legal sections align headings and reading columns on desktop and become a single sequence on mobile. Sticky surfaces must not cover focus.
 
-Video covers and the optional device scene show a static poster until a visitor presses their control, on desktop and mobile. Videos pause and return to the poster when offscreen or the tab is hidden; returning does not restart playback. Reduced motion, data saving, unsupported playback and failures retain the poster. The local devices.glb and its WebP textures remain self-origin. Explicit activation, failure retry, bounded manual rotation, poster fallback and touch scrolling remain available. The scene uses no external decoder or WebAssembly permission.
+Video covers require explicit playback. The local 3D scene loads automatically and rotates at 5 degrees per second after its interaction delay. Pause/resume, manual rotation, reset, failure retry and poster fallback remain. Offscreen, hidden tabs and reduced motion stop rotation; the loaded scene stays visible and static. Keep local GLB/WebP assets, touch scrolling and the existing CSP without external decoders or WebAssembly permissions.
+
+Liquid glass is the functional layer: navigation, action docks, dialogs and card captions use a neutral translucent fill, 16 px backdrop blur and subtle light/shadow. Reading remains opaque. Unsupported backdrop-filter, reduced transparency and forced colors use opaque surfaces. Keep one active parallax card: at most 1.5 degrees tilt, 3 px image shift and scale 1.015, settling in 150 ms. Reading sparkles preserve the native cursor and selection. One 800 ms pixel confetti burst accompanies the start of a native download. Reduced motion and unsuitable pointers disable decorative interaction effects.
+
+Home collections use finite native horizontal scroll-snap, one/two/three cards across phone/tablet/wide layouts, previous/next controls and page count. No autoplay or cloned cards. Home highlights use six existing works in an asymmetric mosaic; the portrait tile links to its mobile variant. Search retains a regular grid.
 
 ## Development kit and visual materials
 
