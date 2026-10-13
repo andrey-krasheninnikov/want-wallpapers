@@ -1,8 +1,9 @@
 import { test, expect } from 'bun:test';
 import type { APIContext } from 'astro';
 import { GET } from '../src/pages/llms.txt';
-import { collections } from '../src/data/catalog';
-import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount } from '../scripts/seo-validation';
+import { collections, locales } from '../src/data/catalog';
+import { collectionStories, editorialCopy } from '../src/data/editorial';
+import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
 async function localizedPages(fallback = '') {
@@ -254,4 +255,57 @@ test('llms build validation requires current public catalog links in their local
     text + `- [Private](${origin}/api/v1/catalog)\n`,
   ];
   for (const invalid of invalidFiles) expect(() => validateLlms(invalid, indexed)).toThrow();
+});
+
+
+test('content metrics use UTF-8 bytes and compare ratios before rounding', async () => {
+  const page = await parsePage('<html lang="zh-CN"><body><main>蓝色光线壁纸图</main></body></html>', '/zh-cn/');
+  page.bytes = 209;
+  const metrics = pageMetrics(page);
+  expect(metrics.textBytes).toBe(21);
+  expect(metrics.ratio).toBeCloseTo(21 / 209 * 100, 10);
+  expect(metrics.ratio).toBeGreaterThan(10);
+  expect(Math.round(metrics.ratio * 10) / 10).toBe(10);
+  expect(() => validateContentMetrics({ ...metrics, words: 200 })).not.toThrow();
+  expect(() => validateContentMetrics({ ...metrics, words: 200, ratio: 10 })).toThrow(/text\/HTML/);
+});
+
+test('content validation keeps the 200-word boundary and reports noindex pages', async () => {
+  const page = await parsePage('<html lang="en"><body><main>' + 'word '.repeat(200) + '</main></body></html>', '/');
+  const metrics = pageMetrics(page);
+  expect(metrics.words).toBe(200);
+  expect(() => validateContentMetrics(metrics)).not.toThrow();
+  expect(() => validateContentMetrics({ ...metrics, words: 199 })).toThrow(/200/);
+  page.path = '/search/';
+  page.robots = ['noindex, follow'];
+  page.text = 'Search';
+  const search = pageMetrics(page);
+  expect(search.indexable).toBe(false);
+  expect(search.words).toBe(1);
+  expect(search.ratio).toBeLessThan(10);
+  expect(() => validateContentMetrics(search)).not.toThrow();
+});
+
+test('localized stories must be in the main content, not metadata or hidden markup', async () => {
+  for (const locale of locales) {
+    const path = (locale === 'en' ? '' : '/' + locale) + '/collections/';
+    const title = editorialCopy[locale].title;
+    const paragraphs = collections.map(collection => collectionStories[collection.slug]![locale][0]!);
+    const content = [title, editorialCopy[locale].licenseText, ...paragraphs].join(' ');
+    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
+    const page = await parsePage(`<html lang="${lang}"><body><main>${content}</main></body></html>`, path);
+    expect(() => validateLocalizedContent(page)).not.toThrow();
+    const missing = await parsePage(`<html lang="${lang}"><head><meta name="description" content="${content}"></head><body><nav>${content}</nav><main>English fallback<p hidden>${content}</p><script>${content}</script></main></body></html>`, path);
+    expect(missing.mainText).toBe('English fallback');
+    expect(() => validateLocalizedContent(missing)).toThrow(/localized main content/);
+  }
+});
+
+test('city search needs distinct contextual source pages', async () => {
+  const pages = await localizedPages('<a href="/search/?q=city">City</a><a href="/search/?q=city">City again</a>');
+  const search = await parsePage(`<html lang="en"><head><link rel="canonical" href="${origin}/search/"><meta property="og:url" content="${origin}/search/"><meta name="robots" content="noindex, follow"></head><body></body></html>`, '/search/');
+  pages.set(search.path, search);
+  expect(() => validateCityLinks(validatePages(pages, new Set()))).toThrow(/two contextual/);
+  pages.get('/ru/')!.references.push({ tag: 'a', url: '/search/?q=city' });
+  expect(() => validateCityLinks(validatePages(pages, new Set()))).not.toThrow();
 });
