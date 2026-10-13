@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { useWallpaperSocial, WallpaperRatings, WallpaperComments } from '@/components/SocialPanel';
 import { copy, localPath } from '@/data/copy';
 import { designCopy } from '@/data/design-copy';
 import { selectedWallpaperVariant, wallpaperSlideHref } from '@/lib/wallpaper-navigation';
@@ -19,6 +20,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
 }) {
   const ui = copy[locale];
   const text = designCopy[locale];
+  const social = useWallpaperSocial(id, locale);
   const [variant, setVariant] = useState<'desktop' | 'mobile'>('desktop');
   const pointer = React.useRef<{ x: number; y: number; id: number } | null>(null);
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
   }
   const image = variants[variant];
   return <Tabs value={variant} onValueChange={changeVariant} className="block"><div className="wallpaper-detail-grid" data-wallpaper-detail={id}>
-    <div className="wallpaper-stage">
+    <div className="wallpaper-stage" style={{ "--desktop-ratio": variants.desktop.width / variants.desktop.height, "--mobile-ratio": variants.mobile.width / variants.mobile.height } as React.CSSProperties}>
       <div id="wallpaper-view" className="wallpaper-preview wallpaper-detail-frame" role="region" tabIndex={0} aria-label={text.gallery}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
@@ -79,9 +81,9 @@ export default function WallpaperView({ locale, id, description, variants, tags,
         {navigation.next && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.next.href, variant)} data-wallpaper-next aria-label={`${text.next}: ${navigation.next.title}`} onClick={() => direction('next')}><ArrowRight aria-hidden="true" /></a></Button>}
       </nav>
     </div>
-    <Card className="gap-0 py-0 shadow-none lg:sticky lg:top-28"><CardContent className="grid gap-6 p-5 sm:p-6">
+    <div className="wallpaper-sidebar"><Card className="gap-0 py-0 shadow-none"><CardContent className="grid gap-6 p-5 sm:p-6">
       <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
-      <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-background p-1">
+      <TabsList className="grid h-auto! w-full grid-cols-2 gap-1 bg-background p-1">
         <TabsTrigger value="desktop" className="wallpaper-variant-trigger"><Monitor className="size-4 shrink-0" aria-hidden="true" />{ui.desktop}</TabsTrigger>
         <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone className="size-4 shrink-0" aria-hidden="true" />{ui.mobile}</TabsTrigger>
       </TabsList>
@@ -91,6 +93,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
       </div>
       <p className="text-sm leading-relaxed text-muted-foreground">{ui.formatHint}. <a className="text-link underline" href={localPath(locale, '/license/')}>{ui.license}</a></p>
       <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
-    </CardContent></Card>
+    </CardContent></Card><WallpaperRatings locale={locale} social={social} /></div>
+    <WallpaperComments locale={locale} social={social} />
   </div></Tabs>;
 }

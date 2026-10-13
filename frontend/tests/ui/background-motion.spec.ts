@@ -10,7 +10,7 @@ test.describe('pixel background', () => {
   test('reading stays still while the background glow remains faint', async ({ page }) => {
     expect((await page.goto('/ru/'))?.status()).toBe(200);
     await expect(page.locator('html')).toHaveAttribute('data-background-motion', 'running');
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(13, 16, 25)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(20, 20, 20)');
     await expect(page.locator('h1')).toHaveCSS('animation-name', 'none');
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
     const background = await page.evaluate(() => {

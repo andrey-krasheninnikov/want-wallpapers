@@ -2,7 +2,6 @@ import { createRoot } from 'react-dom/client';
 import WallpaperAdvertisements from '../../src/components/WallpaperAdvertisements';
 import WallpaperView from '../../src/components/WallpaperView';
 import CookieConsent from '../../src/components/CookieConsent';
-import SocialPanel from '../../src/components/SocialPanel';
 import { wallpapers, type Locale } from '../../src/data/catalog';
 import { copy } from '../../src/data/copy';
 import type { MountAdvertisement } from '../../src/lib/advertising';
@@ -44,7 +43,6 @@ root.render(<>
       <WallpaperAdvertisements locale={locale} mount={mount} />
       <WallpaperView locale={locale} id={wallpaper.id} description={wallpaper.description[locale]} variants={variants} tags={[]} navigation={{ previous: null, next: null, position: 1, total: 1 }} />
     </section>
-    <SocialPanel id={wallpaper.id} locale={locale} />
   </main>
   <footer className="shell"><a data-cookie-settings href="/cookies/">{copy[locale].cookieSettings}</a></footer>
   <CookieConsent locale={locale} analyticsAvailable={false} />

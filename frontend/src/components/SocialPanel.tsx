@@ -15,7 +15,7 @@ import { ratingValues, ratingEmoji, type Rating } from '@/data/ratings';
 import type { Comment, SocialData } from '@/lib/wallpaper-client';
 import type { Locale } from '@/data/catalog';
 
-export default function SocialPanel({ id, locale }: { id: string; locale: Locale }) {
+export function useWallpaperSocial(id: string, locale: Locale) {
   const ui = copy[locale];
   const text = interfaceCopy[locale];
   const [data, setData] = useState<SocialData | null>(null);
@@ -25,6 +25,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   const [busy, setBusy] = useState(false);
   const [comment, setComment] = useState('');
   const [reported, setReported] = useState<string[]>([]);
+  const [noticeTarget, setNoticeTarget] = useState<'ratings' | 'comments'>('comments');
   async function refresh() {
     setLoading(true); setError('');
     try { const service = await import('@/lib/wallpaper-client'); setData(await service.readSocial(id)); }
@@ -39,6 +40,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   }, [id, ui.serviceError]);
   async function rate(value: string) {
     if (busy || !ratingValues.includes(value as Rating)) return;
+    setNoticeTarget('ratings');
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client'); await service.saveRating(id, value as Rating);
@@ -49,6 +51,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    setNoticeTarget('comments');
     if (comment.trim().length < 2) { setError(ui.required); return; }
     setBusy(true); setError(''); setStatus('');
     try {
@@ -59,6 +62,7 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
   }
   async function action(item: Comment) {
     if (busy) return;
+    setNoticeTarget('comments');
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client');
@@ -67,22 +71,49 @@ export default function SocialPanel({ id, locale }: { id: string; locale: Locale
     } catch (error) { setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
-  return <div className="grid gap-6" data-social-panel>
-    {error && <Alert variant="destructive" role="alert"><AlertDescription>{error}<Button type="button" variant="outline" className="mt-3 w-fit" disabled={busy || loading} onClick={() => void refresh()}>{text.retry}</Button></AlertDescription></Alert>}
-    <section aria-labelledby="ratings-title"><h2 id="ratings-title" className="section-title">{ui.ratings}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{ui.ratingHint}</p>
-      {loading && !data ? <div role="status" className="mt-6 grid grid-cols-4 gap-2 sm:gap-4" aria-label={ui.loading} aria-busy="true">{ratingValues.map((value) => <Skeleton key={value} className="h-24" />)}</div> : <RadioGroup value={data?.ownRating ?? ''} onValueChange={(value) => void rate(value)} disabled={busy || !data} aria-label={ui.ratings} className="mt-6 grid grid-cols-4 gap-2 sm:gap-4">
-        {ratingValues.map((value) => <Label key={value} htmlFor={`rating-${value}`} title={ui[value]} className="rating-tile">
-          <RadioGroupItem id={`rating-${value}`} value={value} aria-label={ui[value]} aria-describedby={`rating-count-${value}`} className="absolute inset-0 size-full rounded-lg border-0 opacity-0" /><span aria-hidden="true" className="pointer-events-none text-3xl leading-none">{ratingEmoji[value]}</span>{data?.ownRating === value && <Check aria-hidden="true" className="pointer-events-none absolute top-2 right-2 size-3.5 text-link" />}<span id={`rating-count-${value}`} className="pointer-events-none text-center text-sm text-muted-foreground tabular-nums wrap-anywhere"><span className="sr-only">{text.votes}: </span>{data?.counts[value].toLocaleString(locale) ?? '…'}</span>
-        </Label>)}
-      </RadioGroup>}
-    </section>
+  return { data, loading, error, status, busy, comment, reported, noticeTarget, setComment, refresh, rate, submit, action };
+}
+
+type SocialState = ReturnType<typeof useWallpaperSocial>;
+
+function SocialNotice({ locale, social, target }: { locale: Locale; social: SocialState; target: SocialState['noticeTarget'] }) {
+  const active = social.noticeTarget === target;
+  return <>
+    {active && social.error && <Alert variant="destructive" role="alert"><AlertDescription>{social.error}<Button type="button" variant="outline" className="mt-3 w-fit" disabled={social.busy || social.loading} onClick={() => void social.refresh()}>{interfaceCopy[locale].retry}</Button></AlertDescription></Alert>}
+    <p className="comment-social-status text-sm leading-relaxed text-link" role="status">{active ? social.status : ''}</p>
+  </>;
+}
+
+export function WallpaperRatings({ locale, social }: { locale: Locale; social: SocialState }) {
+  const ui = copy[locale], text = interfaceCopy[locale];
+  const { data, loading, busy } = social;
+  return <section className="wallpaper-ratings grid gap-3" aria-labelledby="ratings-title" data-wallpaper-ratings>
+    <h2 id="ratings-title">{ui.ratings}</h2><p className="text-sm leading-relaxed text-muted-foreground">{ui.ratingHint}</p>
+    {loading && !data ? <div role="status" className="grid grid-cols-4 gap-2" aria-label={ui.loading} aria-busy="true">{ratingValues.map((value) => <Skeleton key={value} className="h-14" />)}</div> : <RadioGroup value={data?.ownRating ?? ''} onValueChange={(value) => void social.rate(value)} disabled={busy || !data} aria-label={ui.ratings} className="grid grid-cols-4 gap-2">
+      {ratingValues.map((value) => <Label key={value} htmlFor={`rating-${value}`} title={ui[value]} className="rating-tile">
+        <RadioGroupItem id={`rating-${value}`} value={value} aria-label={ui[value]} aria-describedby={`rating-count-${value}`} className="absolute inset-0 size-full rounded-lg border-0 opacity-0" /><span aria-hidden="true" className="pointer-events-none text-xl leading-none">{ratingEmoji[value]}</span>{data?.ownRating === value && <Check aria-hidden="true" className="pointer-events-none absolute top-1 right-1 size-3 text-link" />}<span id={`rating-count-${value}`} className="pointer-events-none text-center text-sm text-muted-foreground tabular-nums wrap-anywhere"><span className="sr-only">{text.votes}: </span>{data?.counts[value].toLocaleString(locale) ?? '…'}</span>
+      </Label>)}
+    </RadioGroup>}
+    <SocialNotice locale={locale} social={social} target="ratings" />
+  </section>;
+}
+
+export function WallpaperComments({ locale, social }: { locale: Locale; social: SocialState }) {
+  const ui = copy[locale], text = interfaceCopy[locale];
+  const { data, loading, busy, comment, reported } = social;
+  return <section aria-labelledby="comments-title" className="wallpaper-comments grid gap-4" data-social-panel>
+    <h2 id="comments-title" className="section-title">{ui.comments}</h2>
+    <SocialNotice locale={locale} social={social} target="comments" />
+    <form className="comment-composer" onSubmit={(event) => void social.submit(event)} aria-busy={busy}>
+      <FieldGroup><Field data-disabled={busy || !data}>
+        <div className="comment-compose-row"><span className="comment-avatar" data-own="true" aria-hidden="true"><UserRound /></span><FieldLabel htmlFor="comment-text">{text.commentTitle}</FieldLabel></div>
+        <p id="comment-hint" className="text-sm leading-relaxed text-muted-foreground">{text.commentPublic}</p>
+        <Textarea id="comment-text" name="comment" value={comment} onChange={(event) => social.setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy || !data} aria-describedby="comment-hint" />
+      </Field></FieldGroup>
+      <div className="comment-compose-footer"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><Button type="submit" disabled={busy || !data}>{busy ? ui.loading : ui.commentSubmit}</Button></div>
+    </form>
+    <div aria-busy={loading}>{loading && !data ? <div role="status" aria-label={ui.loading} className="grid gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /></div> : <CommentFeed locale={locale} comments={data?.comments ?? []} ownUid={data?.ownUid ?? null} reported={reported} busy={busy} onAction={(item) => void social.action(item)} />}</div>
     <RecaptchaNotice locale={locale} />
-    <p className="min-h-6 text-sm text-link" role="status">{status}</p>
-    <section aria-labelledby="comments-title" className="grid gap-6"><h2 id="comments-title" className="section-title">{ui.comments}</h2>
-      <form className="comment-composer" onSubmit={(event) => void submit(event)} aria-busy={busy}>
-        <div className="comment-compose-row"><span className="comment-avatar" data-own="true" aria-hidden="true"><UserRound /></span><div className="min-w-0"><FieldGroup><Field data-disabled={busy}><FieldLabel htmlFor="comment-text">{text.commentTitle}</FieldLabel><p id="comment-hint" className="text-sm leading-relaxed text-muted-foreground">{text.commentPublic}</p><Textarea id="comment-text" name="comment" value={comment} onChange={(event) => setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy} aria-describedby="comment-hint" /></Field></FieldGroup><div className="comment-compose-footer"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><Button type="submit" disabled={busy}>{busy ? ui.loading : ui.commentSubmit}</Button></div></div></div>
-      </form>
-      <div aria-busy={loading}>{loading && !data ? <div role="status" aria-label={ui.loading} className="grid gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /></div> : <CommentFeed locale={locale} comments={data?.comments ?? []} ownUid={data?.ownUid ?? null} reported={reported} busy={busy} onAction={(item) => void action(item)} />}</div>
-    </section>
-  </div>;
+    <noscript><p className="text-sm leading-relaxed text-muted-foreground">{text.javascriptRequired}</p></noscript>
+  </section>;
 }

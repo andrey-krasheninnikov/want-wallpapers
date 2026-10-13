@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Menu, Globe } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@/components/ui/navigation-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
-import { copy, languageLabels, localPath } from '@/data/copy';
+import { copy, languageLabels, languageFlags, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import type { Locale } from '@/data/catalog';
 
@@ -31,9 +31,9 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       <div className="flex shrink-0 items-center gap-2">
         <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
           <SelectTrigger aria-label={text.language} className="h-11! w-auto min-w-0 gap-2 rounded-pill px-3 sm:px-4 bg-secondary shadow-none hover:bg-accent">
-            <Globe className="hidden size-4 text-muted-foreground sm:block" aria-hidden="true" /><SelectValue>{locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
+            <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
           </SelectTrigger>
-          <SelectContent>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11">{title}</SelectItem>)}</SelectContent>
+          <SelectContent><SelectGroup>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11"><span aria-hidden="true">{languageFlags[value as Locale]}</span>{title}</SelectItem>)}</SelectGroup></SelectContent>
         </Select>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" aria-label={ui.menu}><Menu /></Button></SheetTrigger>
@@ -44,6 +44,6 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
         </Sheet>
       </div>
     </div>
-    <noscript><nav aria-label={ui.menu} className="shell flex flex-wrap gap-x-6 pb-4 lg:hidden">{links.map((link) => <a key={link.href} className="py-2 text-sm text-link" href={localPath(locale, link.href)}>{link.title}</a>)}</nav><div className="shell flex flex-wrap gap-4 pb-4">{Object.entries(languageLabels).map(([value, title]) => <a key={value} href={localPath(value as Locale, path)} lang={value}>{title}</a>)}</div></noscript>
+    <noscript><nav aria-label={ui.menu} className="shell flex flex-wrap gap-x-6 pb-4 lg:hidden">{links.map((link) => <a key={link.href} className="py-2 text-sm text-link" href={localPath(locale, link.href)}>{link.title}</a>)}</nav><div className="shell flex flex-wrap gap-4 pb-4">{Object.entries(languageLabels).map(([value, title]) => <a key={value} href={localPath(value as Locale, path)} lang={value}><span aria-hidden="true">{languageFlags[value as Locale]}</span> {title}</a>)}</div></noscript>
   </header>;
 }

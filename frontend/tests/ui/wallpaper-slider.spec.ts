@@ -14,6 +14,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) test(`catalogue
   await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
   await expect(page.locator('#detail-image')).toHaveAttribute('src', `/previews/${first.slug}-mobile.webp`);
   await expect(page.locator('#wallpaper-view')).toBeFocused();
+  await expect(page.locator('#wallpaper-view')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
   await page.keyboard.press('ArrowLeft');
   await expect(page).toHaveURL(`http://127.0.0.1:4322${localPath(locale, `/wallpapers/${last.slug}/`)}?variant=mobile#wallpaper-view`);
   await expect(page.locator('[data-wallpaper-detail]')).toHaveAttribute('data-wallpaper-detail', last.id);
@@ -22,6 +23,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) test(`catalogue
   await expect(page.locator('#download-form')).toHaveAttribute('action', `/downloads/${last.slug}-mobile.png`);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, `/wallpapers/${last.slug}/`)}`);
   await expect(page.locator('#wallpaper-view')).toBeFocused();
+  await expect(page.locator('#wallpaper-view')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('h1')).toHaveText(first.title[locale]);
   await page.getByRole('tab', { name: copy[locale].desktop, exact: true }).click();

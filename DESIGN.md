@@ -2,7 +2,7 @@
 
 ## Direction
 
-Want Wallpapers is a gallery on cool dark planes with saturated violet accents and a faint pixel grid. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference supplies the blue-violet identity. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and four locales remain authoritative.
+Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and a faint pixel grid. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity and pixel motif. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and four locales remain authoritative.
 
 The device stage stays beside the home introduction. A prominent collection leads the collection grid. Wallpaper results retain a regular comparison grid. Long supporting content becomes readable sections for stories, works, file formats, licensing and topics. Legal pages place their explanatory continuation inside the same reading surface.
 
@@ -12,20 +12,20 @@ The five gallery references remain useful: Unsplash for image priority, Pexels f
 
 | Token | Value | Use |
 | --- | --- | --- |
-| background | #0D1019 | Page ground |
-| foreground | #F2F4FA | Main text and keyboard focus fill |
-| card, muted | #161B28 | Grouped content |
-| secondary, popover | #202738 | Nested controls and raised surfaces |
-| accent | #2D354A | Interactive surface |
-| media-ground | #090C14 | Wallpaper and device stage |
-| muted-foreground | #AFB7C7 | Supporting text |
+| background | #141414 | Page ground |
+| foreground | #E8E8E8 | Main text and button focus fill |
+| card, muted | #1C1C1C | Grouped content |
+| secondary, popover | #252525 | Nested controls and raised surfaces |
+| accent | #303030 | Interactive surface |
+| media-ground | #101010 | Wallpaper and device stage |
+| muted-foreground | #ADADAD | Supporting text |
 | primary | #6642F5 | Primary action and selected mark |
 | primary-foreground | #FFFFFF | Action labels, including hover |
 | primary-hover / primary-active | #7355F8 / #5634DC | Action feedback |
 | link, ring | #B09AFA | Readable accent text |
 | destructive | #FF738D | Error text and destructive actions |
-| pixel-grid | #3A425C | Decorative grid |
-| border, input | #38425A / #7C88A0 | Compatibility aliases and filled switch/radio indicators |
+| pixel-grid | #383838 | Decorative grid |
+| border, input | #383838 / #858585 | Compatibility aliases and filled switch/radio indicators |
 
 The single source is frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add decorative borders, divider rules, inset hairlines or button gradients. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The faint edge glow stays behind the page. The physical bezel in the device poster depicts the object and remains part of the image.
 
@@ -45,17 +45,23 @@ Onest Variable carries headings; Manrope Variable carries body text and controls
 
 Use the existing Radix-based shadcn sources and semantic Tailwind v4 tokens. The outline variant remains import-compatible and uses a filled secondary surface. Separator exports remain compatible but display no rule. Do not create a second component library.
 
-Keyboard focus inverts the control fill and label to #F2F4FA and #0D1019. Descendant labels and icons retain readable contrast. Forced colors use the system focus outline. Selected states also have a selection mark or label. Errors have linked text and a filled state, not color alone. Disabled and loading controls retain their dimensions.
+Keyboard focus inverts button fills and labels to #E8E8E8 and #141414. Inputs, textareas and the wallpaper viewer keep their dark fills and show a 2 px #B09AFA outline with a 3 px offset. Invalid fields keep their dark error fill during focus. Descendant labels and icons retain readable contrast. Forced colors use the system focus outline. Selected states also have a selection mark or label. Errors have linked text and a filled state, not color alone. Disabled and loading controls retain their dimensions.
 
 Feedback is one writing surface: compact title, topic, optional email, message and a composed action/result area. Validation stays associated with the relevant field. Failed requests preserve input. The direct email action sits beside the form on wide screens; supporting topics continue beneath both columns in the same page composition.
 
 Owner contact has an initial avatar, identity and three linked action rows. Each row includes a useful icon, destination and outgoing arrow. Keep the existing contact URLs.
 
-Comments use a compact feed: avatar, guest/self label, date, text and action. The composer sits above the feed. Only existing publication, deletion and reporting actions are available. Sample comments in the development kit are explicitly demonstrations.
+Comments use a compact feed: avatar, guest/self label, date, text and action. On wallpaper pages the composer uses its full column width, with a small avatar in the label row. A single social controller supplies comments and ratings; request failures preserve drafts and show beside the relevant action. The composer sits above the feed. Only existing publication, deletion and reporting actions are available. Sample comments in the development kit are explicitly demonstrations.
 
 Cookie actions appear in both DOM and visual order: settings, necessary only, allow all. The footer channel label is exactly Telegram Channel in every locale. Preserve independent privacy choices and dialog focus behavior.
 
-## Wallpaper navigation
+## Wallpaper composition and navigation
+
+At 1280 px and above, the 1280 px public shell contains comments on the left (248 px), the viewer in the middle and download controls on the right (304 px), with 24 px gaps. At 768–1279 px, the viewer and a 288 px download column share the first row; comments follow across both columns. Phones show the viewer, navigation, downloads, ratings and comments in that order. Compact rating targets are at least 56 px tall and sit below downloads.
+
+Preview frames follow the selected image ratio, contain the whole image and use a dark media ground. Portrait frames are centered, at most 360 px wide and 65dvh tall; arrows align with the frame. Frame padding is 8 px on phones and 12 px from 768 px. Both image ratios are available before hydration. The long wallpaper story flows through three balanced text columns from 1280 px, two from 768 px and one on phones. Headings stay outside that flow; wording and DOM reading order remain intact.
+
+Language choices show decorative flags beside their existing labels: en 🇬🇧, ru 🇷🇺, zh-cn 🇨🇳 and pt-br 🇧🇷. Flags appear in the selected control, its options and native fallback links; locale identifiers do not change.
 
 The viewer provides previous/next links across the complete catalog in its existing search order. It wraps at both ends and hides links for a single item. Horizontal swipes and ArrowLeft/ArrowRight while the viewer has focus use the same destinations. Vertical gestures remain page scrolling; tab and text-field keys remain local to their controls.
 

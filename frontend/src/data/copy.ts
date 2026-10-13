@@ -150,6 +150,8 @@ export const copy = {
 export const ui = (locale: Locale) => copy[locale];
 export const localePrefix = (locale: Locale) => locale === 'en' ? '' : `/${locale}`;
 export const localPath = (locale: Locale, path = '/') => `${localePrefix(locale)}${path === '/' ? '/' : path}`;
+export const languageFlags: Record<Locale, string> = { en: '🇬🇧', ru: '🇷🇺', 'zh-cn': '🇨🇳', 'pt-br': '🇧🇷' };
+
 export const languageLabels: Record<Locale, string> = {
   en: 'English', ru: 'Русский', 'zh-cn': '简体中文', 'pt-br': 'Português',
 };

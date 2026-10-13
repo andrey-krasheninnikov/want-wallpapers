@@ -27,10 +27,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const palette = [
-  ['Background', '--background', '#0D1019'], ['Card', '--card', '#161B28'], ['Secondary', '--secondary', '#202738'],
-  ['Foreground', '--foreground', '#F2F4FA'], ['Muted text', '--muted-foreground', '#AFB7C7'],
-  ['Accent', '--accent', '#2D354A'], ['Input', '--input', '#7C88A0'], ['Destructive', '--destructive', '#FF738D'],
-  ['Grid', '--pixel-grid', '#3A425C'], ['Primary hover', '--primary-hover', '#7355F8'], ['Primary active', '--primary-active', '#5634DC'], ['Primary', '--primary', '#6642F5'], ['Readable accent', '--link', '#B09AFA'], ['Focus fill', '--foreground', '#F2F4FA'],
+  ['Background', '--background', '#141414'], ['Card', '--card', '#1C1C1C'], ['Secondary', '--secondary', '#252525'],
+  ['Foreground', '--foreground', '#E8E8E8'], ['Muted text', '--muted-foreground', '#ADADAD'],
+  ['Accent', '--accent', '#303030'], ['Input', '--input', '#858585'], ['Destructive', '--destructive', '#FF738D'],
+  ['Grid', '--pixel-grid', '#383838'], ['Primary hover', '--primary-hover', '#7355F8'], ['Primary active', '--primary-active', '#5634DC'], ['Primary', '--primary', '#6642F5'], ['Readable accent', '--link', '#B09AFA'], ['Field focus', '--ring', '#B09AFA'],
 ] as const;
 
 export default function UiKit({ item }: { item: WallpaperCardData }) {

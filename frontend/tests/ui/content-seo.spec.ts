@@ -22,12 +22,12 @@ for (const locale of locales) {
         await expect(page.locator('.wallpaper-card-title').first()).toHaveCSS('font-size', '16px');
         if (path!.startsWith('/wallpapers/')) {
           await expect(page.locator('[data-wallpaper-detail]')).toHaveCSS('display', 'grid');
-          await expect(page.locator('.wallpaper-detail-frame')).toHaveCSS('padding-left', width < 640 ? '16px' : '24px');
+          await expect(page.locator('.wallpaper-detail-frame')).toHaveCSS('padding-left', width < 768 ? '8px' : '12px');
           await expect(page.locator('.wallpaper-variant-trigger').first()).toHaveCSS('min-height', '48px');
           await expect(page.locator('.wallpaper-tag-link').first()).toHaveCSS('padding-top', '8px');
           const tag = page.locator('.wallpaper-tag-link').first();
           await tag.hover();
-          await expect(tag).toHaveCSS('background-color', 'rgb(45, 53, 74)');
+          await expect(tag).toHaveCSS('background-color', 'rgb(48, 48, 48)');
           await page.mouse.move(0, 0);
         }
         if (width === 320 || width === 1440) {
