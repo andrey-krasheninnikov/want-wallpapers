@@ -10,7 +10,7 @@
 - `automation/n8n/`: отдельный локальный n8n на MacBook, постоянный Docker volume и приватные snapshots.
 - `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
 
-Нужны Bun 1.3.14, Rust 1.93.0, Python 3, Docker для тестовой БД и `age` для проверки encrypted backup/restore. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
+Нужны Bun 1.3.14, Rust 1.93.0, Python 3, FFmpeg (ffmpeg/ffprobe) для проверки видеообложек, Docker для тестовой БД и `age` для проверки encrypted backup/restore. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
 
 ```bash
 make install
@@ -70,7 +70,7 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Protected v* tag запускает production workflow после release eligibility; deployment требует подготовленного VPS и работающего Mac backup worker.
 
-`make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Кэш и build output не коммитятся.
+`make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Видеообложки необязательны: [формат, проверка и публикация](docs/collection-covers.md). Сборка проверяет MP4/H.264 без аудио, до 10 секунд и 8 MiB, а также обязательный PNG-постер. FFmpeg нужен только в build/test-среде; Docker build устанавливает его автоматически. Кэш и build output не коммитятся.
 
 ## Эксплуатация
 

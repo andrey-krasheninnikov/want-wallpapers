@@ -2,6 +2,7 @@ import type { Locale } from './catalog';
 
 export const interfaceCopy = {
   en: {
+    pauseCover: 'Pause animation', playCover: 'Play animation',
     skip: 'Skip to content', language: 'Language', legal: 'Information', close: 'Close',
     catalogue: 'The catalogue', reset: 'Reset filters', retry: 'Try again', saved: 'Saved',
     settings: 'Choose what to allow', save: 'Save settings', necessary: 'Essential storage',
@@ -36,6 +37,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Nothing here yet.', notFoundText: 'This page is not in the collection.', back: 'Back to the wallpapers',
   },
   ru: {
+    pauseCover: 'Остановить анимацию', playCover: 'Включить анимацию',
     skip: 'Перейти к содержимому', language: 'Язык', legal: 'Информация', close: 'Закрыть',
     catalogue: 'Каталог', reset: 'Сбросить фильтры', retry: 'Попробовать ещё раз', saved: 'Сохранено',
     settings: 'Выберите, что разрешить', save: 'Сохранить настройки', necessary: 'Необходимое хранение',
@@ -70,6 +72,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Пока пусто.', notFoundText: 'Этой страницы нет в коллекции.', back: 'Вернуться к обоям',
   },
   'zh-cn': {
+    pauseCover: '暂停动画', playCover: '播放动画',
     skip: '跳到正文', language: '语言', legal: '网站信息', close: '关闭',
     catalogue: '壁纸目录', reset: '重置筛选', retry: '重试', saved: '已保存',
     settings: '选择允许的功能', save: '保存设置', necessary: '必要存储',
@@ -104,6 +107,7 @@ export const interfaceCopy = {
     notFoundTitle: '这里暂时没有内容。', notFoundText: '这个页面不在系列中。', back: '返回壁纸',
   },
   'pt-br': {
+    pauseCover: 'Pausar animação', playCover: 'Reproduzir animação',
     skip: 'Ir para o conteúdo', language: 'Idioma', legal: 'Informações', close: 'Fechar',
     catalogue: 'O catálogo', reset: 'Limpar filtros', retry: 'Tentar novamente', saved: 'Salvo',
     settings: 'Escolha o que permitir', save: 'Salvar configurações', necessary: 'Armazenamento essencial',

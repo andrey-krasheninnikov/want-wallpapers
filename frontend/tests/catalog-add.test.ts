@@ -47,3 +47,21 @@ test('manifest limits use UTF-16 length and reject NUL text', () => {
     expect(() => parseCollectionManifest(invalid)).toThrow();
   }
 });
+
+
+test('collection video covers survive manifest and snapshot parsing without changing PNG variants', () => {
+  const input = manifest();
+  const videoCover = { src: 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0004-quiet-light/cover.mp4', poster: 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0004-quiet-light/cover.png' };
+  Object.assign(input.collection, { videoCover });
+  expect(parseCollectionManifest(input)).toEqual(input);
+  expect(parseCollection(input.collection)).toEqual(input.collection);
+});
+
+test('collection video covers reject incomplete objects and unsafe CDN URLs', () => {
+  const prefix = 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0004-quiet-light/';
+  for (const videoCover of [null, {}, { src: prefix + 'cover.mp4' }, { src: prefix + 'cover.mp4', poster: prefix + 'cover.png', extra: true },
+    ...['http://want-foundation.s3.twcstorage.ru/cover.mp4', 'https://example.com/cover.mp4', prefix + '../cover.mp4', prefix + '%2e%2e/cover.mp4', prefix + 'cover.mp4?x=1', prefix + 'cover.mp4#x', prefix + 'cover.webm', prefix.replace('0004-', '0005-') + 'cover.mp4', prefix.replace('.ru/', '.ru:443/') + 'cover.mp4'].map((src) => ({ src, poster: prefix + 'cover.png' })),
+    { src: prefix + 'cover.mp4', poster: prefix + 'cover.svg' }]) {
+    expect(() => parseCollection({ ...manifest().collection, videoCover })).toThrow();
+  }
+});

@@ -181,3 +181,6 @@
 @utility ui-card-header { @apply has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6; }
 @utility ui-card-footer { @apply [.border-t]:pt-6; }
 @utility gallery-card { @apply hover:border-ring/60; }
+
+[data-cover-video][hidden], [data-cover-control][hidden] { display: none; }
+[data-cover-control][data-playing="false"] [data-cover-pause], [data-cover-control][data-playing="true"] [data-cover-play] { display: none; }

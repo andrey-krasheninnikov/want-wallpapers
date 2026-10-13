@@ -71,7 +71,7 @@ pub async fn headers(State(state): State<AppState>, request: Request, next: Next
         "'none'"
     };
     let csp = format!(
-        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}; font-src 'self'; connect-src {connect}{captcha_connect}; frame-src {frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}; media-src https://want-foundation.s3.twcstorage.ru; font-src 'self'; connect-src {connect}{captcha_connect}; frame-src {frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     );
     let headers = response.headers_mut();
     if let Ok(value) = HeaderValue::from_str(&csp) {

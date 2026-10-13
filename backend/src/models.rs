@@ -12,6 +12,47 @@ pub struct Collection {
     pub count: i64,
     pub title: Localized,
     pub description: Localized,
+    #[serde(
+        default,
+        rename = "videoCover",
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "video_cover"
+    )]
+    pub video_cover: Option<VideoCover>,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VideoCover {
+    pub src: String,
+    pub poster: String,
+}
+fn video_cover<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<VideoCover>, D::Error> {
+    VideoCover::deserialize(deserializer).map(Some)
+}
+impl VideoCover {
+    fn validate(&self, collection_id: &str) -> Result<()> {
+        let prefix = format!(
+            "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/{collection_id}/"
+        );
+        for (url, extension) in [(&self.src, ".mp4"), (&self.poster, ".png")] {
+            let name = url
+                .strip_prefix(&prefix)
+                .and_then(|name| name.strip_suffix(extension))
+                .ok_or_else(ApiError::invalid)?;
+            if url.len() > 2048
+                || name.is_empty()
+                || !name.as_bytes()[0].is_ascii_alphanumeric()
+                || !name
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+            {
+                return Err(ApiError::invalid());
+            }
+        }
+        Ok(())
+    }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -89,6 +130,9 @@ impl Collection {
         }
         localized(&self.title, 200)?;
         localized(&self.description, 2000)?;
+        if let Some(cover) = &self.video_cover {
+            cover.validate(&self.id)?;
+        }
         Ok(number)
     }
 }

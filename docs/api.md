@@ -42,10 +42,14 @@ Production требует CAPTCHA и credentials. RECAPTCHA_ENABLED=false раз
 
 - `GET /admin/catalog`: `{collections:[{item,version,archived}],wallpapers:[{item,version,archived}],taxonomy}`; включает архив для readback.
 - `POST /admin/catalog/import`: прежний manifest `{collection,wallpapers}`; `{result:"created"|"unchanged"}`. Точный повтор — no-op. Частичные, отличающиеся записи, повтор номера папки даже без ведущих нулей дают 409 без записи. Социальные данные сохраняются. После сетевой ошибки сначала выполните readback.
-- `PUT /admin/catalog/collections`: `{item,version}`; version=null для создания пустой коллекции, текущая version для изменения переводов. ID/slug/count существующей записи неизменны.
+- `PUT /admin/catalog/collections`: `{item,version}`; version=null для создания пустой коллекции, текущая version для изменения переводов и видеообложки. ID/slug/count существующей записи неизменны.
 - `PUT /admin/catalog/wallpapers`: `{item,version}`; version=null для создания, текущая version для изменения переводов, категории и тегов. ID/slug/номер/коллекция/CDN неизменны.
 - `PATCH /admin/catalog/{collections|wallpapers}/{id}/archive`: `{version,archived}`. Архив не удаляет социальные данные. Восстановление возвращает запись в следующий export.
 
 Каждый перевод содержит ровно en/ru/zh-cn/pt-br, название 1–200 и описание 1–2000 символов. ID коллекции `<положительный номер>-<slug>`, ведущие нули сохраняются. Номер уникален численно. Slug — латинские строчные буквы/цифры, разделённые одиночными дефисами. ID обоев `<slug>-<number>`, s3Folder=ID коллекции, fileStem=slug (сохранённое поле manifest). CDN: `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/{s3Folder}/{number}-{desktop|mobile}.png`. Категории и теги фиксированы в frontend и backend taxonomy. Collection count в защищённом readback хранит общее число дизайнов, публичный export вычисляет число активных. Максимум 1000 дизайнов в одном manifest.
+
+Коллекция может содержать необязательное `videoCover: {src,poster}`. Оба значения обязательны, если поле присутствует; null и неизвестные поля отклоняются. `src` содержит адрес MP4, `poster` содержит адрес PNG. Адреса имеют вид `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/{id}/{filename}`; имя начинается с латинской буквы/цифры и содержит только латинские буквы, цифры, дефисы и подчёркивания перед `.mp4` или `.png`. Другие origin, credentials, ports, query, fragments, подпапки и encoded paths запрещены. Для удаления обложки передайте полный item без videoCover с текущей version. Существующие записи без поля сохраняют прежний формат.
+
+API проверяет структуру и адреса, не скачивает файлы и не утверждает, что они прошли проверку медиа. Проверка MP4/H.264, отсутствия аудио, длительности ≤10 секунд, размера ≤8 MiB и PNG-постера выполняется при обязательной сборке до release. Поле проходит import, protected readback и public export; публикация статических страниц требует export, build и release. [Инструкция](collection-covers.md).
 
 Вход, изменения каталога и модерации записываются в audit_log без текстов сообщений, email, паролей, токенов и TOTP.
