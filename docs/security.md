@@ -1,6 +1,6 @@
 # Безопасность и зависимости
 
-Проверка зависимостей: 4 октября 2026. Следующая проверка обязательна не позднее 4 ноября 2026. Смена runtime, Astro features, версий override или появление новой advisory требует новой оценки. Эти исключения не означают чистый исходный audit.
+Проверка зависимостей: 4 октября 2026; transition directives пересмотрены 13 октября 2026. Следующая проверка обязательна не позднее 4 ноября 2026. Смена runtime, Astro features, версий override или появление новой advisory требует новой оценки. Эти исключения не означают чистый исходный audit.
 
 ```bash
 cargo install cargo-audit --version 0.22.2 --locked
@@ -26,7 +26,8 @@ Astro 5 сохранён ради совместимости текущего fr
 | [GHSA-xr5h-phrj-8vxv](https://github.com/withastro/astro/security/advisories/GHSA-xr5h-phrj-8vxv) | Server islands не используются, сервер Astro отсутствует. |
 | [GHSA-j687-52p2-xcff](https://github.com/withastro/astro/security/advisories/GHSA-j687-52p2-xcff) | define:vars не используется; JSON-LD сериализуется с экранированием `<`. |
 | [GHSA-jrpj-wcv7-9fh9](https://github.com/withastro/astro/security/advisories/GHSA-jrpj-wcv7-9fh9), [GHSA-f48w-9m4c-m7f5](https://github.com/withastro/astro/security/advisories/GHSA-f48w-9m4c-m7f5) | Astro spread attributes отсутствуют; имена атрибутов статические. React spread props не используют Astro renderer. |
-| [GHSA-7pw4-f3q4-r2p2](https://github.com/withastro/astro/security/advisories/GHSA-7pw4-f3q4-r2p2), [GHSA-4g3v-8h47-v7g6](https://github.com/withastro/astro/security/advisories/GHSA-4g3v-8h47-v7g6) | transition directives не используются. |
+| [GHSA-7pw4-f3q4-r2p2](https://github.com/withastro/astro/security/advisories/GHSA-7pw4-f3q4-r2p2) | В Base.astro допустимы только literal transition:persist="header", "cookies" и "feedback-root". Они не получают значения из URL, каталога или форм. Audit отклоняет другие значения, динамические directives и использование в других файлах. ClientRouter получает статические same-origin страницы; Astro SSR отсутствует. |
+| [GHSA-4g3v-8h47-v7g6](https://github.com/withastro/astro/security/advisories/GHSA-4g3v-8h47-v7g6) | transition:animate и другие animation directives запрещены audit. Анимации заданы статически в CSS и не используют request-derived значения или Astro animation helpers. |
 | [GHSA-2pvr-wf23-7pc7](https://github.com/withastro/astro/security/advisories/GHSA-2pvr-wf23-7pc7), [GHSA-376h-93r7-7g6f](https://github.com/withastro/astro/security/advisories/GHSA-376h-93r7-7g6f) | Runtime SSR и middleware Astro отсутствуют; Rust сам проверяет авторизацию независимо от URL статических страниц. |
 | [GHSA-8hv8-536x-4wqp](https://github.com/withastro/astro/security/advisories/GHSA-8hv8-536x-4wqp) | Динамические slot names не используются. |
 | [GHSA-26w7-cxv4-gfx2](https://github.com/withastro/astro/security/advisories/GHSA-26w7-cxv4-gfx2) | Все Sharp instances закреплены на 0.35.5 с исправленным libheif. Обработчик принимает проверенные PNG; runtime image optimizer отсутствует. Astro metadata по-прежнему отмечает finding. |
