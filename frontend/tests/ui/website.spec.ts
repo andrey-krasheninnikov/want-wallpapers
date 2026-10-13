@@ -254,6 +254,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true }).fill('Мне нравится этот горизонт.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-comment] .comment-text')).toHaveCSS('font-size', '16px');
   await page.setViewportSize({ width: 320, height: 900 });
   const commentFits = await page.locator('[data-comment]').evaluate((card) => {
     const bounds = card.getBoundingClientRect();
