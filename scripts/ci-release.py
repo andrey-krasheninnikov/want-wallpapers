@@ -124,7 +124,7 @@ def source_sha(value):
 
 
 def timestamp(value):
-    parsed = datetime.fromisoformat(value)
+    parsed = datetime.fromisoformat(value[:-1] + '+00:00' if value.endswith('Z') else value)
     require(parsed.tzinfo is not None, 'Release protection timestamp needs a timezone')
     return parsed
 
