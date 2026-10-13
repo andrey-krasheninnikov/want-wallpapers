@@ -1,4 +1,5 @@
 -- Stable metadata for restoration and conservative application rollback checks.
+SET LOCAL search_path = pg_catalog;
 WITH metadata AS (
  SELECT jsonb_build_object(
   'namespaces', (SELECT jsonb_agg(nspname ORDER BY nspname) FROM pg_namespace
@@ -13,16 +14,16 @@ WITH metadata AS (
               LEFT JOIN pg_collation coll ON coll.oid=a.attcollation
               WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped),
   'constraints', (SELECT jsonb_agg(jsonb_build_array(c.conrelid::regclass::text,c.conname,
-                     pg_get_constraintdef(c.oid,true)) ORDER BY c.conrelid::regclass::text,c.conname)
+                     pg_get_constraintdef(c.oid,true)) ORDER BY c.conrelid::regclass::text COLLATE "C",c.conname)
                   FROM pg_constraint c WHERE c.connamespace='public'::regnamespace),
-  'indexes', (SELECT jsonb_agg(pg_get_indexdef(i.indexrelid) ORDER BY i.indexrelid::regclass::text)
+  'indexes', (SELECT jsonb_agg(pg_get_indexdef(i.indexrelid) ORDER BY i.indexrelid::regclass::text COLLATE "C")
               FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid WHERE c.relnamespace='public'::regnamespace),
   'views', (SELECT jsonb_agg(jsonb_build_array(c.relname,pg_get_viewdef(c.oid,true)) ORDER BY c.relname)
             FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN ('v','m')),
   'functions', (SELECT jsonb_agg(jsonb_build_array(p.proname,pg_get_function_identity_arguments(p.oid),
                   p.prokind,p.provolatile,p.prosecdef,p.prosrc,p.probin,p.proconfig,format_type(p.prorettype,NULL),
                   CASE WHEN p.prokind <> 'a' THEN pg_get_functiondef(p.oid) ELSE NULL END)
-                  ORDER BY p.proname,pg_get_function_identity_arguments(p.oid))
+                  ORDER BY p.proname,pg_get_function_identity_arguments(p.oid) COLLATE "C")
                 FROM pg_proc p WHERE p.pronamespace='public'::regnamespace),
   'triggers', (SELECT jsonb_agg(pg_get_triggerdef(t.oid,true) ORDER BY c.relname,t.tgname)
                FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
@@ -37,8 +38,8 @@ WITH metadata AS (
  ) AS value
 ), catalog AS (
  SELECT jsonb_build_object(
-  'collections',(SELECT jsonb_agg(to_jsonb(c) ORDER BY c.id) FROM public.collections c),
-  'wallpapers',(SELECT jsonb_agg(to_jsonb(w) ORDER BY w.id) FROM public.wallpapers w)) AS value
+  'collections',(SELECT jsonb_agg(to_jsonb(c) ORDER BY c.id COLLATE "C") FROM public.collections c),
+  'wallpapers',(SELECT jsonb_agg(to_jsonb(w) ORDER BY w.id COLLATE "C") FROM public.wallpapers w)) AS value
 )
 SELECT jsonb_build_object(
  'schema',encode(sha256(convert_to(metadata.value::text,'UTF8')),'hex'),
