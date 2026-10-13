@@ -155,10 +155,14 @@ export function wordCount(text: string, locale: string): number {
   return [...new Intl.Segmenter(locale, { granularity: 'word' }).segment(text)].filter((part) => part.isWordLike).length;
 }
 
+function isIndexable(page: Page): boolean {
+  return !page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'));
+}
+
 export function pageMetrics(page: Page) {
   const textBytes = Buffer.byteLength(page.text);
   return { path: page.path, words: wordCount(page.text, page.lang), ratio: textBytes / page.bytes * 100, htmlBytes: page.bytes, textBytes,
-    indexable: !page.robots.some((value) => value.split(/[,\s]+/).includes('noindex')) };
+    indexable: isIndexable(page) };
 }
 
 export function validateContentMetrics(metrics: ReturnType<typeof pageMetrics>): void {
@@ -170,7 +174,7 @@ export function validateContentMetrics(metrics: ReturnType<typeof pageMetrics>):
 export function validateCityLinks(pages: Map<string, Page>): void {
   const sources = new Set<string>();
   for (const page of pages.values()) {
-    if (page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'))) continue;
+    if (!isIndexable(page)) continue;
     for (const link of page.contextualLinks) {
       const target = internal(link, page.path);
       if (target?.pathname === '/search/' && target.search === '?q=city' && target.pathname !== page.path.split('?')[0]) sources.add(page.path);
@@ -180,7 +184,7 @@ export function validateCityLinks(pages: Map<string, Page>): void {
 }
 
 export function validateLocalizedContent(page: Page): void {
-  if (page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'))) return;
+  if (!isIndexable(page)) return;
   const prefix = page.path.split('/')[1];
   const locale: Locale = prefix === 'ru' || prefix === 'zh-cn' || prefix === 'pt-br' ? prefix : 'en';
   const path = locale === 'en' ? page.path : page.path.slice(locale.length + 1);
