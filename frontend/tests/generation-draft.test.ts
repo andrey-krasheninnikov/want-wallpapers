@@ -102,7 +102,7 @@ async function prepared() {
 }
 
 test('ten native PNGs make a private package; approval is tied to its exact version', async () => {
-  const { root, request, runId, advance } = await prepared();
+  const { root, api, request, runId, advance } = await prepared();
   for (let index = 0; index < 11; index++) await advance();
   const run = (await request(`/runs/${runId}`)).body;
   expect(run.status).toBe('review');
@@ -113,6 +113,12 @@ test('ten native PNGs make a private package; approval is tied to its exact vers
   expect(stale.status).toBe(409);
   const approved = await request(`/runs/${runId}/decision`, { action: 'approve', version: run.version, packageHash: run.packageHash, contentChecked: true });
   expect(approved.body.status).toBe('approved');
+  const download = await api(new Request(`http://draft-store:8091/runs/${runId}/package?version=1`, {headers:{Authorization:'Bearer synthetic-local-access'}}));
+  expect(download.status).toBe(200);
+  expect(download.headers.get('Content-Type')).toBe('application/x-tar');
+  const archive=Buffer.from(await download.arrayBuffer());
+  expect(archive.includes(Buffer.from('manifest.json'))).toBe(true);
+  expect(archive.includes(Buffer.from('5-mobile.png'))).toBe(true);
   const revision = await request(`/runs/${runId}/decision`, { action: 'revise', version: run.version, variants: ['1-desktop'], feedback: 'Make the central subject brighter', texts: false });
   expect(revision.body.approval).toBeNull();
   expect(revision.body.version).toBe(run.version + 1);
@@ -243,4 +249,27 @@ test('valid PNG bytes at the wrong dimensions stop without resizing', async () =
   expect(blocked.errorCode).toBe('invalid-png-dimensions');
   expect(blocked.spentPollen).toBe(.7);
   expect(Object.keys(blocked.assets)).toHaveLength(0);
+});
+
+
+test('provider preflight failures are visible and ageing usage does not block a dedicated key', async () => {
+  const {request,runId,advance}=await prepared();
+  expect((await request('/work/claim',{preflightError:'provider-preflight-http-401'})).status).toBe(422);
+  expect((await request(`/runs/${runId}`)).body.errorCode).toBe('provider-preflight-http-401');
+  await request(`/runs/${runId}/decision`,{action:'resume',version:1});
+  await advance();
+  const claimed=await request('/work/claim',context(39.65,[]));
+  expect(claimed.body.task.kind).toBe('desktop');
+});
+
+test('cancellation records final overspend and cannot resume around the cap', async () => {
+  const {request,runId}=await prepared();
+  const task=(await request('/work/claim',context())).body.task;
+  await request(`/runs/${runId}/decision`,{action:'cancel',version:1});
+  const body={choices:[{message:{content:JSON.stringify(plan())}}],usage:{prompt_tokens:500,completion_tokens:1500}};
+  const complete=await request(`/attempts/${task.attemptId}/complete`,{status:200,body,context:context(29,[{cursor_event_id:'charged',model:'openai/gpt-5.4-nano',meter_source:'tier'}])});
+  expect(complete.body.status).toBe('cancelled');
+  expect(complete.body.spentPollen).toBe(11);
+  expect(complete.body.errorCode).toBe('actual-pollen-limit-exceeded');
+  expect((await request(`/runs/${runId}/decision`,{action:'resume',version:1})).status).toBe(409);
 });

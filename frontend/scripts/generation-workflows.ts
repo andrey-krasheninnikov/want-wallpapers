@@ -55,7 +55,7 @@ export function generationWorkflows() {
   trigger(review, 'Проверка коллекции', 'collection-draft-review', [{ fieldLabel: 'ID коллекции', fieldName: 'collectionId', fieldType: 'text', requiredField: true }]);
   http(review, 'Read draft', '={{ "http://draft-store:8091/collections/" + encodeURIComponent($json.collectionId) }}');
   node(review, 'Просмотр и решение', 'form', 2.5, { operation: 'page', defineForm: 'json', jsonOutput: '={{ JSON.stringify($json.formFields) }}',
-    options: { formTitle: 'Просмотр коллекции', buttonLabel: 'Применить', customCss: formCss } });
+    options: { appendAttribution: false, formTitle: 'Просмотр коллекции', buttonLabel: 'Применить', customCss: formCss } });
   http(review, 'Record decision', '={{ "http://draft-store:8091/runs/" + $json.runId + "/decision" }}', local,
     '={{ JSON.stringify({ action: ({"Одобрить":"approve","Запросить правки":"revise","Отклонить":"reject","Отменить":"cancel","Возобновить":"resume"})[$json.action], version: Number($json.version), packageHash: $json.packageHash, contentChecked: Array.isArray($json.contentChecked) && $json.contentChecked.length === 1, variants: $json.variants ?? [], feedback: $json.feedback ?? "", texts: Array.isArray($json.texts) && $json.texts.length === 1 }) }}');
   ending(review, 'Решение сохранено', '={{ "Коллекция " + $json.collectionId + ", версия " + $json.version + ". Состояние: " + $json.status + ". Обновите просмотр для проверки результата." }}');
@@ -65,13 +65,18 @@ export function generationWorkflows() {
   node(advance, 'Poll drafts', 'scheduleTrigger', 1.2, { rule: { interval: [{ field: 'minutes', minutesInterval: 1 }] } });
   http(advance, 'Read active attempt', 'http://draft-store:8091/work/active');
   condition(advance, 'Can advance', '={{ $json.state === "idle" || ($json.state === "unknown" && $json.outcomeAvailable === true) }}');
-  http(advance, 'Read key', 'https://gen.pollinations.ai/account/key', provider);
-  http(advance, 'Read usage', 'https://gen.pollinations.ai/account/key/usage?format=json&limit=500&days=90', provider);
-  http(advance, 'Read image model', 'https://gen.pollinations.ai/image/models?community=false', provider, undefined, { response: { response: { fullResponse: true, responseFormat: 'json' } } });
-  http(advance, 'Read text model', 'https://gen.pollinations.ai/text/models?community=false', provider, undefined, { response: { response: { fullResponse: true, responseFormat: 'json' } } });
-  code(advance, 'Provider context', `return [{ json: { key: $('Read key').first().json, usage: $('Read usage').first().json.usage,
-imageModel: $('Read image model').first().json.body.find(item => item.name === 'openai/gpt-image-2'),
-textModel: $('Read text model').first().json.body.find(item => item.name === 'openai/gpt-5.4-nano') } }];`);
+  const preflightResponse = { response: { response: { fullResponse: true, responseFormat: 'json', neverError: true } } };
+  for (const [name, path] of [['Read key', '/account/key'], ['Read usage', '/account/key/usage?format=json&limit=500&days=90'],
+    ['Read image model', '/image/models?community=false'], ['Read text model', '/text/models?community=false']]) {
+    http(advance, name!, 'https://gen.pollinations.ai' + path, provider, undefined, preflightResponse).onError = 'continueRegularOutput';
+  }
+  code(advance, 'Provider context', `const responses = ['Read key','Read usage','Read image model','Read text model'].map(name => $(name).first().json);
+const failed = responses.find(value => !(value.statusCode >= 200 && value.statusCode < 300));
+const [key,usage,images,texts] = responses.map(value => value.body);
+return [{ json: { key, usage: usage?.usage,
+imageModel: Array.isArray(images) ? images.find(item => item?.name === 'openai/gpt-image-2') : null,
+textModel: Array.isArray(texts) ? texts.find(item => item?.name === 'openai/gpt-5.4-nano') : null,
+...(failed ? {preflightError: failed.statusCode ? 'provider-preflight-http-'+failed.statusCode : 'provider-preflight-unavailable'} : {}) } }];`);
   condition(advance, 'Reconcile saved receipt', '={{ $("Read active attempt").first().json.state === "unknown" }}');
   http(advance, 'Reconcile receipt', '={{ "http://draft-store:8091/attempts/" + $("Read active attempt").first().json.attemptId + "/reconcile" }}', local, '={{ JSON.stringify($json) }}');
   http(advance, 'Claim attempt', 'http://draft-store:8091/work/claim', local, '={{ JSON.stringify($json) }}');

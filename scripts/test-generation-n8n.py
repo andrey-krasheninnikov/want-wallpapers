@@ -21,9 +21,11 @@ IMAGE = 'docker.n8n.io/n8nio/n8n:2.41.7@sha256:bcef56dd44014e09774219536a3f8cb07
 PROVIDER = r"""
 const http = require('http'), fs = require('fs');
 const fixture = JSON.parse(fs.readFileSync('/fixtures/provider.json'));
-let budget = 40, usage = [], images = 0, texts = 0;
+let budget = 40, usage = [], images = 0, texts = 0, rejectPreflight = false;
 http.createServer(async (request, response) => {
   const send = value => { response.setHeader('Content-Type', 'application/json'); response.end(JSON.stringify(value)); };
+  if (request.url === '/reject-preflight') { rejectPreflight=true; return send({ready:true}); }
+  if (request.url === '/account/key' && rejectPreflight) { rejectPreflight=false; response.statusCode=401; return send({error:'fixture-preflight'}); }
   if (request.url === '/stats') return send({ images, texts });
   if (request.headers.authorization !== 'Bearer synthetic-provider') { response.statusCode = 401; return send({ error: 'fixture-auth' }); }
   if (request.url === '/account/key') return send({ ...fixture.context.key, pollenBudget: budget });
@@ -57,7 +59,8 @@ process.on('SIGTERM',()=>process.exit(0));
 def run(*arguments, environment=None, input=None):
     result = subprocess.run(arguments, cwd=ROOT, env=environment, input=input, capture_output=True, timeout=300)
     if result.returncode:
-        raise RuntimeError('Local fixture command failed: ' + ' '.join(arguments[:3]) + '. Inspect only the isolated project.')
+        detail = result.stderr.decode(errors='replace').strip()[-2000:] if 'scripts/n8n-state.py' in arguments else ''
+        raise RuntimeError('Local fixture command failed: ' + ' '.join(arguments[:3]) + '. '+detail)
     return result.stdout
 
 
@@ -166,6 +169,12 @@ throw Error('Fixture redirect limit.');
             request('/form/collection-draft-start', {**fields.hidden,fields.names[0]:'900026-test-light',fields.names[1]:'Central blue abstraction'}, {'Authorization':owner_header})
             wait(lambda: view().get('runId'))
             print('Isolated forms and private store ready.', flush=True)
+            compose('exec','-T','provider','node','-e',"fetch('http://127.0.0.1:8092/reject-preflight').then(r=>{if(!r.ok)process.exit(1)})")
+            request('/webhook/generation-check-advance')
+            failed=wait(lambda: (value if (value:=view()).get('errorCode')=='provider-preflight-http-401' else None))
+            resume="fetch('http://127.0.0.1:8091/runs/"+failed['runId']+"/decision',{method:'POST',headers:{Authorization:'Bearer '+require('fs').readFileSync('/state/access-token','utf8').trim(),'Content-Type':'application/json'},body:JSON.stringify({action:'resume',version:1})}).then(r=>{if(!r.ok)process.exit(1)})"
+            compose('exec','-T','draft-store','bun','-e',resume)
+            print('Fixture preflight failure is visible and resumable.',flush=True)
             for index in range(11):
                 request('/webhook/generation-check-advance')
                 state = wait(lambda: (value if (value:=view()).get('textAttempts',0)+value.get('imageAttempts',0)==index+1 and value.get('activeAttempt') is None and value['status'] in ('generating','review','blocked') else None))

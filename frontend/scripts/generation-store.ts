@@ -87,7 +87,7 @@ export class DraftStore {
       selected = run;
       const checked = providerContext(context);
       const previous = [...attempts].reverse().find(item => item.keyId === checked.keyId && item.eventsAfter);
-      requireDraft(previous ? checked.events.every(event => previous.eventsAfter!.includes(event)) && previous.eventsAfter!.every(event => checked.events.includes(event)) : checked.events.length === 0, 'foreign-key-activity');
+      requireDraft(previous ? checked.events.every(event => previous.eventsAfter!.includes(event)) : checked.events.length === 0, 'foreign-key-activity');
       const intent = run.pending[0]!;
       const month = new Date().toISOString().slice(0, 7);
       const monthRuns = new Set(attempts.filter(item => item.month === month).map(item => item.task.runId));
@@ -172,7 +172,10 @@ export class DraftStore {
         && !(rejected && cost === 0 && events.length === 0)) return held();
       attempt.cost = cost; attempt.eventsAfter = checked.events; attempt.receiptHash = attempt.outcome.receiptHash;
       this.database.query('UPDATE attempts SET state = ?, detail = ? WHERE id = ?').run('done', JSON.stringify(attempt), id);
-      if (['cancelled', 'rejected'].includes(run.status)) { run.errorCode = null; this.save(run); return run; }
+      const attempts = this.attempts();
+      const exceeded = attempts.filter(item => item.task.runId === run.runId).reduce((sum, item) => sum + (item.cost ?? item.reserve), 0) > 10000000000
+        || attempts.filter(item => item.month === attempt.month).reduce((sum, item) => sum + (item.cost ?? item.reserve), 0) > 40000000000;
+      if (['cancelled', 'rejected'].includes(run.status)) { run.errorCode = exceeded ? 'actual-pollen-limit-exceeded' : null; this.save(run); return run; }
       run.errorCode = attempt.outcome.errorCode ?? null;
       if (rejected) {
         if ([429, 503].includes(status)) {
@@ -186,9 +189,7 @@ export class DraftStore {
         attempt.applied = true;
         this.database.query('UPDATE attempts SET detail = ? WHERE id = ?').run(JSON.stringify(attempt), id);
       }
-      const attempts = this.attempts();
-      if (attempts.filter(item => item.task.runId === run.runId).reduce((sum, item) => sum + (item.cost ?? item.reserve), 0) > 10000000000
-        || attempts.filter(item => item.month === attempt.month).reduce((sum, item) => sum + (item.cost ?? item.reserve), 0) > 40000000000) {
+      if (exceeded) {
         run.status = 'blocked'; run.errorCode = 'actual-pollen-limit-exceeded';
       }
       this.save(run); return run;
@@ -275,6 +276,10 @@ export function draftObject(value: unknown, code: string): Record<string, unknow
 
 export function providerContext(value: unknown, completing = false) {
   const item = draftObject(value, 'invalid-provider-context');
+  if (item.preflightError) {
+    const code = String(item.preflightError);
+    throw new DraftError(code === 'provider-preflight-unavailable' || /^provider-preflight-http-[1-5][0-9]{2}$/.test(code) ? code : 'invalid-provider-context');
+  }
   const key = draftObject(item.key, 'key-restrictions-required');
   const permissions = draftObject(key.permissions, 'key-restrictions-required');
   const allowedModels = permissions.models;

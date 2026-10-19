@@ -11,6 +11,7 @@ import secrets
 import subprocess
 import sys
 import tarfile
+import time
 
 REPOSITORY = Path(__file__).resolve().parent.parent
 COMPOSE = REPOSITORY / 'automation/n8n/compose.yaml'
@@ -136,7 +137,15 @@ def backup(project, directory):
         partial.unlink()
     finally:
         if running_services:
-            compose(project, 'up', '--detach', '--wait', '--wait-timeout', '180', *running_services)
+            compose(project, 'start', *running_services)
+            deadline = time.monotonic() + 180
+            identities = ([container] if running else []) + ([helper] if helper_running else [])
+            while True:
+                states = [docker('inspect', identity, '--format', '{{if .State.Running}}{{if .State.Health}}{{.State.Health.Status}}{{else}}running{{end}}{{else}}stopped{{end}}').stdout.decode().strip() for identity in identities]
+                if all(state in ('healthy', 'running') for state in states): break
+                if time.monotonic() >= deadline or any(state in ('stopped', 'unhealthy') for state in states):
+                    raise SnapshotError('Previous containers did not become healthy after the snapshot; configuration preserved.')
+                time.sleep(2)
     return destination
 
 

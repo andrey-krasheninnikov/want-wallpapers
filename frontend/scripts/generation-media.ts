@@ -3,8 +3,6 @@ sharp.concurrency(1);
 sharp.cache(false);
 import { mkdirSync, writeFileSync, readFileSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { DraftError, hash, requireDraft, type Task, type Prepared } from './generation-store';
 import { parseCollectionManifest } from './catalog-add';
 
@@ -65,6 +63,15 @@ export async function packageArchive(root: string, run: import('./generation-sto
     checksums[`${name}.png`] = asset.hash; files.push(`${name}.png`);
   }
   writeFileSync(join(directory, 'checksums.json'), JSON.stringify(checksums, null, 2) + '\n', { mode: 0o600 });
-  const { stdout } = await promisify(execFile)('tar', ['-cf', '-', '-C', directory, ...files], { encoding: 'buffer', maxBuffer: 700 * 1024 * 1024, timeout: 30000 });
-  return stdout;
+  const process = Bun.spawn(['tar', '-cf', '-', '-C', directory, ...files], { stdout: 'pipe', stderr: 'ignore' });
+  const reader = process.stdout.getReader();
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      const next = await reader.read();
+      if (!next.done) { controller.enqueue(next.value); return; }
+      if (await process.exited !== 0) controller.error(new DraftError('package-export-failed'));
+      else controller.close();
+    },
+    async cancel() { process.kill(); await reader.cancel(); },
+  });
 }

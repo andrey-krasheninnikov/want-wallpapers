@@ -33,13 +33,15 @@ if args[0] == 'compose':
         state['stoppedServices']=args[args.index('90')+1:]
         if 'n8n' in state['stoppedServices']: state['running']=False
         if 'draft-store' in state['stoppedServices']: state['helperRunning']=False
-    elif 'up' in args:
-        state['startedServices']=args[args.index('180')+1:]
+    elif 'start' in args:
+        state['startedServices']=args[args.index('start')+1:]
         if 'n8n' in state['startedServices']: state['running']=True
         if 'draft-store' in state['startedServices']: state['helperRunning']=True
 elif args[0] == 'inspect':
     if '.Mounts' in args[-1]:
         print(json.dumps([{'Type': 'volume', 'Name': 'want-wallpapers-n8n-data', 'Destination': '/state' if args[1]=='helper-container' else '/home/node/.n8n'}]))
+    elif '.State.Health' in args[-1]:
+        print('healthy' if (state.get('helperRunning',False) if args[1]=='helper-container' else state['running']) else 'stopped')
     elif '.State.Running' in args[-1]:
         print(json.dumps(state.get('helperRunning',False) if args[1]=='helper-container' else state['running']))
 elif args[0] == 'ps':
