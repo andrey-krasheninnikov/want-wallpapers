@@ -19,7 +19,7 @@ const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', na
 ---
 <Base locale={locale} title={collection.title[locale]} description={collection.description[locale]} path={path} image={cover?.src} schema={schema}>
   <div class="shell page-heading"><Crumbs label={ui.collections} items={[{ href: localPath(locale, '/collections/'), title: ui.collections }, { title: collection.title[locale] }]} /><h1 class="display-title mt-6">{collection.title[locale]}</h1><p class="mt-6 max-w-3xl text-base leading-relaxed text-muted-foreground">{collection.description[locale]}</p></div>
-  {cover && <div class="shell"><figure class="relative overflow-hidden rounded-xl border bg-card" data-collection-cover><CoverMedia image={cover} alt={collection.videoCover ? collection.description[locale] : items[0].description[locale]} src={collection.videoCover?.src} priority />{collection.videoCover && <CoverControl locale={locale} />}</figure></div>}
+  {cover && <div class="shell"><figure class="relative overflow-hidden rounded-xl bg-card" data-collection-cover><CoverMedia image={cover} alt={collection.videoCover ? collection.description[locale] : items[0].description[locale]} src={collection.videoCover?.src} priority />{collection.videoCover && <CoverControl locale={locale} />}</figure></div>}
   <section class="shell mt-8 sm:mt-10"><div class="mb-6 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-semibold tracking-tight">{ui.inCollection}</h2><p class="text-sm text-muted-foreground">{items.length} {ui.wallpapers}</p></div><WallpaperGrid items={cards} /></section>
   <Editorial locale={locale} collection={collection} />
 </Base>

@@ -40,7 +40,10 @@ pub async fn export(pool: &PgPool) -> Result<Snapshot> {
         .await?;
     let collections = sqlx::query("SELECT c.data, (SELECT count(*) FROM wallpapers w WHERE w.collection_id=c.id AND NOT w.archived) AS count FROM collections c WHERE NOT c.archived ORDER BY c.id").fetch_all(&mut *transaction).await?;
     let wallpapers: Vec<Value> = sqlx::query_scalar("SELECT w.data FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived ORDER BY w.collection_id,w.number").fetch_all(&mut *transaction).await?;
+    let publication_dates = sqlx::query("SELECT w.id,to_char(w.published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS published_at FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived AND w.published_at IS NOT NULL")
+        .fetch_all(&mut *transaction).await?.into_iter().map(|row| (row.get::<String, _>("id"), row.get::<String, _>("published_at"))).collect();
     let snapshot = Snapshot {
+        publication_dates,
         collections: collections
             .iter()
             .map(|row| {
@@ -123,7 +126,7 @@ pub async fn import_manifest(
         .execute(&mut *transaction)
         .await?;
     for w in &manifest.wallpapers {
-        sqlx::query("INSERT INTO wallpapers(id,collection_id,number,data) VALUES($1,$2,$3,$4)")
+        sqlx::query("INSERT INTO wallpapers(id,collection_id,number,data,published_at) VALUES($1,$2,$3,$4,COALESCE(initial_wallpaper_publication($1),transaction_timestamp()))")
             .bind(&w.id)
             .bind(&w.collection_id)
             .bind(w.number)
@@ -226,7 +229,7 @@ pub async fn save_wallpaper(
         if collection.count >= 1000 {
             return Err(ApiError::invalid());
         }
-        let version=sqlx::query_scalar("INSERT INTO wallpapers(id,collection_id,number,data) VALUES($1,$2,$3,$4) RETURNING version").bind(&w.id).bind(&w.collection_id).bind(w.number).bind(json!(w)).fetch_one(&mut *transaction).await?;
+        let version=sqlx::query_scalar("INSERT INTO wallpapers(id,collection_id,number,data,published_at) VALUES($1,$2,$3,$4,COALESCE(initial_wallpaper_publication($1),transaction_timestamp())) RETURNING version").bind(&w.id).bind(&w.collection_id).bind(w.number).bind(json!(w)).fetch_one(&mut *transaction).await?;
         sqlx::query("UPDATE collections SET data=jsonb_set(data,'{count}',to_jsonb((data->>'count')::bigint+1)),version=version+1 WHERE id=$1").bind(&w.collection_id).execute(&mut *transaction).await?;
         version
     };

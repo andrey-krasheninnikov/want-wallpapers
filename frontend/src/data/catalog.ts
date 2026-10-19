@@ -154,10 +154,11 @@ const seedWallpapers: Wallpaper[] = entries.map((entry) => {
   };
 });
 
-const snapshot = snapshotJson as { collections: Collection[]; wallpapers: Wallpaper[] };
+const snapshot = snapshotJson as { collections: Collection[]; wallpapers: Wallpaper[]; publicationDates?: Record<string, string> };
 if (!snapshot.collections.length || !snapshot.wallpapers.length) throw new Error('Empty catalogue snapshot');
 export const collections = snapshot.collections;
 export const wallpapers = snapshot.wallpapers;
+export const publicationDates = snapshot.publicationDates ?? {};
 export const initialCatalog = { collections: seedCollections, wallpapers: seedWallpapers };
 export const getCollection = (slug: string) => collections.find((item) => item.slug === slug);
 export const getWallpaper = (slug: string) => wallpapers.find((item) => item.slug === slug);

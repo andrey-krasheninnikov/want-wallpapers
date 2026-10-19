@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { parseCollection, parseCollectionManifest, type CollectionManifest } from '../scripts/catalog-add';
+import { parseCollection, parseCollectionManifest, parsePublicationDates, type CollectionManifest } from '../scripts/catalog-add';
 
 function manifest(): CollectionManifest {
   const title = { en: 'Quiet Light', ru: 'Тихий свет', 'zh-cn': '静谧之光', 'pt-br': 'Luz tranquila' };
@@ -64,4 +64,13 @@ test('collection video covers reject incomplete objects and unsafe CDN URLs', ()
     { src: prefix + 'cover.mp4', poster: prefix + 'cover.svg' }]) {
     expect(() => parseCollection({ ...manifest().collection, videoCover })).toThrow();
   }
+});
+
+
+test('publication metadata accepts old exports and rejects malformed dates or foreign identities', () => {
+  const wallpapers = manifest().wallpapers;
+  expect(parsePublicationDates(undefined, wallpapers)).toEqual({});
+  const valid = { 'quiet-light-1': '2026-10-13T12:34:56.000001Z' };
+  expect(parsePublicationDates(valid, wallpapers)).toEqual(valid);
+  for (const value of [null, [], 1, { foreign: valid['quiet-light-1'] }, { 'quiet-light-1': 123 }, { 'quiet-light-1': '2026-02-30T12:34:56Z' }, { 'quiet-light-1': '2026-10-13T12:34:56+03:00' }]) expect(() => parsePublicationDates(value, wallpapers)).toThrow();
 });
