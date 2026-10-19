@@ -29,14 +29,17 @@ def docker(*arguments, **options):
 
 
 def compose(project, *arguments):
-    return docker('compose', '--project-name', project, '-f', str(COMPOSE), *arguments)
+    files = ['-f', str(COMPOSE)]
+    generation = COMPOSE.with_name('generation.compose.yaml')
+    if generation.exists(): files += ['-f', str(generation)]
+    return docker('compose', '--project-name', project, *files, *arguments)
 
 
 def configuration(project):
     if not re.fullmatch(r'want-wallpapers-n8n(?:-[a-z0-9]+)*', project):
         raise SnapshotError('Use the local n8n project name or a test project with its prefix.')
     config = json.loads(compose(project, 'config', '--format', 'json').stdout)
-    return config['services']['n8n']['image'], config['volumes']['data']['name']
+    return config['services']['n8n']['image'], config['volumes']['data']['name'], 'draft-store' in config['services']
 
 
 def outside_checkout(value):
@@ -80,7 +83,7 @@ def validate_archive(source):
                 settings = json.load(archive.extractfile(member))
                 if not isinstance(settings.get('encryptionKey'), str) or not settings['encryptionKey']:
                     raise SnapshotError('Snapshot has no original encryption key.')
-            if str(name) == '.n8n/database.sqlite':
+            if str(name) in ('.n8n/database.sqlite', '.n8n/generation/journal.sqlite'):
                 if not member.isfile() or archive.extractfile(member).read(16) != b'SQLite format 3\x00':
                     raise SnapshotError('Snapshot has no valid SQLite header.')
     if not {'.n8n/config', '.n8n/database.sqlite'} <= names:
@@ -96,7 +99,7 @@ def volume_command(image, volume, readonly, *command, **options):
 
 def backup(project, directory):
     directory = private_directory(directory)
-    image, volume = configuration(project)
+    image, volume, has_generation = configuration(project)
     container = compose(project, 'ps', '--all', '--quiet', 'n8n').stdout.decode().strip()
     if not container or len(container.splitlines()) != 1:
         raise SnapshotError('Create the local n8n container before taking a snapshot.')
@@ -105,15 +108,25 @@ def backup(project, directory):
         and mount.get('Destination') == '/home/node/.n8n' for mount in mounts):
         raise SnapshotError('Container does not use the configured n8n data volume.')
     running = json.loads(docker('inspect', container, '--format', '{{json .State.Running}}').stdout)
+    helper = compose(project, 'ps', '--all', '--quiet', 'draft-store').stdout.decode().strip() if has_generation else ''
+    if helper and (len(helper.splitlines()) != 1 or helper == container):
+        raise SnapshotError('Draft store container identity is invalid.')
+    helper_running = False
+    if helper:
+        helper_mounts = json.loads(docker('inspect', helper, '--format', '{{json .Mounts}}').stdout)
+        if not any(mount.get('Type') == 'volume' and mount.get('Name') == volume and mount.get('Destination') == '/state' for mount in helper_mounts):
+            raise SnapshotError('Draft store does not use the configured private volume.')
+        helper_running = json.loads(docker('inspect', helper, '--format', '{{json .State.Running}}').stdout)
+    running_services = (['n8n'] if running else []) + (['draft-store'] if helper_running else [])
     users = docker('ps', '--no-trunc', '--filter', f'volume={volume}', '--format', '{{.ID}}').stdout.decode().split()
-    if any(user != container for user in users):
+    if any(user not in (container, helper) for user in users):
         raise SnapshotError('Another running container uses the n8n data volume; stop it privately first.')
     name = 'n8n-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + secrets.token_hex(4) + '.tar.gz'
     destination = directory / name
     partial = directory / (name + '.partial')
     try:
-        if running:
-            compose(project, 'stop', '--timeout', '90', 'n8n')
+        if running_services:
+            compose(project, 'stop', '--timeout', '90', *running_services)
         descriptor = os.open(partial, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, 'wb') as output:
             volume_command(image, volume, True, 'tar', '-czf', '-', '-C', '/home/node', '.n8n', stdout=output)
@@ -122,15 +135,15 @@ def backup(project, directory):
         os.link(partial, destination)
         partial.unlink()
     finally:
-        if running:
-            compose(project, 'up', '--detach', '--wait', '--wait-timeout', '180', 'n8n')
+        if running_services:
+            compose(project, 'up', '--detach', '--wait', '--wait-timeout', '180', *running_services)
     return destination
 
 
 def restore(project, archive, volume):
     if not re.fullmatch(r'want-wallpapers-n8n-[a-z0-9]+(?:-[a-z0-9]+)*', volume):
         raise SnapshotError('Use a new volume with the want-wallpapers-n8n- prefix.')
-    image, _ = configuration(project)
+    image, _, _ = configuration(project)
     path = outside_checkout(archive)
     with path.open('rb') as source:
         status = os.fstat(source.fileno())
