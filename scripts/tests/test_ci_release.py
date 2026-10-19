@@ -151,15 +151,18 @@ else:
             executable.write_text(stub)
             executable.chmod(0o700)
 
-    def manual_release(self):
-        self.record.update(schemaVersion=2, verificationProfile='full', skippedChecks=[])
+    def manual_release(self, profile='full'):
+        self.selected_profile = profile
+        self.record.update(schemaVersion=2, verificationProfile=profile, skippedChecks=[] if profile == 'full' else ['Full UI'])
         self.record['verificationRun']['workflow'] = '.github/workflows/deploy-production.yml'
         self.run.update(event='workflow_dispatch', head_branch='v1.4.0',
                         path='.github/workflows/deploy-production.yml', status='in_progress', conclusion=None)
         self.responses['actions/runs/73/attempts/1/jobs?per_page=100'] = [{'jobs': [
             {'name': 'checks / ' + name, 'conclusion': 'success'} for name in
-            ['Release profile (full)', 'verify', 'Collection drafts', 'Full UI', 'Runtime (amd64)',
+            ['Release profile (' + profile + ')', 'verify', 'Collection drafts', 'Full UI', 'Runtime (amd64)',
              'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish']]}]
+        if profile == 'fast':
+            self.responses['actions/runs/73/attempts/1/jobs?per_page=100'][0]['jobs'][3]['conclusion'] = 'skipped'
 
     def execute(self, arguments, **environment):
         index = {'schemaVersion': 2, 'mediaType': 'application/vnd.oci.image.index.v1+json',
@@ -222,6 +225,47 @@ else:
             with self.subTest(job=job['name']):
                 self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
             job['conclusion'] = 'success'
+
+    def test_fast_release_accepts_only_the_explicit_ui_skip_and_publishes_new_images(self):
+        self.manual_release('fast')
+        result = self.resolve('--digest', self.digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['skippedChecks'], ['Full UI'])
+        for platform, value in self.record['platforms'].items():
+            (self.root / (platform.split('/')[1] + '.json')).write_text(json.dumps(value))
+        result = self.execute(['record', '--platform-directory', str(self.root)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), self.record)
+        record = self.root / 'release-record.json'
+        record.write_text(result.stdout)
+        result = self.execute(['publish-index', '--record', str(record)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['verificationProfile'], 'fast')
+
+    def test_fast_profile_cannot_skip_other_jobs_or_claim_full_profile(self):
+        self.manual_release('fast')
+        jobs = self.responses['actions/runs/73/attempts/1/jobs?per_page=100'][0]['jobs']
+        for job in jobs:
+            previous = job['conclusion']
+            job['conclusion'] = 'failure'
+            with self.subTest(job=job['name']):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            job['conclusion'] = previous
+        self.record.update(verificationProfile='full', skippedChecks=[])
+        self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+
+    def test_changed_or_missing_fast_profile_is_rejected(self):
+        self.manual_release('fast')
+        for key, value in [('verificationProfile', 'unknown'), ('verificationProfile', 'full'),
+                           ('skippedChecks', []), ('skippedChecks', ['verify', 'Full UI']),
+                           ('schemaVersion', 1), ('schemaVersion', None)]:
+            old = self.record[key]
+            self.record[key] = value
+            with self.subTest(key=key, value=value):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            self.record[key] = old
+        del self.record['skippedChecks']
+        self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
 
     def test_manual_evidence_rejects_wrong_sources_and_profile_data(self):
         self.manual_release()

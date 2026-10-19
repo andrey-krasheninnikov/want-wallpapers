@@ -26,6 +26,18 @@ Workflow ref обязан совпадать с tag input. Guard проверя�
 
 Publication получает `packages: write`; eligibility использует read-only permissions. Только deployment job получает production environment и SSH secret. Concurrency не отменяет активный tag release или migration; серверный lock сохраняет сериализацию при потере SSH.
 
+## Профили full и fast
+
+`full` выбран по умолчанию и выполняет все проверки. `fast` явно пропускает только полный browser UI/E2E suite:
+
+```sh
+gh workflow run deploy-production.yml --ref v1.8.1 -f tag=v1.8.1 -f profile=fast
+```
+
+Оба профиля выполняют static/type/format, unit/API, security audit, collection drafts и native runtime PostgreSQL 18/TLS на amd64/arm64. Любая ошибка блокирует публикацию или deployment. Fast может построить и опубликовать новый image выбранного eligible commit; заранее опубликованный full image не требуется. Backup, off-VPS restore и production gates остаются обязательными и могут занимать время.
+
+Профиль и пропущенные проверки видны перед launch в input description и затем в release/eligibility/deployment evidence. До изменения последний полный run 39325173737 занял около 28 минут; Full UI выполнялся около 20 минут. Это историческая точка сравнения, не гарантия длительности нового release или контролируемое сравнение одинакового source SHA.
+
 ## Evidence и совместимость
 
 Авторитетный release record находится в аннотации OCI index `foundation.want.wallpapers.release.v1`. Суффикс имени аннотации сохраняется для совместимости; JSON `schemaVersion` задаёт формат записи. Копия artifact хранится 90 дней. Используемые index/platform digests нельзя удалять из GHCR.
@@ -34,9 +46,9 @@ Publication получает `packages: write`; eligibility использует
 
 - `repository`, полный `sourceSha` и ровно две `platforms` с `digest`, `configDigest`, `revision`;
 - `verificationRun`: положительные целые `id`, `attempt`, `workflow: .github/workflows/deploy-production.yml`;
-- `verificationProfile: full` и `skippedChecks: []`.
+- `verificationProfile: full` с `skippedChecks: []` либо `verificationProfile: fast` с `skippedChecks: ["Full UI"]`.
 
-Resolver сверяет canonical manual tag run и точный attempt через GitHub API. Успешные jobs имеют фиксированные имена с префиксом `checks / `, включая `Release profile (full)`, `verify`, `Collection drafts`, `Full UI`, обе Runtime, обе Publish и `publish`. Общий run ещё выполняется во время deployment; допуск требует завершённых успешных verification/publication jobs, а не завершения собственного deployment. Cancelled run и любой отсутствующий, повторяющийся или неуспешный обязательный job отклоняются.
+Resolver сверяет canonical manual tag run и точный attempt через GitHub API. Успешные jobs имеют фиксированные имена с префиксом `checks / `, включая `Release profile (<profile>)`, `verify`, `Collection drafts`, обе Runtime, обе Publish и `publish`. Full требует успешный `Full UI`; fast требует ровно один явно skipped `Full UI` и успешные остальные jobs. Нельзя изменить профиль записи, сохранив marker другого профиля. Общий run ещё выполняется во время deployment; допуск требует завершённых успешных verification/publication jobs, а не завершения собственного deployment. Cancelled run и любой отсутствующий, повторяющийся или неуспешный обязательный job отклоняются.
 
 Исторический `schemaVersion: 1` сохраняет прежнее значение: только полностью завершённый успешный main Checks run/attempt с прежним набором jobs. Он не может содержать новые поля профиля. Неизвестные версии, изменённые profile data и несовпадения source/run/attempt/config/platform/index/revision отклоняются. VPS независимо выполняет тот же resolver при принятии запроса и повторно перед остановкой app.
 
@@ -44,7 +56,7 @@ Tag protection проверяется по `.github/release-policy.json`: зак
 
 ## Повтор и эксплуатация
 
-Первый запуск передаёт digest прямо из publication в eligibility и deployment. Не выбирайте более новую публикацию того же SHA. Для повтора передайте исходный digest:
+Первый запуск передаёт digest прямо из publication в eligibility и deployment. Не выбирайте более новую публикацию того же SHA. Для повтора передайте исходный digest и тот же профиль:
 
 ```sh
 gh workflow run deploy-production.yml --ref v1.8.1 -f tag=v1.8.1 -f profile=full -f index_digest=sha256:<original-digest>

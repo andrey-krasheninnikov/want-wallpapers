@@ -20,7 +20,8 @@ spec.loader.exec_module(server)
 
 class ServerTransitions(unittest.TestCase):
     def exercise(self, *, wrong_image=False, worker_failure=False, migration_failure=False,
-                 schema_changes=False, readiness_failure=False, worker_unavailable=False, release_delay=0):
+                 schema_changes=False, readiness_failure=False, worker_unavailable=False, release_delay=0,
+                 profile=None, changed_profile=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             environment = root / '.env'
@@ -36,6 +37,8 @@ class ServerTransitions(unittest.TestCase):
                       'indexDigest': 'sha256:' + 'a' * 64, 'state': 'running', 'stage': 'requested',
                       'verificationRun': {'id': 73, 'attempt': 1}, 'createdAt': int(time.time()),
                       'platforms': {'linux/amd64': {'digest': 'sha256:' + 'b' * 64, 'configDigest': 'sha256:' + 'e' * 64}}}
+            if profile is not None:
+                record.update(schemaVersion=2, verificationProfile=profile, skippedChecks=[] if profile == 'full' else ['Full UI'])
             store.write(record)
             before = {'schema': '1' * 64, 'history': [{'version': 1, 'success': True, 'checksum': '2' * 96}], 'catalog': '3' * 64}
             migrated = [False]
@@ -90,7 +93,7 @@ class ServerTransitions(unittest.TestCase):
 
             def resolve(arguments):
                 clock[0] += release_delay
-                return record
+                return {**record, 'verificationProfile': 'full'} if changed_profile else record
 
             with patch.multiple(server, ENV=environment, COMPOSE=composition, STATE=root, DEPLOYMENT=root, README=notes), \
                  patch.dict(os.environ, {'WANT_RELEASE_PUBLIC_API': '0'}), \
@@ -114,6 +117,23 @@ class ServerTransitions(unittest.TestCase):
         self.assertEqual(result['state'], 'succeeded')
         self.assertTrue(result['backupVerified'])
         self.assertIn(b'KEEP=preserved\n', environment)
+
+    def test_full_and_fast_keep_backup_gate_and_reject_changed_profile_before_stopping(self):
+        for profile in ['full', 'fast']:
+            with self.subTest(profile=profile):
+                result, _, _ = self.exercise(profile=profile)
+                self.assertEqual(result['state'], 'succeeded')
+                self.assertTrue(result['backupVerified'])
+                self.assertEqual(result['verificationProfile'], profile)
+                failed, environment, migrated = self.exercise(profile=profile, worker_failure=True)
+                self.assertEqual(failed['state'], 'failed')
+                self.assertFalse(migrated)
+                self.assertIn(('sha256:' + '6' * 64).encode(), environment)
+        failed, environment, migrated = self.exercise(profile='fast', changed_profile=True)
+        self.assertEqual(failed['errorCode'], 'release-verification-changed')
+        self.assertEqual(failed['state'], 'failed')
+        self.assertFalse(migrated)
+        self.assertIn(('sha256:' + '6' * 64).encode(), environment)
 
     def test_wrong_image_and_failed_worker_leave_the_old_app_config(self):
         for arguments in ({'wrong_image': True}, {'worker_failure': True}, {'worker_unavailable': True}):

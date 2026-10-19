@@ -11,7 +11,7 @@ on:
         required: true
         default: full
         type: choice
-        options: [full]
+        options: [full, fast]
       index_digest:
         description: Original sha256 digest required for a release retry
         required: true

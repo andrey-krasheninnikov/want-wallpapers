@@ -7,11 +7,11 @@ on:
         required: true
         type: string
       profile:
-        description: Verification profile (full runs every check)
+        description: Verification profile; fast skips only the full UI/E2E suite
         required: true
         default: full
         type: choice
-        options: [full]
+        options: [full, fast]
       index_digest:
         description: Original immutable digest for a retry; leave empty to build a new release
         required: false

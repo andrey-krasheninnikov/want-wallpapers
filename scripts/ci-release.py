@@ -19,7 +19,7 @@ REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 IMAGE = 'ghcr.io/' + REPOSITORY
 WORKFLOW = '.github/workflows/checks.yml'
 RELEASE_WORKFLOW = '.github/workflows/deploy-production.yml'
-PROFILES = {'full': []}
+PROFILES = {'full': [], 'fast': ['Full UI']}
 ANNOTATION = 'foundation.want.wallpapers.release.v1'
 PLATFORMS = {'linux/amd64', 'linux/arm64'}
 
@@ -251,6 +251,10 @@ def successful_attempt(sha, run_id, attempt_number, record=None, tag=None):
     required = {'verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish'}
     if not legacy:
         required.update({'Collection drafts', 'Release profile (' + selected + ')'})
+        if selected == 'fast':
+            required.remove('Full UI')
+            ui = [job for job in jobs if job['name'] == prefix + 'Full UI']
+            require(len(ui) == 1 and ui[0]['conclusion'] == 'skipped', 'Fast evidence must explicitly skip only Full UI')
     for name in required:
         matching = [job for job in jobs if job['name'] == prefix + name]
         require(len(matching) == 1 and matching[0]['conclusion'] == 'success',

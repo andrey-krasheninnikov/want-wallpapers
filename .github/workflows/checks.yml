@@ -176,7 +176,11 @@ jobs:
   publish-platforms:
     name: Publish (${{ matrix.arch }})
     needs: [selection, verify, drafts, ui, containers]
-    if: needs.selection.outputs.publish == 'true'
+    if: >-
+      !cancelled() && needs.selection.outputs.publish == 'true' &&
+      needs.verify.result == 'success' && needs.drafts.result == 'success' &&
+      needs.containers.result == 'success' &&
+      (needs.ui.result == 'success' || (inputs.profile == 'fast' && needs.ui.result == 'skipped'))
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     strategy:
@@ -222,7 +226,11 @@ jobs:
       source_sha: ${{ steps.release.outputs.source_sha }}
       index_digest: ${{ steps.release.outputs.index_digest }}
     needs: [selection, verify, drafts, ui, containers, publish-platforms]
-    if: needs.selection.outputs.publish == 'true'
+    if: >-
+      !cancelled() && needs.selection.outputs.publish == 'true' &&
+      needs.verify.result == 'success' && needs.drafts.result == 'success' &&
+      needs.containers.result == 'success' &&
+      (needs.ui.result == 'success' || (inputs.profile == 'fast' && needs.ui.result == 'skipped')) && needs.publish-platforms.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -250,6 +258,7 @@ jobs:
           python3 scripts/ci-release.py publish-index --record "$RUNNER_TEMP/release-record.json" > "$RUNNER_TEMP/published-release.json"
           DIGEST="$(jq -r .indexDigest "$RUNNER_TEMP/published-release.json")"
           jq -r '"source_sha=\(.sourceSha)", "index_digest=\(.indexDigest)"' "$RUNNER_TEMP/published-release.json" >> "$GITHUB_OUTPUT"
+          jq -r '"Profile: \(.verificationProfile)\nSkipped checks: \(.skippedChecks | join(", "))"' "$RUNNER_TEMP/published-release.json" >> "$GITHUB_STEP_SUMMARY"
           printf 'APP_IMAGE=%s@%s\nSource: %s\nRun: %s attempt %s\n' "$IMAGE" "$DIGEST" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
       - name: Release record copy
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
