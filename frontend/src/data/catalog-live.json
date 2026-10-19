@@ -84,6 +84,23 @@
         "ru": "Пять тихих ночных сцен, где лёд, тёмные ели и тёплые огни города встречаются с синими светящимися кольцами.",
         "zh-cn": "五幅静谧的夜景，浮冰、深色冷杉与温暖的城市灯火交织在蓝色光环之间。"
       }
+    },
+    {
+      "id": "0006-neon-tide",
+      "slug": "neon-tide",
+      "count": 10,
+      "title": {
+        "en": "Neon Tide",
+        "pt-br": "Maré de neon",
+        "ru": "Неоновый прилив",
+        "zh-cn": "霓虹潮汐"
+      },
+      "description": {
+        "en": "Ten surreal wallpaper scenes bring glowing pixel patterns into dark coastal landscapes and imagined natural spaces. Black silhouettes and faceted rock give the collection its shape. Violet and magenta dominate the palette, with icy blue water and occasional amber or lime accents. Curved shorelines and living forms sit beside crisp square details, from flower petals to fragments of a moon.\n\nEach scene has separate landscape and portrait compositions for desktop and phone screens.",
+        "pt-br": "Dez cenas surreais trazem padrões de pixels luminosos a paisagens costeiras escuras e espaços naturais imaginados. Silhuetas negras e rochas facetadas dão forma à coleção. Violeta e magenta dominam a paleta, com água azul-gelo e alguns detalhes de âmbar ou verde-lima. Margens curvas e formas vivas convivem com pequenos quadrados bem definidos, das pétalas de flores aos fragmentos de uma lua. Cada cena tem composições horizontal e vertical próprias para telas de computador e celular.",
+        "ru": "Десять сюрреалистичных сцен соединяют светящиеся пиксельные узоры с тёмными побережьями и вымышленными природными пространствами. Форму коллекции задают чёрные силуэты и гранёные скалы. В палитре преобладают фиолетовый и малиновый, рядом с ними ледяная синяя вода и редкие янтарные или лаймовые акценты. Изогнутые берега и живые формы соседствуют с чёткими квадратными деталями: от цветочных лепестков до осколков луны. У каждой сцены отдельные горизонтальная и вертикальная композиции для компьютера и телефона.",
+        "zh-cn": "十幅超现实壁纸将发光的像素图案带入幽暗海岸与想象中的自然空间。黑色剪影和棱角分明的岩石构成系列的轮廓。紫色与洋红色占据主调，冰蓝色海水间点缀着琥珀色和青柠色。弯曲的海岸线与生物形态旁，是清晰的方形细节，从花瓣延伸到月亮的碎片。每个场景都为电脑和手机分别设计了横向与纵向构图。"
+      }
     }
   ],
   "wallpapers": [
@@ -1053,6 +1070,283 @@
         "ru": "Силуэт мужчины в тёмном пальто сливается с елями, золотой набережной и водой среди льдин под парящим синим кольцом.",
         "zh-cn": "深色大衣男子的轮廓与冷杉、金色河岸和浮冰间的水面融为一体，上方悬着蓝色光环。"
       }
+    },
+    {
+      "id": "neon-tide-1",
+      "slug": "neon-tide-1",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "water",
+        "stone",
+        "light"
+      ],
+      "title": {
+        "en": "Pointer archipelago",
+        "pt-br": "Arquipélago de ponteiros",
+        "ru": "Архипелаг указателей",
+        "zh-cn": "指针群岛"
+      },
+      "description": {
+        "en": "Black rock islands shaped like mouse pointers rise from a violet sea. Hot pink surf traces their stepped shores, while sharp magenta edges catch the light. The islands form a receding chain across broad stretches of open water.",
+        "pt-br": "Ilhas de rocha negra em forma de ponteiros de mouse emergem de um mar violeta. A espuma rosa intensa contorna suas margens em degraus, enquanto as arestas refletem luz magenta. As ilhas formam uma cadeia que recua por amplas faixas de água aberta.",
+        "ru": "Чёрные скалистые острова в форме указателей мыши поднимаются из фиолетового моря. Ярко-розовый прибой очерчивает их ступенчатые берега, а острые грани отражают малиновый свет. Цепочка островов уходит вдаль через широкие полосы открытой воды.",
+        "zh-cn": "形似鼠标指针的黑色岩岛从紫色海面升起。亮粉色海浪沿着阶梯状海岸铺开，锋利的棱角映出洋红色光芒。岛屿连成一串，穿过宽阔的水面，向远方延伸。"
+      }
+    },
+    {
+      "id": "neon-tide-2",
+      "slug": "neon-tide-2",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 2,
+      "category": "nature",
+      "tags": [
+        "night",
+        "colour",
+        "light"
+      ],
+      "title": {
+        "en": "Night herbarium",
+        "pt-br": "Herbário noturno",
+        "ru": "Ночной гербарий",
+        "zh-cn": "夜色花集"
+      },
+      "description": {
+        "en": "Flowers grow from slender, curved stems against a black background. Their petals are made of glowing squares, with lime buds opening into amber and lavender blooms. A few loose pixels drift away like pollen.",
+        "pt-br": "Flores crescem em caules finos e curvos sobre um fundo preto. As pétalas são feitas de quadrados luminosos, com botões verde-lima que se abrem em flores de âmbar e lavanda. Alguns pixels soltos se afastam como pólen.",
+        "ru": "Цветы на тонких изогнутых стеблях растут на чёрном фоне. Их лепестки состоят из светящихся квадратов: лаймовые бутоны раскрываются янтарными и лавандовыми цветами. Несколько пикселей отделяются от лепестков и плывут в воздухе, словно пыльца.",
+        "zh-cn": "花朵沿着纤细弯曲的茎生长，背景一片漆黑。花瓣由发光的方块组成，青柠色花苞展开成琥珀色和淡紫色的花朵。几粒散开的像素如花粉般飘离花瓣。"
+      }
+    },
+    {
+      "id": "neon-tide-3",
+      "slug": "neon-tide-3",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 3,
+      "category": "nature",
+      "tags": [
+        "water",
+        "blue",
+        "colour",
+        "motion"
+      ],
+      "title": {
+        "en": "Manta at dawn",
+        "pt-br": "Manta ao amanhecer",
+        "ru": "Манта на рассвете",
+        "zh-cn": "黎明时分的蝠鲼"
+      },
+      "description": {
+        "en": "A dark manta glides beneath an ink-blue sea, its broad wings edged in pink. Small blue and magenta squares form a constellation across its back. Coral currents trail behind it, following the curve of its long tail.",
+        "pt-br": "Uma manta escura desliza sob o mar azul-tinta, com as asas largas contornadas de rosa. Pequenos quadrados azuis e magenta formam uma constelação nas costas. Correntes corais seguem atrás dela, acompanhando a curva da longa cauda.",
+        "ru": "Тёмная манта скользит под поверхностью чернильно-синего моря, её широкие плавники обведены розовым. Небольшие синие и малиновые квадраты образуют созвездие на спине. Коралловые течения тянутся следом, повторяя изгиб длинного хвоста.",
+        "zh-cn": "一只深色蝠鲼在墨蓝色海面下滑行，宽大的双翼镶着粉色边缘。蓝色与洋红色小方块在它的背上排成星群。珊瑚色水流沿着长尾的弧线向后延伸。"
+      }
+    },
+    {
+      "id": "neon-tide-4",
+      "slug": "neon-tide-4",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 4,
+      "category": "fantasy",
+      "tags": [
+        "water",
+        "stone",
+        "violet",
+        "light"
+      ],
+      "title": {
+        "en": "Ocean in a key",
+        "pt-br": "Oceano numa tecla",
+        "ru": "Океан в клавише",
+        "zh-cn": "键帽里的海湾"
+      },
+      "description": {
+        "en": "A single black keyboard key holds a miniature coastal bay. Violet water meets dark cliffs beneath a coral sky, and a lone tree stands above the shore. A thin stream spills over the front edge into the surrounding darkness.",
+        "pt-br": "Uma única tecla preta abriga uma baía costeira em miniatura. A água violeta encontra penhascos escuros sob um céu coral, e uma árvore solitária fica acima da margem. Um fio de água transborda pela borda da frente para a escuridão ao redor.",
+        "ru": "Одна чёрная клавиша вмещает миниатюрную морскую бухту. Фиолетовая вода встречается с тёмными скалами под коралловым небом, над берегом стоит одинокое дерево. Тонкий ручей переливается через передний край и уходит в окружающую темноту.",
+        "zh-cn": "一枚黑色键帽盛着微缩海湾。珊瑚色天空下，紫色海水与深色峭壁相接，一棵孤树立在岸边高处。一缕细流越过前沿，落入四周的黑暗。"
+      }
+    },
+    {
+      "id": "neon-tide-5",
+      "slug": "neon-tide-5",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 5,
+      "category": "abstract",
+      "tags": [
+        "water",
+        "colour",
+        "motion",
+        "blue"
+      ],
+      "title": {
+        "en": "Inside the wave",
+        "pt-br": "Dentro da onda",
+        "ru": "Внутри волны",
+        "zh-cn": "浪潮之中"
+      },
+      "description": {
+        "en": "An enormous wave curls like a sheet of paper. Its dark outer surface wraps around a bright mosaic that shifts from blue through violet and pink to yellow. Loose squares scatter from the crest, and the colors stretch across the water below.",
+        "pt-br": "Uma onda enorme se curva como uma folha de papel. A superfície externa escura envolve um mosaico luminoso que passa do azul ao violeta, rosa e amarelo. Quadrados soltos se espalham da crista, e as cores se alongam sobre a água abaixo.",
+        "ru": "Огромная волна сворачивается, словно лист бумаги. Её тёмная внешняя сторона охватывает яркую мозаику, где синий переходит в фиолетовый, розовый и жёлтый. Квадраты разлетаются с гребня, а цвета вытягиваются по воде внизу.",
+        "zh-cn": "巨浪像一张纸般卷起。深色外表包住明亮的马赛克，色彩从蓝色渐变为紫色、粉色和黄色。散开的方块从浪尖飞出，颜色沿着下方的水面铺展。"
+      }
+    },
+    {
+      "id": "neon-tide-6",
+      "slug": "neon-tide-6",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 6,
+      "category": "landscape",
+      "tags": [
+        "water",
+        "stone",
+        "blue",
+        "light"
+      ],
+      "title": {
+        "en": "Memory delta",
+        "pt-br": "Delta da memória",
+        "ru": "Дельта памяти",
+        "zh-cn": "记忆三角洲"
+      },
+      "description": {
+        "en": "An electric blue river branches between black, faceted rocks. Its smooth bends gradually become stepped channels and square-edged islands near the mouth. Magenta light catches the banks as the delta breaks into smaller geometric fragments.",
+        "pt-br": "Um rio azul elétrico se ramifica entre rochas negras e facetadas. Perto da foz, suas curvas suaves se transformam em canais em degraus e ilhas de bordas quadradas. A luz magenta toca as margens enquanto o delta se divide em fragmentos geométricos menores.",
+        "ru": "Ярко-синяя река ветвится между чёрными гранёными скалами. Ближе к устью её плавные изгибы превращаются в ступенчатые протоки и острова с квадратными краями. Малиновый свет касается берегов, пока дельта распадается на всё более мелкие геометрические фрагменты.",
+        "zh-cn": "电蓝色河流在黑色棱角岩石间分岔。靠近河口时，平滑的弯道逐渐变成阶梯状水道和方边岛屿。洋红色光照亮河岸，三角洲分解为越来越小的几何碎片。"
+      }
+    },
+    {
+      "id": "neon-tide-7",
+      "slug": "neon-tide-7",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 7,
+      "category": "space",
+      "tags": [
+        "night",
+        "violet",
+        "light",
+        "water"
+      ],
+      "title": {
+        "en": "Lunar molt",
+        "pt-br": "Muda lunar",
+        "ru": "Лунная линька",
+        "zh-cn": "月壳蜕落"
+      },
+      "description": {
+        "en": "A dark moon sheds square pieces of its shell, exposing a glowing coral interior. The fragments descend toward the violet sea and become small black islands with illuminated shores. A diagonal trail connects the moon to the water.",
+        "pt-br": "Uma lua escura solta pedaços quadrados da casca, expondo um interior coral luminoso. Os fragmentos descem até o mar violeta e viram pequenas ilhas negras de margens iluminadas. Um rastro diagonal liga a lua à água.",
+        "ru": "Тёмная луна сбрасывает квадратные кусочки оболочки, открывая светящуюся коралловую сердцевину. Осколки опускаются к фиолетовому морю и становятся маленькими чёрными островами со светящимися берегами. Диагональный след соединяет луну с водой.",
+        "zh-cn": "深色月亮的外壳剥落成方形碎片，露出发光的珊瑚色内层。碎片落向紫色海面，变成海岸发亮的小黑岛。一条斜向轨迹把月亮与水面连在一起。"
+      }
+    },
+    {
+      "id": "neon-tide-8",
+      "slug": "neon-tide-8",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 8,
+      "category": "fantasy",
+      "tags": [
+        "stone",
+        "mountains",
+        "light",
+        "violet"
+      ],
+      "title": {
+        "en": "Stairway through mist",
+        "pt-br": "Escadaria entre a névoa",
+        "ru": "Лестница сквозь туман",
+        "zh-cn": "雾中阶梯"
+      },
+      "description": {
+        "en": "Separate basalt steps float above a valley filled with lilac mist. Their dark stone tops contrast with grids of pink and blue light underneath. The stairway narrows into the distance, where its highest steps dissolve into scattered pixels.",
+        "pt-br": "Degraus separados de basalto flutuam acima de um vale coberto de névoa lilás. O topo de pedra escura contrasta com grades de luz rosa e azul na parte de baixo. A escadaria se estreita ao longe, onde os degraus mais altos se desfazem em pixels dispersos.",
+        "ru": "Отдельные базальтовые ступени парят над долиной в сиреневом тумане. Их тёмные каменные поверхности контрастируют с решётками розового и синего света снизу. Лестница сужается вдали, где верхние ступени растворяются в россыпи пикселей.",
+        "zh-cn": "独立的玄武岩台阶漂浮在淡紫色雾气笼罩的山谷上方。深色石面与底部粉蓝色的发光网格形成对照。阶梯向远处收窄，最高处的几级化为散落的像素。"
+      }
+    },
+    {
+      "id": "neon-tide-9",
+      "slug": "neon-tide-9",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 9,
+      "category": "nature",
+      "tags": [
+        "colour",
+        "light"
+      ],
+      "title": {
+        "en": "Rings of light",
+        "pt-br": "Anéis de luz",
+        "ru": "Кольца света",
+        "zh-cn": "光之年轮"
+      },
+      "description": {
+        "en": "A charred tree cross-section reveals uneven growth rings made of colored squares. Amber, lime, coral, and violet bands follow the grain around a dark center. Deep radial cracks split the wood, with light glowing along their inner edges.",
+        "pt-br": "Uma seção de tronco carbonizado revela anéis de crescimento irregulares feitos de quadrados coloridos. Faixas de âmbar, verde-lima, coral e violeta seguem os veios ao redor de um centro escuro. Rachaduras radiais profundas dividem a madeira, com luz nas bordas internas.",
+        "ru": "Обугленный срез дерева открывает неровные годичные кольца из цветных квадратов. Янтарные, лаймовые, коралловые и фиолетовые полосы следуют древесным волокнам вокруг тёмного центра. Древесину рассекают глубокие радиальные трещины, по внутренним краям которых струится свет.",
+        "zh-cn": "焦黑的树木横截面露出由彩色方块组成的不规则年轮。琥珀色、青柠色、珊瑚色和紫色的色带顺着木纹围绕深色中心展开。深深的放射状裂缝劈开木材，内侧边缘透出光芒。"
+      }
+    },
+    {
+      "id": "neon-tide-10",
+      "slug": "neon-tide-10",
+      "collection": "neon-tide",
+      "collectionId": "0006-neon-tide",
+      "s3Folder": "0006-neon-tide",
+      "fileStem": "neon-tide",
+      "number": 10,
+      "category": "fantasy",
+      "tags": [
+        "water",
+        "stone",
+        "blue",
+        "violet"
+      ],
+      "title": {
+        "en": "The lake overhead",
+        "pt-br": "O lago no alto",
+        "ru": "Озеро над головой",
+        "zh-cn": "头顶的湖泊"
+      },
+      "description": {
+        "en": "A still lake rests on the ceiling of a cavern, its surface reflecting the surrounding rocks. Glowing square droplets rise toward it through the open space above a dry stone floor. Magenta and icy blue reflections trace the dark cave walls.",
+        "pt-br": "Um lago imóvel repousa no teto de uma caverna, refletindo as rochas ao redor. Gotas quadradas luminosas sobem até ele pelo espaço acima do chão de pedra seco. Reflexos magenta e azul-gelo contornam as paredes escuras da caverna.",
+        "ru": "Тихое озеро лежит на потолке пещеры, отражая окружающие скалы. Светящиеся квадратные капли поднимаются к нему через пространство над сухим каменным полом. Малиновые и ледяные синие отблески очерчивают тёмные стены пещеры.",
+        "zh-cn": "一片静湖悬在洞穴顶部，水面映着周围的岩石。发光的方形水滴从干燥石地上方的空中升向湖面。洋红色与冰蓝色倒影勾勒出深色洞壁。"
+      }
     }
   ],
   "publicationDates": {
@@ -1090,6 +1384,16 @@
     "a-night-beneath-the-ice-2": "2026-10-05T04:04:04Z",
     "a-night-beneath-the-ice-3": "2026-10-05T04:04:04Z",
     "a-night-beneath-the-ice-4": "2026-10-05T04:04:04Z",
-    "a-night-beneath-the-ice-5": "2026-10-05T04:04:04Z"
+    "a-night-beneath-the-ice-5": "2026-10-05T04:04:04Z",
+    "neon-tide-1": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-10": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-2": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-3": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-4": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-5": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-6": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-7": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-8": "2026-10-19T20:13:10.668531Z",
+    "neon-tide-9": "2026-10-19T20:13:10.668531Z"
   }
 }
