@@ -112,6 +112,18 @@ class ServerTransitions(unittest.TestCase):
             result = store.read(record['requestId'])
             return result, environment.read_bytes(), migrated[0]
 
+    def test_public_readiness_waits_for_proxy_and_keeps_a_deadline(self):
+        with patch.object(server, 'https', side_effect=[DeployError('command-failed'), 'not ready', '{"status":"ok"}']) as request, \
+             patch.object(server.time, 'monotonic', return_value=0), patch.object(server.time, 'sleep') as pause:
+            server.wait_ready()
+            self.assertEqual(request.call_count, 3)
+            self.assertEqual(pause.call_count, 2)
+        with patch.object(server, 'https', side_effect=DeployError('command-failed')), \
+             patch.object(server.time, 'monotonic', side_effect=[0, 0, 90]), patch.object(server.time, 'sleep') as pause:
+            with self.assertRaisesRegex(DeployError, 'readiness-failed'):
+                server.wait_ready()
+            pause.assert_called_once_with(3)
+
     def test_success_switches_only_the_application_and_records_verified_backup(self):
         result, environment, _ = self.exercise()
         self.assertEqual(result['state'], 'succeeded')

@@ -12,6 +12,7 @@
 
 ### Исправлено
 
+- Production smoke ожидает public readiness до 90 секунд, чтобы задержка healthcheck маршрута Traefik не вызывала преждевременный rollback. Остальные smoke checks сохраняются.
 - Фон 3D-сцены стал прозрачным; заполненные controls и минимальные 44 px targets сохранены.
 
 ### Ограничения
