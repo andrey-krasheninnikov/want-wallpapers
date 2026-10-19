@@ -20,6 +20,7 @@ SELECT EXISTS (
       AND NOT has_database_privilege(runtime.oid, current_database(), 'CREATE,TEMPORARY')
       AND has_schema_privilege(runtime.oid, 'public', 'USAGE')
       AND has_function_privilege(runtime.oid, 'public.initial_wallpaper_publication(text)', 'EXECUTE')
+      AND has_function_privilege(runtime.oid, 'public.initial_collection_publication(text)', 'EXECUTE')
       AND NOT EXISTS (
           SELECT 1 FROM pg_namespace namespace
           WHERE has_schema_privilege(runtime.oid, namespace.oid, 'CREATE')
