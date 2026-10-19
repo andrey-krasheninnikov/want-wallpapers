@@ -5,9 +5,13 @@ import AxeBuilder from '@axe-core/playwright';
 import { database } from './database';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
-import { collections, wallpapers, downloadUrl, previewUrl, tagLabels, type Locale } from '../../src/data/catalog';
+import { collections, wallpapers, publicationDates, downloadUrl, previewUrl, tagLabels, type Locale } from '../../src/data/catalog';
+
+import { newestWallpapers } from '../../src/lib/catalog-order';
 
 const wallpaper = 'contours-of-silence-1';
+const orderedWallpapers = newestWallpapers(wallpapers, publicationDates);
+const nextWallpaper = orderedWallpapers[(orderedWallpapers.findIndex((item) => item.id === wallpaper) + 1) % orderedWallpapers.length]!;
 test.beforeEach(async ({ page }) => {
   await page.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'GE' } }));
 });
@@ -372,7 +376,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
       expect(await response.body()).toEqual(bytes);
     }
     await expect(page.locator('details.original-preview')).toHaveCount(0);
-    await expect(page.locator('[data-wallpaper-next]')).toHaveAttribute('href', `${localPath(locale, '/wallpapers/a-night-beneath-the-ice-5/')}?variant=desktop#wallpaper-view`);
+    await expect(page.locator('[data-wallpaper-next]')).toHaveAttribute('href', `${localPath(locale, `/wallpapers/${nextWallpaper.slug}/`)}?variant=desktop#wallpaper-view`);
     // axe needs JavaScript timers; inspect the same no-script DOM with site scripts removed.
     const html = await new HTMLRewriter().on('script', { element(element) { element.remove(); } }).on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(await page.content())).text();
     const accessibilityContext = await browser.newContext({ viewport: { width: 320, height: 900 } });
