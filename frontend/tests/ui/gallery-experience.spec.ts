@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { copy, localPath } from '../../src/data/copy';
 import { designCopy } from '../../src/data/design-copy';
-import { locales, wallpapers, publicationDates } from '../../src/data/catalog';
+import { locales, wallpapers, publicationDates, collections } from '../../src/data/catalog';
 import { newestWallpapers } from '../../src/lib/catalog-order';
 
 test.beforeEach(async ({ page }) => {
@@ -52,13 +52,18 @@ test('collection pages paginate, stories disclose and project links remain disti
   const carousel = page.locator('[data-collection-carousel]');
   await carousel.getByRole('region', { name: designCopy.en.collections }).focus();
   await expect(carousel.getByRole('region', { name: designCopy.en.collections })).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
-  await expect(carousel.locator('output')).toHaveText('1 / 2');
-  await carousel.getByRole('button', { name: designCopy.en.nextCollections }).click();
-  await expect(carousel.locator('output')).toHaveText('2 / 2');
+  const pages = Math.ceil(collections.length / 3);
+  await expect(carousel.locator('output')).toHaveText(`1 / ${pages}`);
+  for (let number = 2; number <= pages; number++) {
+    await carousel.getByRole('button', { name: designCopy.en.nextCollections }).click();
+    await expect(carousel.locator('output')).toHaveText(`${number} / ${pages}`);
+  }
+  await expect(carousel.getByRole('button', { name: designCopy.en.nextCollections })).toBeDisabled();
   await page.setViewportSize({ width: 375, height: 900 });
-  await expect(carousel.locator('output')).toHaveText('3 / 5');
+  const firstVisible = Math.max(1, collections.length - 2);
+  await expect(carousel.locator('output')).toHaveText(`${firstVisible} / ${collections.length}`);
   await carousel.getByRole('button', { name: designCopy.en.previousCollections }).click();
-  await expect(carousel.locator('output')).toHaveText('2 / 5');
+  await expect(carousel.locator('output')).toHaveText(`${Math.max(1, firstVisible - 1)} / ${collections.length}`);
   const story = page.locator('.story-disclosure').first();
   await expect(story).not.toHaveAttribute('open', '');
   await story.locator('summary').click(); await expect(story).toHaveAttribute('open', '');
