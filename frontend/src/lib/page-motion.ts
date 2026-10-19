@@ -2,7 +2,7 @@ export function initPageMotion() {
   let cleanup = () => {};
   const root = document.documentElement;
   const control = document.querySelector<HTMLButtonElement>('[data-background-toggle]');
-  if (root.hasAttribute('data-pixel-background') && control) {
+  if (root.hasAttribute('data-public-background') && control) {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     const forced = window.matchMedia('(forced-colors: active)');
     let paused = false;

@@ -2,7 +2,7 @@
 
 ## Direction
 
-Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and a faint pixel grid. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity and pixel motif. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and four locales remain authoritative.
+Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and four locales remain authoritative.
 
 The device stage stays beside the home introduction. Home collections form a paginated horizontal carousel. Wallpaper results retain a regular comparison grid. Long supporting content becomes readable sections for stories, works, file formats, licensing and topics. Legal pages place their explanatory continuation inside the same reading surface.
 
@@ -25,10 +25,9 @@ The five gallery references remain useful: Unsplash for image priority, Pexels f
 | link | #E8E8E8 | Underlined text links |
 | ring | #5B4FFF | Logo-color focus outline with dark backing |
 | destructive | #FF738D | Error text and destructive actions |
-| pixel-grid | #383838 | Decorative grid |
 | border, input | #383838 / #858585 | Compatibility aliases and filled switch/radio indicators |
 
-The single source is frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add permanent decorative borders, divider rules, inset hairlines or button gradients. Gallery hover uses a thin logo-color glow without moving the card. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The faint edge glow stays behind the page. The physical bezel in the device poster depicts the object and remains part of the image.
+The single source is frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add permanent decorative borders, divider rules, inset hairlines or button gradients. Gallery hover uses a thin logo-color glow without moving the card. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The gradient sphere stays behind the page. The physical bezel in the device poster depicts the object and remains part of the image.
 
 ## Type and geometry
 
@@ -78,9 +77,9 @@ Control feedback takes at most 120 ms. Text, gallery media, menus, dialogs, acco
 
 Wallpaper image transitions use a brief 180 ms opacity change. The frame and controls do not move. Reduced motion removes the transition. Native scrolling remains direct; no entrance or scroll-reveal animations are used.
 
-Public pages and /ui-kit/ have a fixed decorative background behind the content. The grid uses a 40 px step, or 32 px below 768 px, with sparse filled squares and a fade towards the center. Grid opacity is .12; filled squares use a further .4 opacity. Two CSS layers provide the grid and faint edge light; no Canvas or external resources are needed. The light changes opacity from .02 to .04 over a 24-second cycle. Grid geometry stays still. Administration uses the shared palette without the background layers.
+Public pages and /ui-kit/ place one softly blurred gradient sphere behind the content on the solid #141414 graphite ground. A fixed, clipped container keeps it outside layout and pointer input. The sphere is centered at 78% 22%, with a diameter of clamp(24rem, 72vmax, 70rem), a 48 px blur and constant .18 opacity. Its radial gradient uses primary-hover and primary. A 36-second cycle moves it up to 4vw left and 3vh down, then returns it; only transform animates. CSS draws the sphere without Canvas or external resources. Administration uses the shared palette without decoration.
 
-A localized footer button pauses or resumes the glow. Only an explicit choice writes running or paused to localStorage under want-background-motion. An unknown stored value defaults to running; unavailable storage keeps the choice in the current page. The setting stays in the browser and is described on the cookie page. Hidden tabs pause the glow. Reduced motion displays a static background and hides the control; forced colors hide decoration. Without JavaScript the background is static and the control stays hidden.
+A localized footer button pauses or resumes the sphere. Only an explicit choice writes running or paused to localStorage under want-background-motion. An unknown stored value defaults to running; unavailable storage keeps the choice in the current page. The setting stays in the browser and is described on the cookie page. Hidden tabs pause the sphere. Reduced motion displays a static background and hides the control; forced colors hide decoration. Without JavaScript the background is static and the control stays hidden.
 
 Content columns collapse below 768 px. Prevent page overflow at 320 px and preserve image proportions, translated wrapping, 44 px targets and safe areas. Legal sections align headings and reading columns on desktop and become a single sequence on mobile. Sticky surfaces must not cover focus.
 

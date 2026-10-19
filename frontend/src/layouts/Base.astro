@@ -21,7 +21,7 @@ const languageTag = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' 
 const analyticsAvailable = isAnalyticsConfigured();
 ---
 <!doctype html>
-<html lang={languageTag} class="dark" data-pixel-background>
+<html lang={languageTag} class="dark" data-public-background>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -52,6 +52,7 @@ const analyticsAvailable = isAnalyticsConfigured();
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />}
   </head>
   <body data-locale={locale}>
+    <div class="page-background" aria-hidden="true"></div>
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
     <Header locale={locale} path={path} logo={logoUrl} client:load transition:persist="header" />
     <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
