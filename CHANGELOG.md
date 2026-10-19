@@ -2,6 +2,23 @@
 
 ## Не выпущено
 
+## [1.8.1] - 2026-10-20
+
+### Изменено
+
+- Все GitHub workflows запускаются вручную. Один protected-tag release запускает проверки, публикацию проверенных images без rebuild, eligibility и production deployment.
+- Добавлен профиль fast: он пропускает только полный UI/E2E suite. Static/unit/API, audit, collection drafts, native amd64/arm64 runtime и backup/restore остаются обязательными. Профиль записывается в immutable evidence и проверяется на VPS; full выбран по умолчанию.
+- Графитовый фон галереи дополнен мягкой фиолетовой градиентной сферой. Сохраняются pause/resume, скрытая вкладка и reduced-motion поведение.
+
+### Исправлено
+
+- Фон 3D-сцены стал прозрачным; заполненные controls и минимальные 44 px targets сохранены.
+
+### Ограничения
+
+- Выпуск запрошен с профилем fast: полный UI/E2E suite не выполняется. Backup и off-VPS restore могут занимать время независимо от профиля.
+- HTTP smoke не подтверждает приватный password/TOTP вход или реальный CAPTCHA assessment.
+
 ## [1.8.0] - 2026-10-20
 
 ### Добавлено
