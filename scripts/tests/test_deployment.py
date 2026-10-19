@@ -26,7 +26,7 @@ class DeploymentContractTests(unittest.TestCase):
                            ('workflow_dispatch', 'refs/heads/main')]:
             self.assertFalse(deployment.deployment_event(event, ref, deployment.REPOSITORY, 'v1.5.0', 'sha256:' + 'a' * 64))
         self.assertFalse(deployment.deployment_event('push', 'refs/tags/v1.5.0', 'other/fork'))
-        self.assertTrue(deployment.deployment_event('push', 'refs/tags/v1.5.0', deployment.REPOSITORY))
+        self.assertFalse(deployment.deployment_event('push', 'refs/tags/v1.5.0', deployment.REPOSITORY))
         self.assertTrue(deployment.deployment_event('workflow_dispatch', 'refs/tags/v1.5.0', deployment.REPOSITORY,
                                                     'v1.5.0', 'sha256:' + 'a' * 64))
         self.assertFalse(deployment.deployment_event('workflow_dispatch', 'refs/tags/v1.5.0', deployment.REPOSITORY,
