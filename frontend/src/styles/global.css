@@ -384,6 +384,11 @@
   box-shadow: 0 0 0 5px var(--media-ground);
   transition: none;
 }
+.collection-track:focus-visible { outline-offset: -5px; box-shadow: inset 0 0 0 5px var(--media-ground); }
+.collection-track .gallery-card:has(> .collection-card-link:focus-visible) { outline: 2px solid var(--ring); outline-offset: 3px; box-shadow: 0 0 0 5px var(--media-ground); }
+@media (forced-colors: active) {
+  .collection-track .gallery-card:has(> .collection-card-link:focus-visible) { outline-color: Highlight; }
+}
 :where(a, button, input, textarea, select):focus-visible :where(svg, .text-muted-foreground, .text-link, small, [data-slot="card-description"]) { color: inherit; }
 :where(input, textarea):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; background-color: var(--secondary); color: var(--foreground); }
 :where(input, textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }
@@ -539,8 +544,9 @@ html[data-background-motion="running"] .page-background::before { animation-play
   .story-disclosure summary small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-top: .75rem; font-weight: 400; line-height: 1.7; color: var(--muted-foreground); }
   .story-disclosure[open] summary small { display: none; }
   .story-disclosure .long-copy { margin-top: 1rem; }
-  .collection-carousel { display: grid; gap: 1rem; }
-  .collection-track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: 1.5rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; padding: .5rem; margin: -.5rem; }
+  .collection-carousel { --collection-gutter: max(1rem, calc((100% - 1280px) / 2)); display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .collection-track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: 1.5rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--collection-gutter); scrollbar-width: thin; padding: .5rem var(--collection-gutter); }
+  .collection-track .collection-card-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
   .collection-track > article { scroll-snap-align: start; }
   .collection-track .gallery-card { border-radius: var(--panel-radius); }
   .collection-track img { aspect-ratio: 16 / 10; object-fit: cover; }
@@ -568,6 +574,7 @@ html[data-background-motion="running"] .page-background::before { animation-play
   .wand-spark { position: fixed; pointer-events: none; z-index: 40; width: 32px; height: 32px; color: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
   .wand-spark svg { width: 100%; height: 100%; }
   .download-confetti { position: fixed; pointer-events: none; z-index: 60; width: 6px; height: 6px; border-radius: 1px; background: var(--primary); }
+  @media (min-width: 640px) { .collection-carousel { --collection-gutter: max(1.5rem, calc((100% - 1280px) / 2)); } }
   @media (min-width: 768px) {
     .collection-track { grid-auto-columns: calc((100% - 1.5rem) / 2); }
     .home-mosaic { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-areas: "a a a a b b" "a a a a b b" "c c c d d d" "e e e f f f"; grid-auto-rows: 160px; }
@@ -575,6 +582,7 @@ html[data-background-motion="running"] .page-background::before { animation-play
     .comment-feed { grid-auto-columns: calc((100% - 1.5rem) / 2); }
   }
   @media (min-width: 1024px) {
+    .collection-carousel { --collection-gutter: max(2rem, calc((100% - 1280px) / 2)); }
     .wallpaper-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); }
     .wallpaper-preview { height: clamp(420px, 60svh, 640px); }
     .home-mosaic { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "a a c b" "a a c b" "d e e b" "d f f b"; grid-auto-rows: clamp(160px, 15vw, 200px); }
