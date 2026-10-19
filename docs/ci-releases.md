@@ -1,73 +1,64 @@
-# CI и допуск релиза
+# CI и ручной допуск релиза
 
-## События и проверки
+## Запуск
 
-| Событие | Проверки | Публикация |
-| --- | --- | --- |
-| Push feature/development/release и других веток | Static/type/format, unit, API, CI contract | Нет |
-| PR, включая PR в main и fork | Тот же лёгкий набор | Нет |
-| Push main в исходном репозитории | Лёгкий набор, audit, полный UI, native amd64/arm64 runtime с PostgreSQL 18/TLS | Проверенные images и OCI index |
-| Ручной Checks на main | Тот же полный набор | Проверенные images и OCI index |
-| Ручной Checks на другой ветке или fork main | Лёгкий набор | Нет |
-| Push защищённого v* | Release eligibility: только чтение метаданных | Нет сборки и публикации images |
-| Ручной Release eligibility на main | Тег и исходный digest | Нет сборки и публикации images |
+Все workflows запускаются явно через `workflow_dispatch`. Push ветки, открытие PR, публикация тега и завершение другого workflow не запускают Actions. `workflow_call` используется только внутри вручную начатой цепочки.
 
-Лёгкий job имеет общий timeout 20 минут; `make test` ограничен 10 минутами. Его unit/API-набор включает `make test-ci`. Main UI выполняется после лёгких проверок; native runtime проверяется параллельно на Ubuntu 24.04 amd64/arm64. Audit, UI и обе платформы должны пройти до публикации. Main-прогон не отменяет активный предыдущий main-прогон. Fork никогда не получает разрешение публикации.
+Перед merge вручную запустите `Checks` на source-ветке PR:
 
-## Проверка и передача образа
-
-До runtime-теста CI сохраняет Docker image ID, архитектуру и OCI revision. После PostgreSQL 18/TLS теста тот же image сохраняется через `docker save`. Publication job загружает artifact через `docker load`, сверяет image ID/platform/revision и публикует его без rebuild. У опубликованного platform manifest `config.digest` должен совпасть с проверенным image ID.
-
-Registry tags содержат source SHA, GitHub run ID и attempt: `<sha>-<run>-<attempt>-amd64`, `<sha>-<run>-<attempt>-arm64` и общий `<sha>-<run>-<attempt>`. OCI index содержит ровно linux/amd64 и linux/arm64 и собирается из их точных digests. Buildx dry-run предоставляет descriptors; CLI явно задаёт OCI media type и record annotations и публикует index через Registry HTTP API. Обычные Docker platform manifests сохраняют прежние digests; их формат не может молча удалить index annotations. Readback сверяет digest отправленных bytes, record и обе платформы. Consumers используют `ghcr.io/andrey-krasheninnikov/want-wallpapers@sha256:<digest>`, без `latest` и без выбора по одному изменяемому registry tag.
-
-## Долговечный release record
-
-Авторитетная запись находится в GHCR, внутри аннотации OCI index `foundation.want.wallpapers.release.v1`. Она хранится вместе с самим image index; политику очистки GHCR нельзя применять к используемым release digests. Platform images также должны оставаться доступными. CI artifact `published-release.json` хранится 90 дней и служит копией.
-
-Контракт JSON версии 1:
-
-- `schemaVersion`: 1; `repository`: исходный репозиторий; `sourceSha`: полный commit SHA.
-- `platforms`: ровно `linux/amd64` и `linux/arm64`; для каждой `digest`, `configDigest`, `revision`.
-- `verificationRun`: `id`, `attempt`, `workflow` (`.github/workflows/checks.yml`).
-- После чтения index resolver добавляет `indexDigest`, `image`; после допуска тега также `tag`.
-
-Record публикуется после успеха verification jobs. Пока весь соответствующий main run/attempt не завершился успешно, запись не даёт допуска к релизу. Resolver отдельно проверяет GitHub API и успех jobs `verify`, `Full UI`, обеих Runtime, обеих Publish и `publish`. Доступность record сама по себе не доказывает успех CI.
-
-## Защищённый тег
-
-Release eligibility запускается на push `v*`, через workflow_dispatch на main или как reusable workflow. Он читает CLI и политику из main, требует annotated tag с прямой ссылкой на commit в истории main и проверяет действующий tag ruleset, запрещающий update/delete без bypass.
-
-GitHub скрывает `bypass_actors` от клиента без права изменения ruleset. Поэтому `.github/release-policy.json` закрепляет ID и `updated_at` версии правила, проверенной с полным readback и пустым bypass list. Клиент с правами чтения сверяет эту версию и публичные правила. Изменение ruleset блокирует gate. Для обновления политики владелец должен приватно проверить свежий полный ruleset, подтвердить отсутствие bypass и запреты update/delete, затем включить новое `updatedAt` в проверенный PR. Обычный GITHUB_TOKEN остаётся read-only; токен администратора в CI не нужен. Не трактуйте отсутствующий bypass list как пустой.
-
-Для tagged SHA выбирается последний соответствующий main Checks run. Pending/missing result ожидается до 90 минут, с опросом каждые 30 секунд. Failed/cancelled verification, неверный run/attempt, изменённые правила, отсутствующая запись, неполные platforms или несовпадения digest/config/revision блокируют допуск. Старые images без record не допускаются. Тег не запускает повторно audit, UI или image build.
-
-При первом чтении можно выполнить:
-
-```bash
-python3 scripts/ci-release.py resolve --tag v1.4.0 --timeout 5400 > /absolute/path/outside-repository/release.json
+```sh
+gh workflow run checks.yml --ref feature/example
 ```
 
-Нужны настроенный приватно GitHub CLI и pull-доступ к GHCR; команда не меняет GitHub или registry. Для повторения используйте исходный digest из сохранённого record:
+Сверьте `head_sha` завершённого run с текущим HEAD PR. Новый commit требует нового ручного запуска. Если protection требует status checks, дождитесь этих checks на текущем SHA; не снимайте protection и не используйте bypass. Checks на ветках выполняет static/type/format, unit/API и collection drafts. Ручной Checks на canonical main также выполняет audit, UI и native runtime, но не публикует images и не обращается к production.
 
-```bash
-python3 scripts/ci-release.py resolve --tag v1.4.0 --digest sha256:<original-digest> --timeout 5400
+## Один ручной выпуск
+
+Создайте immutable protected annotated `v*` tag на commit в истории main. Сам push тега ничего не запускает. После проверки server validator, production environment и Mac backup worker выполните:
+
+```sh
+gh workflow run deploy-production.yml --ref v1.8.1 -f tag=v1.8.1 -f profile=full
 ```
 
-Workflow_dispatch требует `tag` и `index_digest`. Reusable workflow принимает `tag` и необязательный `index_digest`; outputs: `source_sha`, `image`, `index_digest`, `release_record`. Первый consumer сохраняет полученный record и передаёт его исходный digest при повторении. Более новая публикация того же SHA не должна молча заменять digest прежнего deployment intent.
+Workflow ref обязан совпадать с tag input. Guard проверяет исходный repository, annotated tag с прямой ссылкой на commit, main ancestry и pinned immutable ruleset без bypass. Feature/development/main branch refs, PR, forks и незащищённые теги не допускают production deployment.
 
-Release gate не выполняет SSH, migration, deployment или внешнее объявление. Эти этапы должны использовать точный record и отдельное подтверждение фактически работающего revision/digest. CI и registry не доказывают production.
+Цепочка вызывает Checks, публикует проверенные native images и OCI index, затем вызывает один Release eligibility и restricted production deployment. Static/unit/API, audit, collection drafts, полный UI и обе native runtime платформы должны пройти до публикации. Проверенный image сохраняется через `docker save`, загружается через `docker load` и публикуется без rebuild. Его config digest совпадает с проверенным image ID; OCI revision совпадает с source SHA. Index содержит ровно linux/amd64 и linux/arm64.
 
-## Локальная проверка изменения CI
+Publication получает `packages: write`; eligibility использует read-only permissions. Только deployment job получает production environment и SSH secret. Concurrency не отменяет активный tag release или migration; серверный lock сохраняет сериализацию при потере SSH.
 
-```bash
-make test-ci
-make check
-make test
+## Evidence и совместимость
+
+Авторитетный release record находится в аннотации OCI index `foundation.want.wallpapers.release.v1`. Суффикс имени аннотации сохраняется для совместимости; JSON `schemaVersion` задаёт формат записи. Копия artifact хранится 90 дней. Используемые index/platform digests нельзя удалять из GHCR.
+
+Новая запись `schemaVersion: 2` содержит:
+
+- `repository`, полный `sourceSha` и ровно две `platforms` с `digest`, `configDigest`, `revision`;
+- `verificationRun`: положительные целые `id`, `attempt`, `workflow: .github/workflows/deploy-production.yml`;
+- `verificationProfile: full` и `skippedChecks: []`.
+
+Resolver сверяет canonical manual tag run и точный attempt через GitHub API. Успешные jobs имеют фиксированные имена с префиксом `checks / `, включая `Release profile (full)`, `verify`, `Collection drafts`, `Full UI`, обе Runtime, обе Publish и `publish`. Общий run ещё выполняется во время deployment; допуск требует завершённых успешных verification/publication jobs, а не завершения собственного deployment. Cancelled run и любой отсутствующий, повторяющийся или неуспешный обязательный job отклоняются.
+
+Исторический `schemaVersion: 1` сохраняет прежнее значение: только полностью завершённый успешный main Checks run/attempt с прежним набором jobs. Он не может содержать новые поля профиля. Неизвестные версии, изменённые profile data и несовпадения source/run/attempt/config/platform/index/revision отклоняются. VPS независимо выполняет тот же resolver при принятии запроса и повторно перед остановкой app.
+
+Tag protection проверяется по `.github/release-policy.json`: закреплённые ID и `updatedAt` соответствуют полному readback ruleset с пустым bypass list и запретом update/delete. Изменение ruleset требует проверенного обновления policy; read-only GITHUB_TOKEN не получает административных прав.
+
+## Повтор и эксплуатация
+
+Первый запуск передаёт digest прямо из publication в eligibility и deployment. Не выбирайте более новую публикацию того же SHA. Для повтора передайте исходный digest:
+
+```sh
+gh workflow run deploy-production.yml --ref v1.8.1 -f tag=v1.8.1 -f profile=full -f index_digest=sha256:<original-digest>
 ```
 
-Проверьте workflows через actionlint. CLI-тесты выполняются через публичные команды `plan`, `image`, `record`, `publish-index`, `resolve` с fixtures внешних GitHub/registry ответов. Они проверяют event matrix, защиту тега, отсутствие full jobs, failed/pending verification, source/run/platform/digest и повтор с исходным digest. Они не подтверждают реальную доставку Docker artifacts или native CI. После выпуска изменения в main отдельно сохраните реальные run IDs, оба image IDs/platform digests, общий index digest и результат раннего тега/manual retry.
+Повтор пропускает build/publication и проверяет исходный record/run/attempt. Принятый сервером tag сохраняет исходный source/digest. Standalone Release eligibility остаётся ручным read-only инструментом с обязательными tag, profile и исходным digest; он не запускает deployment.
 
-Production deployment отдельно выполняет `.github/workflows/deploy-production.yml`. Workflow использует reusable gate, protected-tag environment и restricted SSH protocol. Manual retry выбирает ref самого release tag и требует исходный digest. [Provisioning, backup gate и recovery](production-deployments.md) описывают operator prerequisites и actual production acceptance.
+Backup/restore, migrations, TLS/grants, readiness, public smoke и compatible-only rollback обязательны. [Production instructions](production-deployments.md) описывают установку validator и recovery. Результаты CI/registry не подтверждают работающий VPS или приватный CAPTCHA/login assessment.
+
+## Проверки изменений
+
+Запустите `make test-ci`, actionlint, `make check` и `make test`. Contract tests проверяют события, DAG, canonical sources, profile/run/digest identity, сохранение checked images и серверные переходы. После релиза сохраните реальный run/attempt, оба config/platform digests, index digest, deployment request и running revision.
+
+Ниже приведены исторические результаты прежнего автоматического процесса; они не описывают текущие entry points.
 
 ## Подтверждение #13: 13 октября 2026
 

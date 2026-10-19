@@ -241,7 +241,8 @@ def execute(store, record):
             require(fresh_environment == environment and fresh_database_id == database_id, 'database-profile-changed')
             os.environ['WANT_RELEASE_PUBLIC_API'] = '1'
             fresh = release.resolve(argparse.Namespace(tag=record['tag'], digest=record['indexDigest'], timeout=0))
-            require(fresh['sourceSha'] == record['sourceSha'] and fresh['verificationRun'] == record['verificationRun'],
+            require(all(fresh.get(key) == record.get(key) for key in
+                        ('sourceSha', 'verificationRun', 'verificationProfile', 'skippedChecks', 'platforms')),
                     'release-verification-changed')
             verify_privileges(environment)
             verify_receipt(record, record['receipt'])
@@ -342,6 +343,8 @@ def submit(store, tag, sha, digest):
     with store.lock():
         for record in store.records():
             require(record['state'] != 'recovery-required', 'operator-recovery-required')
+            require(record['tag'] != tag or (record['sourceSha'], record['indexDigest']) == (sha, digest),
+                    'release-intent-digest-mismatch')
             same = (record['tag'], record['sourceSha'], record['indexDigest']) == (tag, sha, digest)
             if record['state'] not in TERMINAL:
                 require(same, 'deployment-busy')

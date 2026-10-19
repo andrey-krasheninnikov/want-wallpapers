@@ -159,6 +159,29 @@ class ServerTransitions(unittest.TestCase):
             self.assertEqual(record['state'], 'running')
             self.assertEqual(store.read(record['requestId'])['stage'], 'requested')
 
+    def test_server_rejects_invalid_evidence_before_starting_service(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(Path(directory))
+            with patch.object(server.release, 'resolve', side_effect=server.release.ReleaseError('profile mismatch')), \
+                 patch.object(server, 'run') as start:
+                with self.assertRaises(server.release.ReleaseError):
+                    server.submit(store, 'v1.5.0', 'a' * 40, 'sha256:' + 'b' * 64)
+                start.assert_not_called()
+            self.assertEqual(list(store.records()), [])
+
+    def test_existing_tag_cannot_silently_select_another_published_digest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(Path(directory))
+            original = {'requestId': 'c' * 32, 'tag': 'v1.5.0', 'sourceSha': 'a' * 40,
+                        'indexDigest': 'sha256:' + 'b' * 64, 'state': 'failed'}
+            store.write(original)
+            replacement = {**original, 'indexDigest': 'sha256:' + 'd' * 64}
+            with patch.object(server.release, 'resolve', return_value=replacement), patch.object(server, 'run') as start:
+                with self.assertRaisesRegex(DeployError, 'release-intent-digest-mismatch'):
+                    server.submit(store, replacement['tag'], replacement['sourceSha'], replacement['indexDigest'])
+                start.assert_not_called()
+            self.assertEqual(store.read(original['requestId']), original)
+
     def test_slow_receipt_has_a_deadline_and_does_not_hold_requests_lock(self):
         with tempfile.TemporaryDirectory() as directory:
             store = Store(Path(directory))

@@ -1,16 +1,20 @@
 name: Production deployment
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
         description: Protected annotated release tag; select this same tag as the workflow ref
         required: true
         type: string
-      index_digest:
-        description: Original immutable release digest
+      profile:
+        description: Verification profile (full runs every check)
         required: true
+        default: full
+        type: choice
+        options: [full]
+      index_digest:
+        description: Original immutable digest for a retry; leave empty to build a new release
+        required: false
         type: string
 permissions:
   contents: read
@@ -26,17 +30,37 @@ jobs:
           persist-credentials: false
       - name: Reject non-release deployment requests
         env:
-          INPUT_TAG: ${{ inputs.tag }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          VERIFICATION_PROFILE: ${{ inputs.profile }}
           INPUT_DIGEST: ${{ inputs.index_digest }}
-        run: python3 scripts/deploy-client.py guard --tag "$INPUT_TAG" --digest "$INPUT_DIGEST"
-  eligibility:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci-release.py guard --tag "$RELEASE_TAG" --digest "$INPUT_DIGEST" > "$RUNNER_TEMP/release-request.json"
+          jq -r '"Profile: \(.verificationProfile)\nSkipped checks: \(.skippedChecks | join(", "))"' "$RUNNER_TEMP/release-request.json" >> "$GITHUB_STEP_SUMMARY"
+  checks:
     needs: guard
+    if: inputs.index_digest == ''
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    uses: ./.github/workflows/checks.yml
+    with:
+      tag: ${{ inputs.tag }}
+      profile: ${{ inputs.profile }}
+  eligibility:
+    needs: [guard, checks]
+    if: >-
+      !cancelled() && needs.guard.result == 'success' &&
+      (needs.checks.result == 'success' || (inputs.index_digest != '' && needs.checks.result == 'skipped'))
     uses: ./.github/workflows/release-gate.yml
     with:
-      tag: ${{ inputs.tag || github.ref_name }}
-      index_digest: ${{ inputs.index_digest || '' }}
+      tag: ${{ inputs.tag }}
+      profile: ${{ inputs.profile }}
+      index_digest: ${{ inputs.index_digest || needs.checks.outputs.index_digest }}
   deploy:
     needs: eligibility
+    if: ${{ !cancelled() && needs.eligibility.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     environment: production
@@ -51,7 +75,7 @@ jobs:
           persist-credentials: false
       - name: Deploy exact verified release
         env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag }}
           RELEASE_SOURCE: ${{ needs.eligibility.outputs.source_sha }}
           RELEASE_DIGEST: ${{ needs.eligibility.outputs.index_digest }}
           PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
