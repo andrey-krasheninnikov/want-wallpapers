@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the production image against a separate PostgreSQL 18 TLS endpoint."""
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import hashlib
 import os
@@ -173,6 +173,7 @@ try:
     initial['publicationDates'] = {item['id']: expected['publicationDates'][item['id']] for item in initial['wallpapers']}
     with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
         assert json.load(response) == initial, 'Initial migrations changed.'
+    import_started = datetime.now(timezone.utc)
     for collection in expected['collections']:
         manifest = {'collection': collection, 'wallpapers': [item for item in expected['wallpapers'] if item['collectionId'] == collection['id']]}
         for attempt in range(2):
@@ -180,8 +181,22 @@ try:
             with urllib.request.urlopen(request) as response:
                 result = json.load(response)['result']
                 assert result in ['created', 'unchanged'] if attempt == 0 else result == 'unchanged'
+            with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
+                dates = json.load(response)['publicationDates']
+            if attempt == 0:
+                first_dates = dates
+            else:
+                assert dates == first_dates, 'Exact-repeat import changed publication dates.'
     with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
-        assert json.load(response) == expected, 'Runtime catalogue differs from the build snapshot.'
+        actual = json.load(response)
+        assert {key: value for key, value in actual.items() if key != 'publicationDates'} == {key: value for key, value in expected.items() if key != 'publicationDates'}, 'Runtime catalogue differs from the build snapshot.'
+        assert actual['publicationDates'].keys() == expected['publicationDates'].keys()
+    historical = json.loads(run(psql + ['-A', '-t'], "SELECT coalesce(jsonb_object_agg(id,to_char(public.initial_wallpaper_publication(id) AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')), '{}'::jsonb) FROM wallpapers WHERE public.initial_wallpaper_publication(id) IS NOT NULL;"))
+    for wallpaper_id, date in actual['publicationDates'].items():
+        if wallpaper_id in historical:
+            assert date == historical[wallpaper_id] == expected['publicationDates'][wallpaper_id]
+        else:
+            assert import_started <= datetime.fromisoformat(date.replace('Z', '+00:00')) <= datetime.now(timezone.utc), 'New import must use its own database publication time.'
     print(f"Verified catalogue import/readback and exact-repeat no-op: {len(expected['collections'])} collections and {len(expected['wallpapers'])} wallpapers.")
     with urllib.request.urlopen(origin + '/admin/login/') as response:
         assert 'noindex' in response.headers['X-Robots-Tag']

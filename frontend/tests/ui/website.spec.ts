@@ -16,7 +16,7 @@ async function dismissCookies(page: Page, locale: Locale) {
   await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
 }
 
-const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
+const templates = ['/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', '/collections/neon-tide/', '/wallpapers/neon-tide-4/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
   for (const width of [320, 375, 768, 1024, 1440] as const) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
@@ -132,7 +132,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
   });
 }
 
-for (const [slug, number] of [['where-stars-graze', 4], ['a-night-beneath-the-ice', 1]] as const) for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
+for (const [slug, number] of [['where-stars-graze', 4], ['a-night-beneath-the-ice', 1], ['neon-tide', 4]] as const) for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
   test(`collection, search and PNG downloads: ${slug}, ${locale}`, async ({ page, request }) => {
     const collection = collections.find((item) => item.slug === slug)!;
     const designs = wallpapers.filter((item) => item.collectionId === collection.id);
