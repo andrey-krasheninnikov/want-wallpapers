@@ -38,6 +38,8 @@ grpc-js 1.14.5 и http-cache-semantics 4.3.0 закреплены overrides дл
 
 ## Cargo advisory
 
+19 октября 2026 rustls обновлён с 0.23.45 до 0.23.46 для устранения [RUSTSEC-2026-0347](https://rustsec.org/advisories/RUSTSEC-2026-0347.html). Advisory относится к отправке буферизованных данных после отказа ECH. Исправленная версия используется без дополнительного исключения audit.
+
 [RUSTSEC-2023-0071](https://rustsec.org/advisories/RUSTSEC-2023-0071.html) относится к `rsa` в optional SQLx MySQL зависимостях lockfile. MySQL не включён: production Linux graph с normal/build/dev dependencies не содержит rsa; используются только PostgreSQL и rustls-ring. Проверка графа обязательна перед принятием этого единственного finding. При включении RSA/MySQL исключение становится недействительным. Остальные Rust advisory/warnings блокируют проверку.
 
 ## Проверки
