@@ -100,6 +100,13 @@ verification = (repository / 'deploy/verify-runtime-grants.sql').read_text()
 for _ in range(2):
     run(psql, grants)
     run(psql, verification)
+# Restricted function defaults must still permit catalogue publication dates.
+run(psql, 'REVOKE EXECUTE ON FUNCTION public.initial_wallpaper_publication(text) FROM PUBLIC, :"runtime_role";')
+unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
+assert unsafe.returncode != 0, 'Missing publication function permission must fail verification.'
+run(psql, grants)
+run(psql, verification)
+run(psql, 'SET ROLE :"runtime_role"; SELECT public.initial_wallpaper_publication(\'neon-tide-1\') IS NULL; RESET ROLE;')
 # A future automatic grant must be detected before it can expose a new table.
 run(psql, f'ALTER DEFAULT PRIVILEGES FOR ROLE "{migrator}" GRANT SELECT ON TABLES TO "{role}";')
 unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)

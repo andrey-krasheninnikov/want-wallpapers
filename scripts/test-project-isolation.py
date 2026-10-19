@@ -49,6 +49,7 @@ try:
           'GRANT USAGE, CREATE ON SCHEMA public TO "wallpapers-backup"; '
           'GRANT USAGE, CREATE ON SCHEMA public TO axentra_migrator;', user='wallpapers-admin')
     query((repository / 'backend/migrations/202610040001_schema.sql').read_text() +
+          (repository / 'backend/migrations/202610130001_publication_dates.sql').read_text() +
           'CREATE TABLE public._sqlx_migrations(version bigint); '
           'GRANT ALL ON ALL TABLES IN SCHEMA public TO "wallpapers-admin", axentra_migrator; '
           'GRANT SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO "wallpapers-admin", axentra_migrator; '
