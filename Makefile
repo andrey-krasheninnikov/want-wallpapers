@@ -3,7 +3,7 @@ PYTHON ?= python3
 
 .PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-backup test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
-	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n test-project-isolation test-cover-media'
+	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n test-project-isolation test-cover-media generation-init generation-config generation-up generation-stop test-generation'
 install:
 	bun install --frozen-lockfile --ignore-scripts
 	cargo fetch --locked
@@ -81,3 +81,17 @@ test-project-isolation:
 .PHONY: test-cover-media
 test-cover-media:
 	bun test frontend/tests/collection-covers.test.ts
+
+.PHONY: generation-init generation-config generation-up generation-stop test-generation
+GENERATION_COMPOSE = docker compose -f automation/n8n/compose.yaml -f automation/n8n/generation.compose.yaml
+generation-init:
+	$(GENERATION_COMPOSE) run --rm --no-deps -T --volume "$(CURDIR)/scripts/generation-init.cjs:/setup/generation-init.cjs:ro" --entrypoint node n8n /setup/generation-init.cjs
+generation-config:
+	$(GENERATION_COMPOSE) config --quiet
+generation-up:
+	$(GENERATION_COMPOSE) up --detach --build --wait --wait-timeout 180
+generation-stop:
+	$(GENERATION_COMPOSE) stop --timeout 90 n8n draft-store
+test-generation:
+	bun test frontend/tests/generation-draft.test.ts
+	$(PYTHON) -u -B scripts/test-generation-n8n.py

@@ -25,21 +25,29 @@ if state.get('fail') == 'run' and args[0] == 'run':
     sys.exit(1)
 if args[0] == 'compose':
     if 'config' in args:
-        print(json.dumps({'services': {'n8n': {'image': os.environ['N8N_FIXTURE_IMAGE']}},
+        print(json.dumps({'services': {'n8n': {'image': os.environ['N8N_FIXTURE_IMAGE']}, **({'draft-store':{}} if state.get('helper') else {})},
             'volumes': {'data': {'name': 'want-wallpapers-n8n-data'}}}))
     elif 'ps' in args:
-        print('local-container')
+        print(('helper-container' if state.get('helper') else '') if args[-1]=='draft-store' else 'local-container')
     elif 'stop' in args:
-        state['running'] = False
-    elif 'up' in args:
-        state['running'] = True
+        state['stoppedServices']=args[args.index('90')+1:]
+        if 'n8n' in state['stoppedServices']: state['running']=False
+        if 'draft-store' in state['stoppedServices']: state['helperRunning']=False
+    elif 'start' in args:
+        state['startedServices']=args[args.index('start')+1:]
+        if 'n8n' in state['startedServices']: state['running']=True
+        if 'draft-store' in state['startedServices']: state['helperRunning']=True
 elif args[0] == 'inspect':
     if '.Mounts' in args[-1]:
-        print(json.dumps([{'Type': 'volume', 'Name': 'want-wallpapers-n8n-data', 'Destination': '/home/node/.n8n'}]))
+        print(json.dumps([{'Type': 'volume', 'Name': 'want-wallpapers-n8n-data', 'Destination': '/state' if args[1]=='helper-container' else '/home/node/.n8n'}]))
+    elif '.State.Health' in args[-1]:
+        print('healthy' if (state.get('helperRunning',False) if args[1]=='helper-container' else state['running']) else 'stopped')
     elif '.State.Running' in args[-1]:
-        print(json.dumps(state['running']))
+        print(json.dumps(state.get('helperRunning',False) if args[1]=='helper-container' else state['running']))
 elif args[0] == 'ps':
     print('local-container' if state['running'] else '')
+    if state.get('helperRunning'): print('helper-container')
+    if state.get('unknownUser'): print('unknown-container')
 elif args[0] == 'volume':
     if args[1] == 'ls':
         print('\n'.join(state['volumes']))
@@ -103,6 +111,29 @@ class PrivateSnapshots(unittest.TestCase):
             self.assertEqual(contents.getnames(), ['.n8n/config', '.n8n/database.sqlite'])
         self.assertTrue(json.loads(self.state_path.read_text())['running'])
         self.assertNotIn('synthetic-local-key-value', result.stdout + result.stderr)
+
+    def test_backup_quiesces_only_previously_running_services(self):
+        for running in (False, True):
+            state={'running':running,'helper':True,'helperRunning':True,'volumes':['want-wallpapers-n8n-data']}
+            self.state_path.write_text(json.dumps(state))
+            result=self.command('backup','--directory',str(self.root/'backups'))
+            self.assertEqual(result.returncode,0,result.stderr)
+            saved=json.loads(self.state_path.read_text())
+            self.assertEqual(saved['running'],running)
+            self.assertTrue(saved['helperRunning'])
+            self.assertEqual(saved['stoppedServices'],(['n8n'] if running else [])+['draft-store'])
+            self.assertEqual(saved['startedServices'],saved['stoppedServices'])
+
+    def test_unknown_volume_user_and_corrupt_draft_journal_are_rejected(self):
+        state={'running':True,'helper':True,'helperRunning':True,'unknownUser':True,'volumes':['want-wallpapers-n8n-data']}
+        self.state_path.write_text(json.dumps(state))
+        result=self.command('backup','--directory',str(self.root/'backups'))
+        self.assertNotEqual(result.returncode,0)
+        self.assertTrue(json.loads(self.state_path.read_text())['helperRunning'])
+        original=self.root/'snapshot.tar.gz'
+        snapshot(original,{'.n8n/config':b'{"encryptionKey":"synthetic"}', '.n8n/database.sqlite':b'SQLite format 3\x00fixture', '.n8n/generation/journal.sqlite':b'broken'})
+        self.assertNotEqual(self.command('restore',str(original),'--volume','want-wallpapers-n8n-recovery').returncode,0)
+        self.assertEqual(json.loads(self.state_path.read_text())['volumes'],['want-wallpapers-n8n-data'])
 
     def test_recovery_creates_a_new_volume_and_keeps_the_source(self):
         original = self.root / 'snapshot.tar.gz'
