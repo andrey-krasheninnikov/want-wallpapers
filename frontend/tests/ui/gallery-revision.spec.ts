@@ -43,7 +43,9 @@ for (const width of [320, 1440]) test(`stable two-column gallery, client slides,
     await page.waitForURL(url => url.href !== previousUrl);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
     const nextFrame = (await page.locator('#wallpaper-view').boundingBox())!;
-    expect(nextFrame.y).toBeCloseTo(frame.y, 0); expect(nextFrame.height).toBeCloseTo(frame.height, 0);
+    // A shorter heading cannot preserve a positive viewer offset beyond the document top.
+    const documentTop = nextFrame.y + await page.evaluate(() => scrollY);
+    expect(nextFrame.y).toBeCloseTo(Math.min(frame.y, documentTop), 0); expect(nextFrame.height).toBeCloseTo(frame.height, 0);
     expect(await page.evaluate(() => window.revisionDocument)).toBe(token);
     await expect(page.locator('#detail-image')).toHaveAttribute('src', /-mobile.webp$/);
     previousUrl = page.url();
