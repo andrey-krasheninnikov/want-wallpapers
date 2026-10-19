@@ -77,3 +77,21 @@ test('publication order handles late additions, ties and missing history without
   expect(newestWallpapers([old, late], { old: dates.old, late: dates.old }).map(item => item.id)).toEqual(['late', 'old']);
   expect(newestWallpapers([old, unknown], {}).map(item => item.id)).toEqual(['unknown', 'old']);
 });
+
+
+test('neon collection preserves its ten designs and localized keyboard search', () => {
+  const designs = wallpapers.filter((item) => item.collectionId === '0006-neon-tide');
+  expect(designs.map((item) => item.number)).toEqual(Array.from({ length: 10 }, (_, index) => index + 1));
+  for (const [locale, description, tag] of [
+    ['en', 'keyboard', 'water'],
+    ['ru', 'клавиша', 'вода'],
+    ['zh-cn', '键帽', '水'],
+    ['pt-br', 'tecla', 'água'],
+  ] as [Locale, string, string][]) {
+    const index = createSearchIndex(locale, designs.map((item) => ({
+      id: item.id,
+      text: [item.title[locale], item.description[locale], ...item.tags.map((key) => tagLabels[key][locale])].join(' '),
+    })));
+    for (const phrase of [description, tag]) expect(searchIds(index, locale, phrase)).toContain('neon-tide-4');
+  }
+});

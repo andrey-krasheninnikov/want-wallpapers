@@ -88,7 +88,7 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml stop app
 make migrate
 ```
 
-После миграций примените `deploy/runtime-grants.sql` к БД wallpapers от migrator/DBA, затем `deploy/verify-runtime-grants.sql`. Скрипты поддерживают psql variables `runtime_role` и `migrator_role`; defaults — `wallpapers` и `wallpapers-migrator`, идентификаторы всегда quoted. Новая таблица требует явного grant и обновления allowlist проверки.
+После миграций примените `deploy/runtime-grants.sql` к БД wallpapers от migrator/DBA, затем `deploy/verify-runtime-grants.sql`. Скрипты поддерживают psql variables `runtime_role` и `migrator_role`; defaults — `wallpapers` и `wallpapers-migrator`, идентификаторы всегда quoted. Функции, вызываемые runtime, также требуют точечного EXECUTE: каталог использует public.initial_wallpaper_publication(text). Новая таблица или вызываемая функция требует явного grant и обновления проверки.
 
 Используйте заранее настроенный приватный libpq service `wallpapers-operator` с TLS verify-full/CA и внешним password file, доступным только оператору. Не передавайте URL/пароль в argv, shell history или CI. Service подключается к выделенной wallpapers БД от migrator/DBA:
 
