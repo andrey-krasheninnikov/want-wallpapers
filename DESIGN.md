@@ -17,7 +17,7 @@ The five gallery references remain useful: Unsplash for image priority, Pexels f
 | card, muted | #1C1C1C | Grouped content |
 | secondary, popover | #252525 | Nested controls and raised surfaces |
 | accent | #303030 | Interactive surface |
-| media-ground | #101010 | Wallpaper and device stage |
+| media-ground | #101010 | Wallpaper viewer |
 | muted-foreground | #ADADAD | Supporting text |
 | primary | #5B4FFF | Primary action and selected mark |
 | primary-foreground | #FFFFFF | Action labels, including hover |
@@ -27,7 +27,7 @@ The five gallery references remain useful: Unsplash for image priority, Pexels f
 | destructive | #FF738D | Error text and destructive actions |
 | border, input | #383838 / #858585 | Compatibility aliases and filled switch/radio indicators |
 
-The single source is frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add permanent decorative borders, divider rules, inset hairlines or button gradients. Gallery hover uses a thin logo-color glow without moving the card. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The gradient sphere stays behind the page. The physical bezel in the device poster depicts the object and remains part of the image.
+The single source is frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add permanent decorative borders, divider rules, inset hairlines or button gradients. Gallery hover uses a thin logo-color glow without moving the card. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The gradient sphere stays behind the page. The device stage and model renderer are transparent, so the public page background continues around the devices and behind the caption. Scene buttons retain filled surfaces. The physical bezel and shadows in the device poster depict the objects and remain visible.
 
 ## Type and geometry
 
