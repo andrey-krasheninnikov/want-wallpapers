@@ -59,7 +59,7 @@ process.on('SIGTERM',()=>process.exit(0));
 def run(*arguments, environment=None, input=None):
     result = subprocess.run(arguments, cwd=ROOT, env=environment, input=input, capture_output=True, timeout=300)
     if result.returncode:
-        detail = result.stderr.decode(errors='replace').strip()[-2000:] if 'scripts/n8n-state.py' in arguments else ''
+        detail = (result.stderr or result.stdout).decode(errors='replace').strip()[-2000:]
         raise RuntimeError('Local fixture command failed: ' + ' '.join(arguments[:3]) + '. '+detail)
     return result.stdout
 
@@ -90,6 +90,8 @@ def main():
                 if isinstance(url, str):
                     node['parameters']['url'] = url.replace('https://gen.pollinations.ai', 'http://provider:8092')
         workflow_file.write_text(json.dumps(workflows))
+        # Synthetic exports must be readable by container uid 1000 on Linux.
+        workflow_file.chmod(0o644)
         credentials = [
             {'id':'CollectionDraftStore','name':'Collection draft store','type':'httpHeaderAuth','data':{'name':'Authorization','value':'Bearer ' + token}},
             {'id':'CollectionDraftProvider','name':'Collection draft provider','type':'httpHeaderAuth','data':{'name':'Authorization','value':'Bearer synthetic-provider'}},
