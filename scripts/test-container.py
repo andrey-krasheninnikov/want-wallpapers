@@ -100,6 +100,13 @@ verification = (repository / 'deploy/verify-runtime-grants.sql').read_text()
 for _ in range(2):
     run(psql, grants)
     run(psql, verification)
+# Preflight accepts the old schema only while the publication migration is pending.
+transactional_verification = verification.replace('BEGIN READ ONLY;', '').replace('COMMIT;', '')
+run(psql, 'BEGIN; DELETE FROM public._sqlx_migrations WHERE version = 202610200001; '
+    'DROP FUNCTION public.initial_collection_publication(text);\n' + transactional_verification + '\nROLLBACK;')
+unsafe = subprocess.run(psql, input='BEGIN; DROP FUNCTION public.initial_collection_publication(text);\n'
+    + transactional_verification, capture_output=True, text=True)
+assert unsafe.returncode != 0, 'Applied publication migration must retain its required function.'
 # Restricted function defaults must still permit catalogue publication dates.
 for function, identity in [('initial_wallpaper_publication', 'neon-tide-1'),
                            ('initial_collection_publication', '0006-neon-tide')]:
