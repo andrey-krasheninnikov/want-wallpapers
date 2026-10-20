@@ -7,6 +7,7 @@
 ### Исправлено
 
 - Release-contract tests задают собственные profile, tag и workflow ref. Внешний fast context больше не меняет ожидания standalone full сценариев.
+- Privilege preflight допускает отсутствие новой collection-publication функции только до её миграции. После миграции функция и право EXECUTE остаются обязательными.
 
 ### Изменено
 
