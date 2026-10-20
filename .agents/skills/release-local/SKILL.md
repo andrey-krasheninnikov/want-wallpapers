@@ -29,7 +29,7 @@ make release-local-check TAG=v<version> PROFILE=<full-or-fast>
 make release-local TAG=v<version> PROFILE=<full-or-fast>
 ```
 
-Первая команда выполняет Install, Static, Unit/API, Audit, Collection drafts и, для full, Full UI. Вторая переиспользует эти результаты только при неизменных source tree, инструментах и build configuration, собирает arm64 и amd64, проверяет обе runtime платформы и публикует те же images без rebuild. Arm64 на текущем Mac нативный, amd64 эмулируется. Не называйте эмуляцию нативной проверкой.
+Первая команда выполняет Install, Static, Unit/API, Audit, Collection drafts и, для full, Full UI. Collection drafts включает только unit-тесты Bun, без запуска n8n. Вторая переиспользует эти результаты только при неизменных source tree, инструментах и build configuration, собирает arm64 и amd64, проверяет обе runtime платформы и публикует те же images без rebuild. Arm64 на текущем Mac нативный, amd64 эмулируется. Не называйте эмуляцию нативной проверкой.
 
 Сохраните подписанный v3 record, source SHA, профиль, skipped checks, оба config/platform digests и итоговый index digest. Проверьте anonymous registry readback и серверный допуск. Эта публикация ещё не подтверждает deployment.
 

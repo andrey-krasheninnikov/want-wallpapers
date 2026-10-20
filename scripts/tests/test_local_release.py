@@ -86,6 +86,17 @@ class LocalPipelineTests(unittest.TestCase):
             with self.subTest(path=relative), patch.object(Path, 'read_bytes', changed):
                 self.assertNotEqual(local.tool_digest(), expected)
 
+    def test_collection_checks_do_not_start_n8n(self):
+        self.state['stages'] = ['Install', 'Static', 'Unit/API', 'Audit']
+        fixtures = Mock()
+        fixtures.start.side_effect = lambda source, environment: environment
+        with patch.object(local, 'verification_identity', return_value=self.identity), \
+             patch.object(local, 'Fixtures', return_value=fixtures), patch.object(local, 'execute') as execute:
+            local.prepare(self.root, self.root, self.state, self.config, build_images=False)
+        self.assertEqual(execute.call_args.args[0], ['bun', 'test', 'frontend/tests/generation-draft.test.ts'])
+        self.assertEqual(execute.call_count, 1)
+        self.assertIn('Collection drafts', self.state['stages'])
+
     def test_changed_inputs_cannot_reuse_completed_checks(self):
         self.state['inputFingerprint'] = 'old-inputs'
         with patch.object(local, 'verification_identity', return_value=self.identity), \

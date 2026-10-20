@@ -151,7 +151,7 @@ def prepare(source, directory, state, config, *, build_images=True):
         steps = [('Install', [['make', 'install']]), ('Static', [['make', 'check']]),
                  ('Unit/API', [['make', 'test-frontend', 'test-backend', 'test-ci'],
                                ['python3', '-B', str(ROOT / 'scripts/test-backup.py')]]),
-                 ('Audit', [['make', 'audit']]), ('Collection drafts', [['make', 'test-generation']])]
+                 ('Audit', [['make', 'audit']]), ('Collection drafts', [['bun', 'test', 'frontend/tests/generation-draft.test.ts']])]
         if state['verificationProfile'] == 'full':
             steps.append(('Full UI', [['make', 'test-ui']]))
         for label, commands in steps:

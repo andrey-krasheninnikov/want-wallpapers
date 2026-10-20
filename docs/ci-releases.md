@@ -151,7 +151,7 @@ make release-local TAG=v<version> PROFILE=full
 make deploy-local TAG=v<version> PROFILE=full
 ```
 
-Укажите fast вместо full только по явному выбору. Check выполняет Install, Static, Unit/API, Audit, Collection drafts и Full UI для full. Prepare переиспользует результаты по неизменному дереву, tool digest, версиям и public build configuration, затем строит и проверяет обе платформы. На текущем arm64 Mac amd64 эмулируется; evidence сохраняет это отличие. Приватное состояние находится в `~/.local/state/want-wallpapers/releases/v<version>/release.json`. Оно не публикуется целиком.
+Укажите fast вместо full только по явному выбору. Check выполняет Install, Static, Unit/API, Audit, Collection drafts и Full UI для full. Collection drafts запускает только unit-тесты Bun; n8n не запускается. Prepare переиспользует результаты по неизменному дереву, tool digest, версиям и public build configuration, затем строит и проверяет обе платформы. На текущем arm64 Mac amd64 эмулируется; evidence сохраняет это отличие. Приватное состояние находится в `~/.local/state/want-wallpapers/releases/v<version>/release.json`. Оно не публикуется целиком.
 
 Publication использует изолированный временный Docker auth config и не меняет существующий registry login. Пароль/PAT не передаётся в argv. Требуется предварительная gh authentication с правами GHCR write/read; предоставление доступа выполняет владелец. Образы получают уникальный local release ID и публикуются под отдельными references без перезаписи version tags. Проверяются config digests и итоговый index; подписывается record v3 с точными tag/source/tree/profile/checks/platform identities. Resolver сверяет подпись и tree через GitHub, но не запрашивает Actions runs.
 
