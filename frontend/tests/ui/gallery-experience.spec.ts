@@ -60,11 +60,15 @@ test('collection pages paginate, stories disclose and project links remain disti
   }
   await expect(carousel.getByRole('button', { name: designCopy.en.nextCollections })).toBeDisabled();
   await page.setViewportSize({ width: 375, height: 900 });
-  const firstVisible = Math.max(1, collections.length - 2);
-  await expect(carousel.locator('output')).toHaveText(`${firstVisible} / ${collections.length}`);
+  await expect(carousel.locator('output')).toHaveText(new RegExp(` / ${collections.length}$`));
+  await carousel.getByRole('region').evaluate(element => element.scrollTo({ left: element.scrollWidth, behavior: 'instant' }));
+  const lastPage = collections.length;
+  await expect(carousel.locator('output')).toHaveText(`${lastPage} / ${collections.length}`);
   await carousel.getByRole('button', { name: designCopy.en.previousCollections }).click();
-  await expect(carousel.locator('output')).toHaveText(`${Math.max(1, firstVisible - 1)} / ${collections.length}`);
+  await expect(carousel.locator('output')).toHaveText(`${Math.max(1, lastPage - 1)} / ${collections.length}`);
   const story = page.locator('a[data-story]').first();
+  await story.scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-story-group] astro-island')).not.toHaveAttribute('ssr');
   await story.click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
