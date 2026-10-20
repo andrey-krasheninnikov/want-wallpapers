@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod catalog;
 pub mod config;
+pub mod discovery;
 pub mod error;
 pub mod models;
 pub mod moderation;
@@ -29,6 +30,7 @@ use tower_http::{
 pub struct AppState {
     pub pool: PgPool,
     pub config: Arc<config::Config>,
+    pub runtime_catalog: Option<Arc<discovery::BuildCatalog>>,
     pub csp_hashes: Arc<HashMap<String, Vec<String>>>,
     pub recaptcha: Option<google_cloud_recaptchaenterprise_v1::client::RecaptchaEnterpriseService>,
     pub login_slots: Arc<tokio::sync::Semaphore>,
@@ -41,7 +43,8 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/health/ready", get(ready))
         .route("/api/v1/recaptcha/config", get(recaptcha::public_config))
-        .route("/api/v1/catalog", get(catalog::snapshot))
+        .route("/api/v1/catalog", get(catalog::discovery))
+        .route("/api/v1/catalog/snapshot", get(catalog::snapshot))
         .route("/api/v1/session", post(auth::visitor_session))
         .route("/api/v1/wallpapers/{id}/social", get(social::read))
         .route("/api/v1/wallpapers/{id}/rating", put(social::rate))
@@ -72,6 +75,10 @@ pub fn router(state: AppState) -> Router {
             "/api/v1/admin/catalog/{kind}/{id}/archive",
             patch(catalog::archive),
         )
+        .route(
+            "/api/v1/admin/catalog/{kind}/{id}/listing",
+            patch(catalog::set_listing),
+        )
         .route("/api/v1/admin/moderation/{kind}", get(moderation::list))
         .route(
             "/api/v1/admin/moderation/{kind}/{id}",
@@ -81,10 +88,15 @@ pub fn router(state: AppState) -> Router {
         .route("/ru/404/", get(not_found))
         .route("/zh-cn/404/", get(not_found))
         .route("/pt-br/404/", get(not_found))
+        .route("/ja/404/", get(not_found))
         .with_state(state.clone());
     let not_found_service = Router::new().fallback(not_found).with_state(state.clone());
     let fallback = ServeDir::new(&state.config.static_dir).fallback(not_found_service);
     api.fallback_service(fallback)
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            discovery::serve,
+        ))
         .layer(axum::extract::DefaultBodyLimit::max(2 * 1024 * 1024))
         .layer(TimeoutLayer::with_status_code(
             axum::http::StatusCode::REQUEST_TIMEOUT,
@@ -97,6 +109,7 @@ fn not_found_route(path: &str) -> &'static str {
         Some("ru") => "/ru/404/",
         Some("zh-cn") => "/zh-cn/404/",
         Some("pt-br") => "/pt-br/404/",
+        Some("ja") => "/ja/404/",
         _ => "/404/",
     }
 }

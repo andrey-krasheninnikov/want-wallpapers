@@ -12,3 +12,5 @@ target/
 playwright-report/
 test-results/
 *.tmp
+
+/frontend/runtime-catalog.json

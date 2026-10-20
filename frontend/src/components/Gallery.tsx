@@ -34,14 +34,14 @@ export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardD
 
 export function CollectionCard({ item, headingLevel = 3 }: { item: CollectionCardData; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  return <article className="min-w-0">
+  return <article className="min-w-0" data-collection-card={item.href}>
     <Card className="group gallery-card relative" data-collection-cover>
       <a href={item.href} className="collection-card-link">
-        {item.image && <CoverMedia image={item.image} alt={item.description} src={item.video} />}
+        {item.image && <CoverMedia image={item.image} alt={item.description} src={item.video} listingId={item.href} />}
         <CardContent className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4"><Heading className="text-xl leading-snug font-semibold tracking-tight">{item.title}</Heading><ArrowUpRight className="mt-1 size-5 shrink-0 text-link" aria-hidden="true" /></div>
           <p className="collection-card-description text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-          <Badge variant="secondary" className="mt-auto w-fit">{item.countLabel}</Badge>
+          <Badge variant="secondary" className="mt-auto w-fit" data-collection-count={item.href}>{item.countLabel}</Badge>
         </CardContent>
       </a>
       {item.video && <CoverControl locale={item.locale} />}

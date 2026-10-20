@@ -31,7 +31,7 @@ Chromium запускается с включённым sandbox. На Ubuntu 24.
 
 ## Разработка
 
-Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/` и `/pt-br/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
+Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/`, `/pt-br/404/` и `/ja/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
 
 `make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
 
@@ -49,7 +49,7 @@ make dev-backend
 
 CDN: `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/<id>/<number>-desktop.png` и `-mobile.png`. Публичные ID/slug/download имена сохраняются. Поле fileStem остаётся в manifest для совместимости и больше не входит в имя CDN-файла. Новые PNG не загружаются через админку: она работает с существующими CDN-парами.
 
-Миграция первоначально добавляет snapshot из Git: 3 коллекции / 25 дизайнов; старые социальные данные Firebase не импортируются. Рабочий каталог меняется через админку либо защищённый API. Статические страницы и поиск обновляются после export и rebuild:
+Миграция первоначально добавляет snapshot из Git: 3 коллекции / 25 дизайнов; старые социальные данные Firebase не импортируются. Рабочий каталог меняется через админку либо защищённый API. Кнопки «Показать/Скрыть» меняют списки, поиск и навигацию при следующем запросе. Прямые страницы, индексация и социальные действия сохраняются. Архив работает отдельно. Изменение содержимого и новые страницы требуют полного snapshot export и rebuild:
 
 ```bash
 export BACKEND_API_URL=https://wallpapers.want.foundation
@@ -68,7 +68,7 @@ make catalog-pull
 
 Dry-run не обращается к CDN/API. Импорт делает точный повтор без записи; частичные или отличающиеся данные дают conflict и не перезаписываются. После сетевого сбоя сначала выполните защищённый readback (`GET /api/v1/admin/catalog`). Номер папки уникален независимо от ведущих нулей. Существующие ID и социальные данные сохраняются. Новые категории/теги требуют отдельного согласованного обновления frontend/backend и деплоя до импорта. Для тестового API HTTP допустим только localhost/127.0.0.1.
 
-Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Protected v* tag запускает production workflow после release eligibility; deployment требует подготовленного VPS и работающего Mac backup worker.
+Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Protected v* tag сам ничего не запускает. Production workflow запускается вручную на том же tag ref; deployment требует подготовленного VPS и работающего Mac backup worker.
 
 `make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Видеообложки необязательны: [формат, проверка и публикация](docs/collection-covers.md). Сборка проверяет MP4/H.264 без аудио, до 10 секунд и 8 MiB, а также обязательный PNG-постер. FFmpeg нужен только в build/test-среде; Docker build устанавливает его автоматически. Кэш и build output не коммитятся.
 
@@ -78,7 +78,16 @@ Dry-run не обращается к CDN/API. Импорт делает точн
 
 [Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
 
-Analytics включается только с полной публичной конфигурацией и разрешением analytics в независимых настройках согласия. Страна определяет defaults: вне EEA optional services включены для новых посетителей, в EEA и при неизвестной стране ожидают явного выбора. Сохранённый отказ имеет приоритет. Российский IP и ошибка ipwho.is не отключают оценки, комментарии и обращения; просмотр, поиск и скачивание доступны независимо от выбора. Админка не загружает optional tracking. Закрытые обращения удаляются ежедневной задачей через год. [Политика согласия](docs/adr/0005-regional-availability-and-consent.md) описывает правила; [подготовка рекламных аккаунтов](docs/advertising-providers.md) содержит инструкции и данные для будущей интеграции. Рекламные сети пока не подключены.
+Analytics включается только с полной публичной конфигурацией и разрешением analytics в независимых настройках согласия. Страна определяет defaults: вне EEA optional services включены для новых посетителей, в EEA и при неизвестной стране ожидают явного выбора. Сохранённый отказ имеет приоритет. Российский IP и ошибка ipwho.is не отключают оценки, комментарии и обращения; просмотр, поиск и скачивание доступны независимо от выбора. Админка не загружает optional tracking. Закрытые обращения удаляются ежедневной задачей через год. [Политика согласия](docs/adr/0005-regional-availability-and-consent.md) описывает правила; [интеграция рекламы](docs/advertising-providers.md) описывает Яндекс Auto Placement и адаптивные баннеры Adsterra на публичных страницах, кроме главных. CSP расширяется только для рекламных HTML-страниц; реальные показы требуют отдельной production-проверки.
+
+Для выпуска готового `origin/development` используйте [`$release-patch`](.agents/skills/release-patch/SKILL.md) для patch-инкремента с `fast` или [`$release-minor`](.agents/skills/release-minor/SKILL.md) для minor-инкремента с `full` и patch `0`:
+
+```text
+$release-patch Выпусти origin/development и задеплой patch-релиз.
+$release-minor Выпусти origin/development и задеплой minor-релиз.
+```
+
+Оба skill выполняют Gitflow через release PR в main, protected tag, ручной production deployment и обратный merge в development. [`$release-feature`](.agents/skills/release-feature/SKILL.md) сохраняет общий порядок, поддержку feature-ветки и явной версии; без выбора профиля использует full. Для добавления коллекции из CDN приоритет имеет `release-collection`. Изменение или изучение skill не запускает выпуск.
 
 Все GitHub workflows запускаются вручную. Checks проверяет выбранный HEAD без deployment. Один запуск Production deployment на protected annotated tag из истории main выполняет verification, публикацию тех же checked amd64/arm64 images без rebuild, eligibility и production backup/deploy. Full выбран по умолчанию; fast пропускает только полный UI/E2E suite. Создание тега ничего не запускает; повтор требует исходный digest и профиль. [CI и допуск релиза](docs/ci-releases.md) описывает команды и evidence; [production deployment](docs/production-deployments.md) описывает установку VPS validator, private backup worker и recovery.
 

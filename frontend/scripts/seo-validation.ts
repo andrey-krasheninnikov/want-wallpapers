@@ -1,7 +1,7 @@
 import sax from 'sax';
 import { decodeHTMLAttribute, decodeHTML } from 'entities';
 import { legalPage, type LegalKey } from '../src/data/legal';
-import { collections, getCollection, getWallpaper, type Locale } from '../src/data/catalog';
+import { collections, getCollection, getWallpaper, locales, type Locale } from '../src/data/catalog';
 import { collectionStories, editorialCopy, supportCopy } from '../src/data/editorial';
 
 function attributeValue(element: { getAttribute(name: string): string | null }, name: string): string | null {
@@ -114,14 +114,14 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     require(page.canonical.length === 1 && page.canonical[0] === self, `${page.path}: canonical must identify this page exactly once`);
     require(page.og.length === 1 && page.og[0] === self, `${page.path}: incorrect Open Graph URL`);
     const locale = page.path.split('/')[1];
-    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : 'en';
+    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : locale === 'ja' ? 'ja' : 'en';
     require(page.lang === lang, `${page.path}: incorrect document language`);
     if (excluded) {
       if (page.path.endsWith('/search/')) require(page.robots.length === 1 && page.robots[0] === 'noindex, follow', `${page.path}: search must follow links`);
     } else {
-      const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'x-default'];
+      const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja', 'x-default'];
       require(page.alternates.length === languages.length && languages.every((language) => page.alternates.filter((alternate) => alternate.lang === language).length === 1), `${page.path}: conflicting or missing alternates`);
-      const suffix = ['ru', 'zh-cn', 'pt-br'].includes(locale!) ? page.path.slice(locale!.length + 1) : page.path;
+      const suffix = ['ru', 'zh-cn', 'pt-br', 'ja'].includes(locale!) ? page.path.slice(locale!.length + 1) : page.path;
       for (const alternate of page.alternates) {
         const prefix = ['en', 'x-default'].includes(alternate.lang) ? '' : '/' + alternate.lang.toLowerCase();
         require(alternate.href === origin + prefix + suffix, `${page.path}: incorrect alternate ${alternate.lang}`);
@@ -188,12 +188,12 @@ export function validateCityLinks(pages: Map<string, Page>): void {
 export function validateLocalizedContent(page: Page): void {
   if (!isIndexable(page)) return;
   const prefix = page.path.split('/')[1];
-  const locale: Locale = prefix === 'ru' || prefix === 'zh-cn' || prefix === 'pt-br' ? prefix : 'en';
+  const locale: Locale = prefix === 'ru' || prefix === 'zh-cn' || prefix === 'pt-br' || prefix === 'ja' ? prefix : 'en';
   const path = locale === 'en' ? page.path : page.path.slice(locale.length + 1);
   const text = editorialCopy[locale];
   let required: string[];
   if (path === '/' || path === '/collections/') {
-    required = [text.title, text.licenseText, ...collections.map((collection) => collectionStories[collection.slug]?.[locale][0] ?? '')];
+    required = [text.title, text.licenseText, ...collections.flatMap(collection => [collection.title[locale], collectionStories[collection.slug]?.[locale][0] ?? ''])];
   } else if (path.startsWith('/collections/') || path.startsWith('/wallpapers/')) {
     const slug = path.split('/')[2]!;
     const wallpaper = path.startsWith('/wallpapers/') ? getWallpaper(slug) : undefined;
@@ -251,22 +251,22 @@ export function validateLlms(text: string, indexed: ReadonlySet<string>): void {
   for (const section of license.sections) require(intro!.includes(section.heading + ':\n\n' + section.paragraphs.join('\n')), `llms.txt missing license section: ${section.heading}`);
   const required = new Set([...indexed].filter((link) => {
     const url = new URL(link);
-    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br)(?=\/)/, '');
+    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br|ja)(?=\/)/, '');
     return url.origin === origin && (path === '/' || /^\/(collections\/|wallpapers\/|license\/$|terms\/$)/.test(path));
   }));
   const found = new Set<string>();
-  const locales = new Set(['en', 'ru', 'zh-cn', 'pt-br']);
+  const remainingLocales = new Set<string>(locales);
   for (const section of sections) {
     const [locale, ...lines] = section.trim().split('\n');
-    require(locales.delete(locale!), 'Invalid or duplicate llms.txt locale section');
+    require(remainingLocales.delete(locale!), 'Invalid or duplicate llms.txt locale section');
     for (const line of lines.filter((line) => line.trim())) {
       const link = line.match(/^- \[((?:\\.|[^\]\\])+)\]\((https:\/\/[^)\s]+)\)(?:: .+)?$/);
       require(link && required.has(link[2]!), `Invalid llms.txt public link: ${line}`);
-      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
+      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br|ja)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
       require(!found.has(link[2]!), 'Duplicate llms.txt public link');
       found.add(link[2]!);
     }
   }
-  require(locales.size === 0, 'llms.txt missing locale sections');
+  require(remainingLocales.size === 0, 'llms.txt missing locale sections');
   require([...required].every((link) => found.has(link)), 'llms.txt omits current public catalog or usage links');
 }

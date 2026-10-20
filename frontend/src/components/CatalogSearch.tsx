@@ -13,6 +13,10 @@ import { copy } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import type { Locale } from '@/data/catalog';
 
+export function CatalogSearchEmptyState({ locale, reset }: { locale: Locale; reset?: () => void }) {
+  return <Card className="py-0 shadow-none"><CardContent className="grid justify-items-start gap-4 p-6 sm:p-8"><p className="text-base leading-relaxed text-muted-foreground">{copy[locale].noResults}</p><Button variant="outline" onClick={reset}>{interfaceCopy[locale].reset}</Button></CardContent></Card>;
+}
+
 export default function CatalogSearch({ locale, items, categories, collections }: {
   locale: Locale; items: WallpaperCardData[]; categories: { value: string; title: string }[]; collections: { value: string; title: string }[];
 }) {
@@ -54,8 +58,8 @@ export default function CatalogSearch({ locale, items, categories, collections }
       <Field className="min-w-0"><FieldLabel htmlFor="search-category">{ui.category}</FieldLabel><Select value={category || 'all'} onValueChange={(value) => setCategory(value === 'all' ? '' : value)}><SelectTrigger id="search-category" className="min-h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{ui.all}</SelectItem>{categories.map((item) => <SelectItem key={item.value} value={item.value}>{item.title}</SelectItem>)}</SelectContent></Select></Field>
       <Field className="min-w-0"><FieldLabel htmlFor="search-collection">{ui.collection}</FieldLabel><Select value={collection || 'all'} onValueChange={(value) => setCollection(value === 'all' ? '' : value)}><SelectTrigger id="search-collection" className="min-h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{ui.all}</SelectItem>{collections.map((item) => <SelectItem key={item.value} value={item.value}>{item.title}</SelectItem>)}</SelectContent></Select></Field>
     </CardContent></Card>
-    <div className="my-6 flex flex-wrap items-center justify-between gap-3"><p role="status" aria-live="polite" className="text-sm text-muted-foreground">{results.length} {ui.results}</p>{active && <Button variant="ghost" onClick={reset}><RotateCcw aria-hidden="true" />{text.reset}</Button>}</div>
+    <div className="my-6 flex flex-wrap items-center justify-between gap-3"><p role="status" aria-live="polite" data-discovery-count="results" className="text-sm text-muted-foreground">{`${results.length} ${ui.results}`}</p>{active && <Button variant="ghost" onClick={reset}><RotateCcw aria-hidden="true" />{text.reset}</Button>}</div>
     {active && <div className="mb-6 flex flex-wrap gap-2">{q.trim() && <Badge variant="secondary" className="max-w-full py-2 whitespace-normal wrap-anywhere">{q.trim()}</Badge>}{category && <Badge variant="secondary" className="py-2">{categories.find((item) => item.value === category)?.title}</Badge>}{collection && <Badge variant="secondary" className="py-2">{collections.find((item) => item.value === collection)?.title}</Badge>}</div>}
-    {results.length ? <WallpaperGrid items={results} headingLevel={2} /> : <Card className="py-0 shadow-none"><CardContent className="grid justify-items-start gap-4 p-6 sm:p-8"><p className="text-base leading-relaxed text-muted-foreground">{ui.noResults}</p><Button variant="outline" onClick={reset}>{text.reset}</Button></CardContent></Card>}
+    {results.length ? <WallpaperGrid items={results} headingLevel={2} /> : <CatalogSearchEmptyState locale={locale} reset={reset} />}
   </div>;
 }

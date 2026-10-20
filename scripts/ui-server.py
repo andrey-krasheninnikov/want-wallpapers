@@ -4,6 +4,7 @@ import base64
 import os
 from pathlib import Path
 import secrets
+import signal
 import subprocess
 
 repository = Path(__file__).resolve().parent.parent
@@ -23,7 +24,23 @@ environment.update(APP_ENV='development', RECAPTCHA_ENABLED='false', DATABASE_UR
     ADMIN_TOTP_SECRET_FILE=str(secret_dir / 'ui_admin_totp'), CATALOG_API_TOKEN_FILE=str(secret_dir / 'ui_catalog_token'),
     ADMIN_USERNAME='admin', SITE_URL='http://127.0.0.1:4322', BIND_ADDR='127.0.0.1:4322', STATIC_DIR=str(repository / 'frontend/dist'))
 environment.pop('DATABASE_URL', None)
-subprocess.run(['cargo', 'run', '--locked', '-p', 'want-wallpapers-server', '--', 'migrate'], cwd=repository, env=environment, check=True)
-subprocess.run(['bun', 'scripts/ui-catalog.ts'], cwd=repository / 'frontend', env=environment, check=True)
-os.chdir(repository)
-os.execvpe('cargo', ['cargo', 'run', '--locked', '-p', 'want-wallpapers-server'], environment)
+process = None
+
+def terminate(signum, frame):
+    raise SystemExit(128 + signum)
+
+signal.signal(signal.SIGTERM, terminate)
+try:
+    subprocess.run(['cargo', 'run', '--locked', '-p', 'want-wallpapers-server', '--', 'migrate'], cwd=repository, env=environment, check=True)
+    subprocess.run(['bun', 'scripts/ui-catalog.ts'], cwd=repository / 'frontend', env=environment, check=True)
+    process = subprocess.Popen(['cargo', 'run', '--locked', '-p', 'want-wallpapers-server'], cwd=repository, env=environment, start_new_session=True)
+    raise SystemExit(process.wait())
+finally:
+    if process is not None and process.poll() is None:
+        os.killpg(process.pid, signal.SIGTERM)
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+    subprocess.run(['docker', 'exec', os.environ.get('TEST_DB_CONTAINER', 'want-wallpapers-test-pg'), 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', f'DROP DATABASE {database_name} WITH (FORCE)'], check=True, stdout=subprocess.DEVNULL)

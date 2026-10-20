@@ -109,3 +109,25 @@ test('a provider that detaches its own node cannot leave the label visible on cl
   await tick(); expect(host.hidden).toBe(false); stop();
   expect(host.hidden).toBe(true); expect(children.size).toBe(0);
 });
+
+
+test('public advertising routes exclude every home, private and error route', async () => {
+  const { advertisingPath } = await import('../src/lib/advertising-providers');
+  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) {
+    for (const route of ['/collections/', '/collections/contours-of-silence/', '/wallpapers/contours-of-silence-1/', '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/']) {
+      expect(advertisingPath(`${prefix}${route}`)).toBe(true);
+      expect(advertisingPath(`${prefix}${route}index.html`)).toBe(true);
+      expect(advertisingPath(`${prefix}${route.slice(0, -1)}`)).toBe(true);
+    }
+    for (const route of ['/', '/index.html', '/404/', '/404.html', '/ui-kit/', '/admin', '/admin/', '/admin/login/', '/api/v1/catalog', '/health/ready', '/_astro/app.js', '/wallpapers/not/a/page/', '/unknown/']) expect(advertisingPath(`${prefix}${route}`)).toBe(false);
+  }
+});
+
+test('inline formats fit the available width without scaling or repeating a unit', async () => {
+  const { inlineAdvertisement, adsterraUnits } = await import('../src/lib/advertising-providers');
+  for (const [width, unit] of [[1280, 'leaderboard'], [728, 'leaderboard'], [727, 'banner'], [468, 'banner'], [467, 'mobile'], [320, 'mobile'], [319, 'rectangle'], [300, 'rectangle']] as const) {
+    expect(inlineAdvertisement(width)).toBe(adsterraUnits[unit]);
+  }
+  for (const width of [299, 288, 0, -1, NaN]) expect(inlineAdvertisement(width)).toBeUndefined();
+  expect(new Set(Object.values(adsterraUnits).map(unit => unit.key)).size).toBe(6);
+});

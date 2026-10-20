@@ -64,10 +64,11 @@ test('collection pages paginate, stories disclose and project links remain disti
   await expect(carousel.locator('output')).toHaveText(`${firstVisible} / ${collections.length}`);
   await carousel.getByRole('button', { name: designCopy.en.previousCollections }).click();
   await expect(carousel.locator('output')).toHaveText(`${Math.max(1, firstVisible - 1)} / ${collections.length}`);
-  const story = page.locator('.story-disclosure').first();
-  await expect(story).not.toHaveAttribute('open', '');
-  await story.locator('summary').click(); await expect(story).toHaveAttribute('open', '');
-  await expect(story.locator('.long-copy')).toBeVisible();
+  const story = page.locator('a[data-story]').first();
+  await story.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(story).toBeFocused();
   await expect(page.locator('footer a[href="https://github.com/andrey-krasheninnikov/want-wallpapers"]')).toBeVisible();
   await page.goto('/contact/');
   await expect(page.locator('[data-owner-contact] a[href="https://github.com/andrey-krasheninnikov"]')).toHaveCount(1);
@@ -91,6 +92,8 @@ test('glow, wand and confetti respect reduced motion and preserve downloads', as
   await expect(card).toHaveCSS('transform', 'none');
   await expect.poll(() => card.evaluate(el => getComputedStyle(el, '::after').opacity)).toBe('1');
   await page.locator('[data-long-copy] p').first().hover();
+  await expect(page.locator('.wand-spark')).toHaveCount(0);
+  await page.locator('header a').first().hover();
   await expect(page.locator('.wand-spark').first()).toBeVisible();
   await page.emulateMedia({ reducedMotion: 'reduce' }); await card.hover();
   await expect(card).toHaveCSS('transform', 'none');
@@ -114,7 +117,7 @@ for (const locale of locales) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`${prefix}/`);
       await expect.poll(() => page.locator('[data-collection-carousel] .collection-card-link').evaluateAll(cards => cards.map(card => card.getAttribute('href')))).toEqual(expected);
-      await expect.poll(() => page.locator('[data-editorial] .story-disclosure .long-copy > a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(expected);
+      await expect.poll(() => page.locator('[data-editorial] a[data-story]').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(expected.map(href => href + '#collection-story'));
       await page.goto(`${prefix}/collections/`);
       await expect.poll(() => page.locator('.collection-grid .collection-card-link').evaluateAll(cards => cards.map(card => card.getAttribute('href')))).toEqual(expected);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

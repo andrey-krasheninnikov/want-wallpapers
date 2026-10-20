@@ -1,5 +1,6 @@
+import { WallpaperNavigation } from './WallpaperNavigation';
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, Monitor, Smartphone } from 'lucide-react';
+import { Download, Monitor, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,6 +8,7 @@ import { useWallpaperSocial, WallpaperRatings, WallpaperComments } from '@/compo
 import { copy, localPath } from '@/data/copy';
 import { designCopy } from '@/data/design-copy';
 import { selectedWallpaperVariant, wallpaperSlideHref } from '@/lib/wallpaper-navigation';
+import { yandexAdvertisingRequested } from '@/lib/advertising-providers';
 import type { WallpaperVariant } from '@/data/previews';
 import type { Locale } from '@/data/catalog';
 
@@ -15,7 +17,7 @@ type Neighbor = { href: string; title: string } | null;
 export default function WallpaperView({ locale, id, description, variants, tags, navigation, children }: {
   locale: Locale; id: string; description: string; children?: React.ReactNode;
   variants: Record<'desktop' | 'mobile', WallpaperVariant>; tags: { title: string; href: string }[];
-  navigation: { previous: Neighbor; next: Neighbor; position: number; total: number };
+  navigation: { previous: Neighbor; next: Neighbor; position: number | null; total: number };
 }) {
   const ui = copy[locale];
   const text = designCopy[locale];
@@ -45,6 +47,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     const item = navigation[value];
     if (!item) return;
     const href = wallpaperSlideHref(item.href, variant);
+    if (yandexAdvertisingRequested()) { window.location.assign(href); return; }
     void import('astro:transitions/client').then(({ navigate }) => navigate(href.split('#')[0], { info: { wallpaperSlide: true } }));
   }
   useEffect(() => {
@@ -77,11 +80,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
         }}>
         {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img className="wallpaper-backdrop" src={variants[value].src} alt="" aria-hidden="true" draggable={false} /><img className="wallpaper-image" id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
       </div>
-      <nav className="wallpaper-nav" aria-label={text.gallery}>
-        {navigation.previous && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.previous.href, variant)} data-wallpaper-previous aria-label={`${text.previous}: ${navigation.previous.title}`} onClick={(event) => { if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate('previous'); } }}><ArrowLeft aria-hidden="true" /></a></Button>}
-        <span className="wallpaper-position" aria-live="polite">{navigation.position.toLocaleString(locale)} / {navigation.total.toLocaleString(locale)}</span>
-        {navigation.next && <Button asChild variant="secondary" size="icon"><a href={wallpaperSlideHref(navigation.next.href, variant)} data-wallpaper-next aria-label={`${text.next}: ${navigation.next.title}`} onClick={(event) => { if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate('next'); } }}><ArrowRight aria-hidden="true" /></a></Button>}
-      </nav>
+      <WallpaperNavigation locale={locale} navigation={navigation} variant={variant} navigate={navigate} />
     </div>
     <aside className="wallpaper-sidebar glass-surface">
       <div className="wallpaper-dock">

@@ -34,6 +34,7 @@ test: test-frontend test-backend test-ci test-backup
 test-ui: test-db
 	bun run build
 	bun run test:ui
+	bun run test:listing-ui
 fmt:
 	cargo fmt --all
 catalog-pull:

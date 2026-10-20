@@ -1,59 +1,87 @@
 ---
 name: release-feature
-description: Выпускать фичи Want Wallpapers по Gitflow через squash PR в development, release PR в main, защищённый тег и обратный semantic merge. Protected tag разрешает ручной production workflow с проверкой backup/restore.
+description: Выпускать Want Wallpapers по Gitflow из feature-ветки или готового development через release PR в main, protected tag, ручной production workflow и обратный semantic merge. Общая процедура для patch/fast, minor/full и выпуска с явной версией.
 ---
 
-# Релиз фичи Want Wallpapers
+# Релиз Want Wallpapers по Gitflow
 
-Используйте этот порядок для репозитория `andrey-krasheninnikov/want-wallpapers`. Получите из запроса исходную feature-ветку и версию `MAJOR.MINOR.PATCH`. Публикация веток, PR, правил защиты, тега и GitHub Release требует разрешения на конкретный выпуск. Само наличие skill такого разрешения не даёт.
+Используйте этот порядок для `andrey-krasheninnikov/want-wallpapers`. Он поддерживает исходную feature-ветку и выпуск уже готового `origin/development`. Выполняйте публикацию веток, PR, merges, тега, GitHub Release и deployment в пределах разрешённого конкретного выпуска. Само наличие skill или protected tag разрешения не даёт. Изменения инфраструктуры и правил защиты требуют отдельного scope.
+
+## Версия и профиль
+
+- `$release-patch` задаёт patch-инкремент и `profile=fast`; `$release-minor` задаёт minor-инкремент и `profile=full`.
+- При прямом вызове `$release-feature` получите явную версию `MAJOR.MINOR.PATCH`. Профиль по умолчанию `full`; `fast` используйте по явному запросу. Сохраните поддержку указанной feature-ветки.
+- Для нового patch/minor выпуска прочитайте из `origin/main` версию корневого `package.json`, workspace version в `Cargo.toml` и версию workspace-пакета в `Cargo.lock`. Все три должны совпадать с последним по SemVer стабильным `v*` тегом в ancestry main. Patch увеличивает только patch; minor увеличивает minor и сбрасывает patch в `0`. Например, `1.8.2` становится `1.8.3` либо `1.9.0`.
+- Несовпадение исходных версий, явно запрошенной версии с инкрементом или занятая другим выпуском версия требуют выяснения. Не выбирайте другую версию молча.
+- При возобновлении сначала восстановите версию, профиль и этап из существующих PR, changelog, тега и release evidence. Не рассчитывайте следующий инкремент для уже начатого выпуска.
 
 ## Подготовка
 
-- Прочитайте применимые `AGENTS.md` и README. Используйте `$git-workflow-and-versioning`; для обычных коммитов и их публикации — `$delivery-commit-publish`.
-- Проверьте чистый checkout, текущую ветку, upstream, remotes, divergence, worktrees и отсутствие активной Git-операции. Не прячьте и не удаляйте чужие изменения.
+- Прочитайте применимые `AGENTS.md`, README, [контракт release gate](../../../docs/ci-releases.md) и [production instructions](../../../docs/production-deployments.md). Используйте `$git-workflow-and-versioning`; для обычных коммитов и публикации используйте `$delivery-commit-publish`.
+- Проверьте checkout, ветку, upstream, remotes, divergence, worktrees и отсутствие активной Git-операции. Сохраните посторонние изменения; при необходимости используйте отдельный чистый worktree.
 - Выполните `git fetch --all --prune`. При отставании от upstream разрешён только fast-forward. При divergence остановитесь.
-- Через `git ls-remote` зафиксируйте точные SHA feature, development и main. Проверьте существующие PR, release-ветку, тег и GitHub Release, чтобы не создавать дубликаты.
-- Перед каждым merge повторно проверьте исходный и целевой SHA. Изменившийся ref требует повторной проверки кандидата; не перезаписывайте новые коммиты.
+- Через `git ls-remote` зафиксируйте точные SHA development, main и указанной feature-ветки. Проверьте существующие PR, release-ветку, тег и GitHub Release, чтобы не создавать дубликаты.
+- До каждого merge повторно проверьте исходный и целевой SHA. Изменившийся ref требует пересмотра кандидата и затронутых проверок; не перезаписывайте новые коммиты.
 
-## 1. Feature в development
+## 1. Feature в development, если указана
 
-1. Опубликуйте все согласованные изменения feature-ветки и подтвердите серверный HEAD.
-2. Выполните `make check` и `make test`.
-3. Создайте PR из feature-ветки в `development` с описанием результата и проверок. Перед публикацией проверьте текст и метаданные; сохраните нейтральное авторство.
-4. Выполните squash merge с явным Conventional Commit сообщением и `--match-head-commit` для проверенного HEAD. Не используйте admin bypass.
-5. Прочитайте результат PR и обновите refs. У squash-коммита должен быть один родитель — проверенный прежний HEAD development. Его дерево должно сохранять согласованные изменения обеих веток.
+Если выпуск начинается с готового `origin/development`, переходите к release-ветке. Не создавайте пустой feature PR.
+
+1. Опубликуйте согласованные изменения feature-ветки и подтвердите серверный HEAD.
+2. Выполните `make check`, `make test` и `git diff --check`.
+3. Создайте PR в `development` с описанием результата и проверок. Передайте многострочное тело через `--body-file`; проверьте текст и метаданные, сохраняя нейтральное авторство.
+4. Вручную запустите `Checks` на source-ветке по docs/ci-releases.md. Сверьте `head_sha` с HEAD PR; дождитесь успешных проверок текущего кандидата и обязательных checks. Новый source commit требует нового ручного run.
+5. Выполните squash merge с явным Conventional Commit сообщением и `--match-head-commit <verified-feature-sha>`. Не используйте admin bypass.
+6. Прочитайте результат PR и обновите refs. У squash-коммита один родитель: проверенный прежний HEAD development. Его дерево сохраняет согласованные изменения обеих веток.
 
 ## 2. Release-ветка и main
 
-1. Создайте `release/vMAJOR.MINOR.PATCH` от подтверждённого `origin/development` и опубликуйте её с собственным upstream.
-2. Отдельным release-коммитом синхронизируйте версию корневого `package.json`, workspace version в `Cargo.toml` и пакета в `Cargo.lock` с будущим тегом и добавьте запись в `CHANGELOG.md`. Укажите фактическую дату выпуска, пользу для посетителей и известные ограничения.
-3. На кандидате выполните make check, make test и git diff --check: static/type/format, unit и bounded API на PostgreSQL 18. Полный audit/UI/native runtime gate выполняет вручную запущенная release chain на protected tag после merge в main.
-4. Создайте PR release-ветки в `main`. Используйте обычный merge без squash и rebase, с `--match-head-commit` проверенного release HEAD.
-5. После merge подтвердите два родителя: проверенный прежний main и проверенный release HEAD. Зафиксируйте итоговый SHA main.
+1. Зафиксируйте актуальный `origin/development` и просмотрите весь diff относительно main. В выпуск входят все изменения выбранного development SHA. Несогласованный состав требует уточнения до публикации.
+2. Создайте `release/v<version>` от этого development SHA. Синхронизируйте корневой `package.json`, workspace version в `Cargo.toml` и пакет в `Cargo.lock` с будущим тегом. Добавьте в `CHANGELOG.md` фактическую дату, пользу для посетителей и известные ограничения.
+3. Опубликуйте release-коммит `chore(release): prepare v<version>` с собственным upstream release-ветки. Существующую подходящую ветку продолжайте только после проверки точного HEAD и diff.
+4. На окончательном кандидате выполните `make check`, `make test` и `git diff --check`: static/type/format, unit и bounded API на PostgreSQL 18. Повторно используйте подтверждённые результаты, если относящиеся к ним входные данные не изменились.
+5. Создайте PR в `main`, вручную запустите `Checks` на release-ветке и подтвердите успешный run на текущем HEAD. Тяжёлый audit/UI/native runtime gate выполнит release chain на protected tag после merge в main.
+6. Выполните обычный merge без squash и rebase, с `--match-head-commit <verified-release-sha>` и без bypass. Подтвердите `MERGED` и два родителя: проверенный прежний main и проверенный release HEAD. Зафиксируйте итоговый SHA main.
 
-## 3. Защищённый тег
+## 3. Protected tag и production workflow
 
-- До публикации тега прочитайте [контракт release gate](../../../docs/ci-releases.md). Сверьте `.github/release-policy.json` с текущим ruleset; обновлённые правила требуют полного readback без bypass и отдельного проверенного изменения policy. Проверьте или создайте активный tag ruleset `Protect release tags` для `refs/tags/v*`: запрет обновления и удаления, без bypass actors. Создание новых тегов разрешено. Прочитайте сохранённое правило через GitHub API.
-- До публикации тега проверьте готовность root-owned механизма, protected production environment и вручную запущенного Mac backup worker по docs/production-deployments.md. Отсутствующие prerequisites блокируют публикацию тега; остальные согласованные этапы можно подготовить заранее.
-- Создайте annotated тег `vMAJOR.MINOR.PATCH` на подтверждённом merge-коммите main с сообщением `Release MAJOR.MINOR.PATCH`.
-- Опубликуйте только нужный тег обычным push. Проверьте серверный tag object и peeled SHA; peeled SHA должен совпасть с зафиксированным main.
-- Существующий тег не перемещайте и не удаляйте. Push тега ничего не запускает. Вручную запустите Production deployment на этом же tag ref с input tag и profile=full (default; profile=fast только по явному запросу, пропускается лишь Full UI/E2E). Одна цепочка выполняет проверки, публикацию images без rebuild, один eligibility и deployment; ошибка или timeout блокирует дальнейший выпуск. Сохраните outputs tag/SHA/run/attempt/APP_IMAGE@digest и обе platform revisions. Для повторного допуска передавайте исходный digest; не подменяйте его новой публикацией того же SHA. При неоднозначном результате сначала прочитайте серверное состояние.
+- Сверьте `.github/release-policy.json` с полным readback активного tag ruleset `Protect release tags` для `refs/tags/v*`: запрет update/delete, пустой bypass list, совпадающие ID и `updatedAt`. Production environment допускает только tags `v*`, без branches. Несовпадение блокирует выпуск; не ослабляйте защиту и не меняйте policy без отдельного согласованного изменения.
+- До публикации тега проверьте готовность root-owned validator, production environment и вручную запущенного Mac backup worker по production instructions. Отсутствующие prerequisites блокируют тег; остальные согласованные этапы можно подготовить заранее.
+- Создайте annotated тег `v<version>` на подтверждённом merge-коммите main с сообщением `Release <version>`. Опубликуйте только этот тег обычным push. Проверьте серверные tag object и peeled SHA; peeled SHA совпадает с зафиксированным main.
+- Существующий тег не перемещайте и не удаляйте. Совпадающий тег используйте для оставшихся этапов; другой target блокирует продолжение. Push тега ничего не запускает.
+- Вручную запустите workflow на том же tag ref и с тем же tag input, передав выбранный `fast` или `full`:
+
+```sh
+gh workflow run deploy-production.yml --ref v<version> -f tag=v<version> -f profile=<fast-or-full>
+```
+
+Одна цепочка выполняет проверки, публикацию checked images через artifacts без rebuild, один eligibility и deployment. `fast` пропускает только Full UI/E2E. Оба профиля сохраняют static/type/format, unit/API, security audit, collection drafts и native runtime PostgreSQL 18/TLS на linux/amd64 и linux/arm64. Backup, off-VPS restore, migrations, grants, readiness и public smoke обязательны.
+
+Дождитесь результата и сохраните tag, source SHA, профиль, пропущенные проверки, verification run/attempt, оба platform digests, оба config digests, OCI revisions и исходный `APP_IMAGE@sha256`. Отдельно подтвердите deployment request/status, `backupVerified`, running image/revision и public smoke. Успешный eligibility или публикация образа не подтверждают переключение VPS. Ошибка, timeout или `recovery-required` блокируют объявление успешного выпуска.
 
 ## 4. Main обратно в development
 
-1. В чистом checkout переключитесь на `development` до применения `$delivery-semantic-merge`.
-2. Примените этот skill с явным источником `origin/main`. Во время его выполнения не переключайте ветки.
-3. Используйте `--no-ff --no-commit`; сохраните подготовленное Git сообщение через `git commit --no-edit`. При конфликтах следуйте reference skill и сохраняйте совместимое поведение обеих сторон.
-4. Проверьте два родителя merge-коммита, ancestry main, diff и необходимые проверки. Для двухродительского merge используйте обычный non-force push, без `pcoat`.
-5. Подтвердите local HEAD, серверный ref и remote-tracking ref, divergence `0/0`. При отсутствии других изменений деревья release, main и development должны совпасть.
+1. После подтверждённого deployment обновите refs и подготовьте чистый checkout актуального development. Сохраните новые параллельные изменения development.
+2. До применения `$delivery-semantic-merge` выберите целевую integration-ветку. Примените skill с явным источником `origin/main`; во время его выполнения не переключайте ветки.
+3. Используйте `--no-ff --no-commit`; сохраните подготовленное Git сообщение через `git commit --no-edit`. При конфликтах следуйте этому skill и сохраняйте совместимое поведение обеих сторон.
+4. Проверьте двух родителей, ancestry main, diff и необходимые проверки. Используйте обычный non-force push, без `pcoat` для merge-коммита. При изменении remote target пересмотрите кандидат, не перезаписывая новые коммиты.
+5. Подтвердите local HEAD, серверный ref и remote-tracking ref, divergence `0/0`. При отсутствии параллельных изменений деревья release, main и development совпадают.
 
-## 5. GitHub Release и отчёт
+## 5. GitHub Release, cleanup и отчёт
 
-- После проверки Gitflow и успешного Release eligibility создайте стабильный GitHub Release на существующем теге с `--verify-tag` и `--latest`. Передайте описание из changelog через `--notes-file`; проверьте фактическую страницу релиза.
-- После подтверждённых merges удалите только disposable remote feature/release ветки текущего выпуска; постоянные worktrees сохраните. Завершите на синхронизированной development.
-- В отчёте укажите ссылки на PR и Release, SHA squash и merge-коммитов, тег, ruleset, main/gate run IDs, точный image digest и результаты проверок. Локальные проверки и серверное состояние подтверждайте отдельно.
-- Публикация protected tag ничего не запускает; явно запустите production workflow на том же tag ref. До тега проверьте готовность root-owned механизма, production environment и вручную запущенного Mac worker по docs/production-deployments.md. Принятая автоматизация разрешает deployment проверенного релиза; результат Git/CI не подтверждает фактическое переключение VPS или приватную приёмку владельца.
+- После подтверждённых deployment и обратного merge создайте стабильный GitHub Release на существующем теге с `--verify-tag --latest --notes-file`. Возьмите описание из changelog, укажите профиль и пропущенный Full UI для fast. Прочитайте сохранённые tag, body, `draft: false` и `prerelease: false`.
+- После readback merges удалите только disposable remote feature/release ветки текущего выпуска. Сверьте текущий tip с принятым PR HEAD и отсутствие открытых зависимых PR. При новых непринятых коммитах сохраните ветку. Удаляйте exact ref с SHA lease и подтвердите отсутствие через `git ls-remote`. Постоянные worktrees сохраняйте; завершите на синхронизированной development.
+- Сообщите PR/Release URLs, SHA squash/merge, тег, профиль, ruleset, run/attempt, точный image digest, deployment request и результаты проверок. Разделяйте локальные проверки, CI, registry и фактический production. Настоящие CAPTCHA assessment и password/TOTP login проверяются приватно отдельно.
 
-## Runtime и публикация образа
+## Возобновление и runtime
 
-Production reCAPTCHA обязательна для публичных изменений и admin login. Credentials находятся вне checkout и образа; migrate их не получает. На feature/release выполняйте make check, make test и git diff --check. Используйте manual release run: audit, UI (кроме явно выбранного fast) и native linux/amd64 и linux/arm64 PostgreSQL 18/TLS; затем он публикует те же образы через artifacts без rebuild. Подтвердите обе платформы, OCI revision, общий GHCR digest и anonymous pull по свежему readback. Передайте на VPS record успешного Release eligibility с точными tag, main SHA, run/attempt и APP_IMAGE@sha256. Git release и synthetic Google tests не доказывают деплой или реальный assessment. На домене проверьте Web Key ID, IAM, action/hostname/score и вход; production bypass запрещён.
+- При неоднозначном результате сначала прочитайте серверные refs, PR, runs и deployment status. Не повторяйте публикацию или deployment вслепую.
+- После публикации OCI index повторяйте deployment с исходным digest и тем же профилем. Новый run пропускает build/publication и валидирует исходные evidence. Не выбирайте более новую публикацию того же SHA:
+
+```sh
+gh workflow run deploy-production.yml --ref v<version> -f tag=v<version> -f profile=<original-profile> -f index_digest=sha256:<original-digest>
+```
+
+- Если index ещё не опубликован, сначала подтвердите отсутствие принятого deployment и опубликованного record. После исправления причины можно повторить verification/publication на неизменном теге; изменение исходников требует нового выпуска и нового тега.
+- Существующий GitHub Release проверяйте и продолжайте оставшиеся этапы без дубликата. Полностью подтверждённый выпуск сообщите как уже завершённый.
+- Production reCAPTCHA обязательна для публичных изменений и admin login. Credentials остаются вне checkout и image; migrate их не получает. Сверьте обе платформы, OCI revision, общий GHCR digest и anonymous pull. На домене проверяйте Web Key ID, IAM и action/hostname/score; production bypass запрещён. Git release и synthetic Google tests не доказывают реальный assessment.

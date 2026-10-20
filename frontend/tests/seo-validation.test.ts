@@ -5,9 +5,9 @@ import { collections, locales } from '../src/data/catalog';
 import { collectionStories, editorialCopy } from '../src/data/editorial';
 import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks } from '../scripts/seo-validation';
 
-const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
+const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja'];
 async function localizedPages(fallback = '') {
-  const paths = ['/', '/ru/', '/zh-cn/', '/pt-br/'];
+  const paths = ['/', '/ru/', '/zh-cn/', '/pt-br/', '/ja/'];
   const pages = await Promise.all(paths.map((path, index) => parsePage(`<!doctype html><html lang="${languages[index]}"><head><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}">${paths.map((target, index) => `<link rel="alternate" hreflang="${languages[index]}" href="${origin}${target}">`).join('')}<link rel="alternate" hreflang="x-default" href="${origin}/"></head><body><main id="main">Visible text</main><noscript>${index === 0 ? fallback : ''}</noscript><script>hidden content</script><a href="#main">Skip</a></body></html>`, path)));
   return new Map(pages.map((page) => [page.path, page]));
 }
@@ -49,13 +49,13 @@ test('conflicting and noncanonical alternates fail', async () => {
 });
 
 async function localizedErrorPages() {
-  const paths = ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/'];
+  const paths = ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/', '/ja/404/'];
   const pages = await Promise.all(paths.map((path, index) => parsePage(`<html lang="${languages[index]}"><head><meta name="robots" content="noindex"><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}"></head><body><main id="main">Page not found</main></body></html>`, path)));
   return new Map(pages.map((page) => [page.path, page]));
 }
 
 test('public navigation rejects localized error routes even when their HTML exists', async () => {
-  for (const path of ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/']) {
+  for (const path of ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/', '/ja/404/']) {
     const pages = await localizedPages(`<a href="${path}?from=home#main">Missing page</a>`);
     for (const [path, page] of await localizedErrorPages()) pages.set(path, page);
     expect(() => validatePages(pages, new Set())).toThrow(/error page target/);
@@ -210,7 +210,7 @@ test('llms response preserves license restrictions before localized file lists',
   expect(text).toContain('Ownership:\n\nThe images remain');
   expect(text.indexOf('Please do not:')).toBeLessThan(text.indexOf('## en\n'));
   expect(text).not.toContain('## Usage license');
-  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) {
+  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) {
     expect(text).toContain(`](${origin}${prefix}/terms/)`);
     expect(text).toContain(`](${origin}${prefix}/license/)`);
     expect(text).toContain(`](${origin}${prefix}/collections/a-night-beneath-the-ice/)`);
@@ -286,12 +286,12 @@ test('content validation keeps the 200-word boundary and reports noindex pages',
   expect(() => validateContentMetrics(search)).not.toThrow();
 });
 
-test('localized stories must be in the main content, not metadata or hidden markup', async () => {
+test('localized story cards must be in main content, not metadata or hidden markup', async () => {
   for (const locale of locales) {
     const path = (locale === 'en' ? '' : '/' + locale) + '/collections/';
     const title = editorialCopy[locale].title;
     const paragraphs = collections.map(collection => collectionStories[collection.slug]![locale][0]!);
-    const content = [title, editorialCopy[locale].licenseText, ...paragraphs].join(' ');
+    const content = [title, editorialCopy[locale].licenseText, ...collections.map(collection => collection.title[locale]), ...paragraphs].join(' ');
     const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
     const page = await parsePage(`<html lang="${lang}"><body><main>${content}</main></body></html>`, path);
     expect(() => validateLocalizedContent(page)).not.toThrow();
