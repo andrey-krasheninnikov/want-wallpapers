@@ -45,7 +45,9 @@ for (const locale of locales) for (const width of [320, 1440]) {
       for (const direction of ['ltr', 'rtl']) {
         await owner.evaluate((element, value) => element.setAttribute('dir', value), direction);
         await expect(detail).toHaveCSS('direction', 'ltr');
-        expect(await detail.evaluate(element => element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1)).toBe(true);
+        const dimensions = await detail.evaluate(element => ({ width: element.clientWidth, scrollWidth: element.scrollWidth, height: element.clientHeight, scrollHeight: element.scrollHeight }));
+        expect(dimensions.scrollWidth, JSON.stringify(dimensions)).toBeLessThanOrEqual(dimensions.width + 1);
+        expect(dimensions.scrollHeight, JSON.stringify(dimensions)).toBeLessThanOrEqual(dimensions.height + 1);
         expect(await detail.evaluate(element => getComputedStyle(element).userSelect)).not.toBe('none');
         const selected = await detail.evaluate(element => {
           const range = document.createRange();
@@ -75,7 +77,7 @@ for (const locale of locales) for (const width of [320, 1440]) {
       await expect(email).toHaveAttribute('data-activation', `true:false:${href}`);
       expect(page.context().pages()).toHaveLength(1);
       expect((await new AxeBuilder({ page }).include('[data-owner-contact]').withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
-      if (locale === 'en' && path === '/contact/') await owner.screenshot({ path: testInfo.outputPath(`contact-${width}.png`) });
+      if (['en', 'ar'].includes(locale) && path === '/contact/') await owner.screenshot({ path: testInfo.outputPath(`contact-${locale}-${width}.png`) });
     }
   });
 }

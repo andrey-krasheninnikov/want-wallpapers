@@ -56,6 +56,10 @@ test('administrator edits translations, creates CDN records, archives and modera
     await page.getByLabel(`Название · ${language}`).fill(`UI check ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание коллекции для проверки');
   }
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Заполните название и описание на всех языках.');
+  await expect(page.getByRole('tab', { name: 'العربية', exact: true })).toHaveAttribute('data-state', 'active');
+  await page.getByLabel('Название · العربية').fill('مجموعة اختبار'); await page.getByLabel('Описание · العربية').fill('وصف المجموعة للاختبار');
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Укажите MP4 и PNG-постер');
   await page.getByLabel('Постер, URL PNG').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.png');
   await expect(page.getByRole('dialog')).toContainText('export каталога, build и release');
@@ -79,7 +83,7 @@ test('administrator edits translations, creates CDN records, archives and modera
   await page.getByRole('button', { name: 'В архиве', exact: true }).click();
   await page.getByRole('button', { name: 'Обои', exact: true }).click(); await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByRole('combobox', { name: 'Коллекция', exact: true }).click(); await page.getByRole('option', { name: 'Коллекция для проверки', exact: true }).click();
-  for (const language of ['English', 'Русский', '中文', 'Português', '日本語']) {
+  for (const language of ['English', 'Русский', '中文', 'Português', '日本語', 'العربية']) {
     await page.getByRole('tab', { name: language, exact: true }).click(); await page.getByLabel(`Название · ${language}`).fill(`Design ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание обоев для проверки');
   }
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click(); await page.getByRole('textbox', { name: 'Поиск по каталогу', exact: true }).fill('ui-check-1'); await expect(page.getByRole('heading', { name: 'Design Русский', exact: true })).toBeVisible();
