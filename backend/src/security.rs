@@ -216,7 +216,7 @@ fn content_security_policy(
     // Inline provider tags are allowed only on known public advertising documents.
     let elements = if advertising {
         format!(
-            "; script-src-elem 'self' 'unsafe-inline'{analytics}{captcha_scripts} https://yastatic.net https://*.yandex.ru https://*.adfox.ru https://yandex.ru https://yandex.com https://verify.yandex.ru https://bauval.org"
+            "; script-src-elem 'self' 'unsafe-inline'{analytics}{captcha_scripts}{provider_scripts}"
         )
     } else {
         String::new()
