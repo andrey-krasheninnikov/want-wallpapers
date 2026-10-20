@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../browser';
 import { collections, locales } from '../../src/data/catalog';
 import { localPath } from '../../src/data/copy';
 import { designCopy } from '../../src/data/design-copy';

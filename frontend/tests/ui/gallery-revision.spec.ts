@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../browser';
 import { copy } from '../../src/data/copy';
 import { designCopy } from '../../src/data/design-copy';
 import type { ModelViewerElement } from '@google/model-viewer';

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../browser';
 import { copy } from '../../src/data/copy';
 
 const grid = '.home-mosaic:not(.home-mosaic-outgoing)';
