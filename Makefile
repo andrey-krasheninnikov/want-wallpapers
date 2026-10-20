@@ -109,3 +109,9 @@ deploy-local:
 	PATH="$(HOME)/.local/share/want-wallpapers/tools/bin:$$PATH" $(PYTHON) -B scripts/local-release.py deploy --tag "$(TAG)" --profile "$(PROFILE)"
 release-local-status:
 	PATH="$(HOME)/.local/share/want-wallpapers/tools/bin:$$PATH" $(PYTHON) -B scripts/local-release.py status --tag "$(TAG)"
+
+.PHONY: collection-validate collection-review
+collection-validate:
+	bun run collection validate "$(PACKAGE)"
+collection-review:
+	bun run collection review "$(PACKAGE)"
