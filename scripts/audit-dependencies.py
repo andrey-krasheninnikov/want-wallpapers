@@ -63,7 +63,26 @@ except FileNotFoundError: raise SystemExit('Install cargo-audit 0.22.2 (see docs
 require(result.returncode in (0, 1), 'Cargo audit could not complete.')
 try: report = json.loads(result.stdout)
 except json.JSONDecodeError: raise SystemExit('Cargo audit did not return valid JSON.')
+def patched_root_shim(package, tree):
+    return (package['name'] == 'webpki-roots' and package['version'] == '0.26.11'
+            and tree == ['webpki-roots v0.26.11', 'webpki-roots v1.0.10'])
+
+shim = {'name': 'webpki-roots', 'version': '0.26.11'}
+fixed_tree = ['webpki-roots v0.26.11', 'webpki-roots v1.0.10']
+assert patched_root_shim(shim, fixed_tree)
+assert not patched_root_shim(shim, ['webpki-roots v0.26.11', 'webpki-roots v1.0.9'])
+assert not patched_root_shim(shim, fixed_tree + ['unexpected v1.0.0'])
+assert not patched_root_shim(shim, [fixed_tree[0], fixed_tree[1] + ' (/local)'])
+assert not patched_root_shim({**shim, 'version': '0.26.10'}, fixed_tree)
+assert not patched_root_shim({**shim, 'name': 'other'}, fixed_tree)
+roots = execute(['cargo', 'tree', '--locked', '--offline', '-p', 'webpki-roots@0.26.11',
+                 '--depth', '1', '--prefix', 'none'])
 for item in report['vulnerabilities']['list']:
-    require(item['advisory']['id'] == 'RUSTSEC-2023-0071', f"Unreviewed Rust advisory: {item['advisory']['id']}")
+    advisory = item['advisory']['id']
+    # The reviewed compatibility crate only re-exports the patched v1 root set.
+    compatible_roots = (advisory == 'RUSTSEC-2026-0381' and roots.returncode == 0
+                        and patched_root_shim(item['package'], roots.stdout.splitlines()))
+    require(advisory == 'RUSTSEC-2023-0071' or compatible_roots,
+            f'Unreviewed Rust advisory: {advisory}')
 require(not any(report.get('warnings', {}).values()), 'Cargo audit has warnings that require review.')
-print('Cargo audit: optional lockfile RSA finding is absent from the Linux build graph; no other findings.')
+print('Cargo audit: optional RSA is absent from the Linux build graph; the reviewed root shim uses patched certificates; no other findings.')
