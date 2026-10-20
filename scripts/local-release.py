@@ -58,7 +58,7 @@ def host_architecture():
 def tool_digest():
     digest = hashlib.sha256()
     for name in ('local-release.py', 'local_evidence.py', 'local_release_runtime.py', 'ci-release.py', 'deployment.py',
-                 'deploy-client.py', 'backup-worker.py', 'test-container.py'):
+                 'deploy-client.py', 'backup-worker.py', 'test-container.py', 'test-backup.py'):
         digest.update(name.encode())
         digest.update((ROOT / 'scripts' / name).read_bytes())
     return 'sha256:' + digest.hexdigest()
@@ -131,6 +131,7 @@ def prepare(source, directory, state, config, *, build_images=True):
     environment['ASTRO_TELEMETRY_DISABLED'] = '1'
     environment['BUN_OPTIONS'] = '--timeout=30000'
     environment['RUST_TEST_THREADS'] = '2'
+    environment['TEST_SOURCE_ROOT'] = str(source)
     fixtures = Fixtures(directory / 'fixtures', state['id'])
     fixtures.cleanup()
     complete = set(required_checks(state['verificationProfile']) + ['Install'])
@@ -146,14 +147,17 @@ def prepare(source, directory, state, config, *, build_images=True):
         return state
     try:
         environment = fixtures.start(source, environment)
-        steps = [('Install', ['make', 'install']), ('Static', ['make', 'check']), ('Unit/API', ['make', 'test']),
-                 ('Audit', ['make', 'audit']), ('Collection drafts', ['make', 'test-generation'])]
+        steps = [('Install', [['make', 'install']]), ('Static', [['make', 'check']]),
+                 ('Unit/API', [['make', 'test-frontend', 'test-backend', 'test-ci'],
+                               ['python3', '-B', str(ROOT / 'scripts/test-backup.py')]]),
+                 ('Audit', [['make', 'audit']]), ('Collection drafts', [['make', 'test-generation']])]
         if state['verificationProfile'] == 'full':
-            steps.append(('Full UI', ['make', 'test-ui']))
-        for label, arguments in steps:
+            steps.append(('Full UI', [['make', 'test-ui']]))
+        for label, commands in steps:
             if label not in state['stages']:
                 print(label, flush=True)
-                execute(arguments, source, environment, directory / (label.replace('/', '-') + '.log'))
+                for number, arguments in enumerate(commands):
+                    execute(arguments, source, environment, directory / (label.replace('/', '-') + '-' + str(number) + '.log'))
                 state['stages'].append(label)
                 save(directory, state)
         if not build_images:

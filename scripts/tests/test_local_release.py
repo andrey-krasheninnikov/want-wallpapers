@@ -62,6 +62,20 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(fixtures.cleanup.call_count, 2)
         self.assertFalse(self.state.get('published'))
 
+    def test_current_backup_failure_keeps_unit_stage_incomplete(self):
+        self.state['stages'] = ['Install', 'Static']
+        fixtures = Mock()
+        fixtures.start.side_effect = lambda source, environment: environment
+        with patch.object(local, 'verification_identity', return_value=self.identity), \
+             patch.object(local, 'Fixtures', return_value=fixtures), \
+             patch.object(local, 'execute', side_effect=[None, DeployError('restore-failed')]) as execute:
+            with self.assertRaisesRegex(DeployError, 'restore-failed'):
+                local.prepare(self.root, self.root, self.state, self.config)
+        self.assertNotIn('Unit/API', self.state['stages'])
+        self.assertEqual(execute.call_args_list[0].args[0], ['make', 'test-frontend', 'test-backend', 'test-ci'])
+        self.assertEqual(execute.call_args_list[1].args[0], ['python3', '-B', str(ROOT / 'scripts/test-backup.py')])
+        self.assertEqual(execute.call_args_list[1].args[2]['TEST_SOURCE_ROOT'], str(self.root))
+
     def test_changed_inputs_cannot_reuse_completed_checks(self):
         self.state['inputFingerprint'] = 'old-inputs'
         with patch.object(local, 'verification_identity', return_value=self.identity), \

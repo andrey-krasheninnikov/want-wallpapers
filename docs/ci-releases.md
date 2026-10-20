@@ -136,6 +136,8 @@ cargo install cargo-audit --version 0.22.2 --locked --root ~/.local/share/want-w
 
 SSH configuration задаёт alias `wallpapers-production`, user `wallpapers-deploy`, port 14444, отдельный существующий deploy key, `IdentitiesOnly yes`, `BatchMode yes`, `StrictHostKeyChecking yes` и заранее проверенный `UserKnownHostsFile`. Owner alias для обычного deployment не используется. Backup сохраняет отдельный account/key и свою конфигурацию.
 
+Runtime и backup проверяются текущими harness, включёнными в digest инструментов. Исходники приложения и миграции берутся из выбранного checkout.
+
 На чистом опубликованном release-кандидате до merge:
 
 ```sh
