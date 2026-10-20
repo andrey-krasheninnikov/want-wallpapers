@@ -1,71 +1,20 @@
 {
   "collections": [
     {
-      "slug": "contours-of-silence",
-      "id": "0001-contours-of-silence",
-      "count": 15,
+      "id": "0006-neon-tide",
+      "slug": "neon-tide",
+      "count": 10,
       "title": {
-        "pt-br": "Contornos do silêncio",
-        "en": "Contours of Silence",
-        "zh-cn": "寂静的轮廓",
-        "ru": "Контуры тишины"
+        "en": "Neon Tide",
+        "pt-br": "Maré de neon",
+        "ru": "Неоновый прилив",
+        "zh-cn": "霓虹潮汐"
       },
       "description": {
-        "zh-cn": "蓝紫色形态从黑暗中浮现：沙丘、玻璃、水面与远方的微光。",
-        "ru": "Синие и фиолетовые формы возникают из темноты: дюны, стекло, вода и далёкий свет.",
-        "en": "Blue and violet forms emerge from the dark: dunes, glass, water and distant light.",
-        "pt-br": "Formas azuis e violetas surgem no escuro: dunas, vidro, água e luz distante."
-      }
-    },
-    {
-      "slug": "woven-spectrum",
-      "description": {
-        "en": "Bright strands of colour twist, fold and meet against deep red and black.",
-        "pt-br": "Fios de cor se cruzam e se dobram sobre vermelho profundo e preto.",
-        "ru": "Яркие цветовые нити переплетаются на фоне глубокого красного и чёрного.",
-        "zh-cn": "明亮的彩色丝带在深红与黑色背景中交织、翻转、汇聚。"
-      },
-      "id": "0002-woven-spectrum",
-      "title": {
-        "ru": "Сплетённый спектр",
-        "zh-cn": "交织光谱",
-        "pt-br": "Espectro entrelaçado",
-        "en": "Woven Spectrum"
-      },
-      "count": 5
-    },
-    {
-      "id": "0003-path-to-the-light",
-      "slug": "path-to-the-light",
-      "count": 5,
-      "title": {
-        "pt-br": "Caminho para a luz",
-        "ru": "Путь к свету",
-        "zh-cn": "通往光之路",
-        "en": "Path to the Light"
-      },
-      "description": {
-        "pt-br": "Cinco jornadas serenas rumo a um círculo dourado, entre cidades, montanhas, florestas e ruínas.",
-        "ru": "Пять тихих путешествий к золотому кругу через города, горы, леса и руины.",
-        "zh-cn": "五段通往金色光环的静谧旅程，穿过城市、群山、森林与遗迹。",
-        "en": "Five quiet journeys towards a golden circle through cities, mountains, forests and ruins."
-      }
-    },
-    {
-      "id": "0004-where-stars-graze",
-      "slug": "where-stars-graze",
-      "count": 5,
-      "title": {
-        "en": "Where Stars Graze",
-        "ru": "Где пасутся звёзды",
-        "zh-cn": "星辰的牧场",
-        "pt-br": "Onde as estrelas pastam"
-      },
-      "description": {
-        "en": "Five night scenes with a shaggy ginger cow, a windmill and a blue-violet comet above misty mountains.",
-        "ru": "Пять ночных сцен: рыжая длинношёрстная корова, мельница и сине-фиолетовая комета над горами в тумане.",
-        "zh-cn": "五幅夜景：长毛红棕牛、风车和蓝紫色彗星，映衬着云雾缭绕的群山。",
-        "pt-br": "Cinco cenas noturnas com uma vaca ruiva de pelo comprido, um moinho e um cometa azul-violeta sobre montanhas cobertas de névoa."
+        "en": "Ten surreal wallpaper scenes bring glowing pixel patterns into dark coastal landscapes and imagined natural spaces. Black silhouettes and faceted rock give the collection its shape. Violet and magenta dominate the palette, with icy blue water and occasional amber or lime accents. Curved shorelines and living forms sit beside crisp square details, from flower petals to fragments of a moon.\n\nEach scene has separate landscape and portrait compositions for desktop and phone screens.",
+        "pt-br": "Dez cenas surreais trazem padrões de pixels luminosos a paisagens costeiras escuras e espaços naturais imaginados. Silhuetas negras e rochas facetadas dão forma à coleção. Violeta e magenta dominam a paleta, com água azul-gelo e alguns detalhes de âmbar ou verde-lima. Margens curvas e formas vivas convivem com pequenos quadrados bem definidos, das pétalas de flores aos fragmentos de uma lua. Cada cena tem composições horizontal e vertical próprias para telas de computador e celular.",
+        "ru": "Десять сюрреалистичных сцен соединяют светящиеся пиксельные узоры с тёмными побережьями и вымышленными природными пространствами. Форму коллекции задают чёрные силуэты и гранёные скалы. В палитре преобладают фиолетовый и малиновый, рядом с ними ледяная синяя вода и редкие янтарные или лаймовые акценты. Изогнутые берега и живые формы соседствуют с чёткими квадратными деталями: от цветочных лепестков до осколков луны. У каждой сцены отдельные горизонтальная и вертикальная композиции для компьютера и телефона.",
+        "zh-cn": "十幅超现实壁纸将发光的像素图案带入幽暗海岸与想象中的自然空间。黑色剪影和棱角分明的岩石构成系列的轮廓。紫色与洋红色占据主调，冰蓝色海水间点缀着琥珀色和青柠色。弯曲的海岸线与生物形态旁，是清晰的方形细节，从花瓣延伸到月亮的碎片。每个场景都为电脑和手机分别设计了横向与纵向构图。"
       }
     },
     {
@@ -86,20 +35,71 @@
       }
     },
     {
-      "id": "0006-neon-tide",
-      "slug": "neon-tide",
-      "count": 10,
+      "id": "0004-where-stars-graze",
+      "slug": "where-stars-graze",
+      "count": 5,
       "title": {
-        "en": "Neon Tide",
-        "pt-br": "Maré de neon",
-        "ru": "Неоновый прилив",
-        "zh-cn": "霓虹潮汐"
+        "en": "Where Stars Graze",
+        "ru": "Где пасутся звёзды",
+        "zh-cn": "星辰的牧场",
+        "pt-br": "Onde as estrelas pastam"
       },
       "description": {
-        "en": "Ten surreal wallpaper scenes bring glowing pixel patterns into dark coastal landscapes and imagined natural spaces. Black silhouettes and faceted rock give the collection its shape. Violet and magenta dominate the palette, with icy blue water and occasional amber or lime accents. Curved shorelines and living forms sit beside crisp square details, from flower petals to fragments of a moon.\n\nEach scene has separate landscape and portrait compositions for desktop and phone screens.",
-        "pt-br": "Dez cenas surreais trazem padrões de pixels luminosos a paisagens costeiras escuras e espaços naturais imaginados. Silhuetas negras e rochas facetadas dão forma à coleção. Violeta e magenta dominam a paleta, com água azul-gelo e alguns detalhes de âmbar ou verde-lima. Margens curvas e formas vivas convivem com pequenos quadrados bem definidos, das pétalas de flores aos fragmentos de uma lua. Cada cena tem composições horizontal e vertical próprias para telas de computador e celular.",
-        "ru": "Десять сюрреалистичных сцен соединяют светящиеся пиксельные узоры с тёмными побережьями и вымышленными природными пространствами. Форму коллекции задают чёрные силуэты и гранёные скалы. В палитре преобладают фиолетовый и малиновый, рядом с ними ледяная синяя вода и редкие янтарные или лаймовые акценты. Изогнутые берега и живые формы соседствуют с чёткими квадратными деталями: от цветочных лепестков до осколков луны. У каждой сцены отдельные горизонтальная и вертикальная композиции для компьютера и телефона.",
-        "zh-cn": "十幅超现实壁纸将发光的像素图案带入幽暗海岸与想象中的自然空间。黑色剪影和棱角分明的岩石构成系列的轮廓。紫色与洋红色占据主调，冰蓝色海水间点缀着琥珀色和青柠色。弯曲的海岸线与生物形态旁，是清晰的方形细节，从花瓣延伸到月亮的碎片。每个场景都为电脑和手机分别设计了横向与纵向构图。"
+        "en": "Five night scenes with a shaggy ginger cow, a windmill and a blue-violet comet above misty mountains.",
+        "ru": "Пять ночных сцен: рыжая длинношёрстная корова, мельница и сине-фиолетовая комета над горами в тумане.",
+        "zh-cn": "五幅夜景：长毛红棕牛、风车和蓝紫色彗星，映衬着云雾缭绕的群山。",
+        "pt-br": "Cinco cenas noturnas com uma vaca ruiva de pelo comprido, um moinho e um cometa azul-violeta sobre montanhas cobertas de névoa."
+      }
+    },
+    {
+      "id": "0003-path-to-the-light",
+      "slug": "path-to-the-light",
+      "count": 5,
+      "title": {
+        "pt-br": "Caminho para a luz",
+        "ru": "Путь к свету",
+        "zh-cn": "通往光之路",
+        "en": "Path to the Light"
+      },
+      "description": {
+        "pt-br": "Cinco jornadas serenas rumo a um círculo dourado, entre cidades, montanhas, florestas e ruínas.",
+        "ru": "Пять тихих путешествий к золотому кругу через города, горы, леса и руины.",
+        "zh-cn": "五段通往金色光环的静谧旅程，穿过城市、群山、森林与遗迹。",
+        "en": "Five quiet journeys towards a golden circle through cities, mountains, forests and ruins."
+      }
+    },
+    {
+      "slug": "woven-spectrum",
+      "description": {
+        "en": "Bright strands of colour twist, fold and meet against deep red and black.",
+        "pt-br": "Fios de cor se cruzam e se dobram sobre vermelho profundo e preto.",
+        "ru": "Яркие цветовые нити переплетаются на фоне глубокого красного и чёрного.",
+        "zh-cn": "明亮的彩色丝带在深红与黑色背景中交织、翻转、汇聚。"
+      },
+      "id": "0002-woven-spectrum",
+      "title": {
+        "ru": "Сплетённый спектр",
+        "zh-cn": "交织光谱",
+        "pt-br": "Espectro entrelaçado",
+        "en": "Woven Spectrum"
+      },
+      "count": 5
+    },
+    {
+      "slug": "contours-of-silence",
+      "id": "0001-contours-of-silence",
+      "count": 15,
+      "title": {
+        "pt-br": "Contornos do silêncio",
+        "en": "Contours of Silence",
+        "zh-cn": "寂静的轮廓",
+        "ru": "Контуры тишины"
+      },
+      "description": {
+        "zh-cn": "蓝紫色形态从黑暗中浮现：沙丘、玻璃、水面与远方的微光。",
+        "ru": "Синие и фиолетовые формы возникают из темноты: дюны, стекло, вода и далёкий свет.",
+        "en": "Blue and violet forms emerge from the dark: dunes, glass, water and distant light.",
+        "pt-br": "Formas azuis e violetas surgem no escuro: dunas, vidro, água e luz distante."
       }
     }
   ],
@@ -1395,5 +1395,13 @@
     "neon-tide-7": "2026-10-19T20:13:10.668531Z",
     "neon-tide-8": "2026-10-19T20:13:10.668531Z",
     "neon-tide-9": "2026-10-19T20:13:10.668531Z"
+  },
+  "collectionPublicationDates": {
+    "0001-contours-of-silence": "2026-10-02T21:44:58.000000Z",
+    "0002-woven-spectrum": "2026-10-02T21:44:58.000000Z",
+    "0003-path-to-the-light": "2026-10-02T21:44:58.000000Z",
+    "0004-where-stars-graze": "2026-10-05T00:42:54.000000Z",
+    "0005-a-night-beneath-the-ice": "2026-10-05T04:04:04.000000Z",
+    "0006-neon-tide": "2026-10-19T20:13:10.668531Z"
   }
 }

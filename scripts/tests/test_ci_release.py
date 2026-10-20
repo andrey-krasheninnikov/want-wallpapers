@@ -14,7 +14,8 @@ REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 class EventSelection(unittest.TestCase):
     def plan(self, event, ref, repository=REPOSITORY):
         result = subprocess.run([sys.executable, str(COMMAND), 'plan'], capture_output=True, text=True,
-            env={**os.environ, 'GITHUB_EVENT_NAME': event, 'GITHUB_REF': ref, 'GITHUB_REPOSITORY': repository})
+            env={**os.environ, 'GITHUB_EVENT_NAME': event, 'GITHUB_REF': ref, 'GITHUB_REPOSITORY': repository,
+                 'RELEASE_TAG': '', 'GITHUB_WORKFLOW_REF': '', 'VERIFICATION_PROFILE': 'full'})
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 

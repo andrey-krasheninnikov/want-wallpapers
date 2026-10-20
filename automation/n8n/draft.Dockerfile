@@ -5,7 +5,7 @@ COPY frontend/package.json frontend/package.json
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY frontend/scripts frontend/scripts
 COPY frontend/src/data frontend/src/data
-COPY frontend/src/lib/collection-cover.ts frontend/src/lib/collection-cover.ts
+COPY frontend/src/lib/collection-cover.ts frontend/src/lib/catalog-order.ts frontend/src/lib/
 COPY backend/data/taxonomy.json backend/data/taxonomy.json
 USER 1000:1000
 CMD ["bun", "frontend/scripts/generation-api.ts"]

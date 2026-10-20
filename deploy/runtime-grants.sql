@@ -11,5 +11,5 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON
     public.ratings, public.comments, public.comment_authors, public.reports, public.feedback TO :"runtime_role";
 GRANT SELECT, INSERT ON public.audit_log TO :"runtime_role";
 GRANT USAGE, SELECT ON SEQUENCE public.audit_log_id_seq TO :"runtime_role";
-GRANT EXECUTE ON FUNCTION public.initial_wallpaper_publication(text) TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION public.initial_wallpaper_publication(text), public.initial_collection_publication(text) TO :"runtime_role";
 COMMIT;

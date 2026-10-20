@@ -14,7 +14,7 @@ const bytes = await readFile(new URL('../fixtures/covers/valid.mp4', import.meta
 const poster = await sharp(await readFile(new URL('../../public/previews/contours-of-silence-1-desktop.webp', import.meta.url))).resize(640, 512, { fit: 'cover' }).webp().toBuffer();
 async function fixture(page: Page, locale: Locale, kind = 'card', fail = false) {
   await page.addInitScript(() => localStorage.setItem('want-cookie-preferences-v2', JSON.stringify({ analytics: false, advertising: false })));
-  const collection = collections[0]!;
+  const collection = collections.find(item => item.slug === 'contours-of-silence')!;
   const markup = kind === 'card'
     ? renderToStaticMarkup(<div className="gallery-grid"><CollectionCard item={{ href: '/collections/contours-of-silence/', title: collection.title[locale], description: collection.description[locale], countLabel: '15', image, video: videoUrl, locale }} headingLevel={2} /></div>)
     : renderToStaticMarkup(<figure className="relative" data-collection-cover><CoverMedia image={image} alt={collection.description[locale]} src={videoUrl} priority /><CoverControl locale={locale} /></figure>);

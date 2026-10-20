@@ -1,4 +1,5 @@
 import snapshotJson from './catalog-live.json';
+import { newestCollections } from '../lib/catalog-order';
 
 export const locales = ['en', 'ru', 'zh-cn', 'pt-br'] as const;
 export type Locale = (typeof locales)[number];
@@ -154,9 +155,10 @@ const seedWallpapers: Wallpaper[] = entries.map((entry) => {
   };
 });
 
-const snapshot = snapshotJson as { collections: Collection[]; wallpapers: Wallpaper[]; publicationDates?: Record<string, string> };
+const snapshot = snapshotJson as { collections: Collection[]; wallpapers: Wallpaper[]; publicationDates?: Record<string, string>; collectionPublicationDates?: Record<string, string> };
 if (!snapshot.collections.length || !snapshot.wallpapers.length) throw new Error('Empty catalogue snapshot');
-export const collections = snapshot.collections;
+export const collectionPublicationDates = snapshot.collectionPublicationDates ?? {};
+export const collections = newestCollections(snapshot.collections, collectionPublicationDates);
 export const wallpapers = snapshot.wallpapers;
 export const publicationDates = snapshot.publicationDates ?? {};
 export const initialCatalog = { collections: seedCollections, wallpapers: seedWallpapers };
