@@ -27,13 +27,29 @@ export async function prepareMedia(input: string) {
   }
   const slug = value.manifest?.collection?.slug;
   requirePackage(typeof slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug), 'manifest-slug-required');
+  const outputs = Array.from({ length: 5 }, (_, index) => index + 1).flatMap(design => [
+    ...['desktop', 'mobile'].flatMap(variant => [`public/${slug}-${variant}-${design}.png`, `public/${slug}-${variant}-${design}.webp`]),
+    `public/social-${design}.jpg`, `public/emoji-${design}.png`,
+    ...['desktop', 'mobile'].filter(variant => !sources.some(source => source.role === 'composition' && source.design === design && source.variant === variant)).map(variant => `compositions/${slug}-${variant}-${design}.png`),
+  ]);
+  requirePackage(sources.every(source => !outputs.includes(source.path)), 'source-output-path-conflict');
+  outputs.forEach(path => packagePath(root, path));
   for (let design = 1; design <= 5; design++) {
     for (const variant of ['desktop', 'mobile'] as const) {
-      const source = assets.find(asset => asset.role === 'composition' && asset.design === design && asset.variant === variant)
+      let source = assets.find(asset => asset.role === 'composition' && asset.design === design && asset.variant === variant)
         ?? assets.find(asset => asset.role === 'native' && asset.design === design && asset.variant === variant);
       requirePackage(source, 'native-source-required');
       const width = variant === 'desktop' ? 3840 : 2160, height = variant === 'desktop' ? 2160 : 3840;
-      requirePackage(source.width * height === source.height * width, 'extend-composition-before-resizing');
+      if (source.width * height !== source.height * width) {
+        const unit = Math.ceil(Math.max(source.width / (variant === 'desktop' ? 16 : 9), source.height / (variant === 'desktop' ? 9 : 16)));
+        const canvasWidth = unit * (variant === 'desktop' ? 16 : 9), canvasHeight = unit * (variant === 'desktop' ? 9 : 16);
+        requirePackage(source.role === 'native' && canvasWidth - source.width <= source.width * .01 && canvasHeight - source.height <= source.height * .01, 'extend-composition-before-resizing');
+        // Extend only quantized edge pixels; larger composition changes require a separate artwork edit.
+        source = await save(`compositions/${slug}-${variant}-${design}.png`, await sharp(readFileSync(packagePath(root, source.path))).extend({
+          left: Math.floor((canvasWidth - source.width) / 2), right: Math.ceil((canvasWidth - source.width) / 2),
+          top: Math.floor((canvasHeight - source.height) / 2), bottom: Math.ceil((canvasHeight - source.height) / 2), extendWith: 'mirror',
+        }).png().toBuffer(), { role: 'composition', design, variant, source: source.path });
+      }
       const bytes = readFileSync(packagePath(root, source.path));
       const final = source.width === width && source.height === height ? bytes : await sharp(bytes).resize(width, height, { fit: 'fill' }).png().toBuffer();
       const saved = await save(`public/${slug}-${variant}-${design}.png`, final, { role: 'final', design, variant, source: source.path });

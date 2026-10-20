@@ -51,7 +51,8 @@ export function packagePath(root: string, name: string): string {
   let current = root;
   for (const part of name.split('/')) {
     current = join(current, part);
-    if (existsSync(current)) requirePackage(!lstatSync(current).isSymbolicLink(), 'symlink-package-file');
+    const details = lstatSync(current, { throwIfNoEntry: false });
+    if (details) requirePackage(!details.isSymbolicLink(), 'symlink-package-file');
   }
   return path;
 }

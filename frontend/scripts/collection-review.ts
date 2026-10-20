@@ -1,17 +1,17 @@
-import { copyFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { validatePackage, writePrivate, type Asset } from './collection-package';
+import { lstatSync, mkdirSync, readFileSync } from 'node:fs';
+import { packagePath, requirePackage, validatePackage, writePrivate, type Asset } from './collection-package';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]!));
 export async function reviewPackage(root: string) {
   const checked = await validatePackage(root), { value, packageHash } = checked;
-  const review = join(checked.root, 'review'); mkdirSync(review, { recursive: true, mode: 0o700 });
+  const review = packagePath(checked.root, 'review'); mkdirSync(review, { recursive: true, mode: 0o700 });
+  requirePackage(!(lstatSync(review).mode & 0o077), 'private-review-directory-required');
   const fonts = ['onest', 'manrope', 'noto-sans-jp', 'noto-sans-arabic'];
   const faces: string[] = [];
   for (const font of fonts) {
     const source = new URL(`../../node_modules/@fontsource-variable/${font}/files/${font}-${font === 'noto-sans-jp' ? 'japanese' : font === 'noto-sans-arabic' ? 'arabic' : 'latin'}-wght-normal.woff2`, import.meta.url);
     if (await Bun.file(source).exists()) {
-      copyFileSync(source, join(review, `${font}.woff2`));
+      writePrivate(packagePath(checked.root, `review/${font}.woff2`), readFileSync(source));
       faces.push(`@font-face{font-family:${font};src:url('./${font}.woff2') format('woff2');font-weight:100 900;font-display:swap}`);
     }
   }
@@ -35,10 +35,10 @@ export async function reviewPackage(root: string) {
     body += paragraphs.map(paragraph => `<p>${escape(paragraph)}</p>`).join('') + '</details>';
   }
   body += '<section id="copy"><h2>Публикации на английском</h2>';
-  for (const [destination, posts] of Object.entries(value.copy)) body += `<h3>${escape(destination)}</h3>` + posts.map(post => `<article><h4>${escape(post.title)}</h4><p>${escape(post.description)}</p></article>`).join('');
+  for (const [destination, posts] of Object.entries(value.copy)) body += `<h3>${escape(destination)}</h3>` + posts.map(post => `<article lang="en"><h4>${escape(post.title)}</h4><p>${escape(post.description)}</p></article>`).join('');
   body += '</section><p>Одобрение выполняется в терминале с указанным SHA-256. Любые изменения требуют повторной проверки.</p>';
   const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' file:; font-src 'self' file:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>Проверка коллекции</title><style>${faces.join('')}
 :root{color-scheme:dark;background:#141414;color:#E8E8E8;font-family:manrope,system-ui,sans-serif;font-size:16px;line-height:1.7}body{max-width:1100px;margin:auto;padding:24px}h1,h2,h3,h4{font-family:onest,system-ui,sans-serif;line-height:1.2}h1{font-size:clamp(28px,4vw,40px)}h2{font-size:26px}section,details{background:#1C1C1C;border-radius:24px;padding:24px;margin-block:24px}article{background:#252525;padding:16px;border-radius:12px;margin-block:16px}.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}figure{margin:0}img{display:block;max-width:100%;height:auto;border-radius:24px;background:#101010}.emoji{width:100px;border-radius:12px;background:repeating-conic-gradient(#252525 0 25%,#858585 0 50%) 0/20px 20px}a{color:#E8E8E8;text-underline-offset:4px;display:inline-flex;align-items:center;min-height:44px}a:focus-visible,summary:focus-visible{outline:2px solid #5B4FFF;outline-offset:3px}summary{cursor:pointer;min-height:44px}p{max-width:65ch;overflow-wrap:anywhere}.hash{font-family:monospace;color:#ADADAD;overflow-wrap:anywhere}[lang=ar]{font-family:noto-sans-arabic,system-ui,sans-serif}[lang=ja]{font-family:noto-sans-jp,system-ui,sans-serif}.control{background:#5B4FFF;padding:4px 24px;border-radius:999px}@media(max-width:640px){body{padding:16px}.pair{grid-template-columns:1fr}section,details{padding:16px}}@media(forced-colors:active){a:focus-visible,summary:focus-visible{outline-color:Highlight}}
 </style></head><body>${body}</body></html>`;
-  const path = join(review, 'index.html'); writePrivate(path, html); return path;
+  const path = packagePath(checked.root, 'review/index.html'); writePrivate(path, html); return path;
 }

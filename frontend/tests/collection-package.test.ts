@@ -87,3 +87,39 @@ test('review is local, escaped, RTL aware and distinguishes enlarged output', as
     expect(html).not.toContain('https://');
   } finally { writePrivate(join(root, 'package.json'), original); }
 }, 30000);
+
+
+test('preparation refuses source/output collisions before changing native bytes', async () => {
+  const value = JSON.parse(original), source = value.assets.find((asset: any) => asset.role === 'native' && asset.variant === 'desktop');
+  const path = `public/test-light-desktop-${source.design}.png`, target = join(root, path), previous = readFileSync(target);
+  const native = readFileSync(join(root, source.path)); writePrivate(target, native); source.path = path;
+  writePrivate(join(root, 'package.json'), JSON.stringify(value));
+  try { await expect(prepareMedia(root)).rejects.toThrow('source-output-path-conflict'); expect(readFileSync(target).equals(native)).toBe(true); }
+  finally { writePrivate(target, previous); writePrivate(join(root, 'package.json'), original); }
+});
+
+test('review and command lock reject symlinks without touching outside data', async () => {
+  const outside = mkdtempSync(join(realpathSync(tmpdir()), 'wallpapers-outside-'));
+  const review = join(root, 'review'); rmSync(review, { recursive: true, force: true }); symlinkSync(outside, review);
+  const sentinel = join(outside, 'sentinel'); writePrivate(sentinel, 'keep');
+  try {
+    await expect(reviewPackage(root)).rejects.toThrow('symlink-package-file');
+    symlinkSync(sentinel, join(root, 'command-lock.sqlite'));
+    const child = Bun.spawn([process.execPath, new URL('../scripts/collection.ts', import.meta.url).pathname, 'status', root], { stdout: 'pipe', stderr: 'pipe' });
+    expect(await child.exited).not.toBe(0); expect(readFileSync(sentinel, 'utf8')).toBe('keep');
+  } finally { rmSync(review, { force: true }); rmSync(join(root, 'command-lock.sqlite'), { force: true }); rmSync(outside, { recursive: true, force: true }); }
+});
+
+
+test('pixel quantization extends edges while retaining the exact native file', async () => {
+  const value = JSON.parse(original), source = value.assets.find((asset: any) => asset.role === 'native' && asset.variant === 'desktop');
+  const path = join(root, source.path), previous = readFileSync(path);
+  const bytes = await sharp({ create: { width: 1672, height: 941, channels: 3, background: '#346756' } }).png().toBuffer();
+  writePrivate(path, bytes);
+  const composition = join(root, 'compositions/test-light-desktop-1.png');
+  try {
+    const checked = await prepareMedia(root); expect(readFileSync(path).equals(bytes)).toBe(true);
+    const extended = checked.value.assets.find(asset => asset.role === 'composition' && asset.design === 1)!;
+    expect([extended.width, extended.height]).toEqual([1680, 945]);
+  } finally { writePrivate(path, previous); writePrivate(join(root, 'package.json'), original); rmSync(composition, { force: true }); }
+}, 30000);
