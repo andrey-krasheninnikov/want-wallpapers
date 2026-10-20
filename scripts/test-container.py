@@ -191,7 +191,7 @@ try:
     initial['collections'].sort(key=lambda item: (initial['collectionPublicationDates'][item['id']], item['id']), reverse=True)
     with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
         assert json.load(response) == initial, 'Initial migrations changed.'
-    import_started = datetime.now(timezone.utc)
+    import_started = datetime.fromtimestamp(float(run(psql + ['-A', '-t'], 'SELECT extract(epoch FROM clock_timestamp())')), timezone.utc)
     for collection in expected['collections']:
         manifest = {'collection': collection, 'wallpapers': [item for item in expected['wallpapers'] if item['collectionId'] == collection['id']]}
         for attempt in range(2):
@@ -211,11 +211,12 @@ try:
         assert {key: value for key, value in actual.items() if key != 'publicationDates'} == {key: value for key, value in expected.items() if key != 'publicationDates'}, 'Runtime catalogue differs from the build snapshot.'
         assert actual['publicationDates'].keys() == expected['publicationDates'].keys()
     historical = json.loads(run(psql + ['-A', '-t'], "SELECT coalesce(jsonb_object_agg(id,to_char(public.initial_wallpaper_publication(id) AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')), '{}'::jsonb) FROM wallpapers WHERE public.initial_wallpaper_publication(id) IS NOT NULL;"))
+    import_finished = datetime.fromtimestamp(float(run(psql + ['-A', '-t'], 'SELECT extract(epoch FROM clock_timestamp())')), timezone.utc)
     for wallpaper_id, date in actual['publicationDates'].items():
         if wallpaper_id in historical:
             assert date == historical[wallpaper_id] == expected['publicationDates'][wallpaper_id]
         else:
-            assert import_started <= datetime.fromisoformat(date.replace('Z', '+00:00')) <= datetime.now(timezone.utc), 'New import must use its own database publication time.'
+            assert import_started <= datetime.fromisoformat(date.replace('Z', '+00:00')) <= import_finished, 'New import must use its own database publication time.'
     print(f"Verified catalogue import/readback and exact-repeat no-op: {len(expected['collections'])} collections and {len(expected['wallpapers'])} wallpapers.")
     with urllib.request.urlopen(origin + '/admin/login/') as response:
         assert 'noindex' in response.headers['X-Robots-Tag']
