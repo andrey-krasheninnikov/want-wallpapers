@@ -14,8 +14,10 @@ export default function CollectionCarousel({ items, locale }: { items: Collectio
     const update = () => {
       const card = element.firstElementChild?.getBoundingClientRect();
       if (!card) return;
-      const gap = parseFloat(getComputedStyle(element).columnGap);
-      const count = Math.max(1, Math.round((element.clientWidth + gap) / (card.width + gap)));
+      const style = getComputedStyle(element);
+      const gap = parseFloat(style.columnGap);
+      const width = element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const count = Math.max(1, Math.round((width + gap) / (card.width + gap)));
       step.current = count * (card.width + gap);
       const pages = Math.ceil(items.length / count);
       const atEnd = element.scrollLeft >= element.scrollWidth - element.clientWidth - 2;
@@ -31,7 +33,7 @@ export default function CollectionCarousel({ items, locale }: { items: Collectio
   }
   return <div className="collection-carousel" data-collection-carousel>
     <div ref={track} className="collection-track" role="region" tabIndex={0} aria-label={designCopy[locale].collections}>{items.map((item) => <CollectionCard key={item.href} item={item} />)}</div>
-    <nav className="carousel-pagination" aria-label={designCopy[locale].collections}>
+    <nav className="carousel-pagination shell" aria-label={designCopy[locale].collections}>
       <Button variant="secondary" size="icon" disabled={position.page === 1} onClick={() => move(-1)} aria-label={designCopy[locale].previousCollections}><ArrowLeft aria-hidden="true" /></Button>
       <output aria-live="polite">{position.page} / {position.pages}</output>
       <Button variant="secondary" size="icon" disabled={position.page === position.pages} onClick={() => move(1)} aria-label={designCopy[locale].nextCollections}><ArrowRight aria-hidden="true" /></Button>
