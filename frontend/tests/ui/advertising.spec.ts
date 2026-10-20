@@ -4,11 +4,10 @@ import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
-import type { Locale } from '../../src/data/catalog';
+import { locales, type Locale } from '../../src/data/catalog';
 
 let bundle: string;
 const preferenceKey = 'want-cookie-preferences-v2';
-const locales = ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[];
 test.beforeAll(async () => {
   const result = await Bun.build({ entrypoints: [resolve(import.meta.dir, 'advertising-fixture.tsx')], target: 'browser', minify: true, external: ['astro:transitions/client'], define: { 'import.meta.env': '{}' } });
   if (!result.success) throw new Error(result.logs.map(String).join('\n'));
