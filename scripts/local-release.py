@@ -101,12 +101,23 @@ def save(directory, state):
     atomic_json(directory / 'release.json', state)
 
 
+def image_config_digest(image):
+    descriptor = image.get('Descriptor')
+    if descriptor is None:
+        return release.digest(image['Id'])
+    # Containerd exposes a manifest ID; the checked filesystem belongs to its config.
+    require(descriptor.get('digest') == image['Id'] and descriptor.get('mediaType') in
+            ('application/vnd.docker.distribution.manifest.v2+json', 'application/vnd.oci.image.manifest.v1+json'),
+            'local-image-descriptor-mismatch')
+    return release.digest(descriptor.get('annotations', {}).get('config.digest'))
+
+
 def image_identity(reference, state, architecture):
     image = inspect('image', reference)
     require(image is not None and image['Os'] == 'linux' and image['Architecture'] == architecture
             and image['Config']['Labels'].get('org.opencontainers.image.revision') == state['sourceSha']
             and image['Config']['Labels'].get('foundation.want.wallpapers.local-release') == state['id'], 'local-image-identity-mismatch')
-    return image['Id']
+    return image_config_digest(image)
 
 
 def prepare(source, directory, state, config, *, build_images=True):
@@ -243,7 +254,7 @@ def cleanup_images(state):
             image = inspect('image', reference)
             if image is None:
                 continue
-            require(image['Id'] == checked['configDigest']
+            require(image_config_digest(image) == checked['configDigest']
                     and image['Config']['Labels'].get('foundation.want.wallpapers.local-release') == state['id'],
                     'local-image-cleanup-ownership')
             run(['docker', 'image', 'rm', reference])

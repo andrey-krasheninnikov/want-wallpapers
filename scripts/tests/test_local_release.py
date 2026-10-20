@@ -103,13 +103,29 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertTrue(self.state['published'])
         self.assertEqual(self.state['indexDigest'], 'sha256:' + '3' * 64)
 
+    def test_containerd_image_identity_reads_config_digest_separately_from_manifest_id(self):
+        config, manifest = 'sha256:' + '1' * 64, 'sha256:' + '2' * 64
+        image = {'Id': manifest, 'Os': 'linux', 'Architecture': 'arm64',
+                 'Descriptor': {'digest': manifest, 'mediaType': 'application/vnd.docker.distribution.manifest.v2+json',
+                                'annotations': {'config.digest': config}},
+                 'Config': {'Labels': {'org.opencontainers.image.revision': self.state['sourceSha'],
+                                      'foundation.want.wallpapers.local-release': self.state['id']}}}
+        with patch.object(local, 'inspect', return_value=image):
+            self.assertEqual(local.image_identity('owned', self.state, 'arm64'), config)
+        image['Descriptor']['annotations'] = {}
+        with patch.object(local, 'inspect', return_value=image), self.assertRaises(local.release.ReleaseError):
+            local.image_identity('owned', self.state, 'arm64')
+        del image['Descriptor']
+        with patch.object(local, 'inspect', return_value={**image, 'Id': config}):
+            self.assertEqual(local.image_identity('owned', self.state, 'arm64'), config)
+
     def test_image_cleanup_removes_only_owned_references(self):
         self.state['images'] = {'arm64': {'reference': 'owned', 'configDigest': 'sha256:' + '1' * 64}}
         metadata = {'Id': 'sha256:' + '1' * 64, 'Config': {'Labels': {'foundation.want.wallpapers.local-release': self.state['id']}}}
         with patch.object(local, 'inspect', return_value=metadata), patch.object(local, 'run') as run:
             local.cleanup_images(self.state)
         self.assertEqual(run.call_count, 2)
-        with patch.object(local, 'inspect', return_value={**metadata, 'Id': 'different'}), \
+        with patch.object(local, 'inspect', return_value={**metadata, 'Id': 'sha256:' + '2' * 64}), \
              patch.object(local, 'run') as run, self.assertRaisesRegex(DeployError, 'cleanup-ownership'):
             local.cleanup_images(self.state)
         run.assert_not_called()
