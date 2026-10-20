@@ -99,4 +99,13 @@ test('Japanese translation tab fits the existing Russian administration', async 
   await expect(dialog.getByLabel('Описание · 日本語')).toHaveValue(collection.description.ja);
   await page.setViewportSize({ width: 320, height: 900 }); await noOverflow(page);
   await expect(dialog.getByRole('tab', { name: languageLabels.ja, exact: true })).toBeInViewport();
+  const tabs = await dialog.getByRole('tablist').evaluate(list => {
+    const frame = list.getBoundingClientRect();
+    return [...list.querySelectorAll('[role="tab"]')].map(tab => {
+      const rect = tab.getBoundingClientRect();
+      return { height: rect.height, contained: rect.top >= frame.top && rect.bottom <= frame.bottom && rect.left >= frame.left && rect.right <= frame.right };
+    });
+  });
+  expect(tabs).toHaveLength(5);
+  for (const tab of tabs) { expect(tab.height).toBeGreaterThanOrEqual(44); expect(tab.contained).toBe(true); }
 });
