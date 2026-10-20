@@ -95,3 +95,29 @@ test('neon collection preserves its ten designs and localized keyboard search', 
     for (const phrase of [description, tag]) expect(searchIds(index, locale, phrase)).toContain('neon-tide-4');
   }
 });
+
+
+test('collection chronology uses its first publication and survives snapshot round trips', async () => {
+  const { newestCollections } = await import('../src/lib/catalog-order');
+  const { collections, collectionPublicationDates } = await import('../src/data/catalog');
+  expect(collections[0]!.id).toBe('0006-neon-tide');
+  const original = collections.map(item => item.id);
+  const snapshot = JSON.parse(JSON.stringify({ collections: [...collections].reverse(), collectionPublicationDates }));
+  expect(newestCollections(snapshot.collections, snapshot.collectionPublicationDates).map(item => item.id)).toEqual(original);
+  expect(collections.map(item => item.id)).toEqual(original);
+});
+
+test('collection order keeps microseconds, deterministic ties and undated entries last', async () => {
+  const { newestCollections } = await import('../src/lib/catalog-order');
+  const { collections } = await import('../src/data/catalog');
+  const items = ['0001-old', '0002-recent', '0003-tie', '0004-unknown', '0005-fraction'].map(id => ({ ...collections[0]!, id }));
+  const dates = {
+    '0001-old': '2026-10-02T21:44:58Z',
+    '0002-recent': '2026-10-19T20:13:10.100001Z',
+    '0003-tie': '2026-10-19T20:13:10.100001Z',
+    '0005-fraction': '2026-10-19T20:13:10.1Z',
+  };
+  expect(newestCollections(items, dates).map(item => item.id)).toEqual(['0003-tie', '0002-recent', '0005-fraction', '0001-old', '0004-unknown']);
+  expect(newestCollections(items, {}).map(item => item.id)).toEqual(items.map(item => item.id).reverse());
+  expect(items.map(item => item.id)).toEqual(['0001-old', '0002-recent', '0003-tie', '0004-unknown', '0005-fraction']);
+});

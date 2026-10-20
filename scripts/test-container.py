@@ -101,12 +101,14 @@ for _ in range(2):
     run(psql, grants)
     run(psql, verification)
 # Restricted function defaults must still permit catalogue publication dates.
-run(psql, 'REVOKE EXECUTE ON FUNCTION public.initial_wallpaper_publication(text) FROM PUBLIC, :"runtime_role";')
-unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
-assert unsafe.returncode != 0, 'Missing publication function permission must fail verification.'
-run(psql, grants)
-run(psql, verification)
-run(psql, 'SET ROLE :"runtime_role"; SELECT public.initial_wallpaper_publication(\'neon-tide-1\') IS NULL; RESET ROLE;')
+for function, identity in [('initial_wallpaper_publication', 'neon-tide-1'),
+                           ('initial_collection_publication', '0006-neon-tide')]:
+    run(psql, f'REVOKE EXECUTE ON FUNCTION public.{function}(text) FROM PUBLIC, :"runtime_role";')
+    unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
+    assert unsafe.returncode != 0, 'Missing publication function permission must fail verification.'
+    run(psql, grants)
+    run(psql, verification)
+    run(psql, f"SET ROLE :\"runtime_role\"; SELECT public.{function}('{identity}'); RESET ROLE;")
 # A future automatic grant must be detected before it can expose a new table.
 run(psql, f'ALTER DEFAULT PRIVILEGES FOR ROLE "{migrator}" GRANT SELECT ON TABLES TO "{role}";')
 unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
@@ -169,8 +171,12 @@ try:
     else: raise RuntimeError('Production image did not become ready.')
     initial = json.loads((repository / 'backend/data/catalog.json').read_text())
     expected = json.loads((repository / 'frontend/src/data/catalog-live.json').read_text())
-    expected['publicationDates'] = {key: datetime.fromisoformat(value.replace('Z', '+00:00')).strftime('%Y-%m-%dT%H:%M:%S.%fZ') for key, value in expected['publicationDates'].items()}
+    for field in ['publicationDates', 'collectionPublicationDates']:
+        expected[field] = {key: datetime.fromisoformat(value.replace('Z', '+00:00')).strftime('%Y-%m-%dT%H:%M:%S.%fZ') for key, value in expected[field].items()}
+    expected['collections'].sort(key=lambda item: (expected['collectionPublicationDates'].get(item['id'], ''), item['id']), reverse=True)
     initial['publicationDates'] = {item['id']: expected['publicationDates'][item['id']] for item in initial['wallpapers']}
+    initial['collectionPublicationDates'] = {item['id']: expected['collectionPublicationDates'][item['id']] for item in initial['collections']}
+    initial['collections'].sort(key=lambda item: (initial['collectionPublicationDates'][item['id']], item['id']), reverse=True)
     with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
         assert json.load(response) == initial, 'Initial migrations changed.'
     import_started = datetime.now(timezone.utc)
@@ -182,7 +188,8 @@ try:
                 result = json.load(response)['result']
                 assert result in ['created', 'unchanged'] if attempt == 0 else result == 'unchanged'
             with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
-                dates = json.load(response)['publicationDates']
+                exported = json.load(response)
+                dates = {field: exported[field] for field in ['publicationDates', 'collectionPublicationDates']}
             if attempt == 0:
                 first_dates = dates
             else:

@@ -74,3 +74,30 @@ test('publication metadata accepts old exports and rejects malformed dates or fo
   expect(parsePublicationDates(valid, wallpapers)).toEqual(valid);
   for (const value of [null, [], 1, { foreign: valid['quiet-light-1'] }, { 'quiet-light-1': 123 }, { 'quiet-light-1': '2026-02-30T12:34:56Z' }, { 'quiet-light-1': '2026-10-13T12:34:56+03:00' }]) expect(() => parsePublicationDates(value, wallpapers)).toThrow();
 });
+
+
+test('collection publication metadata validates collection identities independently of wallpapers', () => {
+  const collections = [{ id: '0001-quiet-light' }];
+  const dates = { '0001-quiet-light': '2026-10-19T20:13:10.668531Z' };
+  expect(parsePublicationDates(dates, collections)).toEqual(dates);
+  expect(() => parsePublicationDates({ 'quiet-light-1': dates['0001-quiet-light'] }, collections)).toThrow();
+});
+
+
+test('pulling an old server export preserves the current snapshot', async () => {
+  const file = Bun.file(new URL('../src/data/catalog-live.json', import.meta.url));
+  const before = await file.text();
+  const legacy = JSON.parse(before);
+  delete legacy.collectionPublicationDates;
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => Response.json(legacy) });
+  try {
+    const child = Bun.spawn([process.execPath, 'scripts/catalog-pull.ts'], {
+      cwd: new URL('../', import.meta.url).pathname,
+      env: { ...process.env, BACKEND_API_URL: server.url.origin }, stdout: 'pipe', stderr: 'pipe',
+    });
+    const error = new Response(child.stderr).text();
+    expect(await child.exited).not.toBe(0);
+    expect(await error).toContain('Catalog export lacks collection publication dates');
+    expect(await file.text()).toBe(before);
+  } finally { server.stop(true); }
+});

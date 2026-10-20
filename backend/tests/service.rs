@@ -714,7 +714,12 @@ async fn archive_preserves_social_data_and_abuse_limits_cannot_trust_client_forw
         let snapshot = catalog::export(&pool).await.unwrap();
         assert_eq!(snapshot.wallpapers.len(), if archived { 24 } else { 25 });
         assert_eq!(
-            snapshot.collections[0].count,
+            snapshot
+                .collections
+                .iter()
+                .find(|item| item.id == "0001-contours-of-silence")
+                .unwrap()
+                .count,
             if archived { 14 } else { 15 }
         );
     }
@@ -1548,4 +1553,315 @@ async fn public_social_returns_only_latest_ten_visible_comments(pool: PgPool) {
             .unwrap(),
         13
     );
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn collection_publication_dates_survive_imports_additions_edits_and_archive(pool: PgPool) {
+    let initial = catalog::export(&pool).await.unwrap();
+    assert_eq!(
+        initial
+            .collections
+            .iter()
+            .map(|item| item.id.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "0003-path-to-the-light",
+            "0002-woven-spectrum",
+            "0001-contours-of-silence"
+        ]
+    );
+    let original_dates = initial.collection_publication_dates.clone();
+    assert_eq!(original_dates.len(), 3);
+    let input = manifest();
+    catalog::import_manifest(&pool, &input, CatalogActor::Token)
+        .await
+        .unwrap();
+    let imported = catalog::export(&pool).await.unwrap();
+    let date = imported.collection_publication_dates[&input.collection.id].clone();
+    assert!(date > original_dates["0001-contours-of-silence"]);
+    assert_eq!(imported.collections[0].id, input.collection.id);
+    assert_eq!(
+        catalog::import_manifest(&pool, &input, CatalogActor::Token)
+            .await
+            .unwrap(),
+        "unchanged"
+    );
+    let app = router(state(pool.clone()));
+    let (_, listing, _) = request(
+        &app,
+        "GET",
+        "/api/v1/admin/catalog",
+        None,
+        None,
+        None,
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(listing["collections"][0]["item"]["id"], input.collection.id);
+
+    let mut late = initial.wallpapers[0].clone();
+    late.number = 16;
+    late.id = "contours-of-silence-16".into();
+    late.slug = late.id.clone();
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/wallpapers",
+            Some(json!({"item":late,"version":null})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    late.title
+        .insert("en".into(), "Edited late addition".into());
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/wallpapers",
+            Some(json!({"item":late,"version":1})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    let mut edited = input.collection.clone();
+    edited.title.insert("en".into(), "Edited collection".into());
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/collections",
+            Some(json!({"item":edited,"version":1})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+
+    for (id, version) in [("test-light-1", 1), ("test-light-2", 1)] {
+        assert_eq!(
+            request(
+                &app,
+                "PATCH",
+                &format!("/api/v1/admin/catalog/wallpapers/{id}/archive"),
+                Some(json!({"version":version,"archived":true})),
+                None,
+                None,
+                Some(TOKEN)
+            )
+            .await
+            .0,
+            StatusCode::OK
+        );
+    }
+    let hidden = catalog::export(&pool).await.unwrap();
+    assert_eq!(hidden.collections[0].count, 0);
+    assert_eq!(
+        hidden.collection_publication_dates[&input.collection.id],
+        date
+    );
+    for id in ["test-light-1", "test-light-2"] {
+        assert_eq!(
+            request(
+                &app,
+                "PATCH",
+                &format!("/api/v1/admin/catalog/wallpapers/{id}/archive"),
+                Some(json!({"version":2,"archived":false})),
+                None,
+                None,
+                Some(TOKEN)
+            )
+            .await
+            .0,
+            StatusCode::OK
+        );
+    }
+    for (version, archived) in [(2, true), (3, false)] {
+        assert_eq!(
+            request(
+                &app,
+                "PATCH",
+                &format!(
+                    "/api/v1/admin/catalog/collections/{}/archive",
+                    input.collection.id
+                ),
+                Some(json!({"version":version,"archived":archived})),
+                None,
+                None,
+                Some(TOKEN)
+            )
+            .await
+            .0,
+            StatusCode::OK
+        );
+        let snapshot = catalog::export(&pool).await.unwrap();
+        assert_eq!(
+            snapshot
+                .collection_publication_dates
+                .contains_key(&input.collection.id),
+            !archived
+        );
+    }
+    let restored = catalog::export(&pool).await.unwrap();
+    assert_eq!(restored.collections[0].id, input.collection.id);
+    assert_eq!(
+        restored.collection_publication_dates[&input.collection.id],
+        date
+    );
+    for (id, date) in original_dates {
+        assert_eq!(restored.collection_publication_dates[&id], date);
+    }
+    for (id, date) in initial.publication_dates {
+        assert_eq!(restored.publication_dates[&id], date);
+    }
+    assert_eq!(
+        serde_json::to_value(&restored).unwrap(),
+        serde_json::to_value(catalog::export(&pool).await.unwrap()).unwrap()
+    );
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn collection_publication_starts_with_first_wallpaper_and_keeps_unknown_history(
+    pool: PgPool,
+) {
+    let app = router(state(pool.clone()));
+    let input = manifest();
+    let mut empty = input.collection.clone();
+    empty.count = 0;
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/collections",
+            Some(json!({"item":empty,"version":null})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    assert!(
+        !catalog::export(&pool)
+            .await
+            .unwrap()
+            .collection_publication_dates
+            .contains_key(&empty.id)
+    );
+    for wallpaper in &input.wallpapers {
+        assert_eq!(
+            request(
+                &app,
+                "PUT",
+                "/api/v1/admin/catalog/wallpapers",
+                Some(json!({"item":wallpaper,"version":null})),
+                None,
+                None,
+                Some(TOKEN)
+            )
+            .await
+            .0,
+            StatusCode::OK
+        );
+        let snapshot = catalog::export(&pool).await.unwrap();
+        assert_eq!(
+            snapshot.collection_publication_dates[&empty.id],
+            snapshot.publication_dates["test-light-1"]
+        );
+    }
+    // An undated populated legacy collection must not become new when another work is added.
+    sqlx::query("UPDATE collections SET published_at=NULL WHERE id='0001-contours-of-silence'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let mut late = catalog::export(&pool).await.unwrap().wallpapers[0].clone();
+    late.number = 16;
+    late.id = "contours-of-silence-16".into();
+    late.slug = late.id.clone();
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/admin/catalog/wallpapers",
+            Some(json!({"item":late,"version":null})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    let snapshot = catalog::export(&pool).await.unwrap();
+    assert!(
+        !snapshot
+            .collection_publication_dates
+            .contains_key("0001-contours-of-silence")
+    );
+    assert_eq!(
+        snapshot.collections.last().unwrap().id,
+        "0001-contours-of-silence"
+    );
+}
+
+#[sqlx::test(migrations = false)]
+async fn collection_publication_upgrade_uses_historical_evidence_including_archives(pool: PgPool) {
+    for migration in [
+        include_str!("../migrations/202610040001_schema.sql"),
+        include_str!("../migrations/202610040002_catalog.sql"),
+        include_str!("../migrations/202610130001_publication_dates.sql"),
+    ] {
+        sqlx::raw_sql(migration).execute(&pool).await.unwrap();
+    }
+    let mut collection = manifest().collection;
+    sqlx::query("INSERT INTO collections(id,folder_number,slug,data) VALUES($1,4,$2,$3)")
+        .bind(&collection.id)
+        .bind(&collection.slug)
+        .bind(json!(collection))
+        .execute(&pool)
+        .await
+        .unwrap();
+    collection.id = "0006-neon-tide".into();
+    collection.slug = "neon-tide".into();
+    sqlx::query(
+        "INSERT INTO collections(id,folder_number,slug,data,archived) VALUES($1,6,$2,$3,true)",
+    )
+    .bind(&collection.id)
+    .bind(&collection.slug)
+    .bind(json!(collection))
+    .execute(&pool)
+    .await
+    .unwrap();
+    sqlx::query(
+        "UPDATE wallpapers SET archived=true WHERE collection_id='0001-contours-of-silence'",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    sqlx::raw_sql(include_str!(
+        "../migrations/202610200001_collection_publication_dates.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+    let dates: Value = sqlx::query_scalar("SELECT jsonb_object_agg(id,to_char(published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')) FROM collections").fetch_one(&pool).await.unwrap();
+    assert_eq!(
+        dates["0001-contours-of-silence"],
+        "2026-10-02T21:44:58.000000Z"
+    );
+    assert_eq!(dates["0006-neon-tide"], "2026-10-19T20:13:10.668531Z");
+    assert_eq!(dates["0004-test-light"], Value::Null);
 }
