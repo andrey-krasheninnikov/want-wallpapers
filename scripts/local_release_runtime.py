@@ -5,12 +5,13 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import signal
 import socket
 import subprocess
 import time
 
-from deployment import DeployError, atomic_json, private_file, require, run
+from deployment import DeployError, atomic_json, matches, private_file, require, run
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -21,6 +22,24 @@ def inspect(kind, reference):
         require('no such' in result.stderr.lower() or 'not found' in result.stderr.lower(), 'docker-inspection-failed')
         return None
     return json.loads(result.stdout)[0]
+
+
+def validate_ssh(config):
+    settings = {}
+    for line in run(['ssh', '-G', '-F', str(config), '-o', 'BatchMode=yes',
+                     '-o', 'StrictHostKeyChecking=yes', 'wallpapers-production']).splitlines():
+        name, _, value = line.partition(' ')
+        settings.setdefault(name, []).append(value)
+    require(settings.get('user') == ['wallpapers-deploy'] and settings.get('port') == ['14444']
+            and settings.get('identitiesonly') == ['yes'] and len(settings.get('identityfile', [])) == 1,
+            'invalid-production-ssh-profile')
+    host = settings.get('hostname', [''])[0]
+    require(matches(r'[A-Za-z0-9.:-]{1,253}', host), 'invalid-production-ssh-profile')
+    known = shlex.split(settings.get('userknownhostsfile', [''])[0])
+    require(len(known) == 1, 'trusted-host-key-required')
+    path = private_file(Path(known[0]).expanduser())
+    private_file(Path(settings['identityfile'][0]).expanduser())
+    require(run(['ssh-keygen', '-F', '[' + host + ']:14444', '-f', str(path)]).strip(), 'trusted-host-key-missing')
 
 
 def execute(arguments, source, environment, log):

@@ -11,7 +11,7 @@ description: Выпускать Want Wallpapers с MacBook без GitHub Actions
 
 Прочитайте [локальный контракт](../../../docs/ci-releases.md#локальный-выпуск-с-macbook) и [установку и recovery](../../../docs/production-deployments.md#локальный-validator). Сверьте чистый checkout, точные development/main refs, версии, существующие release PR, protected tag и GitHub Release. Продолжайте уже начатую версию, не создавая следующий инкремент.
 
-На Mac должны быть Docker Desktop, Bun 1.3.14, Rust 1.93.0, cargo-audit 0.22.2, ffmpeg, OpenSSH, age, AWS CLI и gh с доступом к репозиторию и GHCR. Проверьте выбранный Docker context, место и ресурсы до сборок и после очистки. Не меняйте context или настройки Docker автоматически.
+На Mac должны быть Docker Desktop, Bun 1.3.14, Rust 1.93.0, cargo-audit 0.22.2, ffmpeg, OpenSSH, age, AWS CLI и gh с доступом к репозиторию и GHCR. Для full заранее установите Chromium из зафиксированной версии Playwright по локальному контракту. Проверьте выбранный Docker context, место и ресурсы до сборок и после очистки. Не меняйте context или настройки Docker автоматически.
 
 Приватная конфигурация находится вне checkout: `~/.config/want-wallpapers/local-release/config.json`. Отдельный Ed25519 release key загружен владельцем в ssh-agent. Для подписи передаётся только `.pub`; private key, пароли и tokens не входят в argv, Git, PR, artifacts или образ. На VPS заранее установлен совместимый validator и закреплён публичный ключ. Обычный выпуск не обновляет validator через owner SSH.
 
@@ -45,6 +45,6 @@ make deploy-local TAG=v<version> PROFILE=<original-profile>
 
 ## Продолжение
 
-`make release-local-status TAG=v<version>` показывает приватное состояние. После обрыва сначала прочитайте remote refs и deployment status. Повтор `deploy-local` использует сохранённый digest и reconciliation существующего запроса, без повторных migrations или rebuild. При ошибке проверки исправьте причину до продолжения. Изменившиеся входные данные не дают переиспользовать старые результаты; опубликованное намерение не переписывайте.
+`make release-local-status TAG=v<version>` показывает приватное состояние. После обрыва сначала прочитайте remote refs и deployment status. Повтор `deploy-local` использует сохранённый digest и reconciliation существующего запроса, без повторных migrations или rebuild. Терминальные failed/rolled-back/recovery-required и неизвестный status останавливают продолжение; новый deployment требует отдельного решения. При ошибке проверки исправьте причину до продолжения. Изменившиеся входные данные не дают переиспользовать старые результаты; опубликованное намерение не переписывайте.
 
 Не используйте owner alias, общий sudo, root SSH, сборку на VPS, down-migrations, восстановление поверх production, глобальный down/prune или restart Docker/Traefik. Не отключайте CAPTCHA. В результате разделите локальные проверки, registry readback и подтверждённый VPS deployment; отдельно перечислите пропуски fast, cleanup и непроверенные реальные login/CAPTCHA.

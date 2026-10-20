@@ -15,7 +15,7 @@ import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from deployment import DeployError, Store, atomic_json, matches, private_file, require, run
 from local_evidence import allowed_signer, required_checks, sign
-from local_release_runtime import Fixtures, backup_worker, execute, inspect, registry_auth
+from local_release_runtime import Fixtures, backup_worker, execute, inspect, registry_auth, validate_ssh
 
 ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location('local_release_contract', ROOT / 'scripts/ci-release.py')
@@ -40,6 +40,7 @@ def configuration(path):
     build = value.get('buildEnvironment', {})
     require(isinstance(build, dict) and set(build) <= BUILD_KEYS
             and all(isinstance(item, str) and '\x00' not in item for item in build.values()), 'invalid-public-build-environment')
+    validate_ssh(value['sshConfig'])
     value['buildEnvironment'] = build
     return value
 
@@ -72,6 +73,7 @@ def verification_identity(source, sha, config):
     versions = [run([tool, '--version']).strip() for tool in ('bun', 'rustc', 'cargo-audit')]
     require(versions[0] == '1.3.14' and versions[1].startswith('rustc 1.93.0')
             and versions[2] == 'cargo-audit 0.22.2', 'reviewed-local-toolchain-required')
+    versions += [run([tool, '-version']).splitlines()[0] for tool in ('ffmpeg', 'ffprobe')]
     inputs = {'sourceSha': sha, 'sourceTree': git(source, 'rev-parse', 'HEAD^{tree}'), 'toolDigest': tool_digest(),
               'hostArchitecture': architecture, 'buildEnvironment': config['buildEnvironment'], 'versions': versions,
               'dockerVersion': docker['ServerVersion'], 'dockerContext': run(['docker', 'context', 'show']).strip()}
@@ -117,6 +119,8 @@ def prepare(source, directory, state, config, *, build_images=True):
     environment = {key: value for key, value in os.environ.items() if not key.startswith('GITHUB_') and key not in BUILD_KEYS}
     environment.update(config['buildEnvironment'])
     environment['ASTRO_TELEMETRY_DISABLED'] = '1'
+    fixtures = Fixtures(directory / 'fixtures', state['id'])
+    fixtures.cleanup()
     complete = set(required_checks(state['verificationProfile']) + ['Install'])
     if not build_images:
         complete -= {'Runtime (amd64)', 'Runtime (arm64)'}
@@ -128,7 +132,6 @@ def prepare(source, directory, state, config, *, build_images=True):
         for architecture, checked in state['images'].items():
             require(image_identity(checked['reference'], state, architecture) == checked['configDigest'], 'checked-local-image-changed')
         return state
-    fixtures = Fixtures(directory / 'fixtures', state['id'])
     try:
         environment = fixtures.start(source, environment)
         steps = [('Install', ['make', 'install']), ('Static', ['make', 'check']), ('Unit/API', ['make', 'test']),
@@ -180,6 +183,7 @@ def remote_manifest(reference):
 
 
 def publish(source, directory, state, config):
+    Fixtures(directory / 'fixtures', state['id']).cleanup()
     require(verification_identity(source, state['sourceSha'], config)[0] == state['inputFingerprint'], 'local-verification-inputs-changed')
     require(set(required_checks(state['verificationProfile'])) <= set(state['stages']), 'local-verification-incomplete')
     trusted = directory / 'release-signers'
@@ -247,8 +251,11 @@ def cleanup_images(state):
 
 def deploy(directory, state, config):
     require(state.get('published') and state.get('indexDigest'), 'verified-publication-required')
+    resume = bool(state.get('deploymentIntent') or state.get('deployment'))
+    state['deploymentIntent'] = True
+    save(directory, state)
     with backup_worker(config['backupConfig'], directory / 'backup-worker.log'):
-        state['deployment'] = client.deploy(config['sshConfig'], state['tag'], state['sourceSha'], state['indexDigest'])
+        state['deployment'] = client.deploy(config['sshConfig'], state['tag'], state['sourceSha'], state['indexDigest'], resume=resume)
         save(directory, state)
     require(state['deployment']['state'] == 'succeeded', 'production-deployment-not-successful')
     return state
@@ -283,6 +290,7 @@ def main():
             prepare(arguments.source_root.resolve(), directory, state, config, build_images=False)
         elif arguments.mode == 'prepare':
             if state.get('published'):
+                Fixtures(directory / 'fixtures', state['id']).cleanup()
                 release.resolve(argparse.Namespace(tag=state['tag'], digest=state['indexDigest'], timeout=0),
                                 local_signers=directory / 'release-signers')
                 cleanup_images(state)

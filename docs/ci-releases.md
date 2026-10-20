@@ -113,6 +113,8 @@ Image IDs прочитаны из исходных `checked-image.json` в runti
 cargo install cargo-audit --version 0.22.2 --locked --root ~/.local/share/want-wallpapers/tools
 ```
 
+Для профиля full после `make install` установите браузер из текущего lockfile: `(cd frontend && bunx playwright install chromium)`. Убедитесь, что `ffmpeg -version` и `ffprobe -version` выполняются; наличие файлов в PATH не доказывает работоспособность.
+
 Владелец создаёт отдельный release key вне checkout, загружает его в ssh-agent и устанавливает только публичный ключ на VPS по production instructions. Пароль ключа вводится только в собственном терминале. Публичный ключ имеет обычные read-only права; private key и конфигурация имеют mode 0600 в каталоге 0700.
 
 Пример `~/.config/want-wallpapers/local-release/config.json`:
@@ -161,3 +163,5 @@ make deploy-local TAG=v<version> PROFILE=<original-profile>
 Перед повторной publication resolver читает уже существующие references и сверяет identities. При неоднозначном SSH результате client запрашивает status существующего intent. Не редактируйте completed stages или digest в ledger. Изменившиеся исходники требуют нового выпуска; изменившиеся инструменты требуют новой проверки в отдельном state root после безопасной очистки прежних временных ресурсов. Опубликованное намерение не переписывается.
 
 Сборочные кеши сохраняются. Тестовые контейнеры, anonymous volumes, сети и credentials удаляются по точным task identities после проверки или ошибки. После подтверждённой publication собственные локальные image references удаляются; immutable remote images сохраняются для deployment/recovery. Повтор prepare с уже опубликованным состоянием проверяет исходный digest без rebuild. Не применяйте общий prune.
+
+Локальный deployment сохраняет intent до отправки. При повторе он только читает исходный status и продолжает ожидание; failed, rolled-back, recovery-required или неизвестный запрос не создают новый deployment. После проверки причины оператор отдельно решает, нужен ли новый запрос.

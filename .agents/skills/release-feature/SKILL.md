@@ -34,7 +34,7 @@ description: Выпускать Want Wallpapers по Gitflow из feature-вет
 1. Опубликуйте согласованные изменения feature-ветки и подтвердите серверный HEAD.
 2. Выполните `make check`, `make test` и `git diff --check`.
 3. Создайте PR в `development` с описанием результата и проверок. Передайте многострочное тело через `--body-file`; проверьте текст и метаданные, сохраняя нейтральное авторство.
-4. Для `execution=local` подтвердите локальные проверки текущего дерева и обязательные merge protections, не запуская Actions. Для `execution=github` вручную запустите `Checks` на source-ветке по docs/ci-releases.md. Сверьте `head_sha` с HEAD PR; дождитесь успешных проверок текущего кандидата и обязательных checks. Новый source commit требует нового ручного run.
+4. Для `execution=local` подтвердите локальные проверки текущего дерева и обязательные merge protections, не запуская Actions. Для `execution=github` вручную запустите `Checks` на source-ветке по docs/ci-releases.md. Сверьте `head_sha` с HEAD PR; дождитесь успешных проверок текущего кандидата и обязательных checks. В режиме `execution=github` новый source commit требует нового ручного run.
 5. Выполните squash merge с явным Conventional Commit сообщением и `--match-head-commit <verified-feature-sha>`. Не используйте admin bypass.
 6. Прочитайте результат PR и обновите refs. У squash-коммита один родитель: проверенный прежний HEAD development. Его дерево сохраняет согласованные изменения обеих веток.
 
@@ -60,7 +60,7 @@ description: Выпускать Want Wallpapers по Gitflow из feature-вет
 gh workflow run deploy-production.yml --ref v<version> -f tag=v<version> -f profile=<fast-or-full>
 ```
 
-Одна цепочка выполняет проверки, публикацию checked images через artifacts без rebuild, один eligibility и deployment. `fast` пропускает только Full UI/E2E. Оба профиля сохраняют static/type/format, unit/API, security audit, collection drafts и native runtime PostgreSQL 18/TLS на linux/amd64 и linux/arm64. Backup, off-VPS restore, migrations, grants, readiness и public smoke обязательны.
+Цепочка `execution=github` выполняет проверки, публикацию checked images через artifacts без rebuild, один eligibility и deployment. `fast` пропускает только Full UI/E2E. Оба профиля сохраняют static/type/format, unit/API, security audit, collection drafts и native runtime PostgreSQL 18/TLS на linux/amd64 и linux/arm64. Backup, off-VPS restore, migrations, grants, readiness и public smoke обязательны.
 
 Дождитесь результата и сохраните tag, source SHA, профиль, пропущенные проверки, verification run/attempt, оба platform digests, оба config digests, OCI revisions и исходный `APP_IMAGE@sha256`. Отдельно подтвердите deployment request/status, `backupVerified`, running image/revision и public smoke. Успешный eligibility или публикация образа не подтверждают переключение VPS. Ошибка, timeout или `recovery-required` блокируют объявление успешного выпуска.
 

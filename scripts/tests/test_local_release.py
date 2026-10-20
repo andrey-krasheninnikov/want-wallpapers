@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from deployment import DeployError, Store, atomic_json
 from local_evidence import required_checks
-from local_release_runtime import Fixtures, execute
+from local_release_runtime import Fixtures, execute, validate_ssh
 
 spec = importlib.util.spec_from_file_location('local_release_test', ROOT / 'scripts/local-release.py')
 local = importlib.util.module_from_spec(spec)
@@ -57,7 +57,7 @@ class LocalPipelineTests(unittest.TestCase):
                 local.prepare(self.root, self.root, self.state, self.config)
         self.assertEqual(self.state['stages'], ['Install'])
         self.assertEqual(execute.call_count, 2)
-        fixtures.cleanup.assert_called_once()
+        self.assertEqual(fixtures.cleanup.call_count, 2)
         self.assertFalse(self.state.get('published'))
 
     def test_changed_inputs_cannot_reuse_completed_checks(self):
@@ -74,7 +74,8 @@ class LocalPipelineTests(unittest.TestCase):
              patch.object(local, 'run', return_value=''), patch.object(local, 'Fixtures') as fixtures, \
              patch.object(local, 'image_identity', return_value='sha256:' + '1' * 64):
             local.prepare(self.root, self.root, self.state, self.config)
-        fixtures.assert_not_called()
+        fixtures.return_value.cleanup.assert_called_once()
+        fixtures.return_value.start.assert_not_called()
         with patch.object(local, 'verification_identity', return_value=self.identity), \
              patch.object(local, 'run', return_value=''), patch.object(local, 'image_identity', return_value='wrong'), \
              self.assertRaisesRegex(DeployError, 'image-changed'):
@@ -125,6 +126,32 @@ class LocalPipelineTests(unittest.TestCase):
             local.deploy(self.root, self.state, config)
         self.assertEqual(deploy.call_args.args[-1], self.state['indexDigest'])
         self.assertEqual(self.state['deployment']['state'], 'recovery-required')
+
+    def test_lost_deployment_result_preserves_intent_and_resumes_read_only(self):
+        self.state.update(published=True, indexDigest='sha256:' + '9' * 64)
+        config = {'backupConfig': 'unused', 'sshConfig': 'unused'}
+        with patch.object(local, 'backup_worker', return_value=contextlib.nullcontext()), \
+             patch.object(local.client, 'deploy', side_effect=[DeployError('connection-lost'), {'state': 'failed'}]) as deploy:
+            with self.assertRaisesRegex(DeployError, 'connection-lost'):
+                local.deploy(self.root, self.state, config)
+            persisted = json.loads((self.root / 'release.json').read_text())
+            self.assertTrue(persisted['deploymentIntent'])
+            with self.assertRaisesRegex(DeployError, 'not-successful'):
+                local.deploy(self.root, persisted, config)
+            self.assertFalse(deploy.call_args_list[0].kwargs['resume'])
+            self.assertTrue(deploy.call_args_list[1].kwargs['resume'])
+
+    def test_ssh_profile_rejects_owner_and_requires_a_pinned_host_key(self):
+        profile = 'user wallpapers-deploy\nport 14444\nidentitiesonly yes\nidentityfile /private/key\nhostname host.example\nuserknownhostsfile /private/known_hosts\n'
+        with patch('local_release_runtime.private_file', side_effect=lambda path: path):
+            for wrong in (profile.replace('wallpapers-deploy', 'root'), profile.replace('14444', '22'),
+                          profile.replace('identitiesonly yes', 'identitiesonly no')):
+                with patch('local_release_runtime.run', return_value=wrong), self.assertRaises(DeployError):
+                    validate_ssh('private-config')
+            with patch('local_release_runtime.run', side_effect=[profile, 'trusted pinned key']):
+                validate_ssh('private-config')
+            with patch('local_release_runtime.run', side_effect=[profile, '']), self.assertRaisesRegex(DeployError, 'host-key-missing'):
+                validate_ssh('private-config')
 
     def test_test_process_uses_normal_modes_while_its_log_stays_private(self):
         previous = os.umask(0o077)
