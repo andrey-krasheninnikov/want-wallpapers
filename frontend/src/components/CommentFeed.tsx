@@ -1,3 +1,4 @@
+import { carouselScroll, scrollCarousel } from '@/lib/carousel-scroll';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Flag, Trash2, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,8 +24,9 @@ export default function CommentFeed({ locale, comments, ownUid, reported, busy, 
       const count = Math.max(1, Math.round((element.clientWidth + gap) / (card.width + gap)));
       step.current = count * (card.width + gap);
       const total = Math.ceil(comments.length / count);
-      const end = element.scrollLeft >= element.scrollWidth - element.clientWidth - 2;
-      setPage({ at: end ? total : Math.min(total, Math.round(element.scrollLeft / step.current) + 1), total });
+      const { offset, max } = carouselScroll(element);
+      const end = offset >= max - 2;
+      setPage({ at: end ? total : Math.min(total, Math.round(offset / step.current) + 1), total });
     };
     const observer = new ResizeObserver(update); observer.observe(element);
     element.addEventListener('scroll', update, { passive: true }); update();
@@ -32,7 +34,7 @@ export default function CommentFeed({ locale, comments, ownUid, reported, busy, 
   }, [comments.length]);
   function move(direction: number) {
     const element = track.current!;
-    element.scrollTo({ left: Math.max(0, Math.min(element.scrollWidth - element.clientWidth, (page.at - 1 + direction) * step.current)), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    scrollCarousel(element, (page.at - 1 + direction) * step.current);
   }
   return <div data-comment-carousel><div ref={track} className="comment-feed" data-comment-feed role="group" tabIndex={0} aria-label={ui.comments}>{comments.length === 0 ? <p className="text-sm leading-relaxed text-muted-foreground">{ui.commentEmpty}</p> : comments.map((item) => {
     const own = item.uid === ownUid;
@@ -40,13 +42,13 @@ export default function CommentFeed({ locale, comments, ownUid, reported, busy, 
     return <article key={item.id} className="comment-row" data-comment={item.id}>
       <span className="comment-avatar" data-own={own} aria-hidden="true"><UserRound /></span>
       <div className="min-w-0"><div className="comment-meta"><strong>{own ? text.you : text.guest}</strong>{own && <span className="text-muted-foreground">{interfaceCopy[locale].ownComment}</span>}{item.createdAt && <time dateTime={new Date(item.createdAt).toISOString()}>{new Date(item.createdAt).toLocaleDateString(locale)}</time>}</div>
-        {item.text.length > 240 || item.text.split('\n').length > 6 ? <details className="comment-disclosure"><summary><span className="comment-excerpt" aria-hidden="true">{item.text}</span><span className="comment-read">{text.readComment}</span><span className="comment-collapse">{text.collapseComment}</span></summary><p className="comment-text">{item.text}</p></details> : <p className="comment-text">{item.text}</p>}
+        {item.text.length > 240 || item.text.split('\n').length > 6 ? <details className="comment-disclosure"><summary><span dir="auto" className="comment-excerpt" aria-hidden="true">{item.text}</span><span className="comment-read">{text.readComment}</span><span className="comment-collapse">{text.collapseComment}</span></summary><p dir="auto" className="comment-text">{item.text}</p></details> : <p dir="auto" className="comment-text">{item.text}</p>}
         <div className="comment-actions"><Button type="button" variant="ghost" size="sm" disabled={busy || saved} onClick={() => onAction(item)}>{own ? <Trash2 data-icon="inline-start" aria-hidden="true" /> : saved ? <Check data-icon="inline-start" aria-hidden="true" /> : <Flag data-icon="inline-start" aria-hidden="true" />}{own ? ui.delete : saved ? interfaceCopy[locale].saved : ui.report}</Button></div>
       </div>
     </article>;
   })}</div>{comments.length > 0 && <nav className="carousel-pagination" aria-label={ui.comments}>
     <Button variant="secondary" size="icon" disabled={page.at === 1} onClick={() => move(-1)} aria-label={text.previousComments}><ArrowLeft aria-hidden="true" /></Button>
-    <output aria-live="polite">{page.at} / {page.total}</output>
+    <output dir="ltr" aria-live="polite">{page.at} / {page.total}</output>
     <Button variant="secondary" size="icon" disabled={page.at === page.total} onClick={() => move(1)} aria-label={text.nextComments}><ArrowRight aria-hidden="true" /></Button>
   </nav>}</div>;
 }

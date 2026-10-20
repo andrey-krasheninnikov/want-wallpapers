@@ -2,7 +2,7 @@
 
 ## Direction
 
-Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and five locales remain authoritative.
+Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and six locales remain authoritative.
 
 The device stage stays beside the home introduction. Home collections form a paginated horizontal carousel. Wallpaper results retain a regular comparison grid. Long supporting content becomes readable sections for stories, works, file formats, licensing and topics. Legal pages place their explanatory continuation inside the same reading surface.
 
@@ -31,7 +31,7 @@ The single source is frontend/src/styles/global.css. Border aliases do not presc
 
 ## Type and geometry
 
-Onest Variable carries headings; Manrope Variable carries body text and controls. Fonts are served locally. Small indices and metadata use system monospace. Chinese text retains PingFang SC and Microsoft YaHei fallbacks. Japanese uses locally served Noto Sans JP with strict Japanese line breaking.
+Onest Variable carries headings; Manrope Variable carries body text and controls. Fonts are served locally. Small indices and metadata use system monospace. Chinese text retains PingFang SC and Microsoft YaHei fallbacks. Japanese uses locally served Noto Sans JP with strict Japanese line breaking. Arabic uses locally served Noto Sans Arabic, normal letter spacing and right-to-left document direction.
 
 - Hero: clamp(2rem, 3.5vw, 3.125rem), 32–50 px, weight 600, leading 1.15.
 - Page heading: clamp(1.75rem, 3.2vw, 2.5rem), 28–40 px, weight 650, leading 1.12.
@@ -47,7 +47,7 @@ Use the existing Radix-based shadcn sources and semantic Tailwind v4 tokens. The
 
 Keyboard focus retains control fills and uses a 2 px logo-color outline, offset by 3 px, with a dark backing. Inputs and textareas remain dark, including invalid states. Forced colors use the system focus outline. Labels, selection marks and error messages retain meaning without color.
 
-Feedback opens in one lazy modal on the current page. The form keeps topic, optional email, message and action/result areas. Closing preserves the draft and pending request in memory; failed requests preserve input. The dialog traps focus and returns it to the opening control or mobile menu button. Existing localized /feedback/ routes remain direct-link and no-script fallbacks. Field IDs remain unique across instances.
+Feedback opens in one lazy modal on the current page. The form keeps topic, optional email, message and action/result areas. The submit button fills the form content width at every viewport size in both the dialog and standalone page. Preserve the surrounding padding and place privacy and CAPTCHA notices below the button with their own spacing. Closing preserves the draft and pending request in memory; failed requests preserve input. The dialog traps focus and returns it to the opening control or mobile menu button. Existing localized /feedback/ routes remain direct-link and no-script fallbacks. Field IDs remain unique across instances.
 
 Owner contact has an initial avatar, identity and five linked action rows. Each row includes a useful icon, destination and outgoing arrow. Keep the existing contact URLs. The public email uses a native mailto link without a new tab. Its complete address wraps on narrow screens, remains selectable and keeps left-to-right direction inside other text directions.
 
@@ -104,3 +104,7 @@ Use one static pass and one cached-media source build for these revisions. Run f
 ## Advertising
 
 Public pages except localized homes, administration, errors and the development kit may load the region-selected provider under the independent advertising preference. Yandex chooses automatic placements. Adsterra uses two labelled side placements on wallpaper pages at 1712 px and wider: 160×300 left and 160×600 right, 24 px outside the unchanged 1280 px centre. Other eligible layouts use one centred inline placement after main content and before the footer. Select the largest fitting approved width: 728, 468, 320 or 300 px. Below 300 px of available space, show no placement. Keep native banner dimensions, localized labels, focus and reading surfaces. Failed or empty placements remain hidden. Advertising never controls downloads. Revocation after advertising requests start reloads the document with advertising disabled.
+
+### Arabic direction
+
+Arabic uses `ar` and Modern Standard Arabic. Public documents set `lang="ar" dir="rtl"`; existing locales remain LTR. Use logical alignment and spacing for controls, and isolate email, URLs and technical values as LTR. The Arabic language mark is the neutral letter ع. Mirror directional navigation icons, never artwork or the physical 3D scene. Next moves left in RTL: ArrowLeft and a rightward swipe open the next wallpaper. Carousel scrolling remains finite. Administration stays Russian; Arabic translation fields have their own language, direction and font.

@@ -1,5 +1,5 @@
 import type { Run } from './generation-store';
-import { locales } from '../src/data/catalog';
+import { locales, localeDirection } from '../src/data/catalog';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]!));
 export function reviewFields(run: Run & { spentPollen: number; reservedPollen: number }, origin: string) {
@@ -8,14 +8,14 @@ export function reviewFields(run: Run & { spentPollen: number; reservedPollen: n
   let html = `<p>${escape(run.collectionId)}. Версия ${run.version}. ${state[run.status] ?? 'Неизвестное состояние'}.</p><p>Расход: ${run.spentPollen} Pollen; резерв: ${run.reservedPollen}. Изображения: ${run.imageAttempts}/14, дополнительные: ${run.extraImageAttempts}/4. Текст: ${run.textAttempts}/2.</p>`;
   if (run.errorCode) html += `<p>Остановка: ${escape(run.errorCode)}.</p>`;
   if (run.manifest) {
-    for (const locale of locales) html += `<h2>${locale}: ${escape(run.manifest.collection.title[locale] ?? 'Перевод отсутствует')}</h2><p>${escape(run.manifest.collection.description[locale] ?? 'Перевод отсутствует')}</p>`;
+    for (const locale of locales) html += `<h2 lang="${locale}" dir="${localeDirection(locale)}">${locale}: ${escape(run.manifest.collection.title[locale] ?? 'Перевод отсутствует')}</h2><p lang="${locale}" dir="${localeDirection(locale)}">${escape(run.manifest.collection.description[locale] ?? 'Перевод отсутствует')}</p>`;
     for (const wallpaper of run.manifest.wallpapers) {
       html += `<h2>Дизайн ${wallpaper.number}</h2>`;
       for (const variant of ['desktop', 'mobile']) {
         const name = `${wallpaper.number}-${variant}`;
         if (run.assets[name]) html += `<img src="${media(name, true)}" alt="${escape(wallpaper.title.ru)}: ${variant}" width="${variant === 'desktop' ? 960 : 540}" height="${variant === 'desktop' ? 540 : 960}"><p><a href="${media(name, false)}">Оригинал ${variant} PNG</a></p>`;
       }
-      for (const locale of locales) html += `<h3>${locale}: ${escape(wallpaper.title[locale] ?? 'Перевод отсутствует')}</h3><p>${escape(wallpaper.description[locale] ?? 'Перевод отсутствует')}</p>`;
+      for (const locale of locales) html += `<h3 lang="${locale}" dir="${localeDirection(locale)}">${locale}: ${escape(wallpaper.title[locale] ?? 'Перевод отсутствует')}</h3><p lang="${locale}" dir="${localeDirection(locale)}">${escape(wallpaper.description[locale] ?? 'Перевод отсутствует')}</p>`;
     }
   }
   if (run.approval) html += `<p><a href="${origin}/webhook/collection-draft-media?runId=${run.runId}&version=${run.version}&package=true">Скачать одобренный пакет</a></p>`;

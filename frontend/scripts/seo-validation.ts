@@ -11,13 +11,13 @@ function attributeValue(element: { getAttribute(name: string): string | null }, 
 
 export const origin = 'https://wallpapers.want.foundation';
 export function require(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; contextualLinks: string[]; references: { url: string; tag: string; method?: string; download?: boolean }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
+export type Page = { path: string; lang: string; dir: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; contextualLinks: string[]; references: { url: string; tag: string; method?: string; download?: boolean }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
 
 export async function parsePage(html: string, path: string): Promise<Page> {
-  const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), contextualLinks: [], references: [], scripts: [], text: '', mainText: '', bytes: Buffer.byteLength(html) };
+  const page: Page = { path, lang: '', dir: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), contextualLinks: [], references: [], scripts: [], text: '', mainText: '', bytes: Buffer.byteLength(html) };
   const document = await new HTMLRewriter().on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(html)).text();
   const parser = new HTMLRewriter()
-    .on('html', { element(element) { page.lang = attributeValue(element, 'lang') ?? ''; } })
+    .on('html', { element(element) { page.lang = attributeValue(element, 'lang') ?? ''; page.dir = attributeValue(element, 'dir') ?? 'ltr'; } })
     .on('[id], a[name]', { element(element) { const id = attributeValue(element, 'id') ?? attributeValue(element, 'name'); if (id) page.ids.add(id); } })
     .on('meta', { element(element) {
       if (attributeValue(element, 'name') === 'robots') page.robots.push(attributeValue(element, 'content') ?? '');
@@ -114,14 +114,15 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     require(page.canonical.length === 1 && page.canonical[0] === self, `${page.path}: canonical must identify this page exactly once`);
     require(page.og.length === 1 && page.og[0] === self, `${page.path}: incorrect Open Graph URL`);
     const locale = page.path.split('/')[1];
-    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : locale === 'ja' ? 'ja' : 'en';
+    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : locale === 'ja' ? 'ja' : locale === 'ar' ? 'ar' : 'en';
     require(page.lang === lang, `${page.path}: incorrect document language`);
+    require(page.dir === (lang === 'ar' ? 'rtl' : 'ltr'), `${page.path}: incorrect document direction`);
     if (excluded) {
       if (page.path.endsWith('/search/')) require(page.robots.length === 1 && page.robots[0] === 'noindex, follow', `${page.path}: search must follow links`);
     } else {
-      const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja', 'x-default'];
+      const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja', 'ar', 'x-default'];
       require(page.alternates.length === languages.length && languages.every((language) => page.alternates.filter((alternate) => alternate.lang === language).length === 1), `${page.path}: conflicting or missing alternates`);
-      const suffix = ['ru', 'zh-cn', 'pt-br', 'ja'].includes(locale!) ? page.path.slice(locale!.length + 1) : page.path;
+      const suffix = ['ru', 'zh-cn', 'pt-br', 'ja', 'ar'].includes(locale!) ? page.path.slice(locale!.length + 1) : page.path;
       for (const alternate of page.alternates) {
         const prefix = ['en', 'x-default'].includes(alternate.lang) ? '' : '/' + alternate.lang.toLowerCase();
         require(alternate.href === origin + prefix + suffix, `${page.path}: incorrect alternate ${alternate.lang}`);
@@ -188,7 +189,7 @@ export function validateCityLinks(pages: Map<string, Page>): void {
 export function validateLocalizedContent(page: Page): void {
   if (!isIndexable(page)) return;
   const prefix = page.path.split('/')[1];
-  const locale: Locale = prefix === 'ru' || prefix === 'zh-cn' || prefix === 'pt-br' || prefix === 'ja' ? prefix : 'en';
+  const locale: Locale = prefix === 'ru' || prefix === 'zh-cn' || prefix === 'pt-br' || prefix === 'ja' || prefix === 'ar' ? prefix : 'en';
   const path = locale === 'en' ? page.path : page.path.slice(locale.length + 1);
   const text = editorialCopy[locale];
   let required: string[];
@@ -251,7 +252,7 @@ export function validateLlms(text: string, indexed: ReadonlySet<string>): void {
   for (const section of license.sections) require(intro!.includes(section.heading + ':\n\n' + section.paragraphs.join('\n')), `llms.txt missing license section: ${section.heading}`);
   const required = new Set([...indexed].filter((link) => {
     const url = new URL(link);
-    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br|ja)(?=\/)/, '');
+    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br|ja|ar)(?=\/)/, '');
     return url.origin === origin && (path === '/' || /^\/(collections\/|wallpapers\/|license\/$|terms\/$)/.test(path));
   }));
   const found = new Set<string>();
@@ -262,7 +263,7 @@ export function validateLlms(text: string, indexed: ReadonlySet<string>): void {
     for (const line of lines.filter((line) => line.trim())) {
       const link = line.match(/^- \[((?:\\.|[^\]\\])+)\]\((https:\/\/[^)\s]+)\)(?:: .+)?$/);
       require(link && required.has(link[2]!), `Invalid llms.txt public link: ${line}`);
-      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br|ja)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
+      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br|ja|ar)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
       require(!found.has(link[2]!), 'Duplicate llms.txt public link');
       found.add(link[2]!);
     }

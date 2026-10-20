@@ -46,6 +46,19 @@
   word-break: normal;
 }
 
+:lang(ar) {
+  font-family: "Noto Sans Arabic Variable", Tahoma, sans-serif;
+  --font-display: "Noto Sans Arabic Variable", Tahoma, sans-serif;
+  --font-sans: "Noto Sans Arabic Variable", Tahoma, sans-serif;
+  letter-spacing: normal;
+}
+:lang(ar) :is(h1, h2, h3) { line-height: 1.5; letter-spacing: normal; }
+:lang(ar) :is(p, input, textarea, button) { letter-spacing: normal; }
+[dir="rtl"] :is(.carousel-pagination, .wallpaper-nav, [data-slot="breadcrumb-separator"]) svg,
+[dir="rtl"] .contact-arrow { transform: scaleX(-1); }
+[dir="rtl"] [data-slot="switch-thumb"][data-state="checked"] { translate: -1.5rem 0; }
+[dir="rtl"] [data-slot="switch-thumb"][data-state="unchecked"] { translate: -.25rem 0; }
+
 @theme inline {
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "PingFang SC", "Microsoft YaHei", monospace;
   --font-display: "Onest Variable", Onest, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -100,7 +113,7 @@
   .ui-tabs-base { @apply flex gap-2; }
   .ui-navigation-link { @apply flex flex-col gap-1 rounded-pill p-2 text-sm transition-colors duration-120 outline-none; }
   .ui-select-trigger { @apply flex min-h-11 w-fit items-center justify-between gap-2 rounded-md bg-secondary px-4 py-3 text-sm whitespace-nowrap shadow-none transition-colors duration-120 outline-none; }
-  .ui-accordion-trigger { @apply flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-colors duration-120 outline-none; }
+  .ui-accordion-trigger { @apply flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-start text-sm font-medium transition-colors duration-120 outline-none; }
   .ui-button-base { @apply inline-flex shrink-0 items-center justify-center gap-2 rounded-pill text-sm font-medium whitespace-normal transition-colors duration-120 outline-none; }
   .ui-button-default { @apply bg-primary text-primary-foreground; }
   .ui-button-destructive { @apply bg-destructive text-background; }
@@ -135,7 +148,7 @@
   .wallpaper-detail-variant { @apply m-0; }
   .wallpaper-variant-trigger { @apply min-h-12 gap-2 whitespace-normal px-2 py-2 leading-snug; }
   .wallpaper-tag-link { @apply min-h-11 px-3 py-2 text-sm; }
-  .footer-link { overflow-wrap: anywhere; @apply h-auto min-h-11 justify-start px-4 py-2 text-left whitespace-normal; }
+  .footer-link { overflow-wrap: anywhere; @apply h-auto min-h-11 justify-start px-4 py-2 text-start whitespace-normal; }
   .shell { width: min(100% - 2rem, 1280px); margin-inline: auto; }
   .section-space { padding-top: 4rem; }
   .page-heading { padding-block: 2.5rem 2rem; }
@@ -149,7 +162,7 @@
   .prose h2 { margin-top: 2.5rem; margin-bottom: 1rem; font-size: 1.25rem; font-weight: 650; line-height: 1.4; }
   .prose p { margin-block: 1rem; font-size: 1rem; line-height: 1.8; color: var(--muted-foreground); overflow-wrap: anywhere; }
   .prose a { color: var(--link); text-decoration: underline; }
-  .skip-link { position: fixed; top: .5rem; left: 1rem; z-index: 100; padding: .75rem 1rem; border-radius: .5rem; background: var(--primary); color: var(--primary-foreground); transform: translateY(-150%); }
+  .skip-link { position: fixed; top: .5rem; inset-inline-start: 1rem; z-index: 100; padding: .75rem 1rem; border-radius: .5rem; background: var(--primary); color: var(--primary-foreground); transform: translateY(-150%); }
   .skip-link:focus { transform: translateY(0); }
   .cookie-panel { padding-bottom: max(1rem, env(safe-area-inset-bottom)); max-height: calc(100dvh - 2rem); overflow-y: auto; }
   @media (min-width: 640px) {
@@ -206,6 +219,7 @@
 @utility ui-card-header { @apply has-data-[slot=card-action]:grid-cols-[1fr_auto]; }
 
 @layer components {
+  .language-trigger { @apply h-11! w-auto min-w-0 rounded-pill px-3 sm:px-4 hover:bg-accent; }
   .site-header { padding-block: .75rem; }
   .header-bar { flex-wrap: wrap; padding-block: .5rem; border-radius: 999px; background: var(--card); padding-inline: 1rem; box-shadow: 0 12px 32px #14141466; }
   .hero { display: grid; align-items: center; gap: 2rem; padding-block: 2rem 3rem; }
@@ -328,7 +342,7 @@
   .feedback-fields { gap: 1.5rem; }
   .feedback-message { min-height: 12rem; }
   .feedback-footer { display: grid; gap: 1rem; margin-top: 1.5rem; }
-  .feedback-submit-row { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .feedback-submit-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .feedback-private { display: flex; align-items: center; gap: .5rem; max-width: 36ch; color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
   .feedback-private svg { width: 18px; height: 18px; flex-shrink: 0; }
   .feedback-status { display: flex; align-items: center; gap: .75rem; color: var(--link); line-height: 1.6; }
@@ -449,12 +463,11 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
   .support-topic h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--link); }
   .support-topic p { margin-top: .75rem; }
   .feedback-support { grid-column: 1 / -1; margin-top: 0; }
-  .feedback-submit-row .ui-button-base { min-width: 180px; font-size: 1rem; }
+  .feedback-submit-row .ui-button-base { width: 100%; min-width: 0; font-size: 1rem; }
   @container support (min-width: 48rem) {
     .support-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
     .support-topic:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
-  @media (max-width: 767px) { .feedback-submit-row .ui-button-base { width: 100%; } }
 }
 
 .public-advertisements { display: flex; justify-content: center; }
@@ -583,7 +596,7 @@ html[data-background-motion="running"] .page-background::before { animation-play
   @media (forced-colors: active) { .home-mosaic .gallery-card:has(> a:focus-visible) { outline-color: Highlight; } }
   .home-mosaic .gallery-image { width: 100%; height: 100%; object-fit: cover; }
   .home-mosaic-outgoing { position: absolute; inset: 0; pointer-events: none; animation: mosaic-fade 180ms ease-out forwards; }
-  .mosaic-toggle { position: absolute; top: 16px; right: 16px; z-index: 1; }
+  .mosaic-toggle { position: absolute; top: 16px; inset-inline-end: 16px; z-index: 1; }
   @keyframes mosaic-fade { to { opacity: 0; } }
   .feedback-dialog { width: min(640px, calc(100% - 2rem)); max-width: none; padding: 1.5rem; }
   .feedback-dialog .feedback-form { padding: 0; border-radius: 0; background: transparent; }

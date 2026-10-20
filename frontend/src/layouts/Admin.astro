@@ -2,15 +2,17 @@
 import '@fontsource-variable/manrope';
 import '@fontsource-variable/onest';
 import '../styles/global.css';
+import arabicFont from '@fontsource-variable/noto-sans-arabic/wght.css?url';
 import japaneseFont from '@fontsource-variable/noto-sans-jp/wght.css?url';
 import logo from '../../assets/logo.svg';
 const { title } = Astro.props;
 ---
 <!doctype html>
-<html lang="ru" class="dark">
+<html lang="ru" dir="ltr" class="dark">
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href={japaneseFont} />
+    <link rel="stylesheet" href={arabicFont} />
     <meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#141414" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>{title} · Want Wallpapers</title>

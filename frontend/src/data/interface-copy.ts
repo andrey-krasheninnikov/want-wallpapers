@@ -2,6 +2,7 @@ import type { Locale } from './catalog';
 
 export const interfaceCopy = {
   en: {
+    githubProject: 'GitHub Project',
     advertisement: 'Advertisement',
     pauseCover: 'Pause animation', playCover: 'Play animation',
     pauseBackground: 'Pause background glow', playBackground: 'Resume background glow',
@@ -39,6 +40,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Nothing here yet.', notFoundText: 'This page is not in the collection.', back: 'Back to the wallpapers',
   },
   ru: {
+    githubProject: 'GitHub Project',
     advertisement: 'Реклама',
     pauseCover: 'Остановить анимацию', playCover: 'Включить анимацию',
     pauseBackground: 'Остановить свечение фона', playBackground: 'Включить свечение фона',
@@ -76,6 +78,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Пока пусто.', notFoundText: 'Этой страницы нет в коллекции.', back: 'Вернуться к обоям',
   },
   'zh-cn': {
+    githubProject: 'GitHub Project',
     advertisement: '广告',
     pauseCover: '暂停动画', playCover: '播放动画',
     pauseBackground: '暂停背景光效', playBackground: '恢复背景光效',
@@ -113,6 +116,7 @@ export const interfaceCopy = {
     notFoundTitle: '这里暂时没有内容。', notFoundText: '这个页面不在系列中。', back: '返回壁纸',
   },
   'pt-br': {
+    githubProject: 'GitHub Project',
     advertisement: 'Publicidade',
     pauseCover: 'Pausar animação', playCover: 'Reproduzir animação',
     pauseBackground: 'Pausar brilho de fundo', playBackground: 'Retomar brilho de fundo',
@@ -150,6 +154,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Nada por aqui ainda.', notFoundText: 'Esta página não faz parte da coleção.', back: 'Voltar aos papéis de parede',
   },
   ja: {
+    githubProject: 'GitHub Project',
     "advertisement": "広告",
     "pauseCover": "アニメーションを一時停止",
     "playCover": "アニメーションを再生",
@@ -231,5 +236,90 @@ export const interfaceCopy = {
     "notFoundTitle": "このページは見つかりません。",
     "notFoundText": "お探しのページはコレクションにありません。",
     "back": "壁紙に戻る"
+  },
+
+  ar: {
+    githubProject: 'مشروع GitHub',
+    "advertisement": "إعلان",
+    "pauseCover": "إيقاف الحركة",
+    "playCover": "تشغيل الحركة",
+    "pauseBackground": "إيقاف توهج الخلفية",
+    "playBackground": "استئناف توهج الخلفية",
+    "skip": "الانتقال إلى المحتوى",
+    "language": "اللغة",
+    "legal": "معلومات",
+    "close": "إغلاق",
+    "catalogue": "الكتالوج",
+    "reset": "إعادة ضبط التصفية",
+    "retry": "المحاولة مجددًا",
+    "saved": "تم الحفظ",
+    "settings": "اختر ما تسمح به",
+    "save": "حفظ الإعدادات",
+    "necessary": "التخزين الضروري",
+    "necessaryHint": "يحفظ اختيارك ويتيح التفاعل دون اسم. مفعّل دائمًا.",
+    "advertisingHint": "لم تُربط شبكة إعلانية بعد. يتحكم هذا الاختيار أيضًا في أذونات الإعلان ضمن التحليلات.",
+    "analyticsHint": "تساعدنا في فهم الخلفيات التي تعجبك. اختيارية.",
+    "unavailableAnalytics": "التحليلات غير متصلة. تم حفظ تفضيلك.",
+    "javascriptRequired": "فعّل JavaScript لاستخدام التقييمات والتعليقات ونموذج المراسلة.",
+    "selected": "محدد",
+    "ratingSaved": "تم حفظ تقييمك.",
+    "commentSent": "تم نشر التعليق.",
+    "filters": "عوامل التصفية",
+    "free": "مجاني للاستخدام الشخصي",
+    "votes": "التقييمات",
+    "characters": "الأحرف",
+    "ownComment": "تعليقك",
+    "commentTitle": "شاركنا انطباعك",
+    "commentPublic": "سيظهر تعليقك في هذه الصفحة. لا حاجة لاسم.",
+    "feedbackFormTitle": "اكتب إلى الفريق",
+    "feedbackPrivate": "لا يطّلع على رسالتك سوى فريق Want.",
+    "feedbackTopicHint": "عنوان مختصر لما تريد مناقشته.",
+    "feedbackMessageHint": "فكرة أو مشكلة أو تفصيل يستحق التحسين.",
+    "feedbackEmailHint": "اترك بريدك الإلكتروني إذا رغبت في الرد.",
+    "feedbackDirect": "يمكنك المراسلة بالبريد أيضًا",
+    "feedbackDirectHint": "للأسئلة عن الموقع أو استخدام خلفياتنا.",
+    "benefitsTitle": "تغيير صغير للشاشات التي تستخدمها كل يوم.",
+    "benefits": [
+      [
+        "أعمال ضمن مجموعات",
+        "اعثر على خلفية تعجبك، ثم استكشف العالم المحيط بها."
+      ],
+      [
+        "شاشتان، أجواء واحدة",
+        "لكل تصميم نسخة للكمبيوتر وأخرى للهاتف."
+      ],
+      [
+        "ملفات أصلية",
+        "نزّل ملف PNG. لا تحتاج إلى حساب للتصفح أو التنزيل."
+      ]
+    ],
+    "faqTitle": "تفاصيل قبل التنزيل",
+    "faq": [
+      [
+        "هل الخلفيات مجانية؟",
+        "نعم. نزّلها واستخدمها مجانًا على شاشاتك الشخصية."
+      ],
+      [
+        "هل يمكن استخدامها تجاريًا؟",
+        "يشمل الترخيص الاستخدام الشخصي. للمنتجات أو الإعلانات أو غيرها من الأعمال التجارية، راسل wallpapers@want.foundation."
+      ],
+      [
+        "أي نسخة أنزّل؟",
+        "اختر نسخة الكمبيوتر للشاشة العريضة أو نسخة الهاتف للهاتف. كلتا النسختين ملف PNG أصلي."
+      ],
+      [
+        "هل أحتاج إلى حساب؟",
+        "لا تحتاج إلى حساب للتصفح أو البحث أو التنزيل. تستخدم التقييمات والتعليقات حساب متصفح مجهول الهوية."
+      ],
+      [
+        "هل يمكن رفض التحليلات؟",
+        "نعم. اختر التخزين الضروري فقط. يظل التصفح والبحث والتنزيل متاحًا."
+      ]
+    ],
+    "finalTitle": "اعثر على مشهد تود الاحتفاظ به.",
+    "finalText": "ابدأ بلون أو مكان أو شعور.",
+    "notFoundTitle": "لا يوجد شيء هنا بعد.",
+    "notFoundText": "هذه الصفحة غير موجودة في المجموعة.",
+    "back": "العودة إلى الخلفيات"
   },
 } satisfies Record<Locale, object>;

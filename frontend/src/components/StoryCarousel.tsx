@@ -31,7 +31,7 @@ export default function StoryCarousel({ locale, dataUrl, count, children }: {
       {selected && <DialogContent className="story-dialog" closeLabel={interfaceCopy[locale].close} aria-describedby={undefined}
         onOpenAutoFocus={event => { event.preventDefault(); title.current?.focus({ preventScroll: true }); }}
         onCloseAutoFocus={event => { event.preventDefault(); if (trigger.current?.isConnected) trigger.current.focus({ preventScroll: true }); }}>
-        <DialogTitle ref={title} tabIndex={-1} className="section-title pr-10">{selected.title}</DialogTitle>
+        <DialogTitle ref={title} tabIndex={-1} className="section-title pe-10">{selected.title}</DialogTitle>
         {story ? <div className="story-dialog-reading">
           {story.image && <img src={story.image.src} width={story.image.width} height={story.image.height} alt="" className="story-dialog-cover" />}
           {story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}

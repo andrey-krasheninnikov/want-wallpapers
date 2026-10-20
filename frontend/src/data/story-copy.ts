@@ -12,4 +12,12 @@ export const storyCopy = {
     "loading": "物語を読み込み中…",
     "failed": "物語を読み込めませんでした。コレクションのページでお読みいただけます。"
   },
+
+  ar: {
+    "title": "حكايات المجموعات",
+    "previous": "الحكايات السابقة",
+    "next": "الحكايات التالية",
+    "loading": "جارٍ تحميل الحكاية…",
+    "failed": "تعذّر تحميل الحكاية. افتح المجموعة لقراءتها."
+  },
 } satisfies Record<Locale, Record<string, string>>;
