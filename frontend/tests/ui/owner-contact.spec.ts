@@ -6,7 +6,7 @@ import { locales } from '../../src/data/catalog';
 const address = 'wallpapers@want.foundation';
 const href = `mailto:${address}`;
 const paths = ['/contact/', '/privacy/', '/terms/'];
-const labels = { en: 'Email', ru: 'Почта', 'zh-cn': '邮箱', 'pt-br': 'Email', ja: 'メール' };
+const labels = { en: 'Email', ru: 'Почта', 'zh-cn': '邮箱', 'pt-br': 'Email', ja: 'メール', ar: 'البريد الإلكتروني' };
 const destinations = [
   'https://t.me/andrey_krasheninnikov',
   'https://t.me/want_foundation',

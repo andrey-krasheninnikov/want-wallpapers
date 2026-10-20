@@ -106,6 +106,6 @@ test('Japanese translation tab fits the existing Russian administration', async 
       return { height: rect.height, contained: rect.top >= frame.top && rect.bottom <= frame.bottom && rect.left >= frame.left && rect.right <= frame.right };
     });
   });
-  expect(tabs).toHaveLength(5);
+  expect(tabs).toHaveLength(6);
   for (const tab of tabs) { expect(tab.height).toBeGreaterThanOrEqual(44); expect(tab.contained).toBe(true); }
 });

@@ -1,6 +1,6 @@
 # Want Wallpapers
 
-Дизайнерские обои Want на https://wallpapers.want.foundation/. Публичный интерфейс Astro/React/shadcn сохранён: коллекции, поиск, desktop/mobile PNG, четыре языка. Rust API хранит каталог и действия посетителей в PostgreSQL 18. Админка: `/admin/login/` и `/admin/`. Firebase используется только для необязательной Analytics. reCAPTCHA Enterprise защищает публичные изменения и вход в админку.
+Дизайнерские обои Want на https://wallpapers.want.foundation/. Публичный интерфейс Astro/React/shadcn сохранён: коллекции, поиск, desktop/mobile PNG, шесть языков. Rust API хранит каталог и действия посетителей в PostgreSQL 18. Админка: `/admin/login/` и `/admin/`. Firebase используется только для необязательной Analytics. reCAPTCHA Enterprise защищает публичные изменения и вход в админку.
 
 ## Структура
 
@@ -25,13 +25,13 @@ cd ..
 make test-ui
 ```
 
-`make test` запускает поиск/фильтры/manifest, Rust API на отдельном PostgreSQL 18, CI/deployment contracts и изолированное encrypted backup/restore. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют четыре языка на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
+`make test` запускает поиск/фильтры/manifest, Rust API на отдельном PostgreSQL 18, CI/deployment contracts и изолированное encrypted backup/restore. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют шесть языков на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
 
 Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: разрешите `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md). CI создаёт профили с точными путями и выполняет smoke-launch на одноразовом runner; настройки VPS не меняются.
 
 ## Разработка
 
-Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/`, `/pt-br/404/` и `/ja/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
+Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/`, `/pt-br/404/`, `/ja/404/` и `/ar/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
 
 `make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
 

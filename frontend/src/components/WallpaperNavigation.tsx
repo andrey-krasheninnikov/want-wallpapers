@@ -23,7 +23,7 @@ export function WallpaperNavigation({ locale, navigation, variant = 'desktop', n
 }) {
   return <nav className="wallpaper-nav" aria-label={designCopy[locale].gallery}>
     {navigation.previous && <WallpaperNavigationLink locale={locale} item={navigation.previous} direction="previous" variant={variant} navigate={navigate} />}
-    <span className="wallpaper-position" aria-live="polite">{navigation.position === null ? '' : `${navigation.position.toLocaleString(locale)} / ${navigation.total.toLocaleString(locale)}`}</span>
+    <span className="wallpaper-position" dir="ltr" aria-live="polite">{navigation.position === null ? '' : `${navigation.position.toLocaleString(locale)} / ${navigation.total.toLocaleString(locale)}`}</span>
     {navigation.next && <WallpaperNavigationLink locale={locale} item={navigation.next} direction="next" variant={variant} navigate={navigate} />}
   </nav>;
 }

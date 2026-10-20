@@ -1,3 +1,4 @@
+import { carouselScroll, scrollCarousel } from '@/lib/carousel-scroll';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,8 +29,9 @@ export function Carousel({ count: itemCount, label, previousLabel, nextLabel, ch
       const count = Math.max(1, Math.round((width + gap) / (card.width + gap)));
       step.current = count * (card.width + gap);
       const pages = Math.max(1, Math.ceil(itemCount / count));
-      const atEnd = element.scrollLeft >= element.scrollWidth - element.clientWidth - 2;
-      setPosition({ page: atEnd ? pages : Math.min(pages, Math.round(element.scrollLeft / step.current) + 1), pages });
+      const { offset, max } = carouselScroll(element);
+      const atEnd = offset >= max - 2;
+      setPosition({ page: atEnd ? pages : Math.min(pages, Math.round(offset / step.current) + 1), pages });
     };
     const observer = new ResizeObserver(update);
     observer.observe(element); element.addEventListener('scroll', update, { passive: true }); update();
@@ -37,13 +39,13 @@ export function Carousel({ count: itemCount, label, previousLabel, nextLabel, ch
   }, [itemCount]);
   function move(direction: number) {
     const element = track.current!;
-    element.scrollTo({ left: Math.max(0, Math.min(element.scrollWidth - element.clientWidth, (position.page - 1 + direction) * step.current)), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    scrollCarousel(element, (position.page - 1 + direction) * step.current);
   }
   return <div className="collection-carousel">
     <div ref={track} className="collection-track" role="region" tabIndex={0} aria-label={label}>{children}</div>
     <nav className="carousel-pagination shell" aria-label={label}>
       <Button variant="secondary" size="icon" disabled={position.page === 1} onClick={() => move(-1)} aria-label={previousLabel}><ArrowLeft aria-hidden="true" /></Button>
-      <output aria-live="polite">{position.page} / {position.pages}</output>
+      <output dir="ltr" aria-live="polite">{position.page} / {position.pages}</output>
       <Button variant="secondary" size="icon" disabled={position.page === position.pages} onClick={() => move(1)} aria-label={nextLabel}><ArrowRight aria-hidden="true" /></Button>
     </nav>
   </div>;

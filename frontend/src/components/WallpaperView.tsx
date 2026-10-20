@@ -10,7 +10,7 @@ import { designCopy } from '@/data/design-copy';
 import { selectedWallpaperVariant, wallpaperSlideHref } from '@/lib/wallpaper-navigation';
 import { yandexAdvertisingRequested } from '@/lib/advertising-providers';
 import type { WallpaperVariant } from '@/data/previews';
-import type { Locale } from '@/data/catalog';
+import { localeDirection, type Locale } from '@/data/catalog';
 
 type Neighbor = { href: string; title: string } | null;
 
@@ -57,13 +57,13 @@ export default function WallpaperView({ locale, id, description, variants, tags,
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       if (document.querySelector('[role="dialog"][data-state="open"]') || window.getSelection()?.toString()) return;
       if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="tab"], [role="radio"], [role="slider"], [role="combobox"], [role="listbox"], [role="menu"], [data-comment-carousel]')) return;
-      event.preventDefault(); navigate(event.key === 'ArrowLeft' ? 'previous' : 'next');
+      event.preventDefault(); navigate((event.key === 'ArrowLeft') === (locale === 'ar') ? 'next' : 'previous');
     }
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
-  }, [variant, navigation]);
+  }, [variant, navigation, locale]);
   const image = variants[variant];
-  return <Tabs value={variant} onValueChange={changeVariant} className="block"><div className="wallpaper-detail-grid" data-wallpaper-detail={id}>
+  return <Tabs dir={localeDirection(locale)} value={variant} onValueChange={changeVariant} className="block"><div className="wallpaper-detail-grid" data-wallpaper-detail={id}>
     <div className="wallpaper-stage">
       <div id="wallpaper-view" className="wallpaper-preview wallpaper-detail-frame" role="region" tabIndex={0} aria-label={text.gallery}
         onPointerDown={(event) => {
@@ -76,7 +76,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
           if (!start || start.id !== event.pointerId) return;
           const x = event.clientX - start.x, y = event.clientY - start.y;
           if (Math.abs(x) < 48 || Math.abs(x) < Math.abs(y) * 1.5) return;
-          navigate(x < 0 ? 'next' : 'previous');
+          navigate((x < 0) === (locale !== 'ar') ? 'next' : 'previous');
         }}>
         {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img className="wallpaper-backdrop" src={variants[value].src} alt="" aria-hidden="true" draggable={false} /><img className="wallpaper-image" id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
       </div>

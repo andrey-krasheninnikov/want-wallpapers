@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Direction } from 'radix-ui';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@/components/ui/navigation-menu';
@@ -6,7 +7,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import { copy, languageLabels, languageFlags, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
-import type { Locale } from '@/data/catalog';
+import { localeDirection, type Locale } from '@/data/catalog';
 
 export default function Header({ locale, path, logo }: { locale: Locale; path: string; logo: string }) {
   const ui = copy[locale];
@@ -17,11 +18,11 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
     { href: '/search/', title: ui.search, active: path === '/search/' },
     { href: '/feedback/', title: ui.feedback, active: path === '/feedback/' },
   ];
-  return <header className="site-header sticky top-0 z-30">
+  return <Direction.Provider dir={localeDirection(locale)}><header className="site-header sticky top-0 z-30">
     <div className="shell header-bar flex min-h-16 items-center justify-between gap-3 lg:min-h-20">
       <a href={localPath(locale)} aria-label="Want Wallpapers" className="inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg">
         <img src={logo} alt="" width={32} height={32} className="size-8" />
-        <span className="text-xl font-bold tracking-tight">Want<span className="ml-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
+        <span dir="ltr" className="text-xl font-bold tracking-tight">Want<span className="ms-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
       </a>
       <NavigationMenu className="hidden lg:flex" aria-label={ui.menu}>
         <NavigationMenuList className="gap-1 rounded-pill bg-secondary p-1">{links.map((link) => <NavigationMenuItem key={link.href}>
@@ -30,14 +31,14 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       </NavigationMenu>
       <div className="flex shrink-0 items-center gap-2">
         <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
-          <SelectTrigger aria-label={text.language} className="h-11! w-auto min-w-0 gap-2 rounded-pill px-3 sm:px-4 bg-secondary shadow-none hover:bg-accent">
-            <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'ja' ? '日本語' : locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
+          <SelectTrigger aria-label={text.language} className="language-trigger">
+            <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'ar' ? 'العربية' : locale === 'ja' ? '日本語' : locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
           </SelectTrigger>
           <SelectContent><SelectGroup>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11"><span aria-hidden="true">{languageFlags[value as Locale]}</span>{title}</SelectItem>)}</SelectGroup></SelectContent>
         </Select>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" data-menu-trigger aria-label={ui.menu}><Menu /></Button></SheetTrigger>
-          <SheetContent closeLabel={text.close} className="w-full max-w-sm bg-card">
+          <SheetContent side={locale === 'ar' ? 'left' : 'right'} closeLabel={text.close} className="w-full max-w-sm bg-card">
             <SheetHeader className="px-6 pt-8"><SheetTitle>{ui.menu}</SheetTitle><SheetDescription>Want Wallpapers</SheetDescription></SheetHeader>
             <nav className="grid gap-2 px-4" aria-label={ui.menu}>{links.map((link) => <Button key={link.href} asChild variant={link.active ? 'secondary' : 'ghost'} className="justify-start"><a href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined} aria-current={link.active ? 'page' : undefined} onClick={() => setOpen(false)}>{link.title}</a></Button>)}</nav>
           </SheetContent>
@@ -45,5 +46,5 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       </div>
     </div>
     <noscript><nav aria-label={ui.menu} className="shell flex flex-wrap gap-x-6 pb-4 lg:hidden">{links.map((link) => <a key={link.href} className="py-2 text-sm text-link" href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined}>{link.title}</a>)}</nav><div className="shell flex flex-wrap gap-4 pb-4">{Object.entries(languageLabels).map(([value, title]) => <a key={value} href={localPath(value as Locale, path)} lang={value}><span aria-hidden="true">{languageFlags[value as Locale]}</span> {title}</a>)}</div></noscript>
-  </header>;
+  </header></Direction.Provider>;
 }

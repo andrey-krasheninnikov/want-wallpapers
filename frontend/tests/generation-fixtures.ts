@@ -15,7 +15,7 @@ export function context(budget = 40, usage: unknown[] = []) {
 
 export function plan(collectionId = '900026-test-light') {
   const slug = collectionId.replace(/^\d+-/, '');
-  const localized = (text: string) => ({ en: text, ru: `Свет ${text}`, 'zh-cn': `光 ${text}`, 'pt-br': `Luz ${text}`, ja: `光 ${text}` });
+  const localized = (text: string) => ({ en: text, ru: `Свет ${text}`, 'zh-cn': `光 ${text}`, 'pt-br': `Luz ${text}`, ja: `光 ${text}`, ar: `ضوء ${text}` });
   return { manifest: {
     collection: { id: collectionId, slug, count: 5, title: localized('Light'), description: localized('Quiet light') },
     wallpapers: Array.from({ length: 5 }, (_, index) => ({ id: `${slug}-${index + 1}`, slug: `${slug}-${index + 1}`,

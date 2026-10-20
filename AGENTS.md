@@ -22,15 +22,15 @@ Use the project [release-collection skill](.agents/skills/release-collection/SKI
 
 ### Repository layout and checks
 
-Frontend source and catalog tools live in `frontend/`; Rust API and migrations live in `backend/`. Use root `Makefile` for checks. Read `docs/adr/0004-rust-monorepo.md`, `docs/api.md` and `docs/deployment.md` for backend or deployment changes. PostgreSQL 18 is external in production. Firebase is limited to optional Analytics. Preserve public routes and five locales.
+Frontend source and catalog tools live in `frontend/`; Rust API and migrations live in `backend/`. Use root `Makefile` for checks. Read `docs/adr/0004-rust-monorepo.md`, `docs/api.md` and `docs/deployment.md` for backend or deployment changes. PostgreSQL 18 is external in production. Firebase is limited to optional Analytics. Preserve public routes and six locales.
 
 ### Visual contract
 
-Read [DESIGN.md](DESIGN.md) before changing a visual surface. The site is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. The supplied pixel portfolio reference guides color and atmosphere. Want Keep guides filled surfaces, Want Brief guides depth and transitions, and Flutter Grades guides compact type. Preserve the existing logo, catalog imagery, public routes and five locales.
+Read [DESIGN.md](DESIGN.md) before changing a visual surface. The site is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. The supplied pixel portfolio reference guides color and atmosphere. Want Keep guides filled surfaces, Want Brief guides depth and transitions, and Flutter Grades guides compact type. Preserve the existing logo, catalog imagery, public routes and six locales.
 
 - Use exact tokens: background #141414, text #E8E8E8, card #1C1C1C, secondary #252525, accent #303030, media ground #101010, muted text #ADADAD, primary #5B4FFF, primary hover #6357FF, primary active #5549EB, readable links #E8E8E8, input #858585 and error #FF738D.
 - Group content with fills, spacing and type. Do not add decorative borders, divider lines or inset hairlines. Outline variants use fills. Controls keep their fills during focus and use a 2 px logo-color outline with a dark backing. Inputs, textareas and the wallpaper viewer retain dark fills with a 2 px #5B4FFF focus outline, offset by 3 px. Forced colors keep system focus.
-- Use locally served Onest Variable for headings and Manrope Variable for body and controls. Use system monospace for small indices and metadata. Keep Chinese fallbacks; Japanese uses locally served Noto Sans JP. Hero is 32–50 px, page title 28–40 px, section title 22–30 px. Body and inputs are at least 16 px; secondary labels at least 14 px.
+- Use locally served Onest Variable for headings and Manrope Variable for body and controls. Use system monospace for small indices and metadata. Keep Chinese fallbacks; Japanese uses locally served Noto Sans JP. Arabic uses locally served Noto Sans Arabic and document RTL direction. Hero is 32–50 px, page title 28–40 px, section title 22–30 px. Body and inputs are at least 16 px; secondary labels at least 14 px.
 - Reuse Tailwind v4 tokens and installed Radix-based shadcn sources. Fields have 12 px corners, media and panels 24 px, prominent surfaces 32 px and CTA buttons capsule corners. Keep accessible labels and 44 px targets.
 - Compose long text as readable sections up to 65ch. Keep legal/supporting text in the same page composition and preserve legal wording. Contact rows retain their current destinations. Comments remain a compact guest/self feed with existing actions.
 - Wallpaper pages use two columns from 1024 px (60% image, 40% controls, 32 px gap). A constant viewer frame contains landscape and portrait images without cropping, with a blurred artwork backdrop filling unused space; height is clamp(420px, 60svh, 640px). Below 1024 px, viewer/navigation/controls stack with clamp(320px, 58svh, 520px) frame height. Arrows stay beneath the frame. Format, download, compact ratings, description/license/tags occupy the control panel. Comments precede long stories. Long stories, legal and support copy use up to three columns, minimum 18rem and 32 px gaps. Preserve 16 px body text and 44 px targets.
@@ -48,3 +48,7 @@ Read [DESIGN.md](DESIGN.md) before changing a visual surface. The site is a gall
 ### Listing visibility
 
 Show/Hide controls affect discovery on the next request. Archive remains separate. Preserve direct hidden pages, social actions, downloads, sitemap coverage and indexing. Build snapshots retain all nonarchived records; the Rust runtime projects HTML and hydration data together.
+
+### Arabic direction
+
+Arabic uses `ar` and Modern Standard Arabic. Public documents set `lang="ar" dir="rtl"`; existing locales remain LTR. Use logical alignment and spacing for controls, and isolate email, URLs and technical values as LTR. The Arabic language mark is the neutral letter ع. Mirror directional navigation icons, never artwork or the physical 3D scene. Next moves left in RTL: ArrowLeft and a rightward swipe open the next wallpaper. Carousel scrolling remains finite. Administration stays Russian; Arabic translation fields have their own language, direction and font.

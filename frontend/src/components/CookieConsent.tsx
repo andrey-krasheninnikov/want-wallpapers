@@ -65,7 +65,7 @@ export default function CookieConsent({ locale, analyticsAvailable }: { locale: 
         const target = returnFocus.current?.isConnected ? returnFocus.current : document.querySelector<HTMLElement>('[data-cookie-settings]');
         target?.focus();
       }}>
-        <DialogHeader className="pr-8 text-left"><DialogTitle>{ui.cookieSettings}</DialogTitle><DialogDescription>{text.settings}</DialogDescription></DialogHeader>
+        <DialogHeader className="pe-8 text-start"><DialogTitle>{ui.cookieSettings}</DialogTitle><DialogDescription>{text.settings}</DialogDescription></DialogHeader>
         <FieldSet aria-label={ui.cookieSettings} className="gap-5 py-2">
           <FieldGroup className="gap-5">
             <Field orientation="horizontal" data-disabled className="gap-4"><FieldContent className="gap-2"><FieldLabel htmlFor="essential-storage">{text.necessary}</FieldLabel><FieldDescription className="leading-relaxed">{text.necessaryHint}</FieldDescription></FieldContent><Switch id="essential-storage" checked disabled className="mt-1 shrink-0" aria-label={text.necessary} /></Field>
