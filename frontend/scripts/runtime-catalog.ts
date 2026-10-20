@@ -6,6 +6,7 @@ import { copy, localPath } from '../src/data/copy';
 import { buildGalleryData } from '../src/lib/build-gallery-data';
 import { newestWallpapers } from '../src/lib/catalog-order';
 import DeviceScene from '../src/components/DeviceScene';
+import { CatalogSearchEmptyState } from '../src/components/CatalogSearch';
 import { MosaicCard } from '../src/components/HomeMosaic';
 import { CoverMedia } from '../src/components/CollectionCover';
 import { WallpaperNavigationLink } from '../src/components/WallpaperNavigation';
@@ -26,6 +27,7 @@ const localized = Object.fromEntries(await Promise.all(locales.map(async locale 
     }
   }
   return [locale, { gallery: data, dataUrl: url, sceneHtml, mosaicHtml, coverHtml, previousHtml, nextHtml,
+    emptySearchHtml: renderToString(createElement(CatalogSearchEmptyState, { locale })),
     resultsLabel: copy[locale].results, wallpapersLabel: copy[locale].wallpapers, collectionsLabel: copy[locale].collections.toLocaleLowerCase(locale),
     numbers: Array.from({ length: wallpapers.length + 1 }, (_, index) => index.toLocaleString(locale)) }];
 })));

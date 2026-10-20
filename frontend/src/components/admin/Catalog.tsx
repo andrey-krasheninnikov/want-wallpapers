@@ -24,9 +24,9 @@ export default function Catalog({ session }: { session: AdminSession }) {
   async function setListing(record: RecordItem<Collection | Wallpaper>) {
     setBusy(true); setError(''); setNotice('');
     try {
-      await adminApi(session, `/catalog/${kind}/${encodeURIComponent(record.item.id)}/listing`, 'PATCH', { version: record.version, listed: !record.listed });
-      setNotice(record.listed ? 'Скрыто из списков. Прямая страница остаётся доступной.' : 'Показано в списках.');
-      await load();
+      const saved = await adminApi<{ version: number; listed: boolean }>(session, `/catalog/${kind}/${encodeURIComponent(record.item.id)}/listing`, 'PATCH', { version: record.version, listed: !record.listed });
+      setData(current => current && { ...current, [kind]: current[kind].map(item => item.item.id === record.item.id ? { ...item, ...saved } : item) });
+      setNotice(saved.listed ? 'Показано в списках.' : 'Скрыто из списков. Прямая страница остаётся доступной.');
     } catch (error) { setError(errorText(error)); } finally { setBusy(false); }
   }
   async function archive() {

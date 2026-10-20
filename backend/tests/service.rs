@@ -2081,7 +2081,7 @@ async fn listing_visibility_preserves_direct_social_snapshot_and_individual_stat
 #[sqlx::test(migrations = "./migrations")]
 async fn listing_html_is_fresh_and_database_failure_does_not_serve_built_lists(pool: PgPool) {
     let seed: Value = serde_json::from_str(include_str!("../data/catalog.json")).unwrap();
-    let localized = json!({"gallery":{"locale":"en","wallpapers":[],"stories":{}},"dataUrl":"/gallery-data/en/test.json","sceneHtml":{},"mosaicHtml":{},"coverHtml":{},"previousHtml":{},"nextHtml":{},"resultsLabel":"results","wallpapersLabel":"wallpapers","collectionsLabel":"collections","numbers":[]});
+    let localized = json!({"gallery":{"locale":"en","wallpapers":[],"stories":{}},"dataUrl":"/gallery-data/en/test.json","sceneHtml":{},"mosaicHtml":{},"coverHtml":{},"previousHtml":{},"nextHtml":{},"emptySearchHtml":"<p>No matches</p>","resultsLabel":"results","wallpapersLabel":"wallpapers","collectionsLabel":"collections","numbers":[]});
     let build = serde_json::from_value(json!({"schema":1,"collections":seed["collections"],"wallpapers":seed["wallpapers"],"order":[],"locales":{"en":localized}})).unwrap();
     let directory = std::env::temp_dir().join(format!("wallpapers-listing-{}", Uuid::new_v4()));
     std::fs::create_dir(&directory).unwrap();
@@ -2091,6 +2091,26 @@ async fn listing_html_is_fresh_and_database_failure_does_not_serve_built_lists(p
     state.runtime_catalog = Some(Arc::new(build));
     state.csp_hashes = Arc::new(HashMap::from([("/".into(), vec![])]));
     let app = router(state);
+    for alias in [
+        "/%69ndex.html",
+        "//index.html",
+        "/./index.html",
+        "/gallery-data/en/test%2Ejson",
+        "/gallery-data//en/test.json",
+    ] {
+        let response = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(alias)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{alias}");
+        assert_eq!(response.headers()["cache-control"], "no-store");
+    }
     let response = app
         .clone()
         .oneshot(

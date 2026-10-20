@@ -65,7 +65,17 @@ for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) test('fresh discovery and 
   expect(errors).toEqual([]);
 });
 test('empty discovery remains usable and direct pages remain indexable', async ({ page, request }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error' && /hydration|Minified React error|didn't match/i.test(message.text())) errors.push(message.text()); });
   await database`UPDATE wallpapers SET listed=false`;
+  const search = await request.get('/search/');
+  expect(await search.text()).toContain('No matches yet. Try another word or filter.');
+  await page.goto('/search/');
+  await expect(page.getByText('No matches yet. Try another word or filter.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reset filters' })).toBeVisible();
+  expect(await page.locator('.gallery-grid').count()).toBe(0);
+  expect(errors).toEqual([]);
   await page.goto('/');
   await expect(page.locator('[data-collection-carousel] article')).toHaveCount(6);
   expect(await page.locator('[data-scene-wallpaper], .home-mosaic').count()).toBe(0);
@@ -93,9 +103,16 @@ test('administration confirms listing writes and preserves state on version erro
   await page.getByRole('button', { name: 'Войти', exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/$/);
   const row = page.locator('li').filter({ hasText: '0001-contours-of-silence' });
+  await expect(row).toBeVisible();
+  await page.route('**/api/v1/admin/catalog', route => route.fulfill({ status: 503, json: { error: { code: 'unavailable' } } }));
   await row.getByRole('button', { name: 'Скрыть', exact: false }).click();
   await expect(row).toContainText('Скрыто');
   await expect(page.getByRole('status')).toContainText('Прямая страница остаётся доступной');
+  await row.getByRole('button', { name: 'Показать', exact: false }).click();
+  await expect(row.getByRole('button', { name: 'Скрыть', exact: false })).toBeEnabled();
+  await row.getByRole('button', { name: 'Скрыть', exact: false }).click();
+  await expect(row).toContainText('Скрыто');
+  await page.unroute('**/api/v1/admin/catalog');
   await page.route('**/api/v1/admin/catalog/collections/*/listing', route => route.fulfill({ status: 409, json: { error: { code: 'conflict' } } }));
   await row.getByRole('button', { name: 'Показать', exact: false }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'Запись уже изменена' })).toContainText('Обновите список');

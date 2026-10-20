@@ -33,6 +33,7 @@ pub struct LocalizedBuild {
     previous_html: HashMap<String, String>,
     next_html: HashMap<String, String>,
     results_label: String,
+    empty_search_html: String,
     wallpapers_label: String,
     collections_label: String,
     numbers: Vec<String>,
@@ -281,6 +282,9 @@ impl BuildCatalog {
                 element.set_attribute("props", &escape(&serde_json::to_string(&encode_object(&props))?))?;
                 Ok(())
             }),
+            element!("astro-island[component-url*='CatalogSearch'] .gallery-grid", |element| {
+                if items.is_empty() { element.replace(&localized.empty_search_html, ContentType::Html); } Ok(())
+            }),
             element!(".home-mosaic", |element| {
                 let cards = items.iter().take(6).enumerate().map(|(index, item)| {
                     let id = item["id"].as_str().ok_or("Missing mosaic identity")?;
@@ -480,6 +484,17 @@ pub async fn serve(State(state): State<AppState>, mut request: Request, next: Ne
     let Some(build) = state.runtime_catalog.as_ref() else {
         return next.run(request).await;
     };
+    // Static aliases must not bypass projection through ServeDir's path decoding.
+    if !crate::security::is_api_path(&path)
+        && (path.contains('%')
+            || path.contains("//")
+            || path.split('/').any(|part| part == "." || part == ".."))
+    {
+        return uncached(
+            ApiError(StatusCode::BAD_REQUEST, "invalid-input").into_response(),
+            request.method() == Method::HEAD,
+        );
+    }
     let gallery = build.locales.values().find(|value| value.data_url == path);
     let (_, route) = localized_route(&path);
     let page = state.csp_hashes.contains_key(&path)
@@ -590,7 +605,7 @@ mod tests {
         let wallpapers: Vec<Wallpaper> =
             serde_json::from_value(seed["wallpapers"].clone()).unwrap();
         let items: Vec<_> = wallpapers.iter().map(|item| json!({"id":item.id,"href":format!("/wallpapers/{}/",item.slug),"title":item.title["en"],"desktop":{"src":"/previews/test.webp","width":1,"height":1}})).collect();
-        let localized = json!({"gallery":{"locale":"en","wallpapers":items,"stories":{}},"dataUrl":"/gallery-data/en/test.json","sceneHtml":{},"mosaicHtml":{},"coverHtml":{},"previousHtml":{},"nextHtml":{},"resultsLabel":"results","wallpapersLabel":"wallpapers","collectionsLabel":"collections","numbers":(0..=wallpapers.len()).map(|number| number.to_string()).collect::<Vec<_>>()});
+        let localized = json!({"gallery":{"locale":"en","wallpapers":items,"stories":{}},"dataUrl":"/gallery-data/en/test.json","sceneHtml":{},"mosaicHtml":{},"coverHtml":{},"previousHtml":{},"nextHtml":{},"emptySearchHtml":"<p>No matches</p>","resultsLabel":"results","wallpapersLabel":"wallpapers","collectionsLabel":"collections","numbers":(0..=wallpapers.len()).map(|number| number.to_string()).collect::<Vec<_>>()});
         serde_json::from_value(json!({"schema":1,"collections":seed["collections"],"wallpapers":wallpapers,"order":wallpapers.iter().map(|item| &item.id).collect::<Vec<_>>(),"locales":{"en":localized}})).unwrap()
     }
     fn all(build: &BuildCatalog) -> ListingFlags {
