@@ -10,7 +10,7 @@ let bundle: string;
 const preferenceKey = 'want-cookie-preferences-v2';
 const locales = ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[];
 test.beforeAll(async () => {
-  const result = await Bun.build({ entrypoints: [resolve(import.meta.dir, 'advertising-fixture.tsx')], target: 'browser', minify: true, define: { 'import.meta.env': '{}' } });
+  const result = await Bun.build({ entrypoints: [resolve(import.meta.dir, 'advertising-fixture.tsx')], target: 'browser', minify: true, external: ['astro:transitions/client'], define: { 'import.meta.env': '{}' } });
   if (!result.success) throw new Error(result.logs.map(String).join('\n'));
   bundle = await result.outputs[0]!.text();
 });
@@ -59,7 +59,7 @@ for (const locale of locales) {
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
-      if (locale === 'ru') await page.screenshot({ path: testInfo.outputPath(`advertising-${width}.png`), fullPage: true });
+      if (locale === 'ru') await page.screenshot({ path: testInfo.outputPath(`advertising-${width}.png`) });
     }
     expect(await page.evaluate(() => window.advertisingFixture.calls)).toEqual(['yandex:left', 'yandex:right']);
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -150,15 +150,15 @@ test('private pages exclude advertising even when an integration is supplied', a
   expect(lookups).toEqual([]);
 });
 
-test('normal pages have no placements, provider requests or test entrypoints', async ({ page }) => {
+test('home and private pages have no placements, provider requests or test entrypoints', async ({ page }) => {
   await country(page, 'RU'); await page.setViewportSize({ width: 1920, height: 900 });
   const requests: string[] = []; page.on('request', (request) => requests.push(request.url()));
-  for (const locale of locales) for (const path of ['/', '/search/', '/wallpapers/contours-of-silence-1/']) {
+  for (const locale of locales) for (const path of ['/']) {
     const response = await page.goto(localPath(locale, path));
     const csp = response!.headers()['content-security-policy'];
     expect(csp).toContain("script-src 'self'");
     expect(csp).not.toMatch(/unsafe-eval|yastatic|yandex|adsterra/);
-    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
     await expect(page.locator('.wallpaper-advertisement')).toHaveCount(0);
     expect(await page.evaluate(() => typeof window.advertisingFixture)).toBe('undefined');
   }

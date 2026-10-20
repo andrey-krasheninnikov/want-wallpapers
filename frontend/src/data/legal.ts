@@ -20,7 +20,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: 'Essential storage keeps the site secure. You can change analytics and advertising preferences independently without losing browsing, downloads or interactive features.', sections: [
       { heading: 'Security storage', paragraphs: ['reCAPTCHA can set the _GRECAPTCHA cookie when you use a protected action. This security check is independent of optional analytics. Google’s Privacy Policy and Terms of Service apply; links appear next to the protected forms.'] },
-      { heading: 'Essential storage', paragraphs: ['Local storage keeps your cookie choice. Session storage keeps a known country code separately from feature availability. If you rate, comment or send feedback, an HttpOnly session cookie identifies your anonymous visitor session for up to one year. These features need this storage.'] },
+      { heading: 'Essential storage', paragraphs: ['Local storage keeps your cookie choice and, after you change it, your background animation preference. The animation preference stays in your browser and is not sent to the server. Session storage keeps a known country code separately from feature availability. If you rate, comment or send feedback, an HttpOnly session cookie identifies your anonymous visitor session for up to one year. These features need this storage.'] },
       { heading: 'Optional analytics', paragraphs: ['Configured Firebase Analytics follows your analytics preference. For new visitors outside the EEA it defaults on; in the EEA or when the country is unknown it waits for your choice. Choose “Essential only” to refuse both optional purposes, or set them separately. Cookie settings in the footer let you withdraw permission and stop further collection.'] },
       { heading: 'Advertising', paragraphs: ['No advertising network is connected. Your advertising preference separately controls advertising storage, data use and personalization consent in Analytics. An old analytics-only choice never grants advertising permission. Before connecting an advertising provider, we will update the information and consent flow for that provider.'] },
     ] },
@@ -48,7 +48,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: 'Необходимое хранение защищает сайт. Аналитикой и рекламой можно управлять независимо; просмотр, скачивания и интерактивные функции доступны при любом выборе.', sections: [
       { heading: 'Хранение для защиты', paragraphs: ['reCAPTCHA может установить cookie _GRECAPTCHA при выполнении защищённого действия. Проверка защиты не зависит от необязательной аналитики. Применяются Политика конфиденциальности и Условия использования Google; ссылки размещены рядом с защищёнными формами.'] },
-      { heading: 'Необходимое хранение', paragraphs: ['Локальное хранилище запоминает выбор cookie. Хранилище сеанса сохраняет известный код страны отдельно от доступности функций. Для оценок, комментариев и формы HttpOnly cookie сохраняет анонимный сеанс посетителя сроком до одного года. Без этого хранения функции не работают.'] },
+      { heading: 'Необходимое хранение', paragraphs: ['Локальное хранилище запоминает выбор cookie и настройку фоновой анимации после её изменения. Настройка анимации остаётся в браузере и не передаётся на сервер. Хранилище сеанса сохраняет известный код страны отдельно от доступности функций. Для оценок, комментариев и формы HttpOnly cookie сохраняет анонимный сеанс посетителя сроком до одного года. Без этого хранения функции не работают.'] },
       { heading: 'Необязательная аналитика', paragraphs: ['Настроенная Firebase Analytics следует вашему выбору аналитики. Для новых посетителей вне ЕЭЗ она включена по умолчанию; в ЕЭЗ и при неизвестной стране ждёт вашего выбора. «Только необходимые» отключает обе необязательные категории, а настройки позволяют выбрать каждую отдельно. Через «Настройки cookie» внизу страницы можно отозвать разрешение и остановить дальнейший сбор.'] },
       { heading: 'Реклама', paragraphs: ['Рекламная сеть пока не подключена. Выбор рекламы отдельно управляет разрешениями на рекламное хранение, использование данных и персонализацию в Analytics. Прежний выбор только аналитики не разрешает рекламу. Перед подключением рекламного провайдера обновим сведения и согласие для этого провайдера.'] },
     ] },
@@ -76,7 +76,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: '必要存储用于保护网站。分析和广告可独立设置；无论选择如何，都能浏览、下载和使用互动功能。', sections: [
       { heading: '安全存储', paragraphs: ['执行受保护的操作时，reCAPTCHA 可能设置 _GRECAPTCHA Cookie。安全验证不依赖可选分析。适用 Google 的隐私政策和服务条款；受保护表单旁提供链接。'] },
-      { heading: '必要存储', paragraphs: ['本地存储保存 Cookie 选择；会话存储单独保存已知国家代码，不决定功能可用性。评分、评论或发送反馈时，HttpOnly Cookie 会保存匿名访客会话，期限最长为一年。相关功能需要这些存储。'] },
+      { heading: '必要存储', paragraphs: ['本地存储保存 Cookie 选择，以及你更改后的背景动画偏好。动画偏好仅保留在浏览器中，不会发送到服务器；会话存储单独保存已知国家代码，不决定功能可用性。评分、评论或发送反馈时，HttpOnly Cookie 会保存匿名访客会话，期限最长为一年。相关功能需要这些存储。'] },
       { heading: '可选分析', paragraphs: ['已配置的 Firebase Analytics 遵循你的分析设置。EEA 以外的新访客默认启用分析；在 EEA 或国家未知时等待明确选择。“仅必要项”拒绝两项可选用途，也可分别设置。你可随时通过页脚的 Cookie 设置撤回许可，停止后续收集。'] },
       { heading: '广告', paragraphs: ['目前未接入广告网络。广告设置单独控制 Analytics 中广告存储、数据使用和个性化的许可。旧版仅允许分析的选择不授予广告许可。接入广告服务商前，我们会更新相关信息及其同意流程。'] },
     ] },
@@ -104,7 +104,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: 'O armazenamento essencial protege o site. Análise e publicidade podem ser configuradas separadamente; navegação, downloads e funções interativas permanecem disponíveis com qualquer escolha.', sections: [
       { heading: 'Armazenamento de segurança', paragraphs: ['O reCAPTCHA pode definir o cookie _GRECAPTCHA ao executar uma ação protegida. A verificação não depende da análise opcional. Aplicam-se a Política de Privacidade e os Termos de Serviço do Google; os links aparecem junto dos formulários protegidos.'] },
-      { heading: 'Armazenamento essencial', paragraphs: ['O armazenamento local guarda sua escolha de cookies. O armazenamento de sessão guarda um código de país conhecido separadamente da disponibilidade das funções. Ao avaliar, comentar ou enviar contato, um cookie HttpOnly identifica a sessão de visitante anônimo por até um ano. Essas funções precisam desse armazenamento.'] },
+      { heading: 'Armazenamento essencial', paragraphs: ['O armazenamento local guarda sua escolha de cookies e sua preferência de animação de fundo após uma alteração. Essa preferência fica no navegador e não é enviada ao servidor. O armazenamento de sessão guarda um código de país conhecido separadamente da disponibilidade das funções. Ao avaliar, comentar ou enviar contato, um cookie HttpOnly identifica a sessão de visitante anônimo por até um ano. Essas funções precisam desse armazenamento.'] },
       { heading: 'Análise opcional', paragraphs: ['O Firebase Analytics configurado segue sua preferência de análise. Para novos visitantes fora do EEE, começa ativado; no EEE ou quando o país é desconhecido, aguarda sua escolha. “Só essenciais” recusa as duas finalidades opcionais, que também podem ser configuradas separadamente. As configurações de cookies no rodapé permitem retirar a autorização e interromper a coleta futura.'] },
       { heading: 'Publicidade', paragraphs: ['Nenhuma rede de anúncios está conectada. A preferência de publicidade controla separadamente permissões de armazenamento publicitário, uso de dados e personalização no Analytics. Uma escolha antiga de análise não concede permissão para publicidade. Antes de conectar um provedor, atualizaremos as informações e o consentimento correspondente.'] },
     ] },
@@ -117,6 +117,133 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
       { heading: 'Email', paragraphs: ['wallpapers@want.foundation'] },
       { heading: 'Responsável', owner: true, paragraphs: [] },
     ] },
+  },
+  ja: {
+    "privacy": {
+      "intro": "このページでは、閲覧、ダウンロード、メッセージの送信時に、データがどのように扱われるかを説明します。",
+      "sections": [
+        {
+          "heading": "不正利用の防止",
+          "paragraphs": [
+            "評価、コメント、報告、お問い合わせを送信すると、reCAPTCHA Enterprise がブラウザーの技術データを Google に送ります。サーバーも、リクエストを確認するために IP アドレス、ブラウザーのユーザーエージェント、保護用トークンを送信します。パスワード、認証アプリのコード、メッセージ本文は含まれません。管理者のログインにも同じ保護を使用します。閲覧とダウンロードでは reCAPTCHA を読み込みません。"
+          ]
+        },
+        {
+          "heading": "サイトの運営者",
+          "owner": true,
+          "paragraphs": [
+            "wallpapers@want.foundation"
+          ]
+        },
+        {
+          "heading": "利用するデータ",
+          "paragraphs": [
+            "Cloudflare と VPS のホスティング事業者は、IP アドレスを含むリクエストの技術データを受け取ります。オリジナル画像は画像ストレージにも保存されます。外部の IP 照会サービスは、アクセス分析と広告の初期設定を判断するために IP アドレスを受け取ります。国の判定結果は評価、コメント、お問い合わせの利用を制限せず、誤る場合があります。",
+            "評価やコメントを行うと、サイトは匿名の訪問者 ID を作成し、安全なセッション Cookie をブラウザーに保存します。操作はこの ID と関連づけられます。お問い合わせには件名、本文、任意のメールアドレスが含まれます。お名前は求めません。",
+            "アクセス分析と広告は独立して設定できます。欧州経済領域（EEA）以外の新しい訪問者には、初期設定で両方を有効にします。EEA 内または国が不明な場合、任意のデータ収集は明示的な選択を待ちます。保存済みの拒否は維持します。アクセス分析は設定されている場合だけ動作します。現在、広告ネットワークは接続されていません。"
+          ]
+        },
+        {
+          "heading": "保存と保持期間",
+          "paragraphs": [
+            "カタログ、評価、コメント、お問い合わせは、外部データベースサーバーの PostgreSQL に保存されます。サイトは VPS 上で動作し、Timeweb S3、外部の IP 照会、任意の Firebase Analytics を利用します。処理場所は各サービスによって異なります。",
+            "ご自身のコメントは同じブラウザーから削除できます。公開されたコメントと評価は、削除または削除依頼まで保持します。対応が終了したお問い合わせは一年後に削除します。データに関するご質問や削除依頼は wallpapers@want.foundation にお送りください。"
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "intro": "作品と他の利用者への配慮をもって Want Wallpapers をご利用ください。",
+      "sections": [
+        {
+          "heading": "サイトについて",
+          "paragraphs": [
+            "以下のライセンスに従い、個人利用のために壁紙の閲覧、検索、ダウンロードができます。提供状況や機能は変更される場合があります。中断のないアクセスを保証することはできません。"
+          ]
+        },
+        {
+          "heading": "コメントとお問い合わせ",
+          "paragraphs": [
+            "違法、攻撃的、誤解を招く内容、迷惑投稿、他人の個人情報を投稿しないでください。コメントの削除や不正利用の制限を行う場合があります。報告はコメントの確認を求めるもので、自動的に削除するものではありません。"
+          ]
+        },
+        {
+          "heading": "運営者",
+          "owner": true,
+          "paragraphs": [
+            "wallpapers@want.foundation"
+          ]
+        }
+      ]
+    },
+    "cookies": {
+      "intro": "必須ストレージはサイトの安全を保ちます。アクセス分析と広告は、閲覧、ダウンロード、対話機能を失うことなく、個別に設定できます。",
+      "sections": [
+        {
+          "heading": "セキュリティ用ストレージ",
+          "paragraphs": [
+            "保護された操作を行う際、reCAPTCHA が _GRECAPTCHA Cookie を設定する場合があります。このセキュリティ確認は任意のアクセス分析とは独立しています。Google のプライバシーポリシーと利用規約が適用されます。リンクは保護されたフォームの近くに表示されます。"
+          ]
+        },
+        {
+          "heading": "必須ストレージ",
+          "paragraphs": [
+            "ローカルストレージには Cookie の選択と、変更した場合の背景アニメーション設定を保存します。アニメーション設定はブラウザー内に留まり、サーバーには送信されません。セッションストレージは判明した国コードを、機能の利用可否とは別に保存します。評価、コメント、お問い合わせの送信時には、HttpOnly セッション Cookie が匿名の訪問者セッションを最長一年間識別します。これらの機能にはこの保存が必要です。"
+          ]
+        },
+        {
+          "heading": "任意のアクセス分析",
+          "paragraphs": [
+            "設定済みの Firebase Analytics はアクセス分析の選択に従います。EEA 以外の新しい訪問者には初期設定で有効にし、EEA 内または国が不明な場合は選択を待ちます。「必須のみ」で二つの任意の目的を拒否するか、個別に設定できます。ページ下部の Cookie 設定から許可を撤回し、それ以降の収集を停止できます。"
+          ]
+        },
+        {
+          "heading": "広告",
+          "paragraphs": [
+            "現在、広告ネットワークは接続されていません。広告の設定は、Analytics 内の広告ストレージ、データ利用、パーソナライズへの同意を独立して管理します。古いアクセス分析だけの選択は、広告の許可にはなりません。広告事業者を接続する前に、その事業者に関する情報と同意の手続きを更新します。"
+          ]
+        }
+      ]
+    },
+    "license": {
+      "intro": "ご自身の画面で使う壁紙は無料です。",
+      "sections": [
+        {
+          "heading": "許可される利用",
+          "paragraphs": [
+            "オリジナル画像をダウンロードし、個人のパソコン、スマートフォン、タブレットなど、ご自身の端末の壁紙として使用できます。ご自身の画面に合わせてトリミングすることもできます。"
+          ]
+        },
+        {
+          "heading": "許可されない利用",
+          "paragraphs": [
+            "画像の販売、再配布、壁紙パックとしてのアップロード、広告、商品、その他の商用利用、自分の作品だと偽ることは禁止されています。個人の非商用表示を超える用途については wallpapers@want.foundation にお問い合わせください。"
+          ]
+        },
+        {
+          "heading": "権利の帰属",
+          "paragraphs": [
+            "画像の権利は引き続き権利者に帰属します。このライセンスは限定的な利用を認めるもので、所有権を移転するものではありません。"
+          ]
+        }
+      ]
+    },
+    "contact": {
+      "intro": "ご質問、ライセンスのご相談、見落とした細部など、お気軽にご連絡ください。",
+      "sections": [
+        {
+          "heading": "メールアドレス",
+          "paragraphs": [
+            "wallpapers@want.foundation"
+          ]
+        },
+        {
+          "heading": "運営者",
+          "owner": true,
+          "paragraphs": []
+        }
+      ]
+    }
   },
 };
 

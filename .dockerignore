@@ -20,3 +20,5 @@ docs
 **/tests
 *-debug.log
 **/*.tsbuildinfo
+
+frontend/runtime-catalog.json

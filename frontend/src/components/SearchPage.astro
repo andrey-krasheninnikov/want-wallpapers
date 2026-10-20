@@ -1,5 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import { newestWallpapers } from '../lib/catalog-order';
+import { publicationDates } from '../data/catalog';
 import CatalogSearch from './CatalogSearch';
 import { categoryLabels, collections, wallpapers, type Locale } from '../data/catalog';
 import { copy } from '../data/copy';
@@ -7,7 +9,7 @@ import { wallpaperCard } from '../lib/view-models';
 type Props = { locale: Locale };
 const { locale } = Astro.props;
 const ui = copy[locale];
-const items = await Promise.all(wallpapers.map((item) => wallpaperCard(item, locale)));
+const items = await Promise.all(newestWallpapers(wallpapers, publicationDates).map((item) => wallpaperCard(item, locale)));
 const categories = Object.entries(categoryLabels).map(([value, labels]) => ({ value, title: labels[locale] }));
 const collectionOptions = collections.map((item) => ({ value: item.slug, title: item.title[locale] }));
 ---

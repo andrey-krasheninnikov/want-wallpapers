@@ -3,7 +3,8 @@ import type { Locale } from '../data/catalog';
 
 type SearchItem = { id: string; searchText: string; category: string; collection: string };
 export function filterWallpapers<T extends SearchItem>(items: T[], locale: Locale, filters: { q: string; category: string; collection: string }, index?: ReturnType<typeof createSearchIndex>): T[] {
-  const normalize = (value: string) => value.toLocaleLowerCase(locale).normalize('NFKD').replace(/\p{M}/gu, '').trim();
+  const normalize = (value: string) => locale === 'ja' ? value.toLocaleLowerCase(locale).normalize('NFKC').trim()
+    : value.toLocaleLowerCase(locale).normalize('NFKD').replace(/\p{M}/gu, '').trim();
   const phrase = filters.q.trim();
   const matches = searchIds(index, locale, phrase);
   return items.filter((item) =>

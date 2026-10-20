@@ -24,7 +24,7 @@ try {
         assert(!saved.archived);
         assert.deepStrictEqual(saved.data, collection, 'Initial UI collection differs from the build snapshot.');
       } else {
-        const inserted = await transaction<{ data: unknown }[]>`INSERT INTO collections(id,folder_number,slug,data) VALUES(${collection.id},${Number(collection.id.split('-')[0])},${collection.slug},${collection}::jsonb) RETURNING data`;
+        const inserted = await transaction<{ data: unknown }[]>`INSERT INTO collections(id,folder_number,slug,data,published_at) VALUES(${collection.id},${Number(collection.id.split('-')[0])},${collection.slug},${collection}::jsonb,COALESCE(initial_collection_publication(${collection.id}),transaction_timestamp())) RETURNING data`;
         assert.deepStrictEqual(inserted[0]?.data, collection);
       }
       for (const wallpaper of wallpapers) {
@@ -33,7 +33,7 @@ try {
           assert(!saved.archived);
           assert.deepStrictEqual(saved.data, wallpaper, 'Initial UI wallpaper differs from the build snapshot.');
         } else {
-          const inserted = await transaction<{ data: unknown }[]>`INSERT INTO wallpapers(id,collection_id,number,data) VALUES(${wallpaper.id},${wallpaper.collectionId},${wallpaper.number},${wallpaper}::jsonb) RETURNING data`;
+          const inserted = await transaction<{ data: unknown }[]>`INSERT INTO wallpapers(id,collection_id,number,data,published_at) VALUES(${wallpaper.id},${wallpaper.collectionId},${wallpaper.number},${wallpaper}::jsonb,COALESCE(initial_wallpaper_publication(${wallpaper.id}),transaction_timestamp())) RETURNING data`;
           assert.deepStrictEqual(inserted[0]?.data, wallpaper);
         }
       }

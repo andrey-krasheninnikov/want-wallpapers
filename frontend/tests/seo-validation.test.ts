@@ -1,12 +1,13 @@
 import { test, expect } from 'bun:test';
 import type { APIContext } from 'astro';
 import { GET } from '../src/pages/llms.txt';
-import { collections } from '../src/data/catalog';
-import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount } from '../scripts/seo-validation';
+import { collections, locales } from '../src/data/catalog';
+import { collectionStories, editorialCopy } from '../src/data/editorial';
+import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks } from '../scripts/seo-validation';
 
-const languages = ['en', 'ru', 'zh-CN', 'pt-BR'];
+const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja'];
 async function localizedPages(fallback = '') {
-  const paths = ['/', '/ru/', '/zh-cn/', '/pt-br/'];
+  const paths = ['/', '/ru/', '/zh-cn/', '/pt-br/', '/ja/'];
   const pages = await Promise.all(paths.map((path, index) => parsePage(`<!doctype html><html lang="${languages[index]}"><head><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}">${paths.map((target, index) => `<link rel="alternate" hreflang="${languages[index]}" href="${origin}${target}">`).join('')}<link rel="alternate" hreflang="x-default" href="${origin}/"></head><body><main id="main">Visible text</main><noscript>${index === 0 ? fallback : ''}</noscript><script>hidden content</script><a href="#main">Skip</a></body></html>`, path)));
   return new Map(pages.map((page) => [page.path, page]));
 }
@@ -48,13 +49,13 @@ test('conflicting and noncanonical alternates fail', async () => {
 });
 
 async function localizedErrorPages() {
-  const paths = ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/'];
+  const paths = ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/', '/ja/404/'];
   const pages = await Promise.all(paths.map((path, index) => parsePage(`<html lang="${languages[index]}"><head><meta name="robots" content="noindex"><link rel="canonical" href="${origin}${path}"><meta property="og:url" content="${origin}${path}"></head><body><main id="main">Page not found</main></body></html>`, path)));
   return new Map(pages.map((page) => [page.path, page]));
 }
 
 test('public navigation rejects localized error routes even when their HTML exists', async () => {
-  for (const path of ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/']) {
+  for (const path of ['/404/', '/ru/404/', '/zh-cn/404/', '/pt-br/404/', '/ja/404/']) {
     const pages = await localizedPages(`<a href="${path}?from=home#main">Missing page</a>`);
     for (const [path, page] of await localizedErrorPages()) pages.set(path, page);
     expect(() => validatePages(pages, new Set())).toThrow(/error page target/);
@@ -209,7 +210,7 @@ test('llms response preserves license restrictions before localized file lists',
   expect(text).toContain('Ownership:\n\nThe images remain');
   expect(text.indexOf('Please do not:')).toBeLessThan(text.indexOf('## en\n'));
   expect(text).not.toContain('## Usage license');
-  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) {
+  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) {
     expect(text).toContain(`](${origin}${prefix}/terms/)`);
     expect(text).toContain(`](${origin}${prefix}/license/)`);
     expect(text).toContain(`](${origin}${prefix}/collections/a-night-beneath-the-ice/)`);
@@ -217,7 +218,7 @@ test('llms response preserves license restrictions before localized file lists',
 });
 
 test('llms renders catalog Markdown and newlines as literal inline text', async () => {
-  const collection = collections[0]!;
+  const collection = collections.find(({ id }) => id === '0001-contours-of-silence')!;
   const title = collection.title.en;
   const description = collection.description.en;
   let response: Response;
@@ -254,4 +255,74 @@ test('llms build validation requires current public catalog links in their local
     text + `- [Private](${origin}/api/v1/catalog)\n`,
   ];
   for (const invalid of invalidFiles) expect(() => validateLlms(invalid, indexed)).toThrow();
+});
+
+
+test('content metrics use UTF-8 bytes and compare ratios before rounding', async () => {
+  const page = await parsePage('<html lang="zh-CN"><body><main>蓝色光线壁纸图</main></body></html>', '/zh-cn/');
+  page.bytes = 209;
+  const metrics = pageMetrics(page);
+  expect(metrics.textBytes).toBe(21);
+  expect(metrics.ratio).toBeCloseTo(21 / 209 * 100, 10);
+  expect(metrics.ratio).toBeGreaterThan(10);
+  expect(Math.round(metrics.ratio * 10) / 10).toBe(10);
+  expect(() => validateContentMetrics({ ...metrics, words: 200 })).not.toThrow();
+  expect(() => validateContentMetrics({ ...metrics, words: 200, ratio: 10 })).toThrow(/text\/HTML/);
+});
+
+test('content validation keeps the 200-word boundary and reports noindex pages', async () => {
+  const page = await parsePage('<html lang="en"><body><main>' + 'word '.repeat(200) + '</main></body></html>', '/');
+  const metrics = pageMetrics(page);
+  expect(metrics.words).toBe(200);
+  expect(() => validateContentMetrics(metrics)).not.toThrow();
+  expect(() => validateContentMetrics({ ...metrics, words: 199 })).toThrow(/200/);
+  page.path = '/search/';
+  page.robots = ['noindex, follow'];
+  page.text = 'Search';
+  const search = pageMetrics(page);
+  expect(search.indexable).toBe(false);
+  expect(search.words).toBe(1);
+  expect(search.ratio).toBeLessThan(10);
+  expect(() => validateContentMetrics(search)).not.toThrow();
+});
+
+test('localized story cards must be in main content, not metadata or hidden markup', async () => {
+  for (const locale of locales) {
+    const path = (locale === 'en' ? '' : '/' + locale) + '/collections/';
+    const title = editorialCopy[locale].title;
+    const paragraphs = collections.map(collection => collectionStories[collection.slug]![locale][0]!);
+    const content = [title, editorialCopy[locale].licenseText, ...collections.map(collection => collection.title[locale]), ...paragraphs].join(' ');
+    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
+    const page = await parsePage(`<html lang="${lang}"><body><main>${content}</main></body></html>`, path);
+    expect(() => validateLocalizedContent(page)).not.toThrow();
+    const missing = await parsePage(`<html lang="${lang}"><head><meta name="description" content="${content}"></head><body><nav>${content}</nav><main>English fallback<p hidden>${content}</p><script>${content}</script></main></body></html>`, path);
+    expect(missing.mainText).toBe('English fallback');
+    expect(() => validateLocalizedContent(missing)).toThrow(/localized main content/);
+  }
+});
+
+test('city search needs distinct contextual source pages, excluding navigation and self-links', async () => {
+  const first = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a><a href="/search/?q=city">City again</a></main></body></html>', '/collections/path-to-the-light/');
+  const navigation = await parsePage('<html lang="en"><body><nav><a href="/search/?q=city">City</a></nav><main>Gallery</main><footer><a href="/search/?q=city">City</a></footer></body></html>', '/collections/');
+  const search = await parsePage('<html lang="en"><head><meta name="robots" content="noindex, follow"></head><body><main><a href="#main">City</a></main></body></html>', '/search/?q=city');
+  const pages = new Map([first, navigation, search].map(page => [page.path, page]));
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  search.robots = [];
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  const hidden = await parsePage('<html lang="en"><body><main><p hidden><a href="/search/?q=city">City</a></p><p aria-hidden="true"><a href="/search/?q=city">City</a></p></main></body></html>', '/wallpapers/path-to-the-light-1/');
+  pages.set(hidden.path, hidden);
+  expect(() => validateCityLinks(pages)).toThrow(/two contextual/);
+  const second = await parsePage('<html lang="en"><body><main><a href="/search/?q=city">City</a></main></body></html>', '/wallpapers/path-to-the-light-1/');
+  pages.set(second.path, second);
+  expect(() => validateCityLinks(pages)).not.toThrow();
+});
+
+
+test('same-origin PNG download anchors retain download semantics', async () => {
+  const files = new Set(['downloads/picture.png']);
+  const pages = await localizedPages('<a href="/downloads/picture.png" download="picture.png">Download PNG</a>');
+  expect(pages.get('/')!.references).toContainEqual({ tag: 'a', url: '/downloads/picture.png', download: true });
+  expect(() => validatePages(pages, files)).not.toThrow();
+  const external = await localizedPages('<a href="https://example.com/picture.png" download>Download PNG</a>');
+  expect(() => validatePages(external, files)).toThrow(/PNG formatted as a page link/);
 });

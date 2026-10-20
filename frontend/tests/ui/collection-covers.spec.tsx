@@ -14,7 +14,7 @@ const bytes = await readFile(new URL('../fixtures/covers/valid.mp4', import.meta
 const poster = await sharp(await readFile(new URL('../../public/previews/contours-of-silence-1-desktop.webp', import.meta.url))).resize(640, 512, { fit: 'cover' }).webp().toBuffer();
 async function fixture(page: Page, locale: Locale, kind = 'card', fail = false) {
   await page.addInitScript(() => localStorage.setItem('want-cookie-preferences-v2', JSON.stringify({ analytics: false, advertising: false })));
-  const collection = collections[0]!;
+  const collection = collections.find(item => item.slug === 'contours-of-silence')!;
   const markup = kind === 'card'
     ? renderToStaticMarkup(<div className="gallery-grid"><CollectionCard item={{ href: '/collections/contours-of-silence/', title: collection.title[locale], description: collection.description[locale], countLabel: '15', image, video: videoUrl, locale }} headingLevel={2} /></div>)
     : renderToStaticMarkup(<figure className="relative" data-collection-cover><CoverMedia image={image} alt={collection.description[locale]} src={videoUrl} priority /><CoverControl locale={locale} /></figure>);
@@ -31,7 +31,7 @@ async function fixture(page: Page, locale: Locale, kind = 'card', fail = false) 
 }
 test.use({ reducedMotion: 'no-preference' });
 for (const locale of locales) {
-  test(`${locale}: cover cards and collection media preserve responsive layout and keyboard pause`, async ({ page }, testInfo) => {
+  test(`${locale}: cover cards and collection media require keyboard activation and preserve responsive layout`, async ({ page }, testInfo) => {
     const errors: string[] = []; page.on('pageerror', (error) => errors.push(error.message));
     const prefix = locale === 'en' ? '' : `/${locale}`;
     for (const path of ['/', '/collections/', '/collections/contours-of-silence/']) {
@@ -41,6 +41,9 @@ for (const locale of locales) {
       expect(await page.title()).toContain('Want Wallpapers');
       const cover = page.getByTestId('cover-fixture'), video = cover.locator('video');
       await cover.scrollIntoViewIfNeeded();
+      await expect(video).toBeHidden();
+      await expect(video).not.toHaveAttribute('src');
+      await cover.getByRole('button', { name: interfaceCopy[locale].playCover }).press('Enter');
       await expect(video).toBeVisible();
       await expect.poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime)).toBeGreaterThan(0);
       expect(await video.evaluate((element: HTMLVideoElement) => element.muted && element.loop && element.playsInline)).toBe(true);
@@ -69,7 +72,10 @@ test('offscreen and reduced-motion covers never request video, including prefere
   await expect(video).not.toHaveAttribute('src'); expect(requests).toHaveLength(0);
   await page.emulateMedia({ reducedMotion: 'reduce' }); await cover.scrollIntoViewIfNeeded();
   await expect(cover.locator('img')).toBeVisible(); await expect(video).not.toHaveAttribute('src'); expect(requests).toHaveLength(0);
-  await page.emulateMedia({ reducedMotion: 'no-preference' }); await expect(video).toBeVisible();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(video).not.toHaveAttribute('src'); expect(requests).toHaveLength(0);
+  await cover.getByRole('button', { name: interfaceCopy.en.playCover }).click();
+  await expect(video).toBeVisible();
   await page.emulateMedia({ reducedMotion: 'reduce' }); await expect(video).toBeHidden(); await expect(video).not.toHaveAttribute('src');
 });
 test('data-saving and unavailable video retain the static poster', async ({ page }) => {
@@ -82,6 +88,7 @@ test('video failure and unsupported playback retain the poster', async ({ page }
   const failure = page.waitForResponse((response) => response.url() === videoUrl && response.status() === 500);
   await fixture(page, 'en', 'card', true); await page.goto('/collections/');
   const cover = page.getByTestId('cover-fixture'); await cover.scrollIntoViewIfNeeded();
+  await cover.getByRole('button', { name: interfaceCopy.en.playCover }).click();
   await failure;
   await expect(cover.locator('video')).not.toHaveAttribute('src');
   await expect(cover.locator('[data-cover-control]')).toBeHidden(); await expect(cover.locator('video')).toBeHidden(); await expect(cover.locator('img')).toBeVisible();
@@ -95,4 +102,53 @@ test('without JavaScript the SSR poster remains and no video is requested', asyn
   const cover = page.getByTestId('cover-fixture'); await cover.scrollIntoViewIfNeeded();
   await expect(cover.locator('img')).toBeVisible(); await expect(cover.locator('video')).not.toHaveAttribute('src'); expect(requests).toHaveLength(0);
   await context.close();
+});
+
+test('leaving the viewport or hiding the page stops playback until another click', async ({ page }) => {
+  await fixture(page, 'en'); await page.goto('/collections/');
+  const cover = page.getByTestId('cover-fixture'), video = cover.locator('video');
+  await cover.scrollIntoViewIfNeeded();
+  await cover.getByRole('button', { name: interfaceCopy.en.playCover }).click();
+  await expect(video).toBeVisible();
+  await page.evaluate(() => scrollTo(0, 0));
+  await expect(video).toBeHidden();
+  await cover.scrollIntoViewIfNeeded();
+  await expect(cover.getByRole('button', { name: interfaceCopy.en.playCover })).toBeVisible();
+  expect(await video.evaluate((element: HTMLVideoElement) => element.paused)).toBe(true);
+  await cover.getByRole('button', { name: interfaceCopy.en.playCover }).click();
+  await expect(video).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(video).toBeHidden();
+  await page.evaluate(() => {
+    Reflect.deleteProperty(document, 'hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(cover.getByRole('button', { name: interfaceCopy.en.playCover })).toBeVisible();
+  expect(await video.evaluate((element: HTMLVideoElement) => element.paused)).toBe(true);
+  await cover.getByRole('button', { name: interfaceCopy.en.playCover }).click();
+  await expect(video).toBeVisible();
+});
+
+test('a rejected play request waits for another explicit press', async ({ page }) => {
+  await page.addInitScript(() => {
+    HTMLMediaElement.prototype.play = function () {
+      this.dataset.playAttempts = String(Number(this.dataset.playAttempts || 0) + 1);
+      return Promise.reject(new DOMException('Playback denied', 'NotAllowedError'));
+    };
+  });
+  await fixture(page, 'en'); await page.goto('/collections/');
+  const cover = page.getByTestId('cover-fixture'), video = cover.locator('video');
+  await cover.scrollIntoViewIfNeeded();
+  const play = cover.getByRole('button', { name: interfaceCopy.en.playCover });
+  await play.click();
+  await expect(video).toHaveAttribute('data-play-attempts', '1');
+  await expect(video).toBeHidden();
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await expect(video).toHaveAttribute('data-play-attempts', '1');
+  await play.click();
+  await expect(video).toHaveAttribute('data-play-attempts', '2');
+  await expect(cover.locator('img')).toBeVisible();
 });

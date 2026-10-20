@@ -6,10 +6,58 @@ export const editorialCopy = {
   ru: { title: 'Истории коллекций', story: 'История коллекции', works: 'Сцены коллекции', sizes: 'Размеры оригинальных PNG в пикселях', files: 'У каждой работы есть горизонтальный PNG для компьютера и вертикальный PNG для телефона. Ниже указаны размеры исходных файлов; в галерее используются уменьшенные изображения WebP.', license: 'Условия использования', licenseText: 'Разрешены личное некоммерческое использование обоев и обрезка для собственных устройств. Продажа, распространение наборов, публикация изображений как своих работ и коммерческое использование не разрешены.', topics: 'Похожие темы' },
   'zh-cn': { title: '系列中的故事', story: '这个系列的故事', works: '系列里的画面', sizes: '原始 PNG 的像素尺寸', files: '每张壁纸分别提供适合电脑的横向 PNG 和适合手机的纵向 PNG。下方列出的是这两个原始文件的像素尺寸；画廊展示的是尺寸较小的 WebP 预览图。', license: '使用许可', licenseText: '许可允许在自己的设备上将图片用作个人、非商业壁纸，也允许为自己的屏幕裁切图片。不允许出售图片、重新分发壁纸包、声称图片是自己的作品，或将图片用于商业项目。', topics: '相关主题' },
   'pt-br': { title: 'Histórias das coleções', story: 'A história da coleção', works: 'Cenas desta coleção', sizes: 'Dimensões dos PNG originais em pixels', files: 'Cada imagem tem um PNG horizontal para computador e um PNG vertical para celular. As dimensões abaixo são dos arquivos originais; a galeria mostra prévias menores em WebP.', license: 'Licença de uso', licenseText: 'É permitido usar as imagens como papéis de parede pessoais, sem finalidade comercial, e recortá-las para seus aparelhos. Não é permitido vender, redistribuir pacotes, apresentar as imagens como trabalho próprio ou usá-las comercialmente.', topics: 'Temas relacionados' },
+  ja: {
+    "title": "コレクションの物語",
+    "story": "このコレクションの物語",
+    "works": "コレクションの風景",
+    "sizes": "オリジナル PNG のサイズ（ピクセル）",
+    "files": "それぞれのデザインに、パソコン向けの横長 PNG とスマートフォン向けの縦長 PNG があります。以下はオリジナルファイルのピクセル寸法です。ギャラリーには容量の小さい WebP プレビューを使用しています。",
+    "license": "利用ライセンス",
+    "licenseText": "個人の非商用の壁紙としての利用と、ご自身の端末に合わせたトリミングが可能です。販売、壁紙パックの再配布、自作と偽ること、商用利用は認められていません。",
+    "topics": "関連するテーマ"
+  },
 } satisfies Record<Locale, { title: string; story: string; works: string; sizes: string; files: string; license: string; licenseText: string; topics: string }>;
 
 export const collectionStories: Record<string, Record<Locale, string[]>> = {
+  'neon-tide': {
+    ja: [
+      "舟が係留を解く前に、潮は一番低い黒い島へ届いている。桃色の水が段状の岸をのぼり、尖った岩板の下にたまる。沖の島々は、紫の空の同じ一角へ傾いている。一片の四角い光が舳先を流れ過ぎる。岩の割れ目から伸びた茎に引っかかり、その先では小さな黄色い花が開き始めている。",
+      "舟の下でマンタがゆっくりと向きを変える。青い模様が背を横切り、ひれの影へ消えていく。尾が流れの中に珊瑚色の線を描く。舟はその線をたどり、四方を黒い縁に囲まれた狭い入り江へ入る。一本の木が水辺に立っている。根の向こうでは細い流れが縁を越え、その下の景色が見えるより先に、一粒ずつの滴へほどけていく。",
+      "戻ってきた波が舟を横から持ち上げる。巻いた波の内側で、黄色い四角が桃色や青へ変わり、その上に暗い表面が折り重なる。舟は隙間をすり抜け、枝分かれする川へ入る。曲がるたび、滑らかな岸が小さな四角い島々に変わっていく。その上で月から殻の一片が落ちる。音もなく着水し、また一つ、光る岸辺を残す。",
+      "洞窟の入口には玄武岩の階段が浮かんでいる。舟は一番下の段の陰で止まり、割れた幹に寄り添う。その裂け目には、色のついた年輪がまだ光っている。琥珀色の光が木の中心から外へ動く。割れ目を伝って樹皮へ届くと、黄緑色の四角がいくつか離れていく。濡れた綱にとまり、滴が通る間に消える。乾いた床から明るい四角い水滴が昇る。はるか頭上の湖には岩の影が映っている。最初の滴が水面へ届く。天井に波紋が広がり、映った舟が二つの黒い峰の間で揺れる。"
+    ],
+    "en": [
+      "The tide reaches the lowest black island before the boat leaves its mooring. Pink water climbs the stepped shore and gathers beneath a pointed slab. Farther out, the islands lean towards the same patch of violet sky. A loose square of light drifts past the bow. It catches on a stem growing from a crack in the rock, where small yellow flowers have begun to open.",
+      "Below the boat, a manta turns slowly. Blue marks cross its back and disappear under the shadow of a wing. Its tail draws a coral line through the current. The boat follows that line into a narrow bay contained by four raised black edges. A tree stands above the water. Beyond its roots, a thin stream falls over the edge and breaks into separate drops before anything can be seen beneath it.",
+      "The returning wave lifts the boat sideways. Inside its curl, yellow squares pass through pink and blue, while the dark outer skin folds over them. The boat slips through an opening and enters a branching river. At each bend, smooth banks give way to small square islands. Above them, a piece falls from the moon. It lands without a sound, leaving another illuminated shore behind.",
+      "Basalt steps hang over the mouth of a cavern. The boat settles beneath the lowest one, beside a split trunk with colored rings still glowing in its cracks. Amber light moves out from the center of the wood. A crack carries it to the bark, where a few lime squares break loose. They settle on the wet rope and fade as the drops pass. Water rises from the dry floor in bright square drops. High overhead, a lake holds the reflections of the rocks. The first drop reaches its surface. A ripple crosses the ceiling, and the reflected boat shifts between two dark peaks."
+    ],
+    "ru": [
+      "Прилив добирается до нижнего чёрного острова, пока лодка ещё стоит у причала. Розовая вода поднимается по ступенчатому берегу и собирается под заострённой плитой. Дальше острова наклонены к одному участку фиолетового неба. Мимо носа лодки проплывает светящийся квадрат. Он цепляется за стебель, выросший из трещины в скале. На стебле раскрываются маленькие жёлтые цветы, и на воду сыплются отдельные искры. Лодка отходит от камня вместе с течением.",
+      "Под лодкой медленно поворачивает манта. Синие отметины пересекают её спину и исчезают в тени плавника. Хвост прочерчивает коралловую линию в воде. Лодка следует вдоль неё в узкую бухту с четырьмя приподнятыми чёрными краями. Над водой стоит дерево. За его корнями тонкий ручей переливается через край и распадается на капли. Под ними пока ничего не видно. Ближайший каменный выступ заслоняет закат, и на борту остаётся только розовый отсвет.",
+      "Обратная волна приподнимает лодку боком. Внутри завитка жёлтые квадраты переходят в розовые и синие, а снаружи над ними складывается тёмная поверхность. Лодка проскальзывает в просвет и попадает в разветвлённую реку. За каждым поворотом плавные берега уступают место маленьким квадратным островам. Над ними от луны отделяется кусок оболочки. Он падает без звука. Вокруг нового острова медленно разгорается светлая кромка, и течение огибает её с двух сторон.",
+      "Над входом в пещеру висят базальтовые ступени. Лодка останавливается под нижней, возле расколотого ствола, в трещинах которого ещё светятся цветные кольца. Янтарный свет движется от середины древесины к коре. Несколько лаймовых квадратов отделяются от края трещины и оседают на мокрой верёвке. Пока мимо поднимаются капли, квадраты медленно гаснут. От сухого пола поднимаются яркие квадратные капли. Высоко наверху озеро удерживает отражения скал. Первая капля касается поверхности. По потолку расходится рябь, и отражённая лодка сдвигается между двумя тёмными вершинами. На короткое время её нос растягивается вдоль водяной складки, затем снова становится узким."
+    ],
+    "zh-cn": [
+      "潮水抵达最低的黑色岛屿时，小船还系在岸边。粉色海水沿阶梯状海岸上升，在一块尖石下面汇集。远处的岛屿朝同一片紫色天空倾斜。一粒方形光点从船头漂过，挂在岩缝里长出的细茎上。茎端的黄色小花开始开放，几粒亮点落回水中。船身随着水流离开岸边，尖石的影子从船底滑过。",
+      "一只蝠鲼在船下缓缓转身。蓝色光斑横过它的背部，又消失在翼下的阴影里。长尾在水流中拖出珊瑚色细线。小船沿着细线驶入一处狭窄海湾，四边是抬起的黑色边缘。一棵树立在水面上方。根须后面，一缕细流越过边缘，散成水滴。下面仍是一片黑暗。近处的石头挡住落日，船舷上只剩一道粉色反光。",
+      "回潮从侧面托起小船。卷起的浪腹里，黄色方块经过粉色和蓝色区域，外侧的深色表面向内折叠。船从空隙滑过，进入分岔的河流。每过一个弯道，平滑河岸就多出几座方形小岛。头顶的月壳落下一块，没有声音。新岛周围慢慢亮起一圈光，水流分到两边，又在后方重新相接。",
+      "玄武岩台阶悬在洞口上方。船停在最低一级下面，旁边是裂开的树干，裂缝里还亮着彩色年轮。琥珀色光从木头中心向外移动，沿一道裂缝抵达树皮。几粒青柠色方块从裂口脱落，停在湿绳上。水滴从旁边升过，方块的亮光慢慢减弱，绳上留下几小片暗影。方形水滴从干燥地面向上升起。高处的湖面收着岩石的倒影。第一滴水碰到湖面，波纹沿着洞顶展开。倒映的小船在两座黑色尖峰之间移动，船头随着水纹拉长，随后又恢复原来的窄形。"
+    ],
+    "pt-br": [
+      "A maré alcança a ilha negra mais baixa antes de o barco deixar a amarra. A água rosa sobe pela margem em degraus e se acumula sob uma laje pontuda. Mais longe, as ilhas se inclinam para o mesmo trecho do céu violeta. Um quadrado de luz passa pela proa. Ele prende num caule que cresce de uma rachadura na pedra, onde pequenas flores amarelas começam a abrir.",
+      "Uma manta vira devagar sob o barco. Marcas azuis atravessam suas costas e desaparecem na sombra de uma asa. A cauda desenha uma linha coral na corrente. O barco segue essa linha até uma baía estreita, contida por quatro bordas negras levantadas. Uma árvore fica acima da água. Atrás das raízes, um fio de água transborda e se divide em gotas antes que seja possível enxergar qualquer coisa abaixo.",
+      "A onda que retorna levanta o barco de lado. Dentro da curva, quadrados amarelos atravessam o rosa e o azul, enquanto a superfície externa escura se dobra sobre eles. O barco passa por uma abertura e entra num rio ramificado. A cada curva, as margens lisas dão lugar a pequenas ilhas quadradas. Acima delas, um pedaço se desprende da lua. Ele cai sem ruído e deixa outra margem iluminada na água.",
+      "Degraus de basalto pairam sobre a entrada de uma caverna. O barco para sob o mais baixo, junto de um tronco partido com anéis coloridos ainda acesos nas rachaduras. A luz de âmbar avança do centro da madeira até a casca. Alguns quadrados verde-lima se soltam da rachadura e pousam na corda molhada. Eles vão apagando enquanto as gotas passam. Gotas quadradas sobem do chão seco. No alto, um lago guarda os reflexos das pedras. A primeira gota alcança a superfície. Uma ondulação atravessa o teto, e o barco refletido se desloca entre dois picos escuros."
+    ]
+  },
   'contours-of-silence': {
+    ja: [
+      "歩く人が尾根に着くころ、砂はもう冷えている。縁に沿って紫の線が走り、顔を少し動かすだけで見えなくなるほど細い。眼下では砂丘が幾重にも重なり、斜面と空の境目が分からなくなっている。袖から砂粒を払い、坂を下り始める。窪地には片側が滑らかにすり減った石のアーチがある。開口部を満たす青い光が、足元の地面へこぼれている。倒れた石のそばで足を止めると、割れ目に小さな葉が一枚挟まっている。",
+      "アーチの向こうには、さまざまな角度でガラス板が浮かんでいる。通り過ぎると一番近い板が震え、細い反射が他の板の上を横切る。青いリボンが板の間を縫い、折り返して闇へ消える。その先では浅い鉢から紫の煙が立ちのぼる。風が吹くたびにガラスへ伸び、途切れた端だけが空中に残る。歩く人が鉢の冷たい縁に触れる。指に水滴がいくつか付く。",
+      "岩棚の下のどこかで水が動いている。音をたどると、低い波が泡も立てずに崩れ、岸に青い縫い目を残している。水たまりの上では、多面体の石がゆっくり回っている。次の波紋が届くまで、水に映る姿は静止したままだ。道は、奥から光が漏れる岩の裂け目を横切る。それをまたぐと、古い木の下に湿った土が現れる。",
+      "枝の間から、長い紫の帯になって光が落ちる。根の間では葉が光に向かって開き、その先は水たまりから来た水で濡れている。歩く人は幹にもたれて座り、靴に入った砂を出す。梢の隙間から、砂丘の上に青い三日月が見える。また一つ波が岸へすべり、緩んだガラスの端が石のアーチに一度だけ触れて音を立てる。"
+    ],
     en: [
       'The sand has cooled by the time the walker reaches the ridge. A violet line runs along its edge, thin enough to disappear when he turns his head. Below, the dunes overlap until their slopes can no longer be separated from the sky. He shakes a grain of sand from his sleeve and starts down. There is a stone arch in the hollow, worn smooth on one side. Blue light fills the opening and spills onto the ground at his feet. He pauses beside a fallen block, where a small leaf has caught in a crack.',
       'Beyond the arch, sheets of glass hang at different angles. The nearest one trembles as he passes, carrying a narrow reflection across the others. A ribbon of blue winds between them and folds back into the dark. Farther away, violet smoke rises from a shallow basin. Each gust stretches it towards the glass, then leaves a ragged edge suspended in the air. The walker touches the cold rim of the basin. A few drops cling to his fingers.',
@@ -36,6 +84,12 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
     ],
   },
   'woven-spectrum': {
+    ja: [
+      "赤い床の上に、ほどけた橙色の糸が垂れている。表面に触れる前に曲がる。まだ他の糸へ届いていない流れが、横へ引いている。少し遅れて青が続く。二本が近づくところで縁が細くなり、間に桃色の線が現れる。橙色の糸が向きを変えても、その線は動き続ける。はるか下の床は、隅へ向かうほど暗い。壁はどこにも見えない。ただ、さらに長い色の糸が一本ずつ闇から現れ、流れに加わっていく。",
+      "最初の大きな波が空間を横切る。外縁が薄く伸び、その下の赤が透けて見える。縁の後ろでひだが寄り集まり、隣の帯へ小さな影を落とす。青い糸が隙間を抜け、下へ曲がり、反対側に戻ってくる。暖色の束を引き寄せ、開いた輪を作る。ひととき、中心には何もない。動く縁だけが、触れ合うことなくすれ違う。",
+      "片方の端が輪に引っかかり、内側へ巻き始める。ひと巻きごとに小さくなる。橙が赤紫を横切り、その下へ隠れ、折り目に反射の細い帯を残す。渦巻きが傾く。細くなった先から色が扇状に広がり、骨組みがそれぞれ異なる速さで開く。青い一本が他より長く伸び、皆が集まる点へ向かって巻き戻る。",
+      "扇は外側から内側へ折りたたまれる。最後の糸が中心を通り、深紅の床の上に輪を結ぶ。リボンがねじれる場所で速度を落としながら、光が輪を巡る。その下で影が長く伸び、やがて二つの淡い弧へ分かれる。闇からまた一本、橙色の糸が現れ、その脇の空いた場所へ進んでいく。"
+    ],
     en: [
       'A loose orange thread hangs above the red floor. It bends before touching the surface, pulled sideways by a current that has not yet reached the other strands. Blue follows a little later. Where the two pass close together, their edges narrow and a pink line appears between them. The line keeps moving after the orange strand has turned. Far below, the floor darkens towards the corners. There are no walls in sight, only further lengths of colour coming out of the black, one at a time, and joining the current.',
       'The first broad wave rolls across the space. Its outer edge stretches thin enough to show the red beneath it. Behind that edge, folds bunch together and cast small shadows onto the next band. A blue strand slips through a gap, curves down and returns on the other side. It pulls the warm colours into an open loop. For a moment the centre stays empty, while the moving edges slide past each other without touching.',
@@ -62,6 +116,12 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
     ],
   },
   'path-to-the-light': {
+    ja: [
+      "窓に明かりが灯り始めるころ、旅人は街を出る。橋からは水辺へ下る屋根の連なりと、遠い塔の上に浮かぶ金色の輪が見える。輪の下端は塔の向こうへ隠れている。石の欄干に片手を添える。昼間のぬくもりがまだ残っている。橋の中央では、浅い水たまりに輪の全体が映る。靴がその反射を崩す。波紋が収まるころには、最後の窓を過ぎ、川の上を走る道へ出ている。",
+      "道は紫の山々の間をのぼる。かかとの下で小石が転がり、見えない場所へ落ちる。曲がり角で立ち止まり、肩の紐を緩める。眼下には湖がある。両側の斜面と、その間の光の輪をそのまま映すほど平らだ。岸辺の葦が自分の影をなぞる。旅人は山が木々に隠れるまで湖岸を歩く。水面の上の細い隙間から、輪はまだ見えている。",
+      "森へ小川が流れ込んでいる。浅い淀みに金色が集まり、水とともに石を越える。旅人は川に沿って歩き、道に倒れた枝をくぐる。露出した根の窪みに水がたまっている。ひざをついて飲み、樹皮に濡れた手形を残す。その先で川は崩れた石壁の下へ曲がる。道は階段となってのぼっていく。",
+      "下の段には石の間から草が生えている。高くなると草はなくなり、雨に削られた淡い小さな跡が残る。旅人は何もない戸口を過ぎ、最後の段に鞄を置く。タイルの欠片が散らばる床の上、遺跡の中に輪が立っている。背後の戸口から風が入る。鞄の角を少し持ち上げ、乾いた草の葉を明るい石の上へ運んでいく。"
+    ],
     en: [
       'The traveller leaves the city as lamps begin to appear in its windows. From the bridge, he can see roofs stepping down to the water and a golden ring hanging above the far towers. Its lower edge vanishes behind them. He keeps one hand on the stone parapet, which still holds warmth from the day. At the middle of the bridge, a shallow puddle catches the ring in full. His boot breaks the reflection. By the time the ripples settle, he has passed the last window and reached the road above the river.',
       'The road climbs between purple mountains. Loose stones roll under his heels and drop out of sight. At a bend he stops to loosen the strap across his shoulder. Below lies a lake, flat enough to hold both slopes and the circle of light between them. Near the bank, a reed brushes its own reflection. The traveller follows the shore until trees hide the mountains. The ring is still visible through a narrow opening above the water.',
@@ -88,6 +148,12 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
     ],
   },
   'where-stars-graze': {
+    ja: [
+      "風車の羽根が回り始める前から、牛は道端の花へ鼻を寄せている。尾根の上には青い彗星が浮かぶ。その光が、角の間の長い毛と草の濡れた先を照らす。谷では霧が屋根を覆い、道の最初の曲がり角まで達している。風車の戸口には誰かが置いたバケツがある。牛が鼻で押すと、取っ手が縁に当たって鳴る。また花へ戻り、首を横に振って茎を一本引き抜く。",
+      "二人の旅人が、折りたたんだ毛布を二人で持って谷からのぼってくる。道が狭まるところで止まり、牛が草をかみ終えるのを待つ。牛は二人より先に岩だらけの道へ踏み出す。ひづめのたびに少しずつ土がこぼれ、霧へ落ちていく。道の脇ではヤシの葉が風に擦れ合う。風車は斜面の陰へ消えるが、あと数歩だけ羽根は見えている。",
+      "道は山の湖へ出る。水際まで花が生え、浅瀬に花びらが浮かんでいる。牛は頭を下げて水を飲む。鼻先が彗星の反射を波紋に変え、映った星々の間に青が広がる。一人の旅人が乾いた岩に毛布を置く。もう一人は靴から石を振り落とす。湖の向こうでは雲が尾根の前を通り、上の縁だけが明るく残る。",
+      "牛が頭を上げると、顎の下の赤茶色の毛に滴がぶら下がる。牛は湖岸を歩き、風車がまた見える場所へ向かう。谷の雲の上で羽根がゆっくり回っている。旅人たちは毛布を拾って後を追う。牛の毛についた花が低い枝に触れて、そこに残る。山道の上には、彗星の淡い尾が伸びている。"
+    ],
     en: [
       'Before the windmill blades begin to turn, the cow has already pushed her nose into the flowers beside the path. A blue comet hangs above the ridge. Its light picks out the long hairs between her horns and the wet tips of the grass. Down in the valley, mist covers the roofs and reaches the first bend in the road. Someone has left a bucket by the mill door. The cow nudges it, hears the handle strike the rim and moves back to the flowers, pulling a stem free with a sideways turn of her head.',
       'Two travellers come up from the valley carrying a folded blanket between them. They stop where the road narrows and wait for the cow to finish chewing. She steps ahead of them onto the rocky path. Each hoof dislodges a little soil, which falls into the mist. Beside the path, palm leaves rub together in the wind. The mill disappears behind the slope, though the blades remain visible for a few more steps.',
@@ -114,6 +180,12 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
     ],
   },
   'a-night-beneath-the-ice': {
+    ja: [
+      "男は青い灯りの下で止まり、コートの雪を払った。古い壁の脇に光の輪が浮かび、石畳の間の水に映っていた。内ポケットから封筒を取り出し、湿った紙越しに宛先を確かめた。路地の下、坂の両側にはモミの木が立っていた。その先の曲がり角を琥珀色の灯りが示していた。封筒をしまい、雪がまだ石を隠していない壁際を選んで歩いた。背後では、灯りの金具から同じ浅い割れ目へ水が滴り続けていた。",
+      "曲がり角から川へ向かって、青い輪が道に沿って並んでいた。輪の下縁には雪が積もっていた。男は手すりにつかまって下り、手袋の触れた場所に黒い跡を残した。モミの幹の間から、金色の帯となった河岸が見えた。屋根の上にドームがそびえ、その反射は氷の欠片に分かれていた。最後の段に着くと、流氷が船着き場を通り過ぎるのを待った。",
+      "対岸では、さらに大きな青い輪が厚い雲の中に浮かんでいた。その下を霧が動き、向こうの堤防を覆っていた。男は川沿いを歩き、歩道と同じ高さにある明るい窓まで来た。窓枠をたたいた。手が伸び、封筒を受け取れるだけ窓が開いた。暖かい空気が袖に届き、それからガラスはまた閉じた。男は手袋で外側の結露を少し拭った。",
+      "帰り道、路地は濡れていた。暗い店の窓に、男のコートがモミの木や河岸の金色の線と重なって映った。ガラスの中では、肩の上に青い円が浮かんでいた。石の間を細い水が流れるよう、男は脇へよけた。川で二つの流氷が触れ合い、向きを変えて離れていった。それぞれがドームの反射の一部を、下流へ運んでいった。"
+    ],
     en: [
       'The man stopped under the blue lantern to brush snow from his coat. A ring of light hung beside the old wall, catching in the water between the paving stones. He took an envelope from his inside pocket and checked the address through its damp paper. Below the lane, firs stood on both sides of the descent. Amber lamps marked a turn farther down. He put the envelope away and walked towards them, keeping close to the wall where the snow had not yet covered the stones. Behind him, water dripped from the lantern bracket into the same shallow crack.',
       'At the turn, blue rings followed the path towards the river. Snow had collected along their lower edges. The man held the rail as he went down, leaving dark marks where his glove brushed it. Between the fir trunks, the waterfront appeared in strips of gold. A dome rose above the roofs, with its reflection broken by pieces of ice. He reached the last step and waited for a floe to drift past the landing.',
@@ -157,7 +229,7 @@ export const supportCopy = {
       'Cookie settings are available in the footer. Declining optional analytics and advertising does not prevent browsing or downloading. Ratings, comments and feedback are separate interactive actions and use the essential storage and security checks described in the privacy and cookie pages. Public comments are visible to other visitors; feedback is sent through the feedback form. Before using an image outside personal wallpaper use, read the license and contact us with the intended use.'],
     feedback: ['Describe a detail we can check',
       'Start with a short topic that identifies your suggestion or problem. In the message, include the affected page link or wallpaper title and explain the result you expected. If you mean a particular file, say whether it is the desktop or mobile PNG. The collection name helps when several designs have similar colours or shapes. Suggestions for future collections can describe a theme, colour palette or screen orientation.',
-      'For a technical problem, include your browser, device type and the steps that reproduce it. Say whether the issue occurs during browsing, after clicking download, while viewing the original or when setting the saved image as a wallpaper. You can try the other orientation and compare the dimensions shown on the page with your screen. Those checks help separate a crop setting from a file or page problem. If submitting the form fails, the message stays in the form so you can retry.',
+      'For a technical problem, include your browser, device type and the steps that reproduce it. Say whether the issue occurs during browsing, after clicking download or when setting the saved image as a wallpaper. You can try the other orientation and compare the dimensions shown on the page with your screen. Those checks help separate a crop setting from a file or page problem. If submitting the form fails, the message stays in the form so you can retry.',
       'The email field is optional. Use the direct email link if you prefer to write from your mail application or if JavaScript is unavailable. A feedback message is different from a public comment on a wallpaper. Questions about permissions for another use should describe the intended project and refer to the current license. Downloads remain available regardless of optional cookie preferences.'],
   },
   ru: {
@@ -175,7 +247,7 @@ export const supportCopy = {
       'Настройки cookie находятся внизу страницы. Отказ от необязательной аналитики и рекламы не мешает просмотру и скачиванию. Оценки, комментарии и обращения — отдельные интерактивные действия. Они используют необходимое хранение и проверки защиты, описанные на страницах конфиденциальности и cookie. Публичные комментарии видны другим посетителям, а обращение отправляется через форму обратной связи. Перед применением изображения за пределами личных обоев прочитайте лицензию и напишите нам о предполагаемом использовании.'],
     feedback: ['Опишите деталь, которую можно проверить',
       'Начните с короткой темы, которая обозначает предложение или проблему. В сообщении укажите ссылку на страницу или название обоев и объясните ожидаемый результат. Если речь о файле, уточните вариант PNG: для компьютера или телефона. Название коллекции помогает различить работы с похожими цветами и формами. В предложении будущей коллекции можно описать сюжет, палитру или нужную ориентацию экрана.',
-      'Для технической проблемы укажите браузер, тип устройства и шаги воспроизведения. Уточните, когда она возникает: при просмотре страницы, после нажатия на скачивание, при раскрытии оригинала или при установке сохранённой картинки. Можно сравнить другой вариант и сверить размеры со своим экраном. Так проще отличить настройку кадрирования от проблемы файла или страницы. Если отправить форму не получилось, текст остаётся в полях, чтобы можно было повторить попытку.',
+      'Для технической проблемы укажите браузер, тип устройства и шаги воспроизведения. Уточните, когда она возникает: при просмотре страницы, после нажатия на скачивание или при установке сохранённой картинки. Можно сравнить другой вариант и сверить размеры со своим экраном. Так проще отличить настройку кадрирования от проблемы файла или страницы. Если отправить форму не получилось, текст остаётся в полях, чтобы можно было повторить попытку.',
       'Поле электронной почты необязательное. Прямая ссылка email подходит для письма из почтового приложения и для случая, когда JavaScript недоступен. Сообщение обратной связи отличается от публичного комментария под обоями. Вопрос о разрешении на другое использование лучше сопроводить описанием проекта и ссылкой на действующую лицензию. Выбор необязательных cookie не влияет на доступность скачивания.'],
   },
   'zh-cn': {
@@ -193,7 +265,7 @@ export const supportCopy = {
       'Cookie 设置入口位于页面底部。拒绝可选分析与广告不会阻止浏览或下载。评分、评论与反馈是独立的互动操作，会使用隐私与 Cookie 页面说明的必要存储和安全检查。公开评论可以被其他访客看到，反馈消息通过反馈表单发送。准备在个人壁纸之外使用图片时，请先阅读许可，并联系我们说明预期用途。'],
     feedback: ['描述可以核查的细节',
       '先用简短主题说明建议或问题，再在消息中附上相关页面链接或壁纸标题，并解释原本期望的结果。如果涉及具体文件，请说明是电脑版还是手机版 PNG。对于颜色或构图相近的作品，系列名称可以帮助分辨。建议新系列时，可以描述希望看到的主题、配色或屏幕方向。',
-      '技术问题请包含浏览器、设备类型与复现步骤，并说明发生阶段：浏览页面、点击下载、展开原图，或将保存的图片设置为壁纸。你可以试试另一个方向，并比较页面标注的尺寸与设备屏幕。这样有助于区分裁切设置与文件或页面问题。如果提交表单失败，已输入的消息会留在表单中，方便再次尝试。',
+      '技术问题请包含浏览器、设备类型与复现步骤，并说明发生阶段：浏览页面、点击下载，或将保存的图片设置为壁纸。你可以试试另一个方向，并比较页面标注的尺寸与设备屏幕。这样有助于区分裁切设置与文件或页面问题。如果提交表单失败，已输入的消息会留在表单中，方便再次尝试。',
       '电子邮件字段可以留空。如果更喜欢从邮件应用发信，或浏览器无法使用 JavaScript，可以使用直接邮件链接。反馈消息与壁纸下方的公开评论是不同的操作。询问其他用途的许可时，请说明项目，并参考现行许可。无论怎样选择可选 Cookie，壁纸下载都保持可用。请不要在反馈中填写密码、付款信息或访问令牌；描述公开页面和操作步骤就足够了。'],
   },
   'pt-br': {
@@ -211,7 +283,82 @@ export const supportCopy = {
       'As configurações de cookies ficam no rodapé. Recusar análise e publicidade opcionais não impede navegar ou baixar imagens. Avaliações, comentários e feedback são ações interativas separadas, com armazenamento essencial e verificações de segurança descritos nas páginas de privacidade e cookies. Comentários públicos ficam visíveis a outros visitantes; mensagens de feedback são enviadas pelo formulário. Antes de usar uma imagem além de um papel de parede pessoal, leia a licença e escreva sobre o uso pretendido.'],
     feedback: ['Descreva um detalhe que possamos conferir',
       'Comece com um assunto curto que identifique a sugestão ou problema. Na mensagem, inclua o link da página ou o título da imagem e explique o resultado esperado. Para um arquivo específico, diga se é o PNG para computador ou celular. O nome da coleção ajuda a distinguir desenhos com cores ou formas parecidas. Sugestões de futuras coleções podem descrever um tema, uma paleta ou uma orientação de tela.',
-      'Para um problema técnico, inclua navegador, tipo de aparelho e os passos para reproduzir. Diga se ocorre ao navegar, clicar no download, expandir o original ou definir a imagem salva como papel de parede. Experimente a outra orientação e compare as dimensões indicadas com a tela. Isso ajuda a separar uma configuração de recorte de um problema de arquivo ou página. Se o envio falhar, a mensagem permanece no formulário para uma nova tentativa.',
+      'Para um problema técnico, inclua navegador, tipo de aparelho e os passos para reproduzir. Diga se ocorre ao navegar, clicar no download ou definir a imagem salva como papel de parede. Experimente a outra orientação e compare as dimensões indicadas com a tela. Isso ajuda a separar uma configuração de recorte de um problema de arquivo ou página. Se o envio falhar, a mensagem permanece no formulário para uma nova tentativa.',
       'O campo de email é opcional. Use o link direto se preferir escrever pelo seu aplicativo de correio ou se JavaScript estiver indisponível. Uma mensagem de feedback difere de um comentário público na página de uma imagem. Perguntas sobre permissões para outro uso devem descrever o projeto e consultar a licença atual. Downloads continuam disponíveis com qualquer escolha de cookies opcionais.'],
   },
+  ja: {
+    "cookies": [
+      "保存した設定を確認する",
+      "ページ下部の「Cookie 設定」から、アクセス分析と広告をそれぞれ確認できます。希望する項目を保存した後、設定画面をもう一度開くと現在の選択が表示されます。ブラウザーの保存データを消去すると、この設定も削除されます。任意の目的を拒否しても、サイトの閲覧や二つの PNG ダウンロードボタンは引き続き利用できます。JavaScript が無効な場合も通常のリンクからダウンロードでき、任意のスクリプトは実行されません。"
+    ],
+    "contact": [
+      "お問い合わせに添えていただきたい内容",
+      "壁紙についてのご質問には、作品名またはページのリンクを添えてください。コレクション全体についての場合は、コレクションのリンクをお知らせください。横長のパソコン用ファイルか、縦長のスマートフォン用ファイルかもご記入ください。同じデザインの二つのバージョンを区別し、構図のどの部分についてのご質問かを確認しやすくなります。メール、お問い合わせフォーム、このページに記載された公開の連絡先をご利用いただけます。",
+      "ダウンロードや表示の問題については、期待した結果と実際に起きたことをお知らせください。ページのアドレス、端末の種類、ブラウザー、PNG を保存する前か後かを添えてください。選択した向きと、元のファイル名が保たれているかもご確認ください。OS の設定で壁紙が切れて見える場合は、表示方法を変更するだけで解決することがあります。ダウンロードできない場合や、別のファイルが保存される場合とは異なる問題です。こうした情報があると状況を再現しやすくなります。",
+      "利用許諾についてのお問い合わせには、用途、画像を掲載する場所、商用プロジェクトに含まれるかをご説明ください。公開ライセンスでは、個人の壁紙としての使用と、ご自身の端末用のトリミングが認められています。壁紙パックの販売や再配布は認められていません。問い合わせを送るだけではライセンスの範囲は広がりません。他の用途を計画する前に、ライセンス全文をご確認ください。保存されたデータやコメントについては、該当ページと希望する対応をお知らせください。"
+    ],
+    "license": [
+      "個人利用に合うファイルを選ぶ",
+      "横長と縦長のファイルは、それぞれ異なる画面の比率に合わせて用意しています。どちらを選んでもライセンスは変わりません。オリジナルの PNG を保管し、モニター、スマートフォン、タブレットに合わせた別の切り抜きを作成できます。ギャラリーの小さいプレビューは作品を選ぶための画像で、ダウンロードボタンはオリジナルを保存します。トリミングする前に、記載された寸法と画面のサイズを比べてください。",
+      "公開されている壁紙ページへのリンクを共有すると、相手も作品と利用条件を確認できます。画像ファイルをコレクションとして再配布することは別の行為で、個人利用のライセンスでは認められていません。商品、広告、その他の商用プロジェクトに画像が必要な場合は、お問い合わせページから用途をご説明ください。ダウンロードボタン、ファイル形式、ファイルを取得できることは、上記の条件を超える利用許諾を意味しません。"
+    ],
+    "terms": [
+      "公開ギャラリーの使い方",
+      "コレクションのページでは、共通する視覚的なテーマの作品をまとめています。壁紙を一枚開くと、二つの向きとオリジナル PNG の寸法を比べられます。検索では、検索語とカテゴリーやコレクションの絞り込みを組み合わせることができます。見つからない場合は条件を一つ解除するか、コレクション全体に戻ってみてください。ダウンロードは公開ライセンスに従って利用できるオリジナル画像を保存します。ギャラリーのプレビューは閲覧向けの小さいファイルです。",
+      "Cookie 設定はページ下部にあります。任意のアクセス分析と広告を拒否しても、閲覧やダウンロードは利用できます。評価、コメント、お問い合わせは別の操作で、プライバシーと Cookie のページに記載された必須ストレージとセキュリティ確認を使用します。公開コメントは他の訪問者にも表示され、お問い合わせは専用フォームから送信されます。個人の壁紙以外の目的で利用する前に、ライセンスを確認し、予定する用途についてお問い合わせください。"
+    ],
+    "feedback": [
+      "確認できる具体的な内容をお知らせください",
+      "提案や問題が分かる短い件名から始めてください。本文には、該当ページのリンクや壁紙の名前と、期待した結果をご記入ください。特定のファイルについての場合は、パソコン用かスマートフォン用の PNG かをお知らせください。似た色や形の作品がある場合、コレクション名も区別に役立ちます。新しいコレクションのご提案には、テーマ、配色、画面の向きなどをお書きいただけます。",
+      "技術的な問題には、ブラウザー、端末の種類、再現する手順を添えてください。閲覧中、ダウンロードを押した後、保存した画像を壁紙に設定したときのどの段階で起きるかをお知らせください。別の向きのファイルを試し、ページに記載された寸法と画面を比べると、トリミング設定の問題か、ファイルやページの問題かを切り分けやすくなります。送信に失敗しても入力したメッセージはフォームに残るので、再度お試しいただけます。",
+      "メールアドレスは任意です。メールアプリから連絡したい場合や JavaScript が利用できない場合は、直接メールを送るリンクをご利用ください。お問い合わせのメッセージは、壁紙ページの公開コメントとは異なります。別の用途の許可を求める場合は、プロジェクトを説明し、現行のライセンスを参照してください。任意の Cookie をどのように設定しても、ダウンロードは引き続き利用できます。"
+    ]
+  },
 } satisfies Record<Locale, Record<'contact' | 'license' | 'terms' | 'feedback' | 'cookies', string[]>>;
+
+export const supportTopics = {
+  en: {
+    contact: ['Wallpaper or collection', 'Download or display problem', 'Licensing and data requests'],
+    license: ['File and screen format', 'Sharing and other uses'],
+    terms: ['Finding and downloading', 'Privacy and participation'],
+    feedback: ['Suggestion and context', 'Reproducing a problem', 'Email and other requests'],
+  },
+  ru: {
+    contact: ['Обои и коллекции', 'Скачивание и отображение', 'Лицензия и данные'],
+    license: ['Файл и пропорции экрана', 'Ссылки и другое использование'],
+    terms: ['Поиск и скачивание', 'Приватность и участие'],
+    feedback: ['Предложение и контекст', 'Воспроизведение проблемы', 'Email и другие вопросы'],
+  },
+  'zh-cn': {
+    contact: ['壁纸与系列', '下载与显示问题', '许可与数据请求'],
+    license: ['文件与屏幕比例', '分享链接与其他用途'],
+    terms: ['查找与下载', '隐私与互动'],
+    feedback: ['建议与背景', '复现问题', '邮件与其他请求'],
+  },
+  'pt-br': {
+    contact: ['Papel de parede e coleção', 'Download e exibição', 'Licença e solicitações sobre dados'],
+    license: ['Arquivo e formato da tela', 'Compartilhamento e outros usos'],
+    terms: ['Busca e download', 'Privacidade e participação'],
+    feedback: ['Sugestão e contexto', 'Como reproduzir o problema', 'Email e outras solicitações'],
+  },
+  ja: {
+    "contact": [
+      "壁紙とコレクション",
+      "ダウンロードと表示の問題",
+      "ライセンスとデータに関するお問い合わせ"
+    ],
+    "license": [
+      "ファイルと画面の比率",
+      "リンクの共有とその他の用途"
+    ],
+    "terms": [
+      "検索とダウンロード",
+      "プライバシーと参加"
+    ],
+    "feedback": [
+      "提案と背景情報",
+      "問題の再現手順",
+      "メールとその他のご相談"
+    ]
+  },
+} satisfies Record<Locale, Record<Exclude<keyof typeof supportCopy.en, 'cookies'>, string[]>>;

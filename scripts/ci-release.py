@@ -18,6 +18,8 @@ import urllib.parse
 REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 IMAGE = 'ghcr.io/' + REPOSITORY
 WORKFLOW = '.github/workflows/checks.yml'
+RELEASE_WORKFLOW = '.github/workflows/deploy-production.yml'
+PROFILES = {'full': [], 'fast': ['Full UI']}
 ANNOTATION = 'foundation.want.wallpapers.release.v1'
 PLATFORMS = {'linux/amd64', 'linux/arm64'}
 
@@ -129,12 +131,43 @@ def timestamp(value):
     return parsed
 
 
+def profile():
+    value = os.environ.get('VERIFICATION_PROFILE', 'full')
+    require(value in PROFILES, 'Unknown verification profile')
+    return value
+
+
 def plan():
     event = os.environ.get('GITHUB_EVENT_NAME')
     ref = os.environ.get('GITHUB_REF', '')
-    checks = event == 'pull_request' or (event in ['push', 'workflow_dispatch'] and ref.startswith('refs/heads/'))
-    full = checks and event != 'pull_request' and ref == 'refs/heads/main' and os.environ.get('GITHUB_REPOSITORY') == REPOSITORY
-    return {'checks': checks, 'full': full}
+    tag = os.environ.get('RELEASE_TAG', '')
+    manual = event == 'workflow_dispatch'
+    canonical = os.environ.get('GITHUB_REPOSITORY') == REPOSITORY
+    publish = (manual and canonical and bool(tag) and ref == 'refs/tags/' + tag
+               and os.environ.get('GITHUB_WORKFLOW_REF') == REPOSITORY + '/' + RELEASE_WORKFLOW + '@' + ref)
+    checks = manual and (ref.startswith('refs/heads/') or publish)
+    full = checks and canonical and (ref == 'refs/heads/main' or publish)
+    return {'checks': checks, 'full': full, 'publish': publish, 'ui': full and profile() == 'full'}
+
+
+def release_request(tag, expected_digest=None):
+    require(plan()['publish'] and os.environ.get('RELEASE_TAG') == tag, 'Expected a manual release on its tag ref')
+    if expected_digest:
+        digest(expected_digest)
+    sha = tag_commit(tag)
+    require(sha == source_sha(os.environ['GITHUB_SHA']), 'Workflow source differs from release tag')
+    return {'sourceSha': sha, 'verificationProfile': profile(), 'skippedChecks': PROFILES[profile()]}
+
+
+def record_profile(record):
+    require(type(record['schemaVersion']) is int, 'Invalid release record version')
+    if record['schemaVersion'] == 1:
+        require('verificationProfile' not in record and 'skippedChecks' not in record, 'Legacy evidence cannot select a profile')
+        return 'full'
+    require(record['schemaVersion'] == 2 and record['verificationProfile'] in PROFILES, 'Unknown verification profile')
+    selected = record['verificationProfile']
+    require(record['skippedChecks'] == PROFILES[selected], 'Verification profile and skipped checks differ')
+    return selected
 
 
 def tag_commit(tag):
@@ -175,9 +208,11 @@ def release_record(reference, sha, run, expected_digest=None):
     index = registry(IMAGE + '@' + index_digest)
     require(index['schemaVersion'] == 2 and index['mediaType'] == 'application/vnd.oci.image.index.v1+json', 'Expected an OCI image index')
     record = document(index['annotations'][ANNOTATION])
-    require(record['schemaVersion'] == 1 and record['repository'] == REPOSITORY and record['sourceSha'] == sha, 'Release record source mismatch')
+    require(record['repository'] == REPOSITORY and record['sourceSha'] == sha, 'Release record source mismatch')
+    record_profile(record)
+    workflow = WORKFLOW if record['schemaVersion'] == 1 else RELEASE_WORKFLOW
     verification = record['verificationRun']
-    require(verification == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': WORKFLOW}, 'Release record run mismatch')
+    require(verification == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': workflow}, 'Release record run mismatch')
     require(type(verification['id']) is int and verification['id'] > 0 and type(verification['attempt']) is int and verification['attempt'] > 0, 'Invalid verification run identity')
     require(set(record['platforms']) == PLATFORMS and len(index['manifests']) == 2, 'Release requires exactly amd64 and arm64')
     descriptors = {entry['platform']['os'] + '/' + entry['platform']['architecture']: entry for entry in index['manifests']}
@@ -193,18 +228,37 @@ def release_record(reference, sha, run, expected_digest=None):
     return {**record, 'image': IMAGE + '@' + index_digest, 'indexDigest': index_digest}
 
 
-def successful_attempt(sha, run_id, attempt_number):
+def successful_attempt(sha, run_id, attempt_number, record=None, tag=None):
     require(type(run_id) is int and run_id > 0 and type(attempt_number) is int and attempt_number > 0,
             'Invalid verification run identity')
     attempt = api(f'actions/runs/{run_id}/attempts/{attempt_number}')
-    require(attempt['id'] == run_id and attempt['run_attempt'] == attempt_number and main_run(attempt, sha)
-            and attempt['status'] == 'completed' and attempt['conclusion'] == 'success',
-            'Verification attempt is not successful main evidence')
+    require(attempt['id'] == run_id and attempt['run_attempt'] == attempt_number, 'Verification attempt mismatch')
+    legacy = record is None or record['schemaVersion'] == 1
+    selected = record_profile(record) if record is not None else 'full'
+    if legacy:
+        require(main_run(attempt, sha) and attempt['status'] == 'completed' and attempt['conclusion'] == 'success',
+                'Verification attempt is not successful main evidence')
+        prefix = ''
+    else:
+        require(attempt.get('head_sha') == sha and attempt.get('head_branch') == tag
+                and attempt.get('event') == 'workflow_dispatch' and attempt.get('path') == RELEASE_WORKFLOW
+                and attempt.get('head_repository', {}).get('full_name') == REPOSITORY
+                and attempt['status'] in ['in_progress', 'completed'] and attempt.get('conclusion') != 'cancelled',
+                'Verification attempt is not canonical manual release evidence')
+        prefix = 'checks / '
     jobs = [job for page in api(f'actions/runs/{run_id}/attempts/{attempt_number}/jobs?per_page=100', pages=True)
             for job in page['jobs']]
     required = {'verify', 'Full UI', 'Runtime (amd64)', 'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish'}
-    require(required <= {job['name'] for job in jobs if job['conclusion'] == 'success'},
-            'Full main verification/publication jobs did not all succeed')
+    if not legacy:
+        required.update({'Collection drafts', 'Release profile (' + selected + ')'})
+        if selected == 'fast':
+            required.remove('Full UI')
+            ui = [job for job in jobs if job['name'] == prefix + 'Full UI']
+            require(len(ui) == 1 and ui[0]['conclusion'] == 'skipped', 'Fast evidence must explicitly skip only Full UI')
+    for name in required:
+        matching = [job for job in jobs if job['name'] == prefix + name]
+        require(len(matching) == 1 and matching[0]['conclusion'] == 'success',
+                'Required verification/publication job did not succeed: ' + name)
     return attempt
 
 
@@ -220,8 +274,10 @@ def resolve(arguments):
         recorded = document(index['annotations'][ANNOTATION])
         require(recorded['repository'] == REPOSITORY and recorded['sourceSha'] == sha, 'Release record source mismatch')
         verification = recorded['verificationRun']
-        require(verification['workflow'] == WORKFLOW, 'Release record workflow mismatch')
-        attempt = successful_attempt(sha, verification['id'], verification['attempt'])
+        record_profile(recorded)
+        workflow = WORKFLOW if recorded['schemaVersion'] == 1 else RELEASE_WORKFLOW
+        require(verification['workflow'] == workflow, 'Release record workflow mismatch')
+        attempt = successful_attempt(sha, verification['id'], verification['attempt'], recorded, arguments.tag)
         record = release_record(reference, sha, attempt, arguments.digest)
         require(tag_commit(arguments.tag) == sha, 'Release tag changed during verification')
         return {**record, 'tag': arguments.tag}
@@ -262,7 +318,7 @@ def checked_image(arguments):
 
 
 def create_record(arguments):
-    require(plan()['full'], 'Only canonical main verification can publish release records')
+    release_request(os.environ.get('RELEASE_TAG', ''))
     sha = source_sha(os.environ['GITHUB_SHA'])
     platforms = {}
     for arch in ['amd64', 'arm64']:
@@ -273,17 +329,19 @@ def create_record(arguments):
         platforms['linux/' + arch] = checked
     run_id, attempt = int(os.environ['GITHUB_RUN_ID']), int(os.environ['GITHUB_RUN_ATTEMPT'])
     require(run_id > 0 and attempt > 0, 'Invalid verification run identity')
-    return {'schemaVersion': 1, 'repository': REPOSITORY, 'sourceSha': sha, 'platforms': platforms,
-        'verificationRun': {'id': run_id, 'attempt': attempt, 'workflow': WORKFLOW}}
+    return {'schemaVersion': 2, 'repository': REPOSITORY, 'sourceSha': sha, 'platforms': platforms,
+        'verificationProfile': profile(), 'skippedChecks': PROFILES[profile()],
+        'verificationRun': {'id': run_id, 'attempt': attempt, 'workflow': RELEASE_WORKFLOW}}
 
 
 def publish_index(arguments):
-    require(plan()['full'], 'Only canonical main verification can publish release records')
+    release_request(os.environ.get('RELEASE_TAG', ''))
     record = document(Path(arguments.record).read_text())
     sha = source_sha(os.environ['GITHUB_SHA'])
     run = {'id': int(os.environ['GITHUB_RUN_ID']), 'run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT'])}
-    require(record['schemaVersion'] == 1 and record['repository'] == REPOSITORY and record['sourceSha'] == sha
-        and record['verificationRun'] == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': WORKFLOW}, 'Release publication identity mismatch')
+    require(record['schemaVersion'] == 2 and record_profile(record) == profile()
+        and record['repository'] == REPOSITORY and record['sourceSha'] == sha
+        and record['verificationRun'] == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': RELEASE_WORKFLOW}, 'Release publication identity mismatch')
     require(set(record['platforms']) == PLATFORMS, 'Release requires exactly amd64 and arm64')
     references = [IMAGE + '@' + digest(record['platforms'][platform]['digest']) for platform in sorted(PLATFORMS)]
     index = document(command(['docker', 'buildx', 'imagetools', 'create', '--dry-run', *references]))
@@ -315,6 +373,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('plan')
+    guard = commands.add_parser('guard')
+    guard.add_argument('--tag', required=True)
+    guard.add_argument('--digest')
     publication = commands.add_parser('publish-index')
     publication.add_argument('--record', required=True)
     record = commands.add_parser('record')
@@ -329,7 +390,7 @@ def main():
     resolver.add_argument('--digest', help='Require the original index digest when repeating a release')
     arguments = parser.parse_args()
     try:
-        operations = {'plan': lambda: plan(), 'resolve': lambda: resolve(arguments), 'image': lambda: checked_image(arguments), 'record': lambda: create_record(arguments), 'publish-index': lambda: publish_index(arguments)}
+        operations = {'guard': lambda: release_request(arguments.tag, arguments.digest), 'plan': lambda: plan(), 'resolve': lambda: resolve(arguments), 'image': lambda: checked_image(arguments), 'record': lambda: create_record(arguments), 'publish-index': lambda: publish_index(arguments)}
         value = operations[arguments.command]()
         print(json.dumps(value, sort_keys=True))
     except (ReleaseError, KeyError, TypeError, ValueError, AttributeError, IndexError, OSError, subprocess.TimeoutExpired) as error:

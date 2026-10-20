@@ -6,6 +6,7 @@ const output = join(tmpdir(), 'want-wallpapers-ui');
 
 export default defineConfig({
   testDir: './tests/ui',
+  testIgnore: '**/listing.spec.ts',
   outputDir: join(output, 'results'),
   reporter: [['list'], ['html', { outputFolder: join(output, 'report'), open: 'never' }]],
   workers: 2,
@@ -22,6 +23,7 @@ export default defineConfig({
   },
   webServer: {
     command: 'python3 ../scripts/ui-server.py',
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 15000 },
     url: 'http://127.0.0.1:4322/health/ready',
     reuseExistingServer: false,
     timeout: 120000,

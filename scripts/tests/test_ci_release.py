@@ -1,6 +1,7 @@
 """Exercise the CI command's public event and release contracts."""
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -13,28 +14,48 @@ REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 class EventSelection(unittest.TestCase):
     def plan(self, event, ref, repository=REPOSITORY):
         result = subprocess.run([sys.executable, str(COMMAND), 'plan'], capture_output=True, text=True,
-            env={**os.environ, 'GITHUB_EVENT_NAME': event, 'GITHUB_REF': ref, 'GITHUB_REPOSITORY': repository})
+            env={**os.environ, 'GITHUB_EVENT_NAME': event, 'GITHUB_REF': ref, 'GITHUB_REPOSITORY': repository,
+                 'RELEASE_TAG': '', 'GITHUB_WORKFLOW_REF': '', 'VERIFICATION_PROFILE': 'full'})
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
-    def test_feature_push_has_only_lightweight_checks(self):
-        self.assertEqual(self.plan('push', 'refs/heads/feature/example'),
-            {'checks': True, 'full': False})
+    def test_only_explicit_manual_events_select_checks(self):
+        for event in ['push', 'pull_request', 'schedule', 'workflow_run']:
+            for ref in ['refs/heads/main', 'refs/heads/development', 'refs/tags/v1.4.0']:
+                with self.subTest(event=event, ref=ref):
+                    self.assertEqual(self.plan(event, ref), {'checks': False, 'full': False, 'publish': False, 'ui': False})
+        self.assertEqual(self.plan('workflow_dispatch', 'refs/heads/main'),
+                         {'checks': True, 'full': True, 'publish': False, 'ui': True})
+        self.assertEqual(self.plan('workflow_dispatch', 'refs/heads/feature/example'),
+                         {'checks': True, 'full': False, 'publish': False, 'ui': False})
+        self.assertEqual(self.plan('workflow_dispatch', 'refs/heads/main', 'visitor/wallpapers'),
+                         {'checks': True, 'full': False, 'publish': False, 'ui': False})
+        self.assertFalse(self.plan('workflow_dispatch', 'refs/tags/v1.4.0')['publish'])
 
-    def test_event_matrix_never_runs_full_checks_for_prs_forks_or_tags(self):
-        for event, ref, repository, expected in [
-            ('push', 'refs/heads/development', REPOSITORY, {'checks': True, 'full': False}),
-            ('push', 'refs/heads/release/v1.4.0', REPOSITORY, {'checks': True, 'full': False}),
-            ('push', 'refs/heads/main', REPOSITORY, {'checks': True, 'full': True}),
-            ('workflow_dispatch', 'refs/heads/main', REPOSITORY, {'checks': True, 'full': True}),
-            ('workflow_dispatch', 'refs/heads/feature/example', REPOSITORY, {'checks': True, 'full': False}),
-            ('pull_request', 'refs/pull/4/merge', REPOSITORY, {'checks': True, 'full': False}),
-            ('push', 'refs/heads/main', 'visitor/wallpapers', {'checks': True, 'full': False}),
-            ('push', 'refs/tags/v1.4.0', REPOSITORY, {'checks': False, 'full': False}),
-            ('workflow_dispatch', 'refs/tags/v1.4.0', REPOSITORY, {'checks': False, 'full': False}),
-        ]:
-            with self.subTest(event=event, ref=ref, repository=repository):
-                self.assertEqual(self.plan(event, ref, repository), expected)
+    def test_workflows_have_no_automatic_entry_points(self):
+        for path in (COMMAND.parent.parent / '.github/workflows').glob('*.yml'):
+            header = path.read_text().split('\npermissions:', 1)[0]
+            events = set(re.findall(r'^  ([a-z_]+):', header, re.M))
+            with self.subTest(workflow=path.name):
+                self.assertTrue(events)
+                self.assertLessEqual(events, {'workflow_dispatch', 'workflow_call'})
+
+    def test_release_chain_has_one_gate_and_publication_depends_on_all_checks(self):
+        workflows = COMMAND.parent.parent / '.github/workflows'
+        release = (workflows / 'deploy-production.yml').read_text()
+        self.assertEqual(release.count('uses: ./.github/workflows/release-gate.yml'), 1)
+        self.assertIn('uses: ./.github/workflows/checks.yml', release)
+        self.assertIn("needs.guard.result == 'success'", release)
+        self.assertIn("needs.eligibility.result == 'success'", release)
+        checks = (workflows / 'checks.yml').read_text()
+        verify = checks.split('\n  verify:\n')[1].split('\n  drafts:\n')[0]
+        self.assertIn('needs: selection', verify)
+        for job in ['publish-platforms', 'publish']:
+            # Read only the job header before its first runner, not step content.
+            header = checks.split('\n  ' + job + ':\n')[1].split('    runs-on:', 1)[0]
+            for required in ['verify', 'drafts', 'ui', 'containers']:
+                self.assertIn(required, header)
+            self.assertIn("needs.selection.outputs.publish == 'true'", header)
 
 
 class ReleaseResolution(unittest.TestCase):
@@ -131,7 +152,20 @@ else:
             executable.write_text(stub)
             executable.chmod(0o700)
 
-    def execute(self, arguments):
+    def manual_release(self, profile='full'):
+        self.selected_profile = profile
+        self.record.update(schemaVersion=2, verificationProfile=profile, skippedChecks=[] if profile == 'full' else ['Full UI'])
+        self.record['verificationRun']['workflow'] = '.github/workflows/deploy-production.yml'
+        self.run.update(event='workflow_dispatch', head_branch='v1.4.0',
+                        path='.github/workflows/deploy-production.yml', status='in_progress', conclusion=None)
+        self.responses['actions/runs/73/attempts/1/jobs?per_page=100'] = [{'jobs': [
+            {'name': 'checks / ' + name, 'conclusion': 'success'} for name in
+            ['Release profile (' + profile + ')', 'verify', 'Collection drafts', 'Full UI', 'Runtime (amd64)',
+             'Runtime (arm64)', 'Publish (amd64)', 'Publish (arm64)', 'publish']]}]
+        if profile == 'fast':
+            self.responses['actions/runs/73/attempts/1/jobs?per_page=100'][0]['jobs'][3]['conclusion'] = 'skipped'
+
+    def execute(self, arguments, **environment):
         index = {'schemaVersion': 2, 'mediaType': 'application/vnd.oci.image.index.v1+json',
             'annotations': {'foundation.want.wallpapers.release.v1': json.dumps(self.record)},
             'manifests': [{'digest': value['digest'], 'platform': {'os': 'linux', 'architecture': name.split('/')[1]}}
@@ -141,8 +175,11 @@ else:
             'record': self.record, 'pendingOnce': getattr(self, 'pending_once', None), 'actualPlatforms': self.actual_platforms, 'loadedImage': self.loaded_image, 'index': index, 'digest': self.digest}))
         return subprocess.run([sys.executable, str(COMMAND), *arguments],
             capture_output=True, text=True, env={**os.environ, 'PATH': str(self.root) + os.pathsep + os.environ['PATH'],
-                'RELEASE_FIXTURE': str(fixture), 'GITHUB_REPOSITORY': REPOSITORY, 'GITHUB_SHA': self.sha, 'GITHUB_EVENT_NAME': 'push', 'GITHUB_REF': 'refs/heads/main',
-                'GITHUB_RUN_ID': '73', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_ACTOR': 'release-owner', 'GHCR_TOKEN': 'test-only'})
+                'RELEASE_FIXTURE': str(fixture), 'GITHUB_REPOSITORY': REPOSITORY, 'GITHUB_SHA': self.sha, 'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                'GITHUB_REF': 'refs/tags/v1.4.0', 'RELEASE_TAG': 'v1.4.0',
+                'VERIFICATION_PROFILE': getattr(self, 'selected_profile', 'full'),
+                'GITHUB_WORKFLOW_REF': REPOSITORY + '/.github/workflows/deploy-production.yml@refs/tags/v1.4.0',
+                'GITHUB_RUN_ID': '73', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_ACTOR': 'release-owner', 'GHCR_TOKEN': 'test-only', **environment})
 
     def resolve(self, *arguments):
         return self.execute(['resolve', '--tag', 'v1.4.0', '--timeout', '0', *arguments])
@@ -162,6 +199,93 @@ else:
         result = self.resolve('--digest', self.digest)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)['verificationRun'], self.record['verificationRun'])
+
+    def test_release_guard_checks_manual_context_and_protected_main_tag(self):
+        result = self.execute(['guard', '--tag', 'v1.4.0'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['verificationProfile'], 'full')
+        for environment in [{'GITHUB_EVENT_NAME': 'push'}, {'GITHUB_REF': 'refs/heads/main'},
+                            {'GITHUB_REPOSITORY': 'visitor/fork'}, {'GITHUB_SHA': '0' * 40},
+                            {'GITHUB_WORKFLOW_REF': REPOSITORY + '/.github/workflows/checks.yml@refs/tags/v1.4.0'}]:
+            with self.subTest(environment=environment):
+                self.assertNotEqual(self.execute(['guard', '--tag', 'v1.4.0'], **environment).returncode, 0)
+        self.responses['git/ref/tags/v1.4.0']['object']['type'] = 'commit'
+        self.assertNotEqual(self.execute(['guard', '--tag', 'v1.4.0']).returncode, 0)
+
+    def test_manual_full_chain_accepts_completed_jobs_while_deployment_is_running(self):
+        self.manual_release()
+        result = self.resolve('--digest', self.digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['verificationProfile'], 'full')
+
+    def test_manual_evidence_cannot_skip_any_required_job(self):
+        self.manual_release()
+        jobs = self.responses['actions/runs/73/attempts/1/jobs?per_page=100'][0]['jobs']
+        for job in jobs:
+            job['conclusion'] = 'skipped'
+            with self.subTest(job=job['name']):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            job['conclusion'] = 'success'
+
+    def test_fast_release_accepts_only_the_explicit_ui_skip_and_publishes_new_images(self):
+        self.manual_release('fast')
+        result = self.resolve('--digest', self.digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['skippedChecks'], ['Full UI'])
+        for platform, value in self.record['platforms'].items():
+            (self.root / (platform.split('/')[1] + '.json')).write_text(json.dumps(value))
+        result = self.execute(['record', '--platform-directory', str(self.root)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), self.record)
+        record = self.root / 'release-record.json'
+        record.write_text(result.stdout)
+        result = self.execute(['publish-index', '--record', str(record)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['verificationProfile'], 'fast')
+
+    def test_fast_profile_cannot_skip_other_jobs_or_claim_full_profile(self):
+        self.manual_release('fast')
+        jobs = self.responses['actions/runs/73/attempts/1/jobs?per_page=100'][0]['jobs']
+        for job in jobs:
+            previous = job['conclusion']
+            job['conclusion'] = 'failure'
+            with self.subTest(job=job['name']):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            job['conclusion'] = previous
+        self.record.update(verificationProfile='full', skippedChecks=[])
+        self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+
+    def test_changed_or_missing_fast_profile_is_rejected(self):
+        self.manual_release('fast')
+        for key, value in [('verificationProfile', 'unknown'), ('verificationProfile', 'full'),
+                           ('skippedChecks', []), ('skippedChecks', ['verify', 'Full UI']),
+                           ('schemaVersion', 1), ('schemaVersion', None)]:
+            old = self.record[key]
+            self.record[key] = value
+            with self.subTest(key=key, value=value):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            self.record[key] = old
+        del self.record['skippedChecks']
+        self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+
+    def test_manual_evidence_rejects_wrong_sources_and_profile_data(self):
+        self.manual_release()
+        for key, value in [('event', 'push'), ('head_branch', 'main'), ('head_sha', '0' * 40),
+                           ('path', '.github/workflows/checks.yml'), ('conclusion', 'cancelled')]:
+            old = self.run[key]
+            self.run[key] = value
+            with self.subTest(field=key):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            self.run[key] = old
+        for key, value in [('verificationProfile', None), ('verificationProfile', 'unknown'),
+                           ('skippedChecks', ['Full UI'])]:
+            old = self.record[key]
+            self.record[key] = value
+            with self.subTest(field=key, value=value):
+                self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
+            self.record[key] = old
+        del self.record['verificationProfile']
+        self.assertNotEqual(self.resolve('--digest', self.digest).returncode, 0)
 
     def test_readonly_token_can_verify_the_pinned_ruleset_version(self):
         del self.responses['rulesets/24392512']['bypass_actors']
@@ -259,6 +383,7 @@ else:
         self.assertNotEqual(self.execute(['image', '--checked', str(checked), '--arch', 'amd64']).returncode, 0)
 
     def test_docker_platform_manifests_publish_an_oci_index_with_durable_record(self):
+        self.manual_release()
         record = self.root / 'release-record.json'
         record.write_text(json.dumps(self.record))
         result = self.execute(['publish-index', '--record', str(record)])
@@ -272,6 +397,7 @@ else:
         self.assertEqual(json.loads(result.stdout)['platforms'], self.record['platforms'])
 
     def test_release_record_preserves_tested_platform_and_run_identity(self):
+        self.manual_release()
         for platform, value in self.record['platforms'].items():
             (self.root / (platform.split('/')[1] + '.json')).write_text(json.dumps(value))
         result = self.execute(['record', '--platform-directory', str(self.root)])

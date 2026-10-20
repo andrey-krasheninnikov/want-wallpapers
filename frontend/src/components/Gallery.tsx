@@ -21,11 +21,11 @@ export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardD
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return <article className="min-w-0" data-wallpaper-card={item.id}>
     <Card className="group gallery-card">
-      <a href={item.href} className="block h-full rounded-xl">
-        <div className="overflow-hidden bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
-        <CardContent className="flex items-start justify-between gap-4 p-4 sm:p-5">
-          <div className="min-w-0"><Heading className="text-base leading-snug font-semibold">{item.title}</Heading><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.collectionTitle}</p></div>
-          <span className="pt-0.5 text-sm text-muted-foreground" aria-hidden="true">{String(item.number).padStart(2, '0')}</span>
+      <a href={item.href} className="flex h-full flex-col rounded-xl">
+        <div className="media-frame bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
+        <CardContent className="wallpaper-card-content p-4 sm:p-5">
+          <div className="min-w-0"><Heading className="wallpaper-card-title">{item.title}</Heading><p className="wallpaper-card-collection">{item.collectionTitle}</p></div>
+          <span className="wallpaper-card-number" aria-hidden="true">{String(item.number).padStart(2, '0')}</span>
         </CardContent>
       </a>
     </Card>
@@ -34,14 +34,14 @@ export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardD
 
 export function CollectionCard({ item, headingLevel = 3 }: { item: CollectionCardData; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  return <article className="min-w-0">
+  return <article className="min-w-0" data-collection-card={item.href}>
     <Card className="group gallery-card relative" data-collection-cover>
-      <a href={item.href} className="flex h-full flex-col rounded-xl">
-        {item.image && <CoverMedia image={item.image} alt={item.description} src={item.video} />}
+      <a href={item.href} className="collection-card-link">
+        {item.image && <CoverMedia image={item.image} alt={item.description} src={item.video} listingId={item.href} />}
         <CardContent className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4"><Heading className="text-xl leading-snug font-semibold tracking-tight">{item.title}</Heading><ArrowUpRight className="mt-1 size-5 shrink-0 text-link" aria-hidden="true" /></div>
-          <p className="text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-          <Badge variant="secondary" className="mt-auto w-fit">{item.countLabel}</Badge>
+          <p className="collection-card-description text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+          <Badge variant="secondary" className="mt-auto w-fit" data-collection-count={item.href}>{item.countLabel}</Badge>
         </CardContent>
       </a>
       {item.video && <CoverControl locale={item.locale} />}
@@ -54,7 +54,7 @@ export function WallpaperGrid({ items, headingLevel = 3 }: { items: WallpaperCar
 }
 
 export function CollectionGrid({ items, headingLevel = 3 }: { items: CollectionCardData[]; headingLevel?: 2 | 3 }) {
-  return <div className="gallery-grid">{items.map((item) => <CollectionCard key={item.href} item={item} headingLevel={headingLevel} />)}</div>;
+  return <div className="collection-grid">{items.map((item) => <CollectionCard key={item.href} item={item} headingLevel={headingLevel} />)}</div>;
 }
 
 export function Crumbs({ items, label }: { items: { href?: string; title: string }[]; label: string }) {

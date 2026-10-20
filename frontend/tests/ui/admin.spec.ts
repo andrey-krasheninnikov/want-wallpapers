@@ -51,7 +51,7 @@ test('administrator edits translations, creates CDN records, archives and modera
   await page.getByLabel('Номер папки CDN').fill('0009'); await page.getByLabel('Slug', { exact: true }).fill('ui-check');
   await page.getByLabel('Видеообложка, URL MP4').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.mp4');
   await page.getByLabel('Постер, URL PNG').fill('https://example.com/cover.png');
-  for (const language of ['English', 'Русский', '中文', 'Português']) {
+  for (const language of ['English', 'Русский', '中文', 'Português', '日本語']) {
     await page.getByRole('tab', { name: language, exact: true }).click();
     await page.getByLabel(`Название · ${language}`).fill(`UI check ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание коллекции для проверки');
   }
@@ -79,7 +79,7 @@ test('administrator edits translations, creates CDN records, archives and modera
   await page.getByRole('button', { name: 'В архиве', exact: true }).click();
   await page.getByRole('button', { name: 'Обои', exact: true }).click(); await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByRole('combobox', { name: 'Коллекция', exact: true }).click(); await page.getByRole('option', { name: 'Коллекция для проверки', exact: true }).click();
-  for (const language of ['English', 'Русский', '中文', 'Português']) {
+  for (const language of ['English', 'Русский', '中文', 'Português', '日本語']) {
     await page.getByRole('tab', { name: language, exact: true }).click(); await page.getByLabel(`Название · ${language}`).fill(`Design ${language}`); await page.getByLabel(`Описание · ${language}`).fill('Описание обоев для проверки');
   }
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click(); await page.getByRole('textbox', { name: 'Поиск по каталогу', exact: true }).fill('ui-check-1'); await expect(page.getByRole('heading', { name: 'Design Русский', exact: true })).toBeVisible();

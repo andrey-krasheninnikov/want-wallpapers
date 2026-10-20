@@ -1,0 +1,7 @@
+---
+import type { Locale } from '../data/catalog';
+import { interfaceCopy } from '../data/interface-copy';
+const { locale } = Astro.props as { locale: Locale };
+const label = interfaceCopy[locale].advertisement;
+---
+<div class="shell public-advertisements" data-advertisement-label={label}></div>

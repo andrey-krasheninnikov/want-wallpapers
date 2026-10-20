@@ -20,7 +20,7 @@ test('reading, downloads and Russian feedback do not load reCAPTCHA before a pro
   await page.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'RU' } }));
   await page.evaluate(() => sessionStorage.removeItem('want-country-v1'));
   await page.goto('/ru/feedback/');
-  await expect(page.locator('#feedback-message')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: copy.ru.message, exact: true })).toBeVisible();
   expect(requests.filter((url) => /recaptcha/.test(url))).toEqual([]);
 });
 
@@ -42,8 +42,8 @@ test('feedback retries a blocked script and a rejected assessment without losing
   await page.goto('/ru/feedback/');
   await page.getByRole('button', { name: copy.ru.essentialOnly, exact: true }).click();
   await expect(page).toHaveTitle(/Want/);
-  await page.locator('#feedback-topic').fill('Проверка защиты');
-  await page.locator('#feedback-message').fill('Сообщение сохраняется после ошибки проверки.');
+  await page.getByRole('textbox', { name: copy.ru.topic, exact: true }).fill('Проверка защиты');
+  await page.getByRole('textbox', { name: copy.ru.message, exact: true }).fill('Сообщение сохраняется после ошибки проверки.');
   expect(scripts).toBe(0);
   const submit = page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true });
   await submit.click();
@@ -51,14 +51,14 @@ test('feedback retries a blocked script and a rejected assessment without losing
   expect(tokens).toEqual([]);
   await submit.click();
   await expect(page.getByText(copy.ru.recaptchaRejected, { exact: true })).toBeVisible();
-  await expect(page.locator('#feedback-message')).toHaveValue('Сообщение сохраняется после ошибки проверки.');
+  await expect(page.getByRole('textbox', { name: copy.ru.message, exact: true })).toHaveValue('Сообщение сохраняется после ошибки проверки.');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('recaptcha-retry-320.png'), fullPage: true });
   await submit.click();
   await expect(page.getByText(copy.ru.feedbackThanks)).toBeVisible();
   expect(tokens).toEqual(['feedback-1', 'feedback-2']);
   expect(scripts).toBe(2);
-  await expect(page.locator('#feedback-message')).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: copy.ru.message, exact: true })).toHaveValue('');
 });
 
 test('admin login requests its own action independently of regional lookup', async ({ page }) => {

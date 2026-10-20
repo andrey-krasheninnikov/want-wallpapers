@@ -181,15 +181,13 @@ def image_matches(metadata, record):
 
 def public_record(record):
     keys = ('schemaVersion', 'requestId', 'tag', 'sourceSha', 'indexDigest', 'state', 'stage',
-            'errorCode', 'verificationRun', 'actualImageId', 'architecture', 'revision', 'backupVerified')
+            'errorCode', 'verificationRun', 'verificationProfile', 'skippedChecks', 'actualImageId', 'architecture', 'revision', 'backupVerified')
     return {key: record[key] for key in keys if key in record}
 
 
 def deployment_event(event, ref, repository, tag=None, digest=None):
     if repository != REPOSITORY:
         return False
-    if event == 'push':
-        return ref.startswith('refs/tags/') and matches(r'v[A-Za-z0-9][A-Za-z0-9._-]{0,99}', ref[10:])
     return (event == 'workflow_dispatch' and ref == 'refs/tags/' + (tag or '')
             and matches(r'v[A-Za-z0-9][A-Za-z0-9._-]{0,99}', tag)
-            and matches(r'sha256:[0-9a-f]{64}', digest))
+            and (not digest or matches(r'sha256:[0-9a-f]{64}', digest)))

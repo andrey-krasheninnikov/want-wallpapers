@@ -1,6 +1,6 @@
 {
   "name": "want-wallpapers",
-  "version": "1.6.0",
+  "version": "1.9.2",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.3.14",
@@ -15,7 +15,8 @@
     "test": "bun run --cwd frontend test",
     "test:ui": "bun run --cwd frontend test:ui",
     "catalog:pull": "bun run --cwd frontend catalog:pull",
-    "catalog:add": "bun run --cwd frontend catalog:add"
+    "catalog:add": "bun run --cwd frontend catalog:add",
+    "test:listing-ui": "bun run --cwd frontend test:listing-ui"
   },
   "trustedDependencies": [],
   "overrides": {

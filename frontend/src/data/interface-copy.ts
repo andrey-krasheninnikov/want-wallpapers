@@ -4,6 +4,7 @@ export const interfaceCopy = {
   en: {
     advertisement: 'Advertisement',
     pauseCover: 'Pause animation', playCover: 'Play animation',
+    pauseBackground: 'Pause background glow', playBackground: 'Resume background glow',
     skip: 'Skip to content', language: 'Language', legal: 'Information', close: 'Close',
     catalogue: 'The catalogue', reset: 'Reset filters', retry: 'Try again', saved: 'Saved',
     settings: 'Choose what to allow', save: 'Save settings', necessary: 'Essential storage',
@@ -40,6 +41,7 @@ export const interfaceCopy = {
   ru: {
     advertisement: 'Реклама',
     pauseCover: 'Остановить анимацию', playCover: 'Включить анимацию',
+    pauseBackground: 'Остановить свечение фона', playBackground: 'Включить свечение фона',
     skip: 'Перейти к содержимому', language: 'Язык', legal: 'Информация', close: 'Закрыть',
     catalogue: 'Каталог', reset: 'Сбросить фильтры', retry: 'Попробовать ещё раз', saved: 'Сохранено',
     settings: 'Выберите, что разрешить', save: 'Сохранить настройки', necessary: 'Необходимое хранение',
@@ -76,6 +78,7 @@ export const interfaceCopy = {
   'zh-cn': {
     advertisement: '广告',
     pauseCover: '暂停动画', playCover: '播放动画',
+    pauseBackground: '暂停背景光效', playBackground: '恢复背景光效',
     skip: '跳到正文', language: '语言', legal: '网站信息', close: '关闭',
     catalogue: '壁纸目录', reset: '重置筛选', retry: '重试', saved: '已保存',
     settings: '选择允许的功能', save: '保存设置', necessary: '必要存储',
@@ -112,6 +115,7 @@ export const interfaceCopy = {
   'pt-br': {
     advertisement: 'Publicidade',
     pauseCover: 'Pausar animação', playCover: 'Reproduzir animação',
+    pauseBackground: 'Pausar brilho de fundo', playBackground: 'Retomar brilho de fundo',
     skip: 'Ir para o conteúdo', language: 'Idioma', legal: 'Informações', close: 'Fechar',
     catalogue: 'O catálogo', reset: 'Limpar filtros', retry: 'Tentar novamente', saved: 'Salvo',
     settings: 'Escolha o que permitir', save: 'Salvar configurações', necessary: 'Armazenamento essencial',
@@ -144,5 +148,88 @@ export const interfaceCopy = {
     ],
     finalTitle: 'Encontre uma vista para ficar.', finalText: 'Comece com uma cor, um lugar ou uma sensação.',
     notFoundTitle: 'Nada por aqui ainda.', notFoundText: 'Esta página não faz parte da coleção.', back: 'Voltar aos papéis de parede',
+  },
+  ja: {
+    "advertisement": "広告",
+    "pauseCover": "アニメーションを一時停止",
+    "playCover": "アニメーションを再生",
+    "pauseBackground": "背景の光を一時停止",
+    "playBackground": "背景の光を再開",
+    "skip": "本文へ移動",
+    "language": "言語",
+    "legal": "サイト情報",
+    "close": "閉じる",
+    "catalogue": "カタログ",
+    "reset": "絞り込みを解除",
+    "retry": "再試行",
+    "saved": "保存済み",
+    "settings": "許可する項目を選択",
+    "save": "設定を保存",
+    "necessary": "必須ストレージ",
+    "necessaryHint": "設定の保存と匿名での操作に使用します。常に有効です。",
+    "advertisingHint": "現在、広告ネットワークは接続されていません。この設定はアクセス分析内の広告関連の許可にも適用されます。",
+    "analyticsHint": "好まれている壁紙を把握するために使用します。任意です。",
+    "unavailableAnalytics": "アクセス分析は接続されていません。設定は保存されます。",
+    "javascriptRequired": "評価、コメント、お問い合わせフォームを利用するには JavaScript を有効にしてください。",
+    "selected": "選択中",
+    "ratingSaved": "評価を保存しました。",
+    "commentSent": "コメントを投稿しました。",
+    "filters": "絞り込み",
+    "free": "個人利用は無料",
+    "votes": "評価",
+    "characters": "文字数",
+    "ownComment": "自分のコメント",
+    "commentTitle": "感想を聞かせてください",
+    "commentPublic": "コメントはこのページに公開されます。名前の入力は不要です。",
+    "feedbackFormTitle": "運営チームにメッセージを送る",
+    "feedbackPrivate": "メッセージは Want の運営チームだけが確認できます。",
+    "feedbackTopicHint": "ご相談の内容を短い件名でお知らせください。",
+    "feedbackMessageHint": "アイデア、不具合、改善してほしい点をお書きください。",
+    "feedbackEmailHint": "返信をご希望の場合はメールアドレスをご記入ください。",
+    "feedbackDirect": "メールでもお問い合わせいただけます",
+    "feedbackDirectHint": "サイトや壁紙の利用についてのご質問はこちらへ。",
+    "benefitsTitle": "毎日使う画面に、小さな変化を。",
+    "benefits": [
+      [
+        "コレクションで楽しむ",
+        "気に入った一枚から、その周りに広がる世界へ。"
+      ],
+      [
+        "二つの画面に、同じ雰囲気を",
+        "すべてのデザインにパソコン用とスマートフォン用があります。"
+      ],
+      [
+        "オリジナルファイル",
+        "PNG をそのまま保存できます。閲覧やダウンロードに登録は不要です。"
+      ]
+    ],
+    "faqTitle": "ダウンロードの前に",
+    "faq": [
+      [
+        "壁紙は無料ですか？",
+        "はい。ご自身の画面用に無料でダウンロードして利用できます。"
+      ],
+      [
+        "商用利用はできますか？",
+        "ライセンスは個人利用を対象としています。商品、広告、その他の商用利用については wallpapers@want.foundation にお問い合わせください。"
+      ],
+      [
+        "どちらのファイルを選べばよいですか？",
+        "横長の画面にはパソコン用、スマートフォンには縦長のスマートフォン用をお選びください。どちらもオリジナルの PNG ファイルです。"
+      ],
+      [
+        "アカウントは必要ですか？",
+        "閲覧、検索、ダウンロードに登録は不要です。評価とコメントにはブラウザーの匿名アカウントを使用します。"
+      ],
+      [
+        "アクセス分析を拒否できますか？",
+        "はい。「必須のみ」をお選びください。閲覧、検索、ダウンロードは引き続き利用できます。"
+      ]
+    ],
+    "finalTitle": "使い続けたい景色を見つけてください。",
+    "finalText": "色や場所、今の気分から探してみましょう。",
+    "notFoundTitle": "このページは見つかりません。",
+    "notFoundText": "お探しのページはコレクションにありません。",
+    "back": "壁紙に戻る"
   },
 } satisfies Record<Locale, object>;

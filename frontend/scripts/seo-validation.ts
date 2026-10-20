@@ -1,6 +1,8 @@
 import sax from 'sax';
 import { decodeHTMLAttribute, decodeHTML } from 'entities';
-import { legalPage } from '../src/data/legal';
+import { legalPage, type LegalKey } from '../src/data/legal';
+import { collections, getCollection, getWallpaper, locales, type Locale } from '../src/data/catalog';
+import { collectionStories, editorialCopy, supportCopy } from '../src/data/editorial';
 
 function attributeValue(element: { getAttribute(name: string): string | null }, name: string): string | null {
   const value = element.getAttribute(name);
@@ -9,10 +11,10 @@ function attributeValue(element: { getAttribute(name: string): string | null }, 
 
 export const origin = 'https://wallpapers.want.foundation';
 export function require(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }
-export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; references: { url: string; tag: string; method?: string }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; bytes: number };
+export type Page = { path: string; lang: string; canonical: string[]; alternates: { lang: string; href: string }[]; robots: string[]; og: string[]; ids: Set<string>; contextualLinks: string[]; references: { url: string; tag: string; method?: string; download?: boolean }[]; scripts: { source: string | null; type: string | null; text: string }[]; text: string; mainText: string; bytes: number };
 
 export async function parsePage(html: string, path: string): Promise<Page> {
-  const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), references: [], scripts: [], text: '', bytes: Buffer.byteLength(html) };
+  const page: Page = { path, lang: '', canonical: [], alternates: [], robots: [], og: [], ids: new Set(), contextualLinks: [], references: [], scripts: [], text: '', mainText: '', bytes: Buffer.byteLength(html) };
   const document = await new HTMLRewriter().on('noscript', { element(element) { element.removeAndKeepContent(); } }).transform(new Response(html)).text();
   const parser = new HTMLRewriter()
     .on('html', { element(element) { page.lang = attributeValue(element, 'lang') ?? ''; } })
@@ -30,6 +32,7 @@ export async function parsePage(html: string, path: string): Promise<Page> {
       const attribute = element.tagName === 'form' ? 'action' : ['img', 'script'].includes(element.tagName) ? 'src' : 'href';
       const reference: Page['references'][number] = { url: attributeValue(element, attribute) ?? '', tag: element.tagName };
       if (element.tagName === 'form' && element.hasAttribute('method')) reference.method = attributeValue(element, 'method') ?? '';
+      if (element.tagName === 'a' && element.hasAttribute('download')) reference.download = true;
       page.references.push(reference);
     } })
     .on('script', { element(element) {
@@ -38,8 +41,12 @@ export async function parsePage(html: string, path: string): Promise<Page> {
     }, text(chunk) { page.scripts.at(-1)!.text += chunk.text; } });
   await parser.transform(new Response(document)).text();
   const readable = await new HTMLRewriter().on('head, script, style, template, [hidden], [aria-hidden="true"]', { element(element) { element.remove(); } }).transform(new Response(document)).text();
-  await new HTMLRewriter().on('body', { text(chunk) { page.text += chunk.text; } }).transform(new Response(readable)).text();
+  await new HTMLRewriter().on('body', { text(chunk) { page.text += chunk.text; } })
+    .on('main', { text(chunk) { page.mainText += chunk.text; } })
+    .on('main a[href]', { element(element) { page.contextualLinks.push(attributeValue(element, 'href') ?? ''); } })
+    .transform(new Response(readable)).text();
   page.text = decodeHTML(page.text).replace(/\s+/g, ' ').trim();
+  page.mainText = decodeHTML(page.mainText).replace(/\s+/g, ' ').trim();
   return page;
 }
 
@@ -107,14 +114,14 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     require(page.canonical.length === 1 && page.canonical[0] === self, `${page.path}: canonical must identify this page exactly once`);
     require(page.og.length === 1 && page.og[0] === self, `${page.path}: incorrect Open Graph URL`);
     const locale = page.path.split('/')[1];
-    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : 'en';
+    const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale === 'ru' ? 'ru' : locale === 'ja' ? 'ja' : 'en';
     require(page.lang === lang, `${page.path}: incorrect document language`);
     if (excluded) {
       if (page.path.endsWith('/search/')) require(page.robots.length === 1 && page.robots[0] === 'noindex, follow', `${page.path}: search must follow links`);
     } else {
-      const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'x-default'];
+      const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja', 'x-default'];
       require(page.alternates.length === languages.length && languages.every((language) => page.alternates.filter((alternate) => alternate.lang === language).length === 1), `${page.path}: conflicting or missing alternates`);
-      const suffix = ['ru', 'zh-cn', 'pt-br'].includes(locale!) ? page.path.slice(locale!.length + 1) : page.path;
+      const suffix = ['ru', 'zh-cn', 'pt-br', 'ja'].includes(locale!) ? page.path.slice(locale!.length + 1) : page.path;
       for (const alternate of page.alternates) {
         const prefix = ['en', 'x-default'].includes(alternate.lang) ? '' : '/' + alternate.lang.toLowerCase();
         require(alternate.href === origin + prefix + suffix, `${page.path}: incorrect alternate ${alternate.lang}`);
@@ -126,7 +133,7 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
     for (const reference of page.references) {
       const png = decodeURIComponent(new URL(reference.url, origin + page.path).pathname).toLowerCase().endsWith('.png');
       if (png) {
-        require(reference.tag !== 'a', `${page.path}: PNG formatted as a page link`);
+        require(reference.tag !== 'a' || (reference.download && new URL(reference.url, origin + page.path).origin === origin), `${page.path}: PNG formatted as a page link`);
         if (reference.tag === 'form') require(!['post', 'dialog'].includes(reference.method?.toLowerCase() ?? 'get'), `${page.path}: PNG download must use GET`);
       }
       const target = internal(reference.url, page.path);
@@ -148,6 +155,62 @@ export function validatePages(pages: Map<string, Page>, files: Set<string>): Map
 
 export function wordCount(text: string, locale: string): number {
   return [...new Intl.Segmenter(locale, { granularity: 'word' }).segment(text)].filter((part) => part.isWordLike).length;
+}
+
+function isIndexable(page: Page): boolean {
+  return !page.robots.some((value) => value.split(/[,\s]+/).includes('noindex'));
+}
+
+export function pageMetrics(page: Page) {
+  const textBytes = Buffer.byteLength(page.text);
+  return { path: page.path, words: wordCount(page.text, page.lang), ratio: textBytes / page.bytes * 100, htmlBytes: page.bytes, textBytes,
+    indexable: isIndexable(page) };
+}
+
+export function validateContentMetrics(metrics: ReturnType<typeof pageMetrics>): void {
+  if (!metrics.indexable) return;
+  require(metrics.words >= 200, `${metrics.path}: fewer than 200 segmented words`);
+  require(metrics.ratio > 10, `${metrics.path}: text/HTML at or below 10%`);
+}
+
+export function validateCityLinks(pages: Map<string, Page>): void {
+  const sources = new Set<string>();
+  for (const page of pages.values()) {
+    if (!isIndexable(page)) continue;
+    for (const link of page.contextualLinks) {
+      const target = internal(link, page.path);
+      if (target?.pathname === '/search/' && target.search === '?q=city' && target.pathname !== page.path.split('?')[0]) sources.add(page.path);
+    }
+  }
+  require(sources.size >= 2, 'City search needs two contextual source pages');
+}
+
+export function validateLocalizedContent(page: Page): void {
+  if (!isIndexable(page)) return;
+  const prefix = page.path.split('/')[1];
+  const locale: Locale = prefix === 'ru' || prefix === 'zh-cn' || prefix === 'pt-br' || prefix === 'ja' ? prefix : 'en';
+  const path = locale === 'en' ? page.path : page.path.slice(locale.length + 1);
+  const text = editorialCopy[locale];
+  let required: string[];
+  if (path === '/' || path === '/collections/') {
+    required = [text.title, text.licenseText, ...collections.flatMap(collection => [collection.title[locale], collectionStories[collection.slug]?.[locale][0] ?? ''])];
+  } else if (path.startsWith('/collections/') || path.startsWith('/wallpapers/')) {
+    const slug = path.split('/')[2]!;
+    const wallpaper = path.startsWith('/wallpapers/') ? getWallpaper(slug) : undefined;
+    const collection = getCollection(wallpaper?.collection ?? slug);
+    require(collection, `${page.path}: unknown collection`);
+    required = [text.story, text.files, text.licenseText, collection.title[locale], ...(collectionStories[collection.slug]?.[locale] ?? ['']),
+      wallpaper?.description[locale] ?? collection.description[locale]];
+  } else {
+    const key = path.slice(1, -1);
+    require(['privacy', 'terms', 'cookies', 'license', 'contact', 'feedback'].includes(key), `${page.path}: unknown public content template`);
+    required = key in supportCopy[locale] ? [...supportCopy[locale][key as keyof typeof supportCopy.en]] : [];
+    if (key !== 'feedback') {
+      const legal = legalPage(locale, key as LegalKey);
+      required.push(legal.title, legal.intro, ...legal.sections.flatMap((section) => [section.heading, ...section.paragraphs]));
+    }
+  }
+  for (const phrase of required) require(phrase.trim() && page.mainText.includes(phrase.replace(/\s+/g, ' ').trim()), `${page.path}: missing localized main content`);
 }
 
 export function validateRobots(robots: string): void {
@@ -188,22 +251,22 @@ export function validateLlms(text: string, indexed: ReadonlySet<string>): void {
   for (const section of license.sections) require(intro!.includes(section.heading + ':\n\n' + section.paragraphs.join('\n')), `llms.txt missing license section: ${section.heading}`);
   const required = new Set([...indexed].filter((link) => {
     const url = new URL(link);
-    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br)(?=\/)/, '');
+    const path = url.pathname.replace(/^\/(ru|zh-cn|pt-br|ja)(?=\/)/, '');
     return url.origin === origin && (path === '/' || /^\/(collections\/|wallpapers\/|license\/$|terms\/$)/.test(path));
   }));
   const found = new Set<string>();
-  const locales = new Set(['en', 'ru', 'zh-cn', 'pt-br']);
+  const remainingLocales = new Set<string>(locales);
   for (const section of sections) {
     const [locale, ...lines] = section.trim().split('\n');
-    require(locales.delete(locale!), 'Invalid or duplicate llms.txt locale section');
+    require(remainingLocales.delete(locale!), 'Invalid or duplicate llms.txt locale section');
     for (const line of lines.filter((line) => line.trim())) {
       const link = line.match(/^- \[((?:\\.|[^\]\\])+)\]\((https:\/\/[^)\s]+)\)(?:: .+)?$/);
       require(link && required.has(link[2]!), `Invalid llms.txt public link: ${line}`);
-      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
+      require((new URL(link[2]!).pathname.match(/^\/(ru|zh-cn|pt-br|ja)\//)?.[1] ?? 'en') === locale, 'llms.txt link belongs to another locale');
       require(!found.has(link[2]!), 'Duplicate llms.txt public link');
       found.add(link[2]!);
     }
   }
-  require(locales.size === 0, 'llms.txt missing locale sections');
+  require(remainingLocales.size === 0, 'llms.txt missing locale sections');
   require([...required].every((link) => found.has(link)), 'llms.txt omits current public catalog or usage links');
 }

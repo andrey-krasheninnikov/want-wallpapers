@@ -62,3 +62,62 @@ test('migrated source PNG names preserve local download and preview URLs', () =>
     }
   }
 });
+
+
+test('publication order handles late additions, ties and missing history without mutating the catalogue', async () => {
+  const { newestWallpapers } = await import('../src/lib/catalog-order');
+  const old = { ...wallpapers[0]!, id: 'old' };
+  const late = { ...old, id: 'late', number: 16 };
+  const recent = { ...wallpapers.at(-1)!, id: 'recent' };
+  const unknown = { ...recent, id: 'unknown' };
+  const items = [old, late, recent, unknown];
+  const dates = { old: '2026-10-02T21:44:58Z', late: '2026-10-13T12:00:00Z', recent: '2026-10-05T04:04:04Z' };
+  expect(newestWallpapers(items, dates).map(item => item.id)).toEqual(['late', 'recent', 'old', 'unknown']);
+  expect(items.map(item => item.id)).toEqual(['old', 'late', 'recent', 'unknown']);
+  expect(newestWallpapers([old, late], { old: dates.old, late: dates.old }).map(item => item.id)).toEqual(['late', 'old']);
+  expect(newestWallpapers([old, unknown], {}).map(item => item.id)).toEqual(['unknown', 'old']);
+});
+
+
+test('neon collection preserves its ten designs and localized keyboard search', () => {
+  const designs = wallpapers.filter((item) => item.collectionId === '0006-neon-tide');
+  expect(designs.map((item) => item.number)).toEqual(Array.from({ length: 10 }, (_, index) => index + 1));
+  for (const [locale, description, tag] of [
+    ['en', 'keyboard', 'water'],
+    ['ru', 'клавиша', 'вода'],
+    ['zh-cn', '键帽', '水'],
+    ['pt-br', 'tecla', 'água'],
+  ] as [Locale, string, string][]) {
+    const index = createSearchIndex(locale, designs.map((item) => ({
+      id: item.id,
+      text: [item.title[locale], item.description[locale], ...item.tags.map((key) => tagLabels[key][locale])].join(' '),
+    })));
+    for (const phrase of [description, tag]) expect(searchIds(index, locale, phrase)).toContain('neon-tide-4');
+  }
+});
+
+
+test('collection chronology uses its first publication and survives snapshot round trips', async () => {
+  const { newestCollections } = await import('../src/lib/catalog-order');
+  const { collections, collectionPublicationDates } = await import('../src/data/catalog');
+  expect(collections[0]!.id).toBe('0006-neon-tide');
+  const original = collections.map(item => item.id);
+  const snapshot = JSON.parse(JSON.stringify({ collections: [...collections].reverse(), collectionPublicationDates }));
+  expect(newestCollections(snapshot.collections, snapshot.collectionPublicationDates).map(item => item.id)).toEqual(original);
+  expect(collections.map(item => item.id)).toEqual(original);
+});
+
+test('collection order keeps microseconds, deterministic ties and undated entries last', async () => {
+  const { newestCollections } = await import('../src/lib/catalog-order');
+  const { collections } = await import('../src/data/catalog');
+  const items = ['0001-old', '0002-recent', '0003-tie', '0004-unknown', '0005-fraction'].map(id => ({ ...collections[0]!, id }));
+  const dates = {
+    '0001-old': '2026-10-02T21:44:58Z',
+    '0002-recent': '2026-10-19T20:13:10.100001Z',
+    '0003-tie': '2026-10-19T20:13:10.100001Z',
+    '0005-fraction': '2026-10-19T20:13:10.1Z',
+  };
+  expect(newestCollections(items, dates).map(item => item.id)).toEqual(['0003-tie', '0002-recent', '0005-fraction', '0001-old', '0004-unknown']);
+  expect(newestCollections(items, {}).map(item => item.id)).toEqual(items.map(item => item.id).reverse());
+  expect(items.map(item => item.id)).toEqual(['0001-old', '0002-recent', '0003-tie', '0004-unknown', '0005-fraction']);
+});

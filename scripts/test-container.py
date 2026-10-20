@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the production image against a separate PostgreSQL 18 TLS endpoint."""
 import base64
+from datetime import datetime, timezone
 import json
 import hashlib
 import os
@@ -99,6 +100,22 @@ verification = (repository / 'deploy/verify-runtime-grants.sql').read_text()
 for _ in range(2):
     run(psql, grants)
     run(psql, verification)
+# Preflight accepts the old schema only while the publication migration is pending.
+transactional_verification = verification.replace('BEGIN READ ONLY;', '').replace('COMMIT;', '')
+run(psql, 'BEGIN; DELETE FROM public._sqlx_migrations WHERE version = 202610200001; '
+    'DROP FUNCTION public.initial_collection_publication(text);\n' + transactional_verification + '\nROLLBACK;')
+unsafe = subprocess.run(psql, input='BEGIN; DROP FUNCTION public.initial_collection_publication(text);\n'
+    + transactional_verification, capture_output=True, text=True)
+assert unsafe.returncode != 0, 'Applied publication migration must retain its required function.'
+# Restricted function defaults must still permit catalogue publication dates.
+for function, identity in [('initial_wallpaper_publication', 'neon-tide-1'),
+                           ('initial_collection_publication', '0006-neon-tide')]:
+    run(psql, f'REVOKE EXECUTE ON FUNCTION public.{function}(text) FROM PUBLIC, :"runtime_role";')
+    unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
+    assert unsafe.returncode != 0, 'Missing publication function permission must fail verification.'
+    run(psql, grants)
+    run(psql, verification)
+    run(psql, f"SET ROLE :\"runtime_role\"; SELECT public.{function}('{identity}'); RESET ROLE;")
 # A future automatic grant must be detected before it can expose a new table.
 run(psql, f'ALTER DEFAULT PRIVILEGES FOR ROLE "{migrator}" GRANT SELECT ON TABLES TO "{role}";')
 unsafe = subprocess.run(psql, input=verification, capture_output=True, text=True)
@@ -161,8 +178,17 @@ try:
     else: raise RuntimeError('Production image did not become ready.')
     initial = json.loads((repository / 'backend/data/catalog.json').read_text())
     expected = json.loads((repository / 'frontend/src/data/catalog-live.json').read_text())
-    with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
+    for snapshot in (initial, expected):
+        snapshot.setdefault('listing', {kind: {item['id']: True for item in snapshot[kind]} for kind in ['collections', 'wallpapers']})
+    for field in ['publicationDates', 'collectionPublicationDates']:
+        expected[field] = {key: datetime.fromisoformat(value.replace('Z', '+00:00')).strftime('%Y-%m-%dT%H:%M:%S.%fZ') for key, value in expected[field].items()}
+    expected['collections'].sort(key=lambda item: (expected['collectionPublicationDates'].get(item['id'], ''), item['id']), reverse=True)
+    initial['publicationDates'] = {item['id']: expected['publicationDates'][item['id']] for item in initial['wallpapers']}
+    initial['collectionPublicationDates'] = {item['id']: expected['collectionPublicationDates'][item['id']] for item in initial['collections']}
+    initial['collections'].sort(key=lambda item: (initial['collectionPublicationDates'][item['id']], item['id']), reverse=True)
+    with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
         assert json.load(response) == initial, 'Initial migrations changed.'
+    import_started = datetime.now(timezone.utc)
     for collection in expected['collections']:
         manifest = {'collection': collection, 'wallpapers': [item for item in expected['wallpapers'] if item['collectionId'] == collection['id']]}
         for attempt in range(2):
@@ -170,8 +196,23 @@ try:
             with urllib.request.urlopen(request) as response:
                 result = json.load(response)['result']
                 assert result in ['created', 'unchanged'] if attempt == 0 else result == 'unchanged'
-    with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
-        assert json.load(response) == expected, 'Runtime catalogue differs from the build snapshot.'
+            with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
+                exported = json.load(response)
+                dates = {field: exported[field] for field in ['publicationDates', 'collectionPublicationDates']}
+            if attempt == 0:
+                first_dates = dates
+            else:
+                assert dates == first_dates, 'Exact-repeat import changed publication dates.'
+    with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
+        actual = json.load(response)
+        assert {key: value for key, value in actual.items() if key != 'publicationDates'} == {key: value for key, value in expected.items() if key != 'publicationDates'}, 'Runtime catalogue differs from the build snapshot.'
+        assert actual['publicationDates'].keys() == expected['publicationDates'].keys()
+    historical = json.loads(run(psql + ['-A', '-t'], "SELECT coalesce(jsonb_object_agg(id,to_char(public.initial_wallpaper_publication(id) AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')), '{}'::jsonb) FROM wallpapers WHERE public.initial_wallpaper_publication(id) IS NOT NULL;"))
+    for wallpaper_id, date in actual['publicationDates'].items():
+        if wallpaper_id in historical:
+            assert date == historical[wallpaper_id] == expected['publicationDates'][wallpaper_id]
+        else:
+            assert import_started <= datetime.fromisoformat(date.replace('Z', '+00:00')) <= datetime.now(timezone.utc), 'New import must use its own database publication time.'
     print(f"Verified catalogue import/readback and exact-repeat no-op: {len(expected['collections'])} collections and {len(expected['wallpapers'])} wallpapers.")
     with urllib.request.urlopen(origin + '/admin/login/') as response:
         assert 'noindex' in response.headers['X-Robots-Tag']

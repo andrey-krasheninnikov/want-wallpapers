@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
-import { parseCollection, parseCollectionManifest, type CollectionManifest } from '../scripts/catalog-add';
+import { parseCollection, parseCollectionManifest, parsePublicationDates, type CollectionManifest } from '../scripts/catalog-add';
 
 function manifest(): CollectionManifest {
-  const title = { en: 'Quiet Light', ru: 'Тихий свет', 'zh-cn': '静谧之光', 'pt-br': 'Luz tranquila' };
+  const title = { en: 'Quiet Light', ru: 'Тихий свет', 'zh-cn': '静谧之光', 'pt-br': 'Luz tranquila', ja: '静かな光' };
   const collection = { id: '0004-quiet-light', slug: 'quiet-light', count: 2, title, description: title };
   const wallpapers = [1, 2].map((number) => ({
     id: `quiet-light-${number}`, slug: `quiet-light-${number}`, number,
@@ -17,6 +17,8 @@ test('manifest validation preserves CDN identity and rejects incomplete or unsaf
   expect(parseCollectionManifest(JSON.parse(JSON.stringify(valid)))).toEqual(valid);
   for (const change of [
     (item: CollectionManifest) => { item.collection.count = 3; },
+    (item: CollectionManifest) => { delete (item.collection.title as Partial<typeof item.collection.title>).ja; },
+    (item: CollectionManifest) => { item.wallpapers[0]!.description.ja = ''; },
     (item: CollectionManifest) => { item.collection.title.ru = ''; },
     (item: CollectionManifest) => { delete (item.collection.description as Partial<typeof item.collection.description>)['zh-cn']; },
     (item: CollectionManifest) => { item.collection.id = '0004/quiet-light'; },
@@ -64,4 +66,40 @@ test('collection video covers reject incomplete objects and unsafe CDN URLs', ()
     { src: prefix + 'cover.mp4', poster: prefix + 'cover.svg' }]) {
     expect(() => parseCollection({ ...manifest().collection, videoCover })).toThrow();
   }
+});
+
+
+test('publication metadata accepts old exports and rejects malformed dates or foreign identities', () => {
+  const wallpapers = manifest().wallpapers;
+  expect(parsePublicationDates(undefined, wallpapers)).toEqual({});
+  const valid = { 'quiet-light-1': '2026-10-13T12:34:56.000001Z' };
+  expect(parsePublicationDates(valid, wallpapers)).toEqual(valid);
+  for (const value of [null, [], 1, { foreign: valid['quiet-light-1'] }, { 'quiet-light-1': 123 }, { 'quiet-light-1': '2026-02-30T12:34:56Z' }, { 'quiet-light-1': '2026-10-13T12:34:56+03:00' }]) expect(() => parsePublicationDates(value, wallpapers)).toThrow();
+});
+
+
+test('collection publication metadata validates collection identities independently of wallpapers', () => {
+  const collections = [{ id: '0001-quiet-light' }];
+  const dates = { '0001-quiet-light': '2026-10-19T20:13:10.668531Z' };
+  expect(parsePublicationDates(dates, collections)).toEqual(dates);
+  expect(() => parsePublicationDates({ 'quiet-light-1': dates['0001-quiet-light'] }, collections)).toThrow();
+});
+
+
+test('pulling an old server export preserves the current snapshot', async () => {
+  const file = Bun.file(new URL('../src/data/catalog-live.json', import.meta.url));
+  const before = await file.text();
+  const legacy = JSON.parse(before);
+  delete legacy.collectionPublicationDates;
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => Response.json(legacy) });
+  try {
+    const child = Bun.spawn([process.execPath, 'scripts/catalog-pull.ts'], {
+      cwd: new URL('../', import.meta.url).pathname,
+      env: { ...process.env, BACKEND_API_URL: server.url.origin }, stdout: 'pipe', stderr: 'pipe',
+    });
+    const error = new Response(child.stderr).text();
+    expect(await child.exited).not.toBe(0);
+    expect(await error).toContain('Catalog export lacks collection publication dates');
+    expect(await file.text()).toBe(before);
+  } finally { server.stop(true); }
 });

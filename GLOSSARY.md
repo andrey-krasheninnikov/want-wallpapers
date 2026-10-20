@@ -11,7 +11,11 @@ One catalogue contains collections. Each collection contains wallpapers.
 - **Comment**: public text tied to a wallpaper and an anonymous visitor. The account can delete its own comment.
 - **Feedback**: a private message for the site owner. A closed message is deleted one year after closure by scheduled cleanup.
 
+- **Listing state**: whether a collection or wallpaper participates in discovery. General discovery requires both the wallpaper and its collection to be shown. Hidden direct pages, downloads, indexing and social actions remain available.
+- **Build snapshot**: the full nonarchived catalogue with individual listing states; it retains hidden direct pages across builds.
 - **Archive**: hides a collection or wallpaper from the next public catalogue export while keeping its identity and social data.
+- **Catalogue publication date**: immutable UTC metadata for a wallpaper becoming part of the public catalogue. New records use the first public API insertion time; known historical records use their first public catalogue release. Static website pages update after snapshot export and build.
+- **Collection first publication date**: immutable UTC metadata fixed by a nonempty catalogue import or the first wallpaper saved to an empty collection. Historical dates use existing publication evidence. Hiding or changing its contents preserves the date.
 - **Snapshot**: validated catalogue JSON used to build public pages and search.
 - **Administrator**: the single account protected by password and TOTP; its session is separate from anonymous visitors.
 
