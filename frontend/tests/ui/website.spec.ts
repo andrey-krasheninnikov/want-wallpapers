@@ -1,5 +1,5 @@
 import publications from '../../src/data/collection-publications.json';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../browser';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
