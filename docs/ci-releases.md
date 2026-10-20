@@ -102,3 +102,70 @@ Image IDs прочитаны из исходных `checked-image.json` в runti
 Локально существующий UTC timestamp test воспроизвёл отказ системного Python 3.9.6: `Malformed or unavailable release evidence`. Resolver нормализует завершающий `Z` в `+00:00` перед стандартным ISO parser, сохраняя обязательную timezone и сравнение версии ruleset. UTC и негативные boundary tests прошли на Python 3.9.6 и 3.13; `make test-ci PYTHON=/opt/homebrew/bin/python3.13` завершился с 53 успешными тестами. Исправленный resolver на Python 3.9.6 прочитал существующий v1.5.0 и тот же digest через публичные GitHub/GHCR API.
 
 Новые тяжёлые CI runs, E2E, release tags и deployments для этой проверки не запускались. CI workflows и release-record contract не менялись.
+
+## Локальный выпуск с MacBook
+
+`$release-local` принимает явную версию и проводит общий Gitflow с `execution=local`. GitHub хранит код, PR, protected tags и Releases; GHCR хранит images. Actions не запускаются. Обычные release-patch/release-minor сохраняют прежний путь через Actions.
+
+Подготовьте Docker Desktop, Bun 1.3.14, Rust 1.93.0, ffmpeg, OpenSSH, age, AWS CLI, gh и cargo-audit 0.22.2. Для отдельной установки последнего:
+
+```sh
+cargo install cargo-audit --version 0.22.2 --locked --root ~/.local/share/want-wallpapers/tools
+```
+
+В локальном процессе Bun получает default test timeout 30 секунд для обработки PNG под нагрузкой. Rust test runner выполняет не более двух тестов параллельно. Явные ограничения отдельных тестов сохраняются; assertions и состав проверок не меняются.
+
+Для профиля full после `make install` установите браузер из текущего lockfile: `(cd frontend && bunx playwright install chromium)`. Убедитесь, что `ffmpeg -version` и `ffprobe -version` выполняются; наличие файлов в PATH не доказывает работоспособность.
+
+Владелец создаёт отдельный release key вне checkout, загружает его в ssh-agent и устанавливает только публичный ключ на VPS по production instructions. Пароль ключа вводится только в собственном терминале. Публичный ключ имеет обычные read-only права; private key и конфигурация имеют mode 0600 в каталоге 0700.
+
+Пример `~/.config/want-wallpapers/local-release/config.json`:
+
+```json
+{
+  "signingPublicKey": "~/.config/want-wallpapers/local-release/release-signing.pub",
+  "sshConfig": "~/.config/want-wallpapers/local-release/ssh_config",
+  "backupConfig": "~/.config/want-wallpapers/backup-worker/config.json",
+  "buildEnvironment": {
+    "PUBLIC_FIREBASE_PROJECT_ID": "want-wallpapers"
+  }
+}
+```
+
+`buildEnvironment` допускает только четыре существующих публичных Firebase Analytics build variables: API_KEY, PROJECT_ID, APP_ID и MEASUREMENT_ID с префиксом PUBLIC_FIREBASE_. Для сохранения Analytics заполните те же публичные значения, которые использует выбранный выпуск. Production CAPTCHA получает настройки от Rust runtime и не отключается.
+
+SSH configuration задаёт alias `wallpapers-production`, user `wallpapers-deploy`, port 14444, отдельный существующий deploy key, `IdentitiesOnly yes`, `BatchMode yes`, `StrictHostKeyChecking yes` и заранее проверенный `UserKnownHostsFile`. Owner alias для обычного deployment не используется. Backup сохраняет отдельный account/key и свою конфигурацию.
+
+Runtime и backup проверяются текущими harness, включёнными в digest инструментов. Исходники приложения и миграции берутся из выбранного checkout.
+
+На чистом опубликованном release-кандидате до merge:
+
+```sh
+make release-local-check TAG=v<version> PROFILE=full
+```
+
+После merge в main и публикации protected annotated tag перейдите в чистый checkout этого commit:
+
+```sh
+make release-local TAG=v<version> PROFILE=full
+make deploy-local TAG=v<version> PROFILE=full
+```
+
+Укажите fast вместо full только по явному выбору. Check выполняет Install, Static, Unit/API, Audit, Collection drafts и Full UI для full. Collection drafts запускает только unit-тесты Bun; n8n не запускается. Prepare переиспользует результаты по неизменному дереву, tool digest, версиям и public build configuration, затем строит и проверяет обе платформы. На текущем arm64 Mac amd64 эмулируется; evidence сохраняет это отличие. Приватное состояние находится в `~/.local/state/want-wallpapers/releases/v<version>/release.json`. Оно не публикуется целиком.
+
+Publication использует изолированный временный Docker auth config и не меняет существующий registry login. Пароль/PAT не передаётся в argv. Требуется предварительная gh authentication с правами GHCR write/read; предоставление доступа выполняет владелец. Образы получают уникальный local release ID и публикуются под отдельными references без перезаписи version tags. Проверяются config digests и итоговый index; подписывается record v3 с точными tag/source/tree/profile/checks/platform identities. Resolver сверяет подпись и tree через GitHub, но не запрашивает Actions runs.
+
+Deploy работает только с сохранённой проверенной публикацией и исходным digest. Он переиспользует готовый backup worker либо запускает собственный и завершает только его после обработки. Не запускайте второй worker вручную. Отключённый Mac, отсутствие loaded signing key, неизвестный signer, неуспешная проверка, stale heartbeat или несовпадение evidence блокируют дальнейшие шаги.
+
+Для продолжения сначала прочитайте состояние:
+
+```sh
+make release-local-status TAG=v<version>
+make deploy-local TAG=v<version> PROFILE=<original-profile>
+```
+
+Перед повторной publication resolver читает уже существующие references и сверяет identities. При неоднозначном SSH результате client запрашивает status существующего intent. Не редактируйте completed stages или digest в ledger. Изменившиеся исходники требуют нового выпуска; изменившиеся инструменты требуют новой проверки в отдельном state root после безопасной очистки прежних временных ресурсов. Опубликованное намерение не переписывается.
+
+Сборочные кеши сохраняются. Тестовые контейнеры, anonymous volumes, сети и credentials удаляются по точным task identities после проверки или ошибки. После подтверждённой publication собственные локальные image references удаляются; immutable remote images сохраняются для deployment/recovery. Повтор prepare с уже опубликованным состоянием проверяет исходный digest без rebuild. Не применяйте общий prune.
+
+Локальный deployment сохраняет intent до отправки. При повторе он только читает исходный status и продолжает ожидание; failed, rolled-back, recovery-required или неизвестный запрос не создают новый deployment. После проверки причины оператор отдельно решает, нужен ли новый запрос.

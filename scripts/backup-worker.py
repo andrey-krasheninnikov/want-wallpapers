@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import select
+import signal
 import re
 import subprocess
 import sys
@@ -16,7 +17,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from deployment import (DeployError, PREFIX, Store, matches, private_file, require, run,
-                        verify_receipt)
+                        verify_receipt, atomic_json)
 
 ROOT = Path(__file__).resolve().parent.parent
 POSTGRES = 'postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336'
@@ -117,7 +118,7 @@ def restore(ciphertext, identity):
          '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', 'POSTGRES_DB=wallpapers_restore', POSTGRES], timeout=180)
     try:
         for attempt in range(60):
-            ready = subprocess.run(['docker', 'exec', name, 'pg_isready', '-U', 'postgres', '-d', 'wallpapers_restore'],
+            ready = subprocess.run(['docker', 'exec', name, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'wallpapers_restore'],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
             if ready.returncode == 0:
                 break
@@ -238,12 +239,44 @@ def verify_backup_policy(policy):
     require(others in ([], [media]), 'backup-prefix-policy-not-verified')
 
 
+
+def worker_status(config):
+    path = Path(config['directory']) / 'worker.json'
+    if not path.exists():
+        return {'ready': False}
+    value = json.loads(private_file(path).read_text())
+    try:
+        require(type(value.get('pid')) is int and value['pid'] > 1, 'invalid-worker-status')
+        os.kill(value['pid'], 0)
+        require(run(['ps', '-p', str(value['pid']), '-o', 'lstart=']).strip() == value.get('processStart'), 'worker-process-changed')
+    except (ProcessLookupError, PermissionError, DeployError):
+        return {'ready': False}
+    limit = 1800 if value.get('stage') == 'working' else 45
+    return {**value, 'ready': value.get('configDigest') == configuration_digest(config)
+            and 0 <= time.time() - value.get('updatedAt', 0) <= limit}
+
+
+def configuration_digest(config):
+    return hashlib.sha256(json.dumps({key: value for key, value in config.items() if key != 'directory'},
+                                    sort_keys=True).encode()).hexdigest()
+
+
+def heartbeat(config, stage):
+    atomic_json(Path(config['directory']) / 'worker.json', {'pid': os.getpid(), 'stage': stage,
+                'updatedAt': int(time.time()), 'configDigest': configuration_digest(config),
+                'processStart': run(['ps', '-p', str(os.getpid()), '-o', 'lstart=']).strip()})
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('once', 'serve'))
+    parser.add_argument('mode', choices=('once', 'serve', 'status'))
     parser.add_argument('--config', required=True)
     arguments = parser.parse_args()
     config = configuration(arguments.config)
+    if arguments.mode == 'status':
+        print(json.dumps(worker_status(config), sort_keys=True))
+        return
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
     store = Store(config['directory'] / 'state')
     with store.lock('deployment', blocking=False):
         run(['docker', 'version', '--format', '{{.Server.Version}}'], timeout=15)
@@ -252,8 +285,10 @@ def main():
         verify_backup_policy(policy)
         retention(config)
         while True:
+            heartbeat(config, 'idle')
             request = ssh(config, 'backup-next')
             if request.get('pending') is not False:
+                heartbeat(config, 'working')
                 try:
                     receipt = prepare(config, request)
                 except Exception:
@@ -265,6 +300,7 @@ def main():
                     # Replaying this identical receipt only returns its stored acknowledgement.
                     accepted = ssh(config, 'backup-result ' + request['requestId'], receipt)
                 require(accepted.get('accepted') is True, 'backup-receipt-not-accepted')
+                heartbeat(config, 'idle')
                 print(json.dumps({'requestId': request['requestId'], 'status': 'verified'}), flush=True)
             if arguments.mode == 'once':
                 return

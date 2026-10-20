@@ -11,6 +11,21 @@ COMMAND = Path(__file__).resolve().parents[1] / 'ci-release.py'
 REPOSITORY = 'andrey-krasheninnikov/want-wallpapers'
 
 
+class RegistryDescriptor(unittest.TestCase):
+    def test_registry_uses_json_descriptor_and_validates_its_digest(self):
+        import importlib.util
+        from unittest.mock import patch
+        spec = importlib.util.spec_from_file_location('descriptor_release', COMMAND)
+        release = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(release)
+        expected = 'sha256:' + 'a' * 64
+        with patch.object(release, 'command', return_value=json.dumps({'digest': expected})) as command:
+            self.assertEqual(release.registry('fixture', '{{.Manifest.Digest}}'), expected)
+            self.assertEqual(command.call_args.args[0][-2:], ['--format', '{{json .Manifest}}'])
+        with patch.object(release, 'command', return_value=json.dumps({'digest': 'invalid'})), self.assertRaises(release.ReleaseError):
+            release.registry('fixture', '{{.Manifest.Digest}}')
+
+
 class EventSelection(unittest.TestCase):
     def plan(self, event, ref, repository=REPOSITORY):
         result = subprocess.run([sys.executable, str(COMMAND), 'plan'], capture_output=True, text=True,
@@ -144,8 +159,10 @@ else:
         name = next(name for name, value in fixture['actualPlatforms'].items() if reference.endswith(value['digest']))
         print(json.dumps({'architecture': name.split('/')[1], 'os': 'linux',
             'config': {'Labels': {'org.opencontainers.image.revision': fixture['actualPlatforms'][name]['revision']}}}))
+    elif '{{json .Manifest}}' in sys.argv:
+        print(json.dumps({'digest': index_digest}))
     else:
-        print(index_digest)
+        print('Name: fixture\\nDigest: ' + index_digest)
 '''
         for name in ['gh', 'docker', 'curl']:
             executable = self.root / name

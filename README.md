@@ -1,100 +1,118 @@
-# Want Wallpapers
+<p align="center">
+  <a href="https://wallpapers.want.foundation/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/cover-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="docs/assets/cover-light.png">
+      <img src="docs/assets/cover-light.png" width="1600" alt="Want Wallpapers: violet pixel logo, Lunar molt, Colour Rays and Tree of the Night. Wallpapers worth keeping.">
+    </picture>
+  </a>
+</p>
 
-Дизайнерские обои Want на https://wallpapers.want.foundation/. Публичный интерфейс Astro/React/shadcn сохранён: коллекции, поиск, desktop/mobile PNG, шесть языков. Rust API хранит каталог и действия посетителей в PostgreSQL 18. Админка: `/admin/login/` и `/admin/`. Firebase используется только для необязательной Analytics. reCAPTCHA Enterprise защищает публичные изменения и вход в админку.
+<p align="center">
+  <a href="README.md" lang="en">English</a> · <a href="README.ru.md" lang="ru">Русский</a><br>
+  <a href="https://wallpapers.want.foundation/">wallpapers.want.foundation</a> · <a href="https://t.me/want_wallpapers">Telegram Channel</a><br>
+  <a href="https://wallpapers.want.foundation/wallpapers/neon-tide-7/">Lunar molt</a> · <a href="https://wallpapers.want.foundation/wallpapers/woven-spectrum-4/">Colour Rays</a> · <a href="https://wallpapers.want.foundation/wallpapers/contours-of-silence-11/">Tree of the Night</a>
+</p>
 
-## Структура
+<p align="center">
+  <a href="https://github.com/andrey-krasheninnikov/want-wallpapers/releases/latest"><img src="https://img.shields.io/github/v/release/andrey-krasheninnikov/want-wallpapers?style=flat-square&amp;color=5B4FFF" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code%20license-MIT-5B4FFF?style=flat-square" alt="Code license: MIT"></a>
+  <a href="https://github.com/andrey-krasheninnikov/want-wallpapers/stargazers"><img src="https://img.shields.io/github/stars/andrey-krasheninnikov/want-wallpapers?style=social" alt="GitHub stars"></a>
+</p>
 
-- `frontend/`: Astro, React, стили, статический каталог и инструменты export/import.
-- `backend/`: Axum/Tokio/SQLx, миграции PostgreSQL 18, авторизация, публичный API и модерация.
-- `deploy/`: один контейнер за существующим Traefik, внешний PostgreSQL.
-- `automation/n8n/`: отдельный локальный n8n на MacBook, постоянный Docker volume и приватные snapshots.
-- `Makefile`: все основные команды из корня; Bun workspace и Cargo workspace.
+## 🧭 Contents
 
-Нужны Bun 1.3.14, Rust 1.93.0, Python 3, FFmpeg (ffmpeg/ffprobe) для проверки видеообложек, Docker для тестовой БД и `age` для проверки encrypted backup/restore. Версия выпуска — корневой package.json и Cargo workspace. Установка не выполняет dependency scripts.
+- [About the project](#-about-the-project)
+- [FAQ](#-faq)
+- [Monetization](#-monetization)
+- [Fork and run locally](#-fork-and-run-locally)
+- [Contributing](#-contributing)
+- [Changelog and latest update](#-changelog-and-latest-update)
+- [Development ideas](#-development-ideas)
+- [License](#-license)
+
+## 🌄 About the project
+
+Original PNG wallpapers, composed separately for desktop and mobile so both screens share a mood.
+
+- Themed collections, search by subject or colour, stories, ratings and comments.
+- Six languages: English, Russian, Simplified Chinese, Brazilian Portuguese, Japanese and Arabic.
+- Browsing and downloads without an account.
+
+By [Andrey Krasheninnikov](https://github.com/andrey-krasheninnikov). Questions and collaboration: [wallpapers@want.foundation](mailto:wallpapers@want.foundation).
+
+## 💬 FAQ
+
+### Are the wallpapers free?
+
+Yes, for personal use on your own screens, even if you decline optional analytics or advertising.
+
+### Which file should I download?
+
+Desktop for landscape, mobile for portrait. Both are PNGs; sizes vary, and personal cropping is allowed.
+
+### Can I use them commercially?
+
+Resale, pack redistribution and commercial use require permission. Ask [wallpapers@want.foundation](mailto:wallpapers@want.foundation).
+
+### Do I need to register?
+
+No account is needed to browse or download. Ratings and comments use an anonymous session; administration has a separate protected login.
+
+### What if I decline tracking?
+
+Browsing, search and downloads stay available; analytics and ads have separate cookie settings in the footer. Protected actions such as comments use reCAPTCHA Enterprise independently of optional analytics: [consent policy](docs/adr/0005-regional-availability-and-consent.md).
+
+## 💸 Monetization
+
+HilltopAds provides banners and popup windows according to advertising preferences; home pages and administration are excluded. Ads never control downloads. See [provider details and production checks](docs/advertising-providers.md); integration alone does not confirm revenue.
+
+There is no paid tier, shop or donation link. The ideas below are possible future income sources; published wallpapers remain free for personal use.
+
+## 🔧 Fork and run locally
+
+Astro, React and shadcn/ui on the frontend; Rust (Axum, Tokio, SQLx) and PostgreSQL 18 on the backend. Firebase serves optional Analytics only.
+
+Fork on GitHub, replace `YOUR-USERNAME`, then:
 
 ```bash
+git clone https://github.com/YOUR-USERNAME/want-wallpapers.git
+cd want-wallpapers
+git remote add upstream https://github.com/andrey-krasheninnikov/want-wallpapers.git
+git fetch upstream development
+git switch -c my-change upstream/development
 make install
-make test-db
-make test
-make check
-make build
-make docker-build
-make test-container
-cd frontend && bunx playwright install chromium
-cd ..
-make test-ui
 ```
 
-`make test` запускает поиск/фильтры/manifest, Rust API на отдельном PostgreSQL 18, CI/deployment contracts и изолированное encrypted backup/restore. UI-прогоны создают новую локальную БД с уникальным именем, запускают Rust со статической сборкой, проверяют шесть языков на 320/768/1024/1440 px, доступность, cookie, оценки, комментарии, жалобы, обращения и админку. Существующие БД не удаляются. Отчёты: `want-wallpapers-ui/` внутри системного временного каталога (`os.tmpdir()`); в CI он задаётся через TMPDIR. Тестовые секреты: `/tmp/want-wallpapers-test-<uid>/`, режим 0700. Контейнер: `want-wallpapers-test-pg`; TEST_DB_CONTAINER, TEST_DB_PORT и TEST_SECRETS_DIR позволяют выбрать другую изолированную среду. Не задавайте production DATABASE_URL для тестов.
+Requires Bun 1.3.14, Rust 1.93.0, Python 3, FFmpeg and Docker. [Local setup](docs/development.md#local-setup) covers a separate database, private files, environment and startup without production credentials. The first build needs public CDN access; open <http://localhost:4321>.
 
-Chromium запускается с включённым sandbox. На Ubuntu 24.04+ AppArmor может запрещать user namespaces скачанным браузерам: разрешите `userns` для конкретных установленных Playwright-бинарников по [инструкции Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md). CI создаёт профили с точными путями и выполняет smoke-launch на одноразовом runner; настройки VPS не меняются.
+## 🤝 Contributing
 
-## Разработка
+[Open an issue](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/new) with the page URL, steps and expected behaviour. Keep credentials and personal data private.
 
-Публичные заголовки используют общий размер 32-56 px. Страницы `/404/`, `/ru/404/`, `/zh-cn/404/`, `/pt-br/404/`, `/ja/404/` и `/ar/404/` возвращают HTTP 404 и исключены из индексации. Неизвестный публичный URL получает страницу на языке своего префикса; без известного префикса используется английский. API и health сохраняют JSON-ошибки.
+Translations, accessibility, docs and code are welcome. Discuss large changes first, target `development`, follow [DESIGN.md](DESIGN.md) and run [relevant checks](docs/development.md#checks). Preserve all six locales and download links. For artwork, confirm your rights and agree on publication terms first.
 
-`make dev` запускает frontend на localhost:4321; `/api` проксируется на Rust :8080. Скопируйте корневой `.env.example` в `.env`, задайте внешние secret files и `APP_ENV=development`, `SITE_URL=http://localhost:4321`. Публичные настройки Analytics находятся в `frontend/.env.example`; скопируйте их в `frontend/.env`. Для локальной разработки RECAPTCHA_ENABLED=false допустим; production требует Web key и credentials Google из внешнего файла. Backend не читает `.env` автоматически: экспортируйте переменные в терминале.
+## 📝 Changelog and latest update
 
-```bash
-set -a
-. ./.env
-set +a
-cargo run --locked -p want-wallpapers-server -- migrate
-make dev-backend
-```
+[Full changelog](CHANGELOG.md) · [Latest release: v1.9.3](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.9.3), October 20, 2026: Arabic and RTL, full-width feedback submission and improved side-ad spacing.
 
-Для локального DATABASE_URL_FILE можно использовать файл тестовой БД, подготовленный `make test-db`. Создайте отдельные секреты администратора через `scripts/create-secrets.py` вне репозитория. Для запуска Rust сначала нужна `make build`: она создаёт static site и CSP hashes. После этого frontend можно разрабатывать отдельно. Для просмотра production поведения используйте Rust: публичный API и production static site обслуживает Rust; `bun run preview` доступен для просмотра только статических страниц.
+## 💡 Development ideas
 
-## Каталог и CDN
+Ten income ideas to test, without committed dates or revenue forecasts. Prints need proofs; XR needs dedicated scenes and device testing.
 
-CDN: `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/<id>/<number>-desktop.png` и `-mobile.png`. Публичные ID/slug/download имена сохраняются. Поле fileStem остаётся в manifest для совместимости и больше не входит в имя CDN-файла. Новые PNG не загружаются через админку: она работает с существующими CDN-парами.
+1. Numbered art prints and posters for collectors, starting with a small preorder.
+2. Custom wall murals with an AR placement preview, sold by room size.
+3. Desk mats and interior textiles for coordinated workspaces.
+4. Curated digital picture-frame collections through display licenses or a subscription.
+5. Projection installations for cafés, hotels and events, commissioned or licensed.
+6. Physical prints with an included AR animation layer.
+7. AR portals into collection worlds, sold as scenes or access to an experience.
+8. VR spaces for rest and focus, sold individually or in themed packs.
+9. Virtual exhibitions funded by tickets or sponsorship.
+10. Commissioned AR/VR scenes with defined usage rights for brands and spaces.
 
-Миграция первоначально добавляет snapshot из Git: 3 коллекции / 25 дизайнов; старые социальные данные Firebase не импортируются. Рабочий каталог меняется через админку либо защищённый API. Кнопки «Показать/Скрыть» меняют списки, поиск и навигацию при следующем запросе. Прямые страницы, индексация и социальные действия сохраняются. Архив работает отдельно. Изменение содержимого и новые страницы требуют полного snapshot export и rebuild:
+## 📄 License
 
-```bash
-export BACKEND_API_URL=https://wallpapers.want.foundation
-make catalog-pull
-make build
-```
+Code and documentation: [MIT](LICENSE). Wallpapers: separate [personal, noncommercial terms](https://wallpapers.want.foundation/license/), including display and cropping on your own devices.
 
-Для атомарного импорта сохраните JSON `{collection,wallpapers}` и используйте токен вне репозитория. Формат и проверка PNG описаны в [инструкции каталога](.agents/skills/release-collection/references/catalogue.md).
-
-```bash
-make catalog-add MANIFEST=/absolute/path/collection.json ARGS=--dry-run
-export CATALOG_API_TOKEN_FILE=/absolute/path/outside-repository/catalog_api_token
-make catalog-add MANIFEST=/absolute/path/collection.json
-make catalog-pull
-```
-
-Dry-run не обращается к CDN/API. Импорт делает точный повтор без записи; частичные или отличающиеся данные дают conflict и не перезаписываются. После сетевого сбоя сначала выполните защищённый readback (`GET /api/v1/admin/catalog`). Номер папки уникален независимо от ведущих нулей. Существующие ID и социальные данные сохраняются. Новые категории/теги требуют отдельного согласованного обновления frontend/backend и деплоя до импорта. Для тестового API HTTP допустим только localhost/127.0.0.1.
-
-Для выпуска коллекции используйте локальный `release-collection` с URL новой CDN-папки. Он сохраняет Gitflow и разрешения конкретного выпуска; запрос изучить папку разрешает только чтение. Protected v* tag сам ничего не запускает. Production workflow запускается вручную на том же tag ref; deployment требует подготовленного VPS и работающего Mac backup worker.
-
-`make build` скачивает и декодирует оба PNG каждого дизайна, проверяет обе стороны ≥500 px, создаёт WebP и копии PNG для скачивания. CDN недоступен — сборка завершается ошибкой. Видеообложки необязательны: [формат, проверка и публикация](docs/collection-covers.md). Сборка проверяет MP4/H.264 без аудио, до 10 секунд и 8 MiB, а также обязательный PNG-постер. FFmpeg нужен только в build/test-среде; Docker build устанавливает его автоматически. Кэш и build output не коммитятся.
-
-## Эксплуатация
-
-[Локальный n8n](docs/local-n8n.md): запуск на MacBook, приватный вход, постоянные workflows/credentials/Wait и журнал, backup и восстановление в новый volume. n8n не развёртывается на VPS и не принимает публичные webhooks.
-
-[Деплой на VPS](docs/deployment.md) описывает PostgreSQL 18/TLS, роли, секреты, готовый маршрут Traefik к `wallpapers:8080` в сети `wallpapers-proxy`, Cloudflare Full (strict), GHCR, первый запуск, обновление, rollback и smoke checks. [HTTP API](docs/api.md) описывает контракт и защиту. [ADR](docs/adr/0004-rust-monorepo.md) фиксирует архитектуру.
-
-Analytics включается только с полной публичной конфигурацией и разрешением analytics в независимых настройках согласия. Страна определяет defaults: вне EEA optional services включены для новых посетителей, в EEA и при неизвестной стране ожидают явного выбора. Сохранённый отказ имеет приоритет. Российский IP и ошибка ipwho.is не отключают оценки, комментарии и обращения; просмотр, поиск и скачивание доступны независимо от выбора. Админка не загружает optional tracking. Закрытые обращения удаляются ежедневной задачей через год. [Политика согласия](docs/adr/0005-regional-availability-and-consent.md) описывает правила; [интеграция рекламы](docs/advertising-providers.md) описывает Яндекс Auto Placement и адаптивные баннеры Adsterra на публичных страницах, кроме главных. CSP расширяется только для рекламных HTML-страниц; реальные показы требуют отдельной production-проверки.
-
-Для выпуска готового `origin/development` используйте [`$release-patch`](.agents/skills/release-patch/SKILL.md) для patch-инкремента с `fast` или [`$release-minor`](.agents/skills/release-minor/SKILL.md) для minor-инкремента с `full` и patch `0`:
-
-```text
-$release-patch Выпусти origin/development и задеплой patch-релиз.
-$release-minor Выпусти origin/development и задеплой minor-релиз.
-```
-
-Оба skill выполняют Gitflow через release PR в main, protected tag, ручной production deployment и обратный merge в development. [`$release-feature`](.agents/skills/release-feature/SKILL.md) сохраняет общий порядок, поддержку feature-ветки и явной версии; без выбора профиля использует full. Для добавления коллекции из CDN приоритет имеет `release-collection`. Изменение или изучение skill не запускает выпуск.
-
-Все GitHub workflows запускаются вручную. Checks проверяет выбранный HEAD без deployment. Один запуск Production deployment на protected annotated tag из истории main выполняет verification, публикацию тех же checked amd64/arm64 images без rebuild, eligibility и production backup/deploy. Full выбран по умолчанию; fast пропускает только полный UI/E2E suite. Создание тега ничего не запускает; повтор требует исходный digest и профиль. [CI и допуск релиза](docs/ci-releases.md) описывает команды и evidence; [production deployment](docs/production-deployments.md) описывает установку VPS validator, private backup worker и recovery.
-
-Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.
-
-## Visual system and UI kit
-
-See [DESIGN.md](DESIGN.md) for visual tokens, typography, component composition and responsive rules. The design philosophy and direction board live in [docs/design](docs/design/).
-
-Run `bun run dev` and open `http://127.0.0.1:4321/ui-kit/` to browse the installed components and their states. The UI-kit route is development-only. Rebuild the local device scene with `bun frontend/scripts/device-scene.ts` after syncing previews.
+Resale, pack redistribution and commercial use need permission. The cover does not expand artwork rights. Licensing: [wallpapers@want.foundation](mailto:wallpapers@want.foundation).

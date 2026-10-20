@@ -56,6 +56,14 @@ class ClientProtocol(unittest.TestCase):
         self.assertEqual([call.args[1] for call in transport.call_args_list],
                          ['deploy ' + ' '.join((tag, sha, digest)), 'deploy-status ' + ' '.join((tag, sha, digest))])
 
+    def test_resume_queries_terminal_failure_without_new_submission(self):
+        tag, sha, digest = 'v1.5.0', 'a' * 40, 'sha256:' + 'b' * 64
+        for state in ('failed', 'rolled-back', 'recovery-required', 'succeeded'):
+            record = {'requestId': 'c' * 32, 'tag': tag, 'sourceSha': sha, 'indexDigest': digest, 'state': state}
+            with self.subTest(state=state), patch.object(client, 'transport', return_value=record) as transport:
+                self.assertEqual(client.deploy('/unused/config', tag, sha, digest, resume=True), record)
+                transport.assert_called_once_with('/unused/config', 'deploy-status ' + ' '.join((tag, sha, digest)))
+
     def test_server_failure_remains_failure_and_cannot_substitute_another_release(self):
         tag, sha, digest = 'v1.5.0', 'a' * 40, 'sha256:' + 'b' * 64
         record = {'requestId': 'c' * 32, 'tag': tag, 'sourceSha': sha, 'indexDigest': digest,

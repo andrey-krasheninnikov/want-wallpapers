@@ -2,6 +2,7 @@ FROM oven/bun:1.3.14-slim@sha256:d56a2534ffd262e92c12fd3249d3924d296d97086da773f
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY frontend/package.json frontend/package.json
+COPY patches ./patches
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY frontend/scripts frontend/scripts
 COPY frontend/src/data frontend/src/data

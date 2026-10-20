@@ -7,6 +7,7 @@ WORKDIR /app
 ENV ASTRO_TELEMETRY_DISABLED=1
 COPY package.json bun.lock ./
 COPY frontend/package.json frontend/package.json
+COPY patches ./patches
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY frontend ./frontend
 ARG PUBLIC_FIREBASE_API_KEY

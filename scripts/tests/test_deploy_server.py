@@ -21,7 +21,7 @@ spec.loader.exec_module(server)
 class ServerTransitions(unittest.TestCase):
     def exercise(self, *, wrong_image=False, worker_failure=False, migration_failure=False,
                  schema_changes=False, readiness_failure=False, worker_unavailable=False, release_delay=0,
-                 profile=None, changed_profile=False):
+                 profile=None, changed_profile=False, local=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             environment = root / '.env'
@@ -39,6 +39,9 @@ class ServerTransitions(unittest.TestCase):
                       'platforms': {'linux/amd64': {'digest': 'sha256:' + 'b' * 64, 'configDigest': 'sha256:' + 'e' * 64}}}
             if profile is not None:
                 record.update(schemaVersion=2, verificationProfile=profile, skippedChecks=[] if profile == 'full' else ['Full UI'])
+            if local:
+                record.update(schemaVersion=3, localVerification={'id': 'f' * 32}, signature='synthetic-signature')
+                record.pop('verificationRun', None)
             store.write(record)
             before = {'schema': '1' * 64, 'history': [{'version': 1, 'success': True, 'checksum': '2' * 96}], 'catalog': '3' * 64}
             migrated = [False]
@@ -146,6 +149,15 @@ class ServerTransitions(unittest.TestCase):
         self.assertEqual(failed['state'], 'failed')
         self.assertFalse(migrated)
         self.assertIn(('sha256:' + '6' * 64).encode(), environment)
+
+    def test_local_records_keep_backup_migration_and_compatible_only_rollback(self):
+        for arguments, expected in [({}, 'succeeded'), ({'worker_failure': True}, 'failed'),
+                                    ({'migration_failure': True}, 'rolled-back'),
+                                    ({'migration_failure': True, 'schema_changes': True}, 'recovery-required')]:
+            with self.subTest(arguments=arguments):
+                result, _, _ = self.exercise(local=True, profile='fast', **arguments)
+                self.assertEqual(result['state'], expected)
+                self.assertEqual(result['localVerification'], {'id': 'f' * 32})
 
     def test_wrong_image_and_failed_worker_leave_the_old_app_config(self):
         for arguments in ({'wrong_image': True}, {'worker_failure': True}, {'worker_unavailable': True}):
