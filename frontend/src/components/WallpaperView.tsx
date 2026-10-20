@@ -8,7 +8,6 @@ import { useWallpaperSocial, WallpaperRatings, WallpaperComments } from '@/compo
 import { copy, localPath } from '@/data/copy';
 import { designCopy } from '@/data/design-copy';
 import { selectedWallpaperVariant, wallpaperSlideHref } from '@/lib/wallpaper-navigation';
-import { yandexAdvertisingRequested } from '@/lib/advertising-providers';
 import type { WallpaperVariant } from '@/data/previews';
 import { localeDirection, type Locale } from '@/data/catalog';
 
@@ -47,7 +46,6 @@ export default function WallpaperView({ locale, id, description, variants, tags,
     const item = navigation[value];
     if (!item) return;
     const href = wallpaperSlideHref(item.href, variant);
-    if (yandexAdvertisingRequested()) { window.location.assign(href); return; }
     void import('astro:transitions/client').then(({ navigate }) => navigate(href.split('#')[0], { info: { wallpaperSlide: true } }));
   }
   useEffect(() => {

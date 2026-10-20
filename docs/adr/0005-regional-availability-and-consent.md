@@ -2,7 +2,7 @@
 
 Status: accepted; availability and consent implemented in #10. Publisher integration is implemented in #16; live production advertising remains unverified. Replaces the availability and consent decisions in [0002](0002-region-and-consent.md) and the regional-policy paragraph of [0004](0004-rust-monorepo.md).
 
-Ratings, comments, feedback and analytics are no longer disabled solely because a visitor is in Russia or a country lookup fails; analytics remains subject to consent and configuration, and authentication, CSRF, ownership, rate limits and production reCAPTCHA remain independent. Optional analytics and advertising default to enabled for new visitors outside the EEA, while EEA visitors and unknown-country results require an explicit choice; stored refusals are preserved and advertising consent is independent of an earlier analytics choice. Country selection uses Yandex for RU/KZ/BY and Adsterra elsewhere, including unknown-country results after consent, while downloads stay available when advertising is declined, dismissed or unavailable.
+Ratings, comments, feedback and analytics are no longer disabled solely because a visitor is in Russia or a country lookup fails; analytics remains subject to consent and configuration, and authentication, CSRF, ownership, rate limits and production reCAPTCHA remain independent. Optional analytics and advertising default to enabled for new visitors outside the EEA, while EEA visitors and unknown-country results require an explicit choice; stored refusals are preserved and advertising consent is independent of an earlier analytics choice. Advertising uses HilltopAds in all countries when permitted by the advertising preference, while downloads stay available when advertising is declined, dismissed or unavailable.
 
 
 ## Реализация #10
@@ -11,14 +11,12 @@ Ratings, comments, feedback and analytics are no longer disabled solely because 
 
 Явные настройки имеют приоритет над defaults. `want-cookie-preferences-v2` хранит независимые boolean analytics/advertising. Старое essential переносится в false/false, analytics в true/false; повреждённая запись не разрешает сбор. Необходимое хранение и CAPTCHA сохраняются при отказе от optional tracking. Настройки доступны в footer; отзыв отключает дальнейший сбор, включая другую открытую вкладку и незавершённый запуск SDK.
 
-Firebase Analytics требует полной публичной конфигурации и разрешения аналитики. До инициализации применяются analytics_storage и отдельные ad_storage/ad_user_data/ad_personalization. Админка не выполняет lookup и не загружает optional tracking. Яндекс Auto Placement и адаптивные баннеры Adsterra используют эти разрешения независимо от Analytics. Реальные production-показы остаются отдельной проверкой.
+Firebase Analytics требует полной публичной конфигурации и разрешения аналитики. До инициализации применяются analytics_storage и отдельные ad_storage/ad_user_data/ad_personalization. Админка не выполняет lookup и не загружает optional tracking. HilltopAds использует эти разрешения независимо от Analytics. Реальные production-показы остаются отдельной проверкой.
 
 Политика согласия опирается на [рекомендации EDPB](https://www.edpb.europa.eu/sme/be-compliant/process-personal-data-lawfully_en); это не общее юридическое одобрение рекламных конфигураций. API consent и отключения сбора описан в [Firebase Analytics](https://firebase.google.com/docs/reference/js/analytics).
 
 Территории сверяются с [перечнем регионов ЕС](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=legissum%3Aoutermost_regions) и [декларацией о применении ЕЭЗ к Аландским островам](https://treatydatabase.overheid.nl/en/Treaty/Details/004981_p).
 
-## Подготовка рекламных аккаунтов #16
+## Рекламная интеграция
 
-Владелец подтвердил одобрение сайтов и предоставил публичные коды. [Инструкция](../advertising-providers.md) содержит ID, размеры, CSP и ограничения проверки. По решению владельца реклама разрешена на всех публичных страницах, кроме локализованных главных; admin, 404 и ui-kit исключены. Adsterra использует два разных боковых формата на широких страницах обоев и один подходящий inline-формат в остальных разрешённых случаях. Это заменяет исходное ограничение #22 только боковыми размещениями.
-
-Рекламные HTML-документы получают отдельные исключения CSP для ресурсов провайдеров, inline-кода и eval. После начала загрузки Яндекса переходы перезагружают документ из-за ограничений авторасстановки на SPA. Отзыв согласия после начала рекламных запросов сохраняет отказ и перезагружает документ, включая отзыв из другой вкладки. Скачивания остаются обычными ссылками. Видео не подключено; #28 остаётся отдельной задачей. Фактические показы, дополнительные домены Adsterra и требования ads.txt не подтверждены локальными тестами.
+[#136](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/136) заменяет региональный выбор сети единым HilltopAds MultiTag с баннером и штатными popup. [ADR 0014](0014-hilltopads.md) определяет провайдера и границу документа; правила согласия выше сохраняются.

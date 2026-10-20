@@ -187,51 +187,17 @@ fn content_security_policy(
         && hashes.contains_key(route)
         && advertising_path(path);
     let provider_scripts = if advertising {
-        " https://yastatic.net https://*.yandex.ru https://*.adfox.ru https://yandex.ru https://yandex.com https://verify.yandex.ru https://bauval.org"
-    } else {
-        ""
-    };
-    let ad_eval = if advertising { " 'unsafe-eval'" } else { "" };
-    let ad_styles = if advertising {
-        " https://yastatic.net https://*.adfox.ru"
-    } else {
-        ""
-    };
-    let ad_images = if advertising {
-        " https://*.yandex.net https://*.adfox.ru https://*.yandex.ru https://yandex.ru https://yandex.com https://bauval.org"
-    } else {
-        ""
-    };
-    let ad_media = if advertising {
-        " blob: data: https://yastatic.net https://*.yandex.net https://*.yandex.ru https://*.adfox.ru https://yandex.ru https://yandex.com"
-    } else {
-        ""
-    };
-    let ad_fonts = if advertising {
-        " https://yastatic.net data:"
-    } else {
-        ""
-    };
-    let ad_connect = if advertising {
-        " blob: https://yastatic.net https://*.yandex.net https://*.adfox.ru https://*.yandex.ru https://yandex.ru https://yandex.com https://bauval.org"
+        " https://massivesalad.com https://phoroglopsu.com"
     } else {
         ""
     };
     let ad_frames = if advertising {
-        " https://yandexadexchange.net https://*.yandexadexchange.net https://yastatic.net https://*.yandex.ru https://*.adfox.ru https://bauval.org"
+        " https://massivesalad.com"
     } else {
         ""
     };
-    // Inline provider tags are allowed only on known public advertising documents.
-    let elements = if advertising {
-        format!(
-            "; script-src-elem 'self' 'unsafe-inline'{analytics}{captcha_scripts}{provider_scripts}"
-        )
-    } else {
-        String::new()
-    };
     format!(
-        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}{provider_scripts}{ad_eval}; style-src 'self' 'unsafe-inline'{ad_styles}; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}{ad_images}; media-src https://want-foundation.s3.twcstorage.ru{ad_media}; font-src 'self'{ad_fonts}; connect-src {connect}{captcha_connect}{ad_connect}; frame-src {frames}{ad_frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'{elements}"
+        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}{provider_scripts}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}; media-src https://want-foundation.s3.twcstorage.ru; font-src 'self'; connect-src {connect}{captcha_connect}; frame-src {frames}{ad_frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     )
 }
 
@@ -270,12 +236,12 @@ mod tests {
                             &hashes,
                         );
                         assert!(
-                            csp.contains("'unsafe-eval'")
-                                && csp.contains("script-src-elem 'self' 'unsafe-inline'"),
+                            !csp.contains("'unsafe-eval'") && !csp.contains("script-src-elem"),
                             "{path}"
                         );
                         assert!(
-                            csp.contains("https://bauval.org") && csp.contains("https://yandex.ru")
+                            csp.contains("https://massivesalad.com")
+                                && csp.contains("https://phoroglopsu.com")
                         );
                         assert!(
                             csp.contains("frame-ancestors 'none'")
@@ -291,12 +257,12 @@ mod tests {
                     ] {
                         assert!(
                             !content_security_policy(&path, status, html, &hashes)
-                                .contains("bauval")
+                                .contains("massivesalad")
                         );
                     }
                     assert!(
                         !content_security_policy(&path, StatusCode::OK, true, &HashMap::new())
-                            .contains("bauval")
+                            .contains("massivesalad")
                     );
                 }
             }
@@ -319,8 +285,8 @@ mod tests {
                 let hashes = HashMap::from([(path.clone(), vec![])]);
                 let csp = content_security_policy(&path, StatusCode::OK, true, &hashes);
                 assert!(
-                    !csp.contains("bauval")
-                        && !csp.contains("yandex")
+                    !csp.contains("massivesalad")
+                        && !csp.contains("phoroglopsu")
                         && !csp.contains("unsafe-eval")
                         && !csp.contains("script-src-elem"),
                     "{path}"
