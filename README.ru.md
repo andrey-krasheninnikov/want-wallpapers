@@ -1,18 +1,52 @@
-# Want Wallpapers
+<p align="center">
+  <a href="https://wallpapers.want.foundation/ru/">
+    <img src="frontend/assets/logo.svg" width="80" height="80" alt="Логотип Want Wallpapers">
+  </a>
+</p>
 
-[English](README.md) · [Русский](README.ru.md)
+<h1 align="center">Want Wallpapers</h1>
 
-[wallpapers.want.foundation](https://wallpapers.want.foundation/ru/) · [Telegram Channel](https://t.me/want_wallpapers)
+<p align="center">
+  <strong>Обои, которые хочется оставить.</strong><br>
+  Авторские PNG-обои для компьютера и телефона.
+</p>
 
-Обои, которые хочется оставить.
+<p align="center">
+  <a href="README.md" lang="en">English</a> · <a href="README.ru.md" lang="ru">Русский</a><br>
+  <a href="https://wallpapers.want.foundation/ru/">wallpapers.want.foundation</a> · <a href="https://t.me/want_wallpapers">Telegram Channel</a>
+</p>
 
-[![Want Wallpapers: обои «Фиолетовый горизонт» на горизонтальном и вертикальном экранах рядом с фирменным фиолетовым пиксельным логотипом.](docs/assets/readme-banner.png)](https://wallpapers.want.foundation/ru/)
+<p align="center">
+  <a href="https://wallpapers.want.foundation/ru/">
+    <img src="docs/assets/readme-banner.png" width="1600" alt="Want Wallpapers: обои «Фиолетовый горизонт» на горизонтальном и вертикальном экранах рядом с фирменным фиолетовым пиксельным логотипом.">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/andrey-krasheninnikov/want-wallpapers/releases/latest"><img src="https://img.shields.io/github/v/release/andrey-krasheninnikov/want-wallpapers?style=flat-square&amp;color=5B4FFF" alt="Последний релиз"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code%20license-MIT-5B4FFF?style=flat-square" alt="Лицензия кода: MIT"></a>
+  <a href="https://github.com/andrey-krasheninnikov/want-wallpapers/stargazers"><img src="https://img.shields.io/github/stars/andrey-krasheninnikov/want-wallpapers?style=social" alt="Звёзды на GitHub"></a>
+</p>
+
+## Содержание
+
+- [О проекте](#о-проекте)
+- [FAQ](#faq)
+- [Монетизация](#монетизация)
+- [Форк и локальный запуск](#форк-и-локальный-запуск)
+- [Участие в проекте](#участие-в-проекте)
+- [Changelog и последнее обновление](#changelog-и-последнее-обновление)
+- [План развития](#план-развития)
+- [Лицензия](#лицензия)
 
 ## О проекте
 
 Want Wallpapers собирает авторские обои для экранов, которыми вы пользуетесь каждый день. Выберите настроение и скачайте горизонтальный или вертикальный PNG. У каждого дизайна есть композиция для компьютера и телефона, чтобы экраны сочетались и сохраняли удобное для своего формата расположение деталей.
 
-На сайте есть тематические коллекции, поиск по сюжету и цвету, истории работ, оценки и комментарии. Доступны английский, русский, упрощённый китайский, бразильский португальский, японский и арабский языки. Для просмотра и скачивания аккаунт не нужен.
+- Тематические коллекции и поиск по сюжету и цвету.
+- Истории работ, оценки и комментарии.
+- Английский, русский, упрощённый китайский, бразильский португальский, японский и арабский языки.
+- Просмотр и скачивание без аккаунта.
 
 Проект поддерживает [Andrey Krasheninnikov](https://github.com/andrey-krasheninnikov). По вопросам проекта, лицензирования и сотрудничества пишите на [wallpapers@want.foundation](mailto:wallpapers@want.foundation).
 

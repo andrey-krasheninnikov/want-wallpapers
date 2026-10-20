@@ -1,18 +1,52 @@
-# Want Wallpapers
+<p align="center">
+  <a href="https://wallpapers.want.foundation/">
+    <img src="frontend/assets/logo.svg" width="80" height="80" alt="Want Wallpapers logo">
+  </a>
+</p>
 
-[English](README.md) · [Русский](README.ru.md)
+<h1 align="center">Want Wallpapers</h1>
 
-[wallpapers.want.foundation](https://wallpapers.want.foundation/) · [Telegram Channel](https://t.me/want_wallpapers)
+<p align="center">
+  <strong>Wallpapers worth keeping.</strong><br>
+  Original PNG wallpapers for desktop and mobile.
+</p>
 
-Wallpapers worth keeping.
+<p align="center">
+  <a href="README.md" lang="en">English</a> · <a href="README.ru.md" lang="ru">Русский</a><br>
+  <a href="https://wallpapers.want.foundation/">wallpapers.want.foundation</a> · <a href="https://t.me/want_wallpapers">Telegram Channel</a>
+</p>
 
-[![Want Wallpapers: the Violet Horizon desktop and mobile wallpapers on two screens, beside the violet pixel logo.](docs/assets/readme-banner.png)](https://wallpapers.want.foundation/)
+<p align="center">
+  <a href="https://wallpapers.want.foundation/">
+    <img src="docs/assets/readme-banner.png" width="1600" alt="Want Wallpapers: the Violet Horizon desktop and mobile wallpapers on two screens, beside the violet pixel logo.">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/andrey-krasheninnikov/want-wallpapers/releases/latest"><img src="https://img.shields.io/github/v/release/andrey-krasheninnikov/want-wallpapers?style=flat-square&amp;color=5B4FFF" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code%20license-MIT-5B4FFF?style=flat-square" alt="Code license: MIT"></a>
+  <a href="https://github.com/andrey-krasheninnikov/want-wallpapers/stargazers"><img src="https://img.shields.io/github/stars/andrey-krasheninnikov/want-wallpapers?style=social" alt="GitHub stars"></a>
+</p>
+
+## Contents
+
+- [About the project](#about-the-project)
+- [FAQ](#faq)
+- [Monetization](#monetization)
+- [Fork and run locally](#fork-and-run-locally)
+- [Contributing](#contributing)
+- [Changelog and latest update](#changelog-and-latest-update)
+- [Development ideas](#development-ideas)
+- [License](#license)
 
 ## About the project
 
 Want Wallpapers is a collection of original wallpapers for the screens you use every day. Find a mood you like, then download a landscape or portrait PNG. Each design has a desktop and mobile composition, so your screens can share a visual theme without relying on one crop.
 
-Browse themed collections, search by subject or colour, read the stories behind the work, and leave ratings or comments. The site supports English, Russian, Simplified Chinese, Brazilian Portuguese, Japanese and Arabic. Browsing and downloads need no account.
+- Themed collections and search by subject or colour.
+- Stories behind the work, ratings and comments.
+- English, Russian, Simplified Chinese, Brazilian Portuguese, Japanese and Arabic.
+- Browsing and downloads without an account.
 
 [Andrey Krasheninnikov](https://github.com/andrey-krasheninnikov) maintains the project. For questions, licensing or collaboration, write to [wallpapers@want.foundation](mailto:wallpapers@want.foundation).
 
