@@ -2413,7 +2413,7 @@ async fn japanese_upgrade_rolls_back_unknown_records_and_changed_sources(pool: P
 }
 
 #[sqlx::test(migrations = "./migrations")]
-async fn japanese_catalog_roundtrip_requires_five_locales(pool: PgPool) {
+async fn japanese_catalog_roundtrip_preserves_translation(pool: PgPool) {
     let input = manifest();
     assert_eq!(
         catalog::import_manifest(&pool, &input, CatalogActor::Token)
@@ -2537,6 +2537,194 @@ async fn japanese_public_not_found_uses_localized_document_and_http_status() {
         let text = std::str::from_utf8(&body).unwrap();
         assert!(text.contains("lang=\"ja\""));
         assert!(text.contains("このページは見つかりません。"));
+    }
+    std::fs::remove_dir_all(directory).unwrap();
+}
+
+async fn before_arabic(pool: &PgPool) {
+    before_japanese(pool).await;
+    japanese_backfill(pool).await.unwrap();
+    sqlx::raw_sql(include_str!(
+        "../migrations/202610200003_listing_visibility.sql"
+    ))
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+async fn arabic_backfill(pool: &PgPool) -> Result<(), sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    sqlx::raw_sql(include_str!(
+        "../migrations/202610200004_arabic_catalog.sql"
+    ))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await
+}
+
+#[sqlx::test(migrations = false)]
+async fn arabic_upgrade_preserves_catalog_and_existing_translations(pool: PgPool) {
+    before_arabic(&pool).await;
+    let source: Value =
+        serde_json::from_str(include_str!("../../frontend/src/data/catalog-live.json")).unwrap();
+    for kind in ["collections", "wallpapers"] {
+        for original in source[kind].as_array().unwrap() {
+            let mut item = original.clone();
+            for field in ["title", "description"] {
+                item[field].as_object_mut().unwrap().remove("ar");
+            }
+            if kind == "collections" {
+                sqlx::query("INSERT INTO collections(id,folder_number,slug,data) VALUES($1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data")
+                    .bind(item["id"].as_str().unwrap()).bind(item["id"].as_str().unwrap().split('-').next().unwrap().parse::<i64>().unwrap())
+                    .bind(item["slug"].as_str().unwrap()).bind(&item).execute(&pool).await.unwrap();
+            } else {
+                sqlx::query("INSERT INTO wallpapers(id,collection_id,number,data) VALUES($1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data")
+                    .bind(item["id"].as_str().unwrap()).bind(item["collectionId"].as_str().unwrap()).bind(item["number"].as_i64().unwrap()).bind(&item).execute(&pool).await.unwrap();
+            }
+        }
+    }
+    sqlx::query("UPDATE collections SET data=jsonb_set(data,'{title,ar}',to_jsonb('عنوان محفوظ'::text)),listed=false,archived=true,version=7 WHERE id='0001-contours-of-silence'").execute(&pool).await.unwrap();
+    let before = catalog_rows(&pool).await;
+    arabic_backfill(&pool).await.unwrap();
+    let after = catalog_rows(&pool).await;
+    assert_eq!(before.len(), 51);
+    for (previous, mut row) in before.iter().zip(after.clone()) {
+        assert_eq!(row["version"], previous["version"].as_i64().unwrap() + 1);
+        row["version"] = previous["version"].clone();
+        for field in ["title", "description"] {
+            assert!(!row["data"][field]["ar"].as_str().unwrap().is_empty());
+            if let Some(existing) = previous["data"][field].get("ar") {
+                assert_eq!(&row["data"][field]["ar"], existing);
+            } else {
+                row["data"][field].as_object_mut().unwrap().remove("ar");
+            }
+        }
+        assert_eq!(&row, previous);
+    }
+    arabic_backfill(&pool).await.unwrap();
+    assert_eq!(catalog_rows(&pool).await, after);
+}
+
+#[sqlx::test(migrations = false)]
+async fn arabic_upgrade_rolls_back_unknown_and_changed_sources(pool: PgPool) {
+    before_arabic(&pool).await;
+    sqlx::query("UPDATE collections SET data=jsonb_set(data,'{title,en}',to_jsonb('Changed source'::text)) WHERE id='0001-contours-of-silence'").execute(&pool).await.unwrap();
+    let before = catalog_rows(&pool).await;
+    assert!(arabic_backfill(&pool).await.is_err());
+    assert_eq!(catalog_rows(&pool).await, before);
+    sqlx::query("UPDATE collections SET data=jsonb_set(data,'{title,en}',to_jsonb('Contours of Silence'::text)) WHERE id='0001-contours-of-silence'").execute(&pool).await.unwrap();
+    let mut unknown = json!(manifest().collection);
+    unknown["id"] = json!("0099-unknown");
+    unknown["slug"] = json!("unknown");
+    for field in ["title", "description"] {
+        unknown[field].as_object_mut().unwrap().remove("ar");
+    }
+    sqlx::query("INSERT INTO collections(id,folder_number,slug,data) VALUES('0099-unknown',99,'unknown',$1)").bind(unknown).execute(&pool).await.unwrap();
+    let before = catalog_rows(&pool).await;
+    assert!(arabic_backfill(&pool).await.is_err());
+    assert_eq!(catalog_rows(&pool).await, before);
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn arabic_catalog_roundtrip_requires_six_locales(pool: PgPool) {
+    let mut input = manifest();
+    input
+        .collection
+        .title
+        .insert("ar".into(), "عنوان عربي محفوظ".into());
+    input.wallpapers[0]
+        .description
+        .insert("ar".into(), "وصف عربي محفوظ".into());
+    assert_eq!(
+        catalog::import_manifest(&pool, &input, CatalogActor::Token)
+            .await
+            .unwrap(),
+        "created"
+    );
+    assert_eq!(
+        catalog::import_manifest(&pool, &input, CatalogActor::Token)
+            .await
+            .unwrap(),
+        "unchanged"
+    );
+    let exported = catalog::export(&pool).await.unwrap();
+    assert_eq!(
+        exported
+            .collections
+            .iter()
+            .find(|item| item.id == input.collection.id)
+            .unwrap(),
+        &input.collection
+    );
+    assert_eq!(
+        exported
+            .wallpapers
+            .iter()
+            .find(|item| item.id == input.wallpapers[0].id)
+            .unwrap(),
+        &input.wallpapers[0]
+    );
+    let app = router(state(pool));
+    for invalid in [Value::Null, json!(""), json!("a".repeat(201)), json!(42)] {
+        let mut value = json!(input);
+        value["collection"]["title"]["ar"] = invalid;
+        let (status, _, _) = request(
+            &app,
+            "POST",
+            "/api/v1/admin/catalog/import",
+            Some(value),
+            None,
+            None,
+            Some(TOKEN),
+        )
+        .await;
+        assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    }
+    let mut legacy = json!(input);
+    legacy["collection"]["title"]
+        .as_object_mut()
+        .unwrap()
+        .remove("ar");
+    let (status, _, _) = request(
+        &app,
+        "POST",
+        "/api/v1/admin/catalog/import",
+        Some(legacy),
+        None,
+        None,
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+}
+
+#[tokio::test]
+async fn arabic_public_not_found_uses_localized_document_and_http_status() {
+    let directory = std::env::temp_dir().join(format!("want-wallpapers-ar-404-{}", Uuid::new_v4()));
+    std::fs::create_dir_all(directory.join("ar/404")).unwrap();
+    std::fs::write(
+        directory.join("ar/404/index.html"),
+        "<!doctype html><html lang=\"ar\" dir=\"rtl\"><body>هذه الصفحة غير موجودة.</body></html>",
+    )
+    .unwrap();
+    let mut state = state(PgPool::connect_lazy("postgresql://localhost/unused").unwrap());
+    Arc::get_mut(&mut state.config).unwrap().static_dir = directory.clone();
+    let app = router(state);
+    for path in ["/ar/missing/", "/ar/404/"] {
+        let response = app
+            .clone()
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_eq!(
+            response.headers()["cache-control"],
+            "public, max-age=0, must-revalidate"
+        );
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let text = std::str::from_utf8(&body).unwrap();
+        assert!(text.contains("lang=\"ar\" dir=\"rtl\""));
+        assert!(text.contains("هذه الصفحة غير موجودة."));
     }
     std::fs::remove_dir_all(directory).unwrap();
 }

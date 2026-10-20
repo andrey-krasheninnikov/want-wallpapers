@@ -89,7 +89,7 @@ export function WallpaperRatings({ locale, social }: { locale: Locale; social: S
   const { data, loading, busy } = social;
   return <section className="wallpaper-ratings grid gap-3" aria-labelledby="ratings-title" data-wallpaper-ratings>
     <h2 id="ratings-title">{ui.ratings}</h2><p className="text-sm leading-relaxed text-muted-foreground">{ui.ratingHint}</p>
-    {loading && !data ? <div role="status" className="grid grid-cols-4 gap-2" aria-label={ui.loading} aria-busy="true">{ratingValues.map((value) => <Skeleton key={value} className="h-14" />)}</div> : <RadioGroup value={data?.ownRating ?? ''} onValueChange={(value) => void social.rate(value)} disabled={busy || !data} aria-label={ui.ratings} className="grid grid-cols-4 gap-2">
+    {loading && !data ? <div role="status" className="grid grid-cols-4 gap-2" aria-label={ui.loading} aria-busy="true">{ratingValues.map((value) => <Skeleton key={value} className="h-14" />)}</div> : <RadioGroup dir={locale === 'ar' ? 'rtl' : 'ltr'} value={data?.ownRating ?? ''} onValueChange={(value) => void social.rate(value)} disabled={busy || !data} aria-label={ui.ratings} className="grid grid-cols-4 gap-2">
       {ratingValues.map((value) => <Label key={value} htmlFor={`rating-${value}`} title={ui[value]} className="rating-tile">
         <RadioGroupItem id={`rating-${value}`} value={value} aria-label={ui[value]} aria-describedby={`rating-count-${value}`} className="absolute inset-0 size-full rounded-lg border-0 opacity-0" /><span aria-hidden="true" className="pointer-events-none text-xl leading-none">{ratingEmoji[value]}</span>{data?.ownRating === value && <Check aria-hidden="true" className="pointer-events-none absolute top-1 right-1 size-3 text-link" />}<span id={`rating-count-${value}`} className="pointer-events-none text-center text-sm text-muted-foreground tabular-nums wrap-anywhere"><span className="sr-only">{text.votes}: </span>{data?.counts[value].toLocaleString(locale) ?? '…'}</span>
       </Label>)}
@@ -108,7 +108,7 @@ export function WallpaperComments({ locale, social }: { locale: Locale; social: 
       <FieldGroup><Field data-disabled={busy || !data}>
         <div className="comment-compose-row"><span className="comment-avatar" data-own="true" aria-hidden="true"><UserRound /></span><FieldLabel htmlFor="comment-text">{text.commentTitle}</FieldLabel></div>
         <p id="comment-hint" className="text-sm leading-relaxed text-muted-foreground">{text.commentPublic}</p>
-        <Textarea id="comment-text" name="comment" value={comment} onChange={(event) => social.setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy || !data} aria-describedby="comment-hint" />
+        <Textarea dir="auto" id="comment-text" name="comment" value={comment} onChange={(event) => social.setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy || !data} aria-describedby="comment-hint" />
       </Field></FieldGroup>
       <div className="comment-compose-footer"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><Button type="submit" disabled={busy || !data}>{busy ? ui.loading : ui.commentSubmit}</Button></div>
     </form>

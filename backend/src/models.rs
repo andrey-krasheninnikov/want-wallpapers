@@ -2,7 +2,7 @@ use crate::error::{ApiError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 
-pub const LOCALES: [&str; 5] = ["en", "ru", "zh-cn", "pt-br", "ja"];
+pub const LOCALES: [&str; 6] = ["en", "ru", "zh-cn", "pt-br", "ja", "ar"];
 pub type Localized = BTreeMap<String, String>;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

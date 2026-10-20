@@ -16,6 +16,17 @@ export const editorialCopy = {
     "licenseText": "個人の非商用の壁紙としての利用と、ご自身の端末に合わせたトリミングが可能です。販売、壁紙パックの再配布、自作と偽ること、商用利用は認められていません。",
     "topics": "関連するテーマ"
   },
+
+  ar: {
+    "title": "حكايات المجموعات",
+    "story": "حكاية المجموعة",
+    "works": "مشاهد هذه المجموعة",
+    "sizes": "أبعاد ملفات PNG الأصلية بالبكسل",
+    "files": "لكل تصميم ملف PNG أفقي للكمبيوتر وملف PNG عمودي للهاتف. الأبعاد التالية تخص الملفات الأصلية؛ أما معاينات المعرض فهي صور WebP أصغر حجمًا.",
+    "license": "ترخيص الاستخدام",
+    "licenseText": "يُسمح بالاستخدام الشخصي غير التجاري كخلفية وبالاقتصاص لأجهزتك الخاصة. لا يُسمح بالبيع أو إعادة توزيع حزم الخلفيات أو ادعاء ملكية الأعمال أو الاستخدام التجاري.",
+    "topics": "موضوعات ذات صلة"
+  },
 } satisfies Record<Locale, { title: string; story: string; works: string; sizes: string; files: string; license: string; licenseText: string; topics: string }>;
 
 export const collectionStories: Record<string, Record<Locale, string[]>> = {
@@ -50,6 +61,13 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       "A onda que retorna levanta o barco de lado. Dentro da curva, quadrados amarelos atravessam o rosa e o azul, enquanto a superfície externa escura se dobra sobre eles. O barco passa por uma abertura e entra num rio ramificado. A cada curva, as margens lisas dão lugar a pequenas ilhas quadradas. Acima delas, um pedaço se desprende da lua. Ele cai sem ruído e deixa outra margem iluminada na água.",
       "Degraus de basalto pairam sobre a entrada de uma caverna. O barco para sob o mais baixo, junto de um tronco partido com anéis coloridos ainda acesos nas rachaduras. A luz de âmbar avança do centro da madeira até a casca. Alguns quadrados verde-lima se soltam da rachadura e pousam na corda molhada. Eles vão apagando enquanto as gotas passam. Gotas quadradas sobem do chão seco. No alto, um lago guarda os reflexos das pedras. A primeira gota alcança a superfície. Uma ondulação atravessa o teto, e o barco refletido se desloca entre dois picos escuros."
     ]
+  ,
+    ar: [
+      "يبلغ المدّ أدنى جزيرة سوداء قبل أن يفك القارب رباطه. يصعد الماء الوردي على الشاطئ المتدرّج ويتجمع تحت لوح صخري مدبّب. في البعيد، تميل الجزر نحو البقعة نفسها من السماء البنفسجية. ينجرف مربع ضوء منفلت قرب مقدمة القارب، ثم يعلق بساق نابتة من شق في الصخر، حيث بدأت أزهار صفراء صغيرة تتفتح.",
+      "تحت القارب، تستدير سمكة مانتا ببطء. تعبر علامات زرقاء ظهرها وتختفي تحت ظل زعنفة. يرسم ذيلها خطًا مرجانيًا في التيار. يتبع القارب ذلك الخط إلى خليج ضيق تحيط به أربع حواف سوداء مرتفعة. تقف شجرة فوق الماء. وراء جذورها، ينسكب جدول رفيع من الحافة ويتفكك إلى قطرات منفصلة قبل أن يتضح ما يقع تحته.",
+      "ترفع الموجة العائدة القارب من جانبه. داخل التفافتها، تمر مربعات صفراء عبر الوردي والأزرق، بينما تنثني فوقها قشرة داكنة. ينزلق القارب من فتحة ويدخل نهرًا متفرّعًا. عند كل منعطف، تحل جزر مربعة صغيرة محل الضفاف الملساء. فوقها، تسقط قطعة من القمر. تهبط دون صوت وتترك وراءها شاطئًا مضيئًا آخر.",
+      "تتدلى درجات بازلتية فوق فم كهف. يستقر القارب تحت أدناها، بجوار جذع مشقوق لا تزال حلقاته الملونة تتوهج بين الشقوق. ينتشر ضوء كهرماني من مركز الخشب. يحمله شق حتى اللحاء، حيث تنفصل مربعات ليمونية قليلة. تستقر على الحبل المبلل وتخبو مع مرور القطرات. يرتفع الماء من الأرض الجافة في قطرات مربعة مضيئة. في الأعلى، تحمل بحيرة انعكاسات الصخور. تبلغ أول قطرة سطحها. تعبر تموّجة السقف، ويتحرك القارب المنعكس بين قمتين داكنتين."
+    ],
   },
   'contours-of-silence': {
     ja: [
@@ -81,6 +99,13 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       'Depois do arco, placas de vidro ficam suspensas em ângulos diferentes. A mais próxima treme quando ele passa, levando um reflexo estreito até as outras. Uma fita azul se curva entre as placas e volta para o escuro. Mais adiante, fumaça violeta sobe de uma bacia rasa. Cada rajada a estica na direção do vidro e deixa uma borda irregular no ar. O caminhante toca o aro frio da bacia. Algumas gotas ficam nos dedos e escurecem a manga quando ele as enxuga.',
       'Há água correndo abaixo da saliência. Ele segue o som até uma onda baixa, que se desfaz sem espuma e deixa uma linha azul junto à margem. Sobre uma poça, uma pedra facetada gira devagar. O reflexo permanece parado até a próxima ondulação alcançá-lo. O caminho cruza uma fenda na rocha, iluminada por dentro. Ele passa por cima dela e encontra terra molhada sob uma árvore antiga.',
       'A luz atravessa os galhos em faixas violetas. Entre as raízes, as folhas se abrem na direção do brilho, com gotas nas pontas. O caminhante se senta junto ao tronco e esvazia a areia dos sapatos. Por uma abertura na copa, um crescente azul aparece acima das dunas. Outra onda chega à margem, e uma ponta solta de vidro bate uma vez no arco de pedra.',
+    ],
+
+    ar: [
+      "يكون الرمل قد برد حين يبلغ السائر حافة الكثيب. يمتد على طرفها خط بنفسجي دقيق، يختفي حين يدير رأسه. في الأسفل، تتراكب الكثبان حتى لا يعود من الممكن تمييز منحدراتها عن السماء. ينفض حبة رمل عن كمّه ويبدأ النزول. في المنخفض قوس حجري، صقله الزمن من جانب واحد. يملأ الضوء الأزرق فتحته وينسكب على الأرض عند قدميه. يتوقف بجوار كتلة حجرية ساقطة، علقت ورقة صغيرة في أحد شقوقها.",
+      "وراء القوس، تتدلى ألواح زجاج بزوايا مختلفة. يرتعش أقربها حين يمر بجواره، حاملًا انعكاسًا رفيعًا عبر الألواح الأخرى. يلتف بينها شريط أزرق ثم ينثني عائدًا إلى العتمة. أبعد قليلًا، يرتفع دخان بنفسجي من حوض ضحل. تمدّه كل هبّة نحو الزجاج، ثم تترك طرفًا ممزقًا معلّقًا في الهواء. يلمس السائر حافة الحوض الباردة، فتعلق قطرات قليلة بأصابعه.",
+      "يتحرك الماء في مكان ما أسفل الحافة. يتبع صوته حتى موجة منخفضة تنكسر دون زبد، تاركة خطًا أزرق على الشاطئ. فوق بركة، يدور حجر متعدد الأوجه ببطء. يبقى انعكاسه ساكنًا إلى أن تبلغه التموجة التالية. يعبر الطريق شقًا في الصخر يضيء من أعماقه. يتخطاه السائر ويجد أرضًا رطبة تحت شجرة عتيقة.",
+      "يتساقط الضوء بين الأغصان في أشرطة بنفسجية طويلة. وبين الجذور، تتفتح أوراق نحو الوهج، وأطرافها مبللة بماء البركة. يجلس السائر مستندًا إلى الجذع ويفرغ الرمل من حذائه. ومن فتحة بين الأغصان، يستقر هلال أزرق فوق الكثبان. تنزلق موجة أخرى على الشاطئ، وتطرق حافة زجاج منفلتة القوس الحجري مرة واحدة."
     ],
   },
   'woven-spectrum': {
@@ -114,6 +139,13 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       'Uma ponta prende na volta e começa a se enrolar para dentro. Cada giro fica menor. O laranja cruza o magenta e desaparece por baixo, deixando uma linha de luz na dobra. A espiral se inclina. De sua ponta estreita, a cor se abre num leque cujas hastes avançam em velocidades diferentes. Uma haste azul passa das outras e se curva de volta para o ponto em que todas se encontram.',
       'O leque se fecha das bordas para o meio. A última faixa atravessa o centro e completa um anel acima do chão carmesim. A luz percorre o anel, mais devagar onde a fita se torce. Embaixo, a sombra se alonga e se divide em dois arcos suaves. Outro fio laranja sai do escuro e avança para o espaço aberto ao lado deles. A borda mais próxima do anel cede um pouco na sua direção.',
     ],
+
+    ar: [
+      "يتدلى خيط برتقالي منفلت فوق أرضية حمراء. ينحني قبل أن يلامس السطح، إذ يجذبه جانبًا تيار لم يصل بعد إلى الخيوط الأخرى. يلحق به الأزرق بعد قليل. وحيث يتقاربان، تضيق حافتاهما ويظهر بينهما خط وردي. يواصل الخط حركته بعد أن ينعطف الخيط البرتقالي. في الأسفل بعيدًا، تزداد الأرضية عتمة عند الزوايا. لا تظهر جدران، بل أطوال أخرى من اللون تخرج من السواد، واحدة تلو الأخرى، وتنضم إلى التيار.",
+      "تعبر الموجة العريضة الأولى المكان. تتمدد حافتها الخارجية حتى تصبح رقيقة تكشف الحمرة تحتها. وراء تلك الحافة، تتجمع الثنيات وتلقي ظلالًا صغيرة على الشريط التالي. يتسلل خيط أزرق من فجوة وينحني إلى الأسفل ثم يعود من الجانب الآخر. يسحب الألوان الدافئة لتشكّل حلقة مفتوحة. للحظة، يظل المركز خاليًا، فيما تنزلق الحواف المتحركة متجاورة دون أن تتلامس.",
+      "يعلق أحد الأطراف بالحلقة ويبدأ الالتفاف إلى الداخل. تضيق اللفات. يعبر البرتقالي فوق الأرجواني، ثم يختفي تحته، تاركًا شريطًا من الضوء المنعكس على الطية. يميل الحلزون. ومن طرفه الضيق، تنتشر الألوان كالمروحة، وتنبسط أضلاعها بسرعات مختلفة. يمتد ضلع أزرق واحد أبعد من البقية، ثم يلتف عائدًا نحو نقطة التقائها.",
+      "تنغلق المروحة من الخارج إلى الداخل. يمر خيطها الأخير عبر المركز ويكمل حلقة فوق الأرضية القرمزية. يسري الضوء حول الحلقة، ويتباطأ حيث يلتوي الشريط. تحتها، يطول الظل، ثم ينفصل إلى قوسين باهتين. يدخل خيط برتقالي آخر من العتمة ويتجه نحو الفراغ المجاور لهما."
+    ],
   },
   'path-to-the-light': {
     ja: [
@@ -145,6 +177,13 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       'A estrada sobe entre montanhas violetas. Pedrinhas rolam sob seus calcanhares e caem fora de vista. Numa curva ele para para afrouxar a alça no ombro. Abaixo há um lago, liso o bastante para refletir as duas encostas e o círculo de luz entre elas. Perto da margem, um junco encosta no próprio reflexo. O viajante segue a água até as árvores esconderem as montanhas. O anel continua visível por uma abertura estreita acima do lago.',
       'Um riacho entra na floresta. A luz dourada se acumula nas poças e escorre pelas pedras com a corrente. Ele anda ao lado da água, abaixando a cabeça sob um galho caído sobre o caminho. Há água numa cavidade de uma raiz exposta. Ele se ajoelha para beber e deixa a marca molhada da mão na casca. Mais adiante, o riacho passa sob um muro quebrado. O caminho se transforma numa escadaria.',
       'Entre os degraus de baixo cresce grama. Mais acima, a pedra está nua, com marcas claras deixadas pela chuva. O viajante passa por um vão sem porta e põe a bolsa no último degrau. O anel está dentro das ruínas, sobre um chão coberto de pedaços de ladrilho. O vento atravessa a entrada atrás dele, levanta um canto da bolsa e leva uma folha seca de grama pela pedra iluminada.',
+    ],
+
+    ar: [
+      "يغادر المسافر المدينة حين تبدأ المصابيح بالظهور في نوافذها. من الجسر، يرى الأسطح تتدرج نزولًا إلى الماء، وحلقة ذهبية معلّقة فوق الأبراج البعيدة. تختفي حافتها السفلى وراءها. يضع يدًا على الحاجز الحجري الذي لا يزال يحتفظ بدفء النهار. في منتصف الجسر، تعكس بركة ضحلة الحلقة كاملة. يكسر حذاؤه الانعكاس. وحين تهدأ التموجات، يكون قد تجاوز آخر نافذة وبلغ الطريق فوق النهر.",
+      "يصعد الطريق بين جبال بنفسجية. تتدحرج أحجار سائبة تحت كعبيه وتغيب عن النظر. عند منعطف، يتوقف ليرخي الحزام على كتفه. في الأسفل بحيرة، ساكنة بما يكفي لتعكس المنحدرين ودائرة الضوء بينهما. قرب الضفة، تلامس قصبة انعكاسها. يتبع المسافر الشاطئ حتى تحجب الأشجار الجبال. لا تزال الحلقة مرئية عبر فتحة ضيقة فوق الماء.",
+      "يتجه جدول إلى داخل الغابة. يتجمع الذهب في بركه الضحلة، ثم ينزلق مع التيار فوق كل حجر. يسير إلى جانبه، وينحني تحت غصن سقط على الطريق. يملأ الماء تجويف جذر مكشوف. يجثو ليشرب ويترك بصمة يد مبللة على اللحاء. أبعد من ذلك، ينعطف الجدول تحت جدار من حجارة متهدمة. يرتفع الطريق ليصبح درجًا.",
+      "ينمو العشب بين الدرجات السفلى. وفي الأعلى، تبدو الحجارة عارية، عليها آثار صغيرة شاحبة تركها المطر. يصعد المسافر متجاوزًا مدخلًا خاليًا ويضع حقيبته على الدرجة الأخيرة. تقف الحلقة داخل الأطلال، فوق أرضية تتناثر عليها قطع البلاط. تهب الريح من المدخل خلفه. ترفع زاوية من الحقيبة وتحمل نصل عشب جافًا فوق الحجر المضيء."
     ],
   },
   'where-stars-graze': {
@@ -178,6 +217,13 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       'O caminho chega a um lago de montanha. As flores crescem até a água, com pétalas boiando na parte rasa. A vaca abaixa a cabeça para beber. Seu focinho desfaz o cometa em ondulações, espalhando azul entre as estrelas refletidas. Um viajante põe a manta numa pedra seca. O outro tira uma pedrinha do sapato. Do outro lado do lago, uma nuvem passa diante da crista e deixa apenas a borda superior iluminada.',
       'Quando a vaca levanta a cabeça, gotas ficam presas no pelo ruivo sob o queixo. Ela segue pela margem até o moinho aparecer outra vez. As pás giram devagar acima da nuvem no vale. Os viajantes recolhem a manta e acompanham a vaca. Uma flor presa no pelo encosta num galho baixo e fica ali, enquanto a cauda clara do cometa se estende acima da trilha.',
     ],
+
+    ar: [
+      "قبل أن تبدأ أجنحة الطاحونة بالدوران، تكون البقرة قد دفعت أنفها بين الزهور بجانب الطريق. يتدلى مذنّب أزرق فوق الحافة الجبلية. يضيء الشعر الطويل بين قرنيها وأطراف العشب المبللة. في الوادي، يغطي الضباب الأسطح ويبلغ المنعطف الأول من الطريق. ترك أحدهم دلوًا عند باب الطاحونة. تدفعه البقرة وتسمع مقبضه يطرق الحافة، ثم تعود إلى الزهور وتنتزع ساقًا بإمالة رأسها جانبًا.",
+      "يصعد مسافران من الوادي يحملان بينهما بطانية مطوية. يتوقفان حيث يضيق الطريق وينتظران حتى تنتهي البقرة من المضغ. تتقدمهما إلى الدرب الصخري. يزيح كل حافر قليلًا من التراب، فيسقط في الضباب. بجانب الدرب، تحتك أوراق النخيل بعضها ببعض في الريح. تختفي الطاحونة وراء المنحدر، وإن ظلت أجنحتها مرئية لبضع خطوات أخرى.",
+      "يبلغ الدرب بحيرة جبلية. تنمو الأزهار حتى حافة الماء، وتطفو بتلاتها في المياه الضحلة. تخفض البقرة رأسها لتشرب. يكسر أنفها صورة المذنّب إلى تموجات، وينتشر الأزرق بين النجوم المنعكسة. يضع أحد المسافرين البطانية على صخرة جافة. وينفض الآخر حجرًا من حذائه. في الجهة المقابلة من البحيرة، تمر سحابة أمام الحافة الجبلية، فلا يبقى مضيئًا سوى طرفها العلوي.",
+      "حين ترفع البقرة رأسها، تتدلى قطرات من الشعر النحاسي تحت ذقنها. تمشي على الضفة حتى تظهر الطاحونة من جديد. تدور أجنحتها ببطء فوق سحابة الوادي. يلتقط المسافران البطانية ويتبعانها. تلامس زهرة عالقة بفرو البقرة غصنًا منخفضًا وتبقى عليه، بينما يمتد ذيل المذنّب الشاحب فوق الدرب الجبلي."
+    ],
   },
   'a-night-beneath-the-ice': {
     ja: [
@@ -209,6 +255,13 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       'Depois da curva, anéis azuis acompanhavam o caminho até o rio. A neve se acumulava nas bordas inferiores. O homem segurou o corrimão ao descer, deixando marcas escuras onde a luva encostava. Entre os troncos, a margem iluminada aparecia em faixas douradas. Uma cúpula se erguia acima dos telhados, com o reflexo partido por pedaços de gelo. Ele chegou ao último degrau e esperou uma placa passar diante do patamar. Um galho estava preso na borda irregular do gelo.',
       'Sobre a água, um anel azul maior pairava entre nuvens pesadas. A névoa passava por baixo e cobria a margem oposta. O homem seguiu o rio até uma janela iluminada na altura do calçamento. Bateu na moldura. Uma mão abriu a janela apenas o bastante para receber o envelope. O ar quente alcançou sua manga antes de o vidro se fechar. Ele limpou uma pequena área embaçada do lado de fora com a luva.',
       'Na volta, a viela estava molhada. Numa vitrine escura, o casaco se sobrepunha aos abetos refletidos e à linha dourada da margem. Um círculo azul aparecia acima do ombro no vidro. Ele deu um passo para o lado e deixou a água correr entre as pedras. No rio, duas placas de gelo se tocaram, giraram e levaram partes separadas do reflexo da cúpula correnteza abaixo.',
+    ],
+
+    ar: [
+      "توقف الرجل تحت الفانوس الأزرق لينفض الثلج عن معطفه. كانت حلقة ضوء معلّقة بجوار الجدار القديم، ينعكس نورها في الماء بين حجارة الرصف. أخرج ظرفًا من جيبه الداخلي وتحقق من العنوان عبر ورقه الرطب. أسفل الزقاق، اصطفت أشجار التنوب على جانبي المنحدر. وكانت مصابيح كهرمانية تحدد منعطفًا أبعد إلى الأسفل. أعاد الظرف ومشى نحوها، ملازمًا الجدار حيث لم يغطّ الثلج الحجارة بعد. خلفه، تقاطر الماء من حامل الفانوس إلى الشق الضحل نفسه.",
+      "عند المنعطف، امتدت حلقات زرقاء على الطريق نحو النهر. تراكم الثلج على أطرافها السفلى. أمسك الرجل بالدرابزين وهو ينزل، تاركًا آثارًا داكنة حيث احتك قفازه به. ظهرت الواجهة النهرية بين جذوع التنوب على هيئة شرائط ذهبية. علت قبة فوق الأسطح، وكسرت قطع الجليد انعكاسها. بلغ الدرجة الأخيرة وانتظر حتى تمر قطعة جليد طافية بجوار المرسى.",
+      "عبر الماء، تدلت حلقة زرقاء أكبر بين سحب ثقيلة. تحرك الضباب تحتها وغطّى الضفة المقابلة. تبع الرجل النهر حتى بلغ نافذة مضاءة بمستوى الرصيف. طرق إطارها. فتحت يد النافذة بمقدار يكفي لأخذ الظرف. وصل الهواء الدافئ إلى كمّه قبل أن يُغلق الزجاج مجددًا. مسح بقفازه بقعة من التكاثف على السطح الخارجي.",
+      "في طريق العودة، كان الزقاق قد ابتلّ. وفي واجهة متجر معتمة، تراكب معطف الرجل مع انعكاس التنوب والخط الذهبي للواجهة النهرية. استقرت دائرة زرقاء فوق كتفه في الزجاج. تنحّى ليسمح لجدول رفيع بالمرور بين الحجارة. وعند النهر، تلامست قطعتان من الجليد، ثم دارتا مبتعدتين، وحملتا شظيتين منفصلتين من انعكاس القبة مع التيار."
     ],
   },
 };
@@ -314,6 +367,35 @@ export const supportCopy = {
       "メールアドレスは任意です。メールアプリから連絡したい場合や JavaScript が利用できない場合は、直接メールを送るリンクをご利用ください。お問い合わせのメッセージは、壁紙ページの公開コメントとは異なります。別の用途の許可を求める場合は、プロジェクトを説明し、現行のライセンスを参照してください。任意の Cookie をどのように設定しても、ダウンロードは引き続き利用できます。"
     ]
   },
+
+  ar: {
+    "cookies": [
+      "مراجعة اختيارك المحفوظ",
+      "استخدم إعدادات ملفات تعريف الارتباط في التذييل لمراجعة التحليلات والإعلانات كلًّا على حدة. احفظ الخيارات التي تريدها، ثم أعد فتح النافذة للتحقق من الاختيار الحالي. يؤدي مسح تخزين المتصفح إلى حذف التفضيلات المحفوظة. يظل التصفح وزرّا تنزيل PNG متاحين عند رفض الأغراض الاختيارية. عند تعطيل JavaScript، تعمل روابط التنزيل الأصلية ولا تُشغّل البرامج النصية الاختيارية."
+    ],
+    "contact": [
+      "ما الذي تذكره في رسالتك",
+      "إذا كان سؤالك عن خلفية، فأرفق عنوانها أو رابط صفحتها. وإذا كان عن مجموعة، فأرسل رابط المجموعة بدلًا منه. وضّح هل تقصد ملف الكمبيوتر الأفقي أم ملف الهاتف العمودي. يساعد ذلك في التمييز بين نسختين من التصميم نفسه، ويجعل فهم التفصيل المقصود في التكوين أسهل. يمكنك التواصل بالبريد الإلكتروني أو نموذج المراسلة أو روابط التواصل العامة المدرجة في هذه الصفحة.",
+      "عند حدوث مشكلة في التنزيل أو العرض، صِف ما توقعته وما حدث فعلًا. أرفق عنوان الصفحة ونوع الجهاز والمتصفح، واذكر هل تظهر المشكلة قبل حفظ ملف PNG أم بعده. تأكد من اختيار الاتجاه المناسب والاحتفاظ باسم الملف الأصلي. قد تحتاج الخلفية التي تبدو مقصوصة في إعدادات النظام إلى خيار ملاءمة مختلف؛ أما تعذّر التنزيل أو الحصول على ملف غير صحيح فمشكلة أخرى. تساعد هذه التفاصيل في إعادة إظهار المشكلة وفهم سببها.",
+      "لطلب ترخيص، صِف الاستخدام المقصود والمكان الذي ستظهر فيه الصورة، ووضّح هل ستكون جزءًا من مشروع تجاري. يسمح الترخيص المنشور أصلًا بالاستخدام الشخصي كخلفية وبالاقتصاص لأجهزتك الخاصة. لكنه لا يسمح ببيع حزمة صور أو إعادة توزيعها. إرسال الطلب لا يوسّع نطاق هذا الترخيص. راجع صفحة الترخيص كاملة لمعرفة الشروط الحالية قبل التخطيط لاستخدام آخر. وإذا تعلقت رسالتك ببيانات مخزنة أو تعليق، فحدّد الصفحة المعنية واشرح الإجراء المطلوب."
+    ],
+    "license": [
+      "اختيار ملف للاستخدام الشخصي",
+      "تُقدّم النسختان الأفقية والعمودية لأشكال مختلفة من الشاشات. لا يغيّر اختيار نسخة منهما شروط الترخيص. يمكنك الاحتفاظ بملف PNG الأصلي وإنشاء نسخة مقصوصة منفصلة لشاشتك أو هاتفك أو جهازك اللوحي. تساعدك معاينة المعرض الأصغر على اختيار التصميم، بينما يحفظ زر التنزيل الملف الأصلي. قارن الأبعاد المدرجة بأبعاد شاشتك قبل الاقتصاص.",
+      "يتيح رابط صفحة خلفية عامة لشخص آخر مشاهدة التصميم وقراءة هذه الشروط. أما إعادة توزيع ملفات الصور كمجموعة فهو إجراء مختلف لا يسمح به ترخيص الاستخدام الشخصي. إذا كنت تحتاج إلى صورة لمنتج أو إعلان أو مشروع تجاري آخر، فاشرح هذا الاستخدام عبر صفحة التواصل. لا تمنح أزرار التنزيل أو صيغة الصورة أو إتاحة الملف إذنًا يتجاوز الشروط المذكورة أعلاه."
+    ],
+    "terms": [
+      "استخدام المعرض العام",
+      "تجمع صفحات المجموعات تصاميم تشترك في موضوع بصري. افتح خلفية منفردة لمقارنة اتجاهَيها ومعرفة أبعاد ملف PNG الأصلي. يتيح البحث الجمع بين عبارة وعامل تصفية للفئة أو المجموعة. إذا لم تجد تصميمًا مطابقًا، فأزل عامل تصفية أو عد إلى المجموعة كاملة. يحفظ التنزيل الصورة الأصلية لاستخدامها وفق الترخيص المنشور؛ أما معاينة المعرض فهي ملف أصغر مخصص للتصفح.",
+      "تتوفر إعدادات ملفات تعريف الارتباط في التذييل. لا يمنع رفض التحليلات والإعلانات الاختيارية التصفح أو التنزيل. التقييمات والتعليقات والمراسلة إجراءات تفاعلية منفصلة تستخدم التخزين الضروري والفحوص الأمنية الموضّحة في صفحات الخصوصية وملفات تعريف الارتباط. تظهر التعليقات العامة للزوار الآخرين، بينما تُرسل الرسائل عبر نموذج المراسلة. قبل استخدام صورة خارج نطاق الخلفيات الشخصية، اقرأ الترخيص وتواصل معنا مع وصف الاستخدام المقصود."
+    ],
+    "feedback": [
+      "صِف تفصيلًا يمكننا التحقق منه",
+      "ابدأ بموضوع قصير يحدّد اقتراحك أو مشكلتك. أرفق في الرسالة رابط الصفحة المعنية أو عنوان الخلفية، واشرح النتيجة التي توقعتها. إذا كنت تقصد ملفًا بعينه، فاذكر هل هو PNG للكمبيوتر أم للهاتف. يساعد اسم المجموعة عندما تتشابه ألوان عدة تصاميم أو أشكالها. ويمكن لاقتراحات المجموعات المستقبلية أن تصف موضوعًا أو لوحة ألوان أو اتجاه شاشة.",
+      "للمشكلة التقنية، اذكر المتصفح ونوع الجهاز والخطوات التي تعيد إظهارها. وضّح هل تحدث أثناء التصفح أو بعد النقر على التنزيل أو عند تعيين الصورة المحفوظة كخلفية. يمكنك تجربة الاتجاه الآخر ومقارنة الأبعاد المعروضة في الصفحة بشاشتك. تساعد هذه الفحوص في التمييز بين إعداد الاقتصاص ومشكلة في الملف أو الصفحة. إذا فشل إرسال النموذج، تبقى الرسالة فيه لتتمكن من المحاولة مجددًا.",
+      "حقل البريد الإلكتروني اختياري. استخدم رابط البريد المباشر إذا كنت تفضّل الكتابة من تطبيق البريد أو إذا لم يكن JavaScript متاحًا. تختلف رسالة المراسلة عن التعليق العام على الخلفية. ويجب أن تصف أسئلة الأذونات لاستخدام آخر المشروع المقصود وأن تشير إلى الترخيص الحالي. تظل التنزيلات متاحة مهما كانت تفضيلات ملفات تعريف الارتباط الاختيارية."
+    ]
+  },
 } satisfies Record<Locale, Record<'contact' | 'license' | 'terms' | 'feedback' | 'cookies', string[]>>;
 
 export const supportTopics = {
@@ -359,6 +441,27 @@ export const supportTopics = {
       "提案と背景情報",
       "問題の再現手順",
       "メールとその他のご相談"
+    ]
+  },
+
+  ar: {
+    "contact": [
+      "خلفية أو مجموعة",
+      "مشكلة في التنزيل أو العرض",
+      "طلبات الترخيص والبيانات"
+    ],
+    "license": [
+      "الملف ومقاس الشاشة",
+      "المشاركة والاستخدامات الأخرى"
+    ],
+    "terms": [
+      "البحث والتنزيل",
+      "الخصوصية والمشاركة"
+    ],
+    "feedback": [
+      "الفكرة والسياق",
+      "إعادة إظهار المشكلة",
+      "البريد والطلبات الأخرى"
     ]
   },
 } satisfies Record<Locale, Record<Exclude<keyof typeof supportCopy.en, 'cookies'>, string[]>>;

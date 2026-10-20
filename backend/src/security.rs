@@ -113,7 +113,7 @@ fn advertising_path(path: &str) -> bool {
         .strip_suffix("index.html")
         .unwrap_or(path)
         .trim_end_matches('/');
-    let path = ["/ru", "/zh-cn", "/pt-br", "/ja"]
+    let path = ["/ru", "/zh-cn", "/pt-br", "/ja", "/ar"]
         .iter()
         .find_map(|prefix| {
             path.strip_prefix(prefix)
@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn advertising_csp_is_limited_to_known_successful_public_documents() {
-        for prefix in ["", "/ru", "/zh-cn", "/pt-br", "/ja"] {
+        for prefix in ["", "/ru", "/zh-cn", "/pt-br", "/ja", "/ar"] {
             for route in [
                 "/collections/",
                 "/collections/contours-of-silence/",

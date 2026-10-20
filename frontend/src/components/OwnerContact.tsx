@@ -16,7 +16,7 @@ export default function OwnerContact({ locale }: { locale: Locale }) {
     <div className="contact-identity"><span className="contact-avatar" aria-hidden="true">{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><div><strong>{name}</strong><small>Want Foundation</small></div></div>
     <div className="contact-actions">{contacts.map(({ title, detail, href, icon: Icon, label }) => {
       const isEmail = href.startsWith('mailto:');
-      return <a key={href} className="contact-link" href={href} target={isEmail ? undefined : '_blank'} rel={isEmail ? undefined : 'noopener noreferrer'} aria-label={label}><Icon aria-hidden="true" /><span>{title}<small title={detail} dir={isEmail ? 'ltr' : undefined}>{detail}</small></span><ArrowUpRight className="contact-arrow" aria-hidden="true" /></a>;
+      return <a key={href} className="contact-link" href={href} target={isEmail ? undefined : '_blank'} rel={isEmail ? undefined : 'noopener noreferrer'} aria-label={label}><Icon aria-hidden="true" /><span>{title}<small title={detail} dir="ltr">{detail}</small></span><ArrowUpRight className="contact-arrow" aria-hidden="true" /></a>;
     })}</div>
   </div>;
 }
