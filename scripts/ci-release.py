@@ -22,6 +22,7 @@ RELEASE_WORKFLOW = '.github/workflows/deploy-production.yml'
 PROFILES = {'full': [], 'fast': ['Full UI']}
 ANNOTATION = 'foundation.want.wallpapers.release.v1'
 PLATFORMS = {'linux/amd64', 'linux/arm64'}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 class ReleaseError(Exception):
@@ -164,7 +165,7 @@ def record_profile(record):
     if record['schemaVersion'] == 1:
         require('verificationProfile' not in record and 'skippedChecks' not in record, 'Legacy evidence cannot select a profile')
         return 'full'
-    require(record['schemaVersion'] == 2 and record['verificationProfile'] in PROFILES, 'Unknown verification profile')
+    require(record['schemaVersion'] in (2, 3) and record['verificationProfile'] in PROFILES, 'Unknown verification profile')
     selected = record['verificationProfile']
     require(record['skippedChecks'] == PROFILES[selected], 'Verification profile and skipped checks differ')
     return selected
@@ -202,7 +203,7 @@ def main_run(run, sha):
         and run.get('head_repository', {}).get('full_name') == REPOSITORY)
 
 
-def release_record(reference, sha, run, expected_digest=None):
+def release_record(reference, sha, run, expected_digest=None, *, tag=None, local_signers=None):
     index_digest = digest(registry(reference, '{{.Manifest.Digest}}'))
     require(expected_digest is None or index_digest == expected_digest, 'Published index digest differs from the requested release')
     index = registry(IMAGE + '@' + index_digest)
@@ -210,10 +211,19 @@ def release_record(reference, sha, run, expected_digest=None):
     record = document(index['annotations'][ANNOTATION])
     require(record['repository'] == REPOSITORY and record['sourceSha'] == sha, 'Release record source mismatch')
     record_profile(record)
-    workflow = WORKFLOW if record['schemaVersion'] == 1 else RELEASE_WORKFLOW
-    verification = record['verificationRun']
-    require(verification == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': workflow}, 'Release record run mismatch')
-    require(type(verification['id']) is int and verification['id'] > 0 and type(verification['attempt']) is int and verification['attempt'] > 0, 'Invalid verification run identity')
+    if record['schemaVersion'] == 3:
+        from deployment import DeployError
+        from local_evidence import verify
+        try:
+            verify(record, tag, sha, local_signers)
+            require(api('git/commits/' + sha)['tree']['sha'] == record['localVerification']['sourceTree'], 'Local verification tree differs from the tagged source')
+        except DeployError as error:
+            raise ReleaseError(str(error)) from error
+    else:
+        workflow = WORKFLOW if record['schemaVersion'] == 1 else RELEASE_WORKFLOW
+        verification = record['verificationRun']
+        require(verification == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': workflow}, 'Release record run mismatch')
+        require(type(verification['id']) is int and verification['id'] > 0 and type(verification['attempt']) is int and verification['attempt'] > 0, 'Invalid verification run identity')
     require(set(record['platforms']) == PLATFORMS and len(index['manifests']) == 2, 'Release requires exactly amd64 and arm64')
     descriptors = {entry['platform']['os'] + '/' + entry['platform']['architecture']: entry for entry in index['manifests']}
     require(set(descriptors) == PLATFORMS, 'Published platforms differ from the release record')
@@ -262,7 +272,7 @@ def successful_attempt(sha, run_id, attempt_number, record=None, tag=None):
     return attempt
 
 
-def resolve(arguments):
+def resolve(arguments, *, local_signers=None):
     require(os.environ.get('GITHUB_REPOSITORY', REPOSITORY) == REPOSITORY, 'Forks cannot authorize releases')
     require(0 <= arguments.timeout <= 5400, 'Release timeout must be between 0 and 5400 seconds')
     if arguments.digest:
@@ -273,12 +283,14 @@ def resolve(arguments):
         index = registry(reference)
         recorded = document(index['annotations'][ANNOTATION])
         require(recorded['repository'] == REPOSITORY and recorded['sourceSha'] == sha, 'Release record source mismatch')
-        verification = recorded['verificationRun']
         record_profile(recorded)
-        workflow = WORKFLOW if recorded['schemaVersion'] == 1 else RELEASE_WORKFLOW
-        require(verification['workflow'] == workflow, 'Release record workflow mismatch')
-        attempt = successful_attempt(sha, verification['id'], verification['attempt'], recorded, arguments.tag)
-        record = release_record(reference, sha, attempt, arguments.digest)
+        attempt = None
+        if recorded['schemaVersion'] != 3:
+            verification = recorded['verificationRun']
+            workflow = WORKFLOW if recorded['schemaVersion'] == 1 else RELEASE_WORKFLOW
+            require(verification['workflow'] == workflow, 'Release record workflow mismatch')
+            attempt = successful_attempt(sha, verification['id'], verification['attempt'], recorded, arguments.tag)
+        record = release_record(reference, sha, attempt, arguments.digest, tag=arguments.tag, local_signers=local_signers)
         require(tag_commit(arguments.tag) == sha, 'Release tag changed during verification')
         return {**record, 'tag': arguments.tag}
     deadline = time.monotonic() + arguments.timeout
@@ -342,6 +354,14 @@ def publish_index(arguments):
     require(record['schemaVersion'] == 2 and record_profile(record) == profile()
         and record['repository'] == REPOSITORY and record['sourceSha'] == sha
         and record['verificationRun'] == {'id': run['id'], 'attempt': run['run_attempt'], 'workflow': RELEASE_WORKFLOW}, 'Release publication identity mismatch')
+    reference = f"{sha}-{run['id']}-{run['run_attempt']}"
+    published = publish_oci_index(record, reference, os.environ['GITHUB_ACTOR'], os.environ['GHCR_TOKEN'])
+    return release_record(IMAGE + ':' + reference, sha, run, published)
+
+
+def publish_oci_index(record, reference, actor, token):
+    require(re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}', reference), 'Invalid publication reference')
+    sha = source_sha(record['sourceSha'])
     require(set(record['platforms']) == PLATFORMS, 'Release requires exactly amd64 and arm64')
     references = [IMAGE + '@' + digest(record['platforms'][platform]['digest']) for platform in sorted(PLATFORMS)]
     index = document(command(['docker', 'buildx', 'imagetools', 'create', '--dry-run', *references]))
@@ -353,9 +373,8 @@ def publish_index(arguments):
         'org.opencontainers.image.source': 'https://github.com/' + REPOSITORY, 'org.opencontainers.image.revision': sha}
     body = json.dumps(index, sort_keys=True).encode()
     expected_digest = 'sha256:' + hashlib.sha256(body).hexdigest()
-    reference = f"{sha}-{run['id']}-{run['run_attempt']}"
     curl = ['curl', '-q', '--fail', '--silent', '--show-error', '--max-time', '60', '--config', '-']
-    credentials = os.environ['GITHUB_ACTOR'] + ':' + os.environ['GHCR_TOKEN']
+    credentials = actor + ':' + token
     authorization = document(command([*curl, 'https://ghcr.io/token?service=ghcr.io&scope=repository:' + REPOSITORY + ':pull,push'],
         input='user = ' + json.dumps(credentials) + '\n'))['token']
     require(isinstance(authorization, str) and re.fullmatch(r'[A-Za-z0-9._~+/\-]+=*', authorization), 'Invalid registry authorization response')
@@ -366,7 +385,7 @@ def publish_index(arguments):
         manifest.write_bytes(body)
         command([*curl, '--request', 'PUT', '--data-binary', '@' + str(manifest),
             'https://ghcr.io/v2/' + REPOSITORY + '/manifests/' + reference], input=headers)
-    return release_record(IMAGE + ':' + reference, sha, run, expected_digest)
+    return expected_digest
 
 
 def main():
