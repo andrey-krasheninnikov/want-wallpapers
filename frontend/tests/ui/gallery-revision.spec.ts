@@ -91,7 +91,7 @@ test('manual 3D changes paired textures, automatic rotation and reset keep the w
   await expect(scene).toHaveAttribute('data-scene-wallpaper', selected!);
   await page.unroute('**/previews/*');
   await page.locator('.home-mosaic').scrollIntoViewIfNeeded();
-  const cards = await page.locator('.home-mosaic > article').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return { x: box.x, y: box.y, right: box.right, bottom: box.bottom }; }));
+  const cards = await page.locator('.home-mosaic:not(.home-mosaic-outgoing) > article').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return { x: box.x, y: box.y, right: box.right, bottom: box.bottom }; }));
   expect(cards).toHaveLength(6);
   expect(cards[1].y).toBeCloseTo(cards[0].y, 0); expect(cards[1].bottom).toBeCloseTo(cards[5].bottom, 0);
   const card = page.locator('.home-mosaic .gallery-card').first(); await card.hover(); await expect(card).toHaveCSS('transform', 'none');
