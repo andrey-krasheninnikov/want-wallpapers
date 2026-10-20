@@ -218,7 +218,7 @@ test('llms response preserves license restrictions before localized file lists',
 });
 
 test('llms renders catalog Markdown and newlines as literal inline text', async () => {
-  const collection = collections[0]!;
+  const collection = collections.find(({ id }) => id === '0001-contours-of-silence')!;
   const title = collection.title.en;
   const description = collection.description.en;
   let response: Response;

@@ -8,6 +8,7 @@
 
 - Release-contract tests задают собственные profile, tag и workflow ref. Внешний fast context больше не меняет ожидания standalone full сценариев.
 - Privilege preflight допускает отсутствие новой collection-publication функции только до её миграции. После миграции функция и право EXECUTE остаются обязательными.
+- Draft image включает модуль порядка каталога. SEO fixture выбирает коллекцию по ID независимо от порядка выдачи.
 
 ### Изменено
 
