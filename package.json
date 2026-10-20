@@ -1,6 +1,6 @@
 {
   "name": "want-wallpapers",
-  "version": "1.9.4",
+  "version": "1.9.5",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.3.14",
@@ -17,14 +17,16 @@
     "catalog:pull": "bun run --cwd frontend catalog:pull",
     "catalog:add": "bun run --cwd frontend catalog:add",
     "test:listing-ui": "bun run --cwd frontend test:listing-ui",
-    "test:advertising-ui": "bun run --cwd frontend test:advertising-ui"
+    "test:advertising-ui": "bun run --cwd frontend test:advertising-ui",
+    "collection": "bun frontend/scripts/collection.ts"
   },
   "trustedDependencies": [],
   "overrides": {
     "sharp": "0.35.5",
     "@grpc/grpc-js": "1.14.5",
     "http-cache-semantics": "4.3.0",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "vite": "6.4.4"
   },
   "patchedDependencies": {
     "lunr-languages@1.22.0": "patches/lunr-languages@1.22.0.patch"
