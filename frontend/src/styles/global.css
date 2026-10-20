@@ -317,6 +317,7 @@
   .contact-link:hover { background: var(--accent); }
   .contact-link svg { width: 20px; height: 20px; color: var(--link); }
   .contact-link small { display: block; margin-top: .25rem; color: var(--muted-foreground); font-size: .875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .contact-link[href^="mailto:"] small { white-space: normal; overflow: visible; overflow-wrap: anywhere; unicode-bidi: isolate; }
   .feedback-layout { display: grid; gap: 2rem; align-items: start; padding-block: 2.5rem; }
   .feedback-direct { display: grid; gap: 1rem; margin-top: 2rem; padding: 1.5rem; border-radius: var(--panel-radius); background: var(--card); }
   .feedback-direct > svg { width: 28px; height: 28px; color: var(--link); }

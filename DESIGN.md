@@ -49,7 +49,7 @@ Keyboard focus retains control fills and uses a 2 px logo-color outline, offset 
 
 Feedback opens in one lazy modal on the current page. The form keeps topic, optional email, message and action/result areas. Closing preserves the draft and pending request in memory; failed requests preserve input. The dialog traps focus and returns it to the opening control or mobile menu button. Existing localized /feedback/ routes remain direct-link and no-script fallbacks. Field IDs remain unique across instances.
 
-Owner contact has an initial avatar, identity and three linked action rows. Each row includes a useful icon, destination and outgoing arrow. Keep the existing contact URLs.
+Owner contact has an initial avatar, identity and five linked action rows. Each row includes a useful icon, destination and outgoing arrow. Keep the existing contact URLs. The public email uses a native mailto link without a new tab. Its complete address wraps on narrow screens, remains selectable and keeps left-to-right direction inside other text directions.
 
 Comments use a compact feed: avatar, guest/self label, date, text and action. On wallpaper pages the composer uses its full column width, with a small avatar in the label row. A single social controller supplies comments and ratings; request failures preserve drafts and show beside the relevant action. The composer sits above the feed. Only existing publication, deletion and reporting actions are available. Sample comments in the development kit are explicitly demonstrations.
 
