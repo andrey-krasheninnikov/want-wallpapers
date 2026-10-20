@@ -212,6 +212,17 @@ class ValidatorInstallationTests(unittest.TestCase):
 
 
 class WorkerReadinessTests(unittest.TestCase):
+    def test_restore_waits_for_tcp_server_instead_of_temporary_init_socket(self):
+        name = 'wallpapers-restore-' + 'd' * 32
+        metadata = json.dumps([{'Config': {'Labels': {'foundation.want.wallpapers.restore': name}}}])
+        with patch.object(worker.uuid, 'uuid4', return_value=Mock(hex='d' * 32)), \
+             patch.object(worker, 'run', side_effect=['container', metadata, 'removed']), \
+             patch.object(worker.subprocess, 'run', return_value=Mock(returncode=0)) as ready, \
+             patch.object(worker, 'pipeline'), patch.object(worker, 'restored_state', return_value={}):
+            worker.restore(Path('/synthetic/ciphertext'), Path('/synthetic/identity'))
+        arguments = ready.call_args.args[0]
+        self.assertEqual(arguments[arguments.index('-h') + 1], '127.0.0.1')
+
     def test_readiness_requires_matching_configuration_live_process_and_fresh_heartbeat(self):
         with tempfile.TemporaryDirectory(prefix='wallpapers-worker-test-') as directory:
             config = {'directory': Path(directory), 'databaseId': 'synthetic-database'}
