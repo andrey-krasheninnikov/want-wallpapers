@@ -1,7 +1,7 @@
 use crate::{
     AppState,
     error::{ApiError, Result},
-    models::{Collection, ListingFlags, Wallpaper},
+    models::{Collection, LOCALES, ListingFlags, Wallpaper},
 };
 use axum::{
     body::{Body, to_bytes},
@@ -55,7 +55,10 @@ impl BuildCatalog {
         let value: Self =
             serde_json::from_slice(&std::fs::read(directory.join("../runtime-catalog.json"))?)?;
         if value.schema != 1
-            || value.locales.len() != 4
+            || value.locales.len() != LOCALES.len()
+            || LOCALES
+                .iter()
+                .any(|locale| !value.locales.contains_key(*locale))
             || value.order.len() != value.wallpapers.len()
         {
             return Err("Invalid runtime catalog".into());
@@ -378,9 +381,10 @@ fn localized_route(path: &str) -> (&str, &str) {
         .strip_suffix("index.html")
         .unwrap_or(path)
         .trim_end_matches('/');
-    for (prefix, locale) in [("/ru", "ru"), ("/zh-cn", "zh-cn"), ("/pt-br", "pt-br")] {
+    for locale in LOCALES.into_iter().filter(|locale| *locale != "en") {
+        let prefix = format!("/{locale}");
         if let Some(rest) = route
-            .strip_prefix(prefix)
+            .strip_prefix(prefix.as_str())
             .filter(|rest| rest.is_empty() || rest.starts_with('/'))
         {
             return (locale, rest);

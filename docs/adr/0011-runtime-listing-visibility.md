@@ -1,4 +1,4 @@
-# 0010: Runtime listing visibility with static direct pages
+# 0011: Runtime listing visibility with static direct pages
 
 Status: accepted. Revises the publication model in ADR 0004 and the caching of gallery data in ADR 0009.
 

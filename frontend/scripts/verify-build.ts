@@ -4,9 +4,11 @@ import { join, relative, resolve, basename } from 'node:path';
 import { tmpdir } from 'node:os';
 import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, validateLlms, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks, require, type Page } from './seo-validation';
 
+import { locales } from '../src/data/catalog';
+
 const root = resolve(import.meta.dir, '../dist');
 const runtime = JSON.parse(await readFile(resolve(root, '../runtime-catalog.json'), 'utf8'));
-require(runtime.schema === 1 && Object.keys(runtime.locales).length === 4, 'Missing runtime catalogue');
+require(runtime.schema === 1 && Object.keys(runtime.locales).length === locales.length && locales.every(locale => Object.hasOwn(runtime.locales, locale)), 'Missing runtime catalogue');
 const hashes = JSON.parse(await readFile(join(root, 'csp-hashes.json'), 'utf8')) as Record<string, string[]>;
 const files = new Set<string>();
 const pages = new Map<string, Page>();

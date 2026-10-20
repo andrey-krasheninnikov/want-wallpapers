@@ -2,6 +2,7 @@
 import '@fontsource-variable/manrope';
 import '@fontsource-variable/onest';
 import '../styles/global.css';
+import japaneseFont from '@fontsource-variable/noto-sans-jp/wght.css?url';
 import logo from '../../assets/logo.svg';
 const { title } = Astro.props;
 ---
@@ -9,6 +10,7 @@ const { title } = Astro.props;
 <html lang="ru" class="dark">
   <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href={japaneseFont} />
     <meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#141414" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>{title} · Want Wallpapers</title>

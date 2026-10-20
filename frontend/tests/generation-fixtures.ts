@@ -15,11 +15,11 @@ export function context(budget = 40, usage: unknown[] = []) {
 
 export function plan(collectionId = '900026-test-light') {
   const slug = collectionId.replace(/^\d+-/, '');
-  const localized = (text: string) => ({ en: text, ru: `Свет ${text}`, 'zh-cn': `光 ${text}`, 'pt-br': `Luz ${text}` });
+  const localized = (text: string) => ({ en: text, ru: `Свет ${text}`, 'zh-cn': `光 ${text}`, 'pt-br': `Luz ${text}`, ja: `光 ${text}` });
   return { manifest: {
     collection: { id: collectionId, slug, count: 5, title: localized('Light'), description: localized('Quiet light') },
     wallpapers: Array.from({ length: 5 }, (_, index) => ({ id: `${slug}-${index + 1}`, slug: `${slug}-${index + 1}`,
-      collection: slug, collectionId, s3Folder: collectionId, fileStem: slug, number: index + 1, category: 'abstract', tags: ['blue', 'light'],
+      collection: slug, collectionId, s3Folder: collectionId, fileStem: slug, number: index + 1, category: 'abstract' as const, tags: ['blue' as const, 'light' as const],
       title: localized(`Shape ${index + 1}`), description: localized(`Central shape ${index + 1}`) })),
   }, scenes: Array.from({ length: 5 }, (_, index) => ({ number: index + 1, scene: `Blue shape ${index + 1}`,
     desktopPrompt: `Wide blue shape ${index + 1}`, mobilePrompt: `Tall blue shape ${index + 1}` })) };

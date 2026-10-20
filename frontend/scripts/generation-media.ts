@@ -49,6 +49,7 @@ export async function prepareResult(root: string, task: Task, body: any): Promis
 
 export async function packageArchive(root: string, run: import('./generation-store').Run) {
   requireDraft(run.status === 'approved' && run.approval?.version === run.version && run.approval.packageHash === run.packageHash, 'package-not-approved', 409);
+  try { parseCollectionManifest(run.manifest); } catch { throw new DraftError('draft-translations-required'); }
   const directory = join(root, 'packages', run.runId, String(run.version));
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const files = ['manifest.json', 'approval.json', 'checksums.json'];

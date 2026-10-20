@@ -113,7 +113,7 @@ test('a provider that detaches its own node cannot leave the label visible on cl
 
 test('public advertising routes exclude every home, private and error route', async () => {
   const { advertisingPath } = await import('../src/lib/advertising-providers');
-  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) {
+  for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) {
     for (const route of ['/collections/', '/collections/contours-of-silence/', '/wallpapers/contours-of-silence-1/', '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/']) {
       expect(advertisingPath(`${prefix}${route}`)).toBe(true);
       expect(advertisingPath(`${prefix}${route}index.html`)).toBe(true);

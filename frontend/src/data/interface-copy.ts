@@ -149,4 +149,87 @@ export const interfaceCopy = {
     finalTitle: 'Encontre uma vista para ficar.', finalText: 'Comece com uma cor, um lugar ou uma sensação.',
     notFoundTitle: 'Nada por aqui ainda.', notFoundText: 'Esta página não faz parte da coleção.', back: 'Voltar aos papéis de parede',
   },
+  ja: {
+    "advertisement": "広告",
+    "pauseCover": "アニメーションを一時停止",
+    "playCover": "アニメーションを再生",
+    "pauseBackground": "背景の光を一時停止",
+    "playBackground": "背景の光を再開",
+    "skip": "本文へ移動",
+    "language": "言語",
+    "legal": "サイト情報",
+    "close": "閉じる",
+    "catalogue": "カタログ",
+    "reset": "絞り込みを解除",
+    "retry": "再試行",
+    "saved": "保存済み",
+    "settings": "許可する項目を選択",
+    "save": "設定を保存",
+    "necessary": "必須ストレージ",
+    "necessaryHint": "設定の保存と匿名での操作に使用します。常に有効です。",
+    "advertisingHint": "現在、広告ネットワークは接続されていません。この設定はアクセス分析内の広告関連の許可にも適用されます。",
+    "analyticsHint": "好まれている壁紙を把握するために使用します。任意です。",
+    "unavailableAnalytics": "アクセス分析は接続されていません。設定は保存されます。",
+    "javascriptRequired": "評価、コメント、お問い合わせフォームを利用するには JavaScript を有効にしてください。",
+    "selected": "選択中",
+    "ratingSaved": "評価を保存しました。",
+    "commentSent": "コメントを投稿しました。",
+    "filters": "絞り込み",
+    "free": "個人利用は無料",
+    "votes": "評価",
+    "characters": "文字数",
+    "ownComment": "自分のコメント",
+    "commentTitle": "感想を聞かせてください",
+    "commentPublic": "コメントはこのページに公開されます。名前の入力は不要です。",
+    "feedbackFormTitle": "運営チームにメッセージを送る",
+    "feedbackPrivate": "メッセージは Want の運営チームだけが確認できます。",
+    "feedbackTopicHint": "ご相談の内容を短い件名でお知らせください。",
+    "feedbackMessageHint": "アイデア、不具合、改善してほしい点をお書きください。",
+    "feedbackEmailHint": "返信をご希望の場合はメールアドレスをご記入ください。",
+    "feedbackDirect": "メールでもお問い合わせいただけます",
+    "feedbackDirectHint": "サイトや壁紙の利用についてのご質問はこちらへ。",
+    "benefitsTitle": "毎日使う画面に、小さな変化を。",
+    "benefits": [
+      [
+        "コレクションで楽しむ",
+        "気に入った一枚から、その周りに広がる世界へ。"
+      ],
+      [
+        "二つの画面に、同じ雰囲気を",
+        "すべてのデザインにパソコン用とスマートフォン用があります。"
+      ],
+      [
+        "オリジナルファイル",
+        "PNG をそのまま保存できます。閲覧やダウンロードに登録は不要です。"
+      ]
+    ],
+    "faqTitle": "ダウンロードの前に",
+    "faq": [
+      [
+        "壁紙は無料ですか？",
+        "はい。ご自身の画面用に無料でダウンロードして利用できます。"
+      ],
+      [
+        "商用利用はできますか？",
+        "ライセンスは個人利用を対象としています。商品、広告、その他の商用利用については wallpapers@want.foundation にお問い合わせください。"
+      ],
+      [
+        "どちらのファイルを選べばよいですか？",
+        "横長の画面にはパソコン用、スマートフォンには縦長のスマートフォン用をお選びください。どちらもオリジナルの PNG ファイルです。"
+      ],
+      [
+        "アカウントは必要ですか？",
+        "閲覧、検索、ダウンロードに登録は不要です。評価とコメントにはブラウザーの匿名アカウントを使用します。"
+      ],
+      [
+        "アクセス分析を拒否できますか？",
+        "はい。「必須のみ」をお選びください。閲覧、検索、ダウンロードは引き続き利用できます。"
+      ]
+    ],
+    "finalTitle": "使い続けたい景色を見つけてください。",
+    "finalText": "色や場所、今の気分から探してみましょう。",
+    "notFoundTitle": "このページは見つかりません。",
+    "notFoundText": "お探しのページはコレクションにありません。",
+    "back": "壁紙に戻る"
+  },
 } satisfies Record<Locale, object>;

@@ -20,7 +20,7 @@ test.afterAll(async () => {
   await database`UPDATE collections SET listed=true`;
   await database`UPDATE wallpapers SET listed=true`;
 });
-for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) test('fresh discovery and direct pages retain correct state: ' + (prefix || 'en'), async ({ page, request }) => {
+for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) test('fresh discovery and direct pages retain correct state: ' + (prefix || 'en'), async ({ page, request }) => {
   await setListing(request, 'collections', '0001-contours-of-silence', false);
   await setListing(request, 'wallpapers', 'woven-spectrum-2', false);
   await setListing(request, 'wallpapers', 'contours-of-silence-2', false);
