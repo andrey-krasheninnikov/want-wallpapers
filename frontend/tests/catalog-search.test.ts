@@ -100,7 +100,7 @@ test('neon collection preserves its ten designs and localized keyboard search', 
 test('collection chronology uses its first publication and survives snapshot round trips', async () => {
   const { newestCollections } = await import('../src/lib/catalog-order');
   const { collections, collectionPublicationDates } = await import('../src/data/catalog');
-  expect(collections[0]!.id).toBe('0006-neon-tide');
+  expect(collections.findIndex(item => item.id === '0006-neon-tide')).toBeLessThan(collections.findIndex(item => item.id === '0001-contours-of-silence'));
   const original = collections.map(item => item.id);
   const snapshot = JSON.parse(JSON.stringify({ collections: [...collections].reverse(), collectionPublicationDates }));
   expect(newestCollections(snapshot.collections, snapshot.collectionPublicationDates).map(item => item.id)).toEqual(original);
@@ -120,4 +120,20 @@ test('collection order keeps microseconds, deterministic ties and undated entrie
   expect(newestCollections(items, dates).map(item => item.id)).toEqual(['0003-tie', '0002-recent', '0005-fraction', '0001-old', '0004-unknown']);
   expect(newestCollections(items, {}).map(item => item.id)).toEqual(items.map(item => item.id).reverse());
   expect(items.map(item => item.id)).toEqual(['0001-old', '0002-recent', '0003-tie', '0004-unknown', '0005-fraction']);
+});
+
+
+test('published packages expose five searchable designs and complete stories in six locales', async () => {
+  const { default: publications } = await import('../src/data/collection-publications.json');
+  const { collectionStories } = await import('../src/data/editorial');
+  const { locales } = await import('../src/data/catalog');
+  for (const value of Object.values(publications) as { manifest: { collection: { id: string; slug: string }; wallpapers: typeof wallpapers }; stories: Record<Locale, string[]> }[]) {
+    const designs = wallpapers.filter(item => item.collectionId === value.manifest.collection.id);
+    expect(designs).toEqual(value.manifest.wallpapers); expect(designs).toHaveLength(5);
+    for (const locale of locales) {
+      expect(collectionStories[value.manifest.collection.slug]![locale]).toEqual(value.stories[locale]);
+      const index = createSearchIndex(locale, designs.map(item => ({ id: item.id, text: [item.title[locale], item.description[locale], ...item.tags.map(key => tagLabels[key][locale])].join(' ') })));
+      for (const item of designs) expect(searchIds(index, locale, item.title[locale])).toContain(item.id);
+    }
+  }
 });

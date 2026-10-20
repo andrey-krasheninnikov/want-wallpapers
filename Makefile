@@ -115,3 +115,11 @@ collection-validate:
 	bun run collection validate "$(PACKAGE)"
 collection-review:
 	bun run collection review "$(PACKAGE)"
+
+.PHONY: collection-publish collection-publication-status collection-resume
+collection-publish:
+	bun frontend/scripts/collection.ts publish "$(PACKAGE)" "$(PUBLICATION_CONFIG)"
+collection-publication-status:
+	bun frontend/scripts/collection.ts publication-status "$(PACKAGE)"
+collection-resume:
+	bun frontend/scripts/collection.ts resume "$(PACKAGE)" "$(PUBLICATION_CONFIG)"

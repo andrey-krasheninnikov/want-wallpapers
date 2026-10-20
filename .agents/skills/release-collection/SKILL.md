@@ -7,6 +7,8 @@ description: Добавлять и выпускать новую коллекц�
 
 Работайте в `andrey-krasheninnikov/want-wallpapers`. Вход — URL папки `https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/<number-and-name>/`. Явный вызов `$release-collection` с URL или запрос «добавь и выпусти коллекцию» разрешает подготовку данных, атомарный импорт новых записей через Rust API, публикацию веток, PR, merges, тега, GitHub Release и удаление соответствующих временных веток. После публикации protected tag вручную запустите согласованный production workflow с backup/restore gate. Отдельные ручные deployment и изменения инфраструктуры требуют своего согласованного scope. Запрос изучения папки разрешает только чтение. Для коллекций этот порядок имеет приоритет над `release-feature`.
 
+Для точного одобренного приватного пакета используйте [publish-collection](../publish-collection/SKILL.md). Этот путь автоматизирует описанный Gitflow с `execution=local`; Actions не запускаются. Прямой выпуск произвольной CDN-папки сохраняет процедуру ниже.
+
 ## 1. Подготовка
 
 - Прочитайте применимые `AGENTS.md`, README и ADR каталога. Загрузите `$git-workflow-and-versioning` и `$delivery-commit-publish`; `$delivery-semantic-merge` загрузите перед обратным merge.
