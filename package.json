@@ -25,7 +25,8 @@
     "sharp": "0.35.5",
     "@grpc/grpc-js": "1.14.5",
     "http-cache-semantics": "4.3.0",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "vite": "6.4.4"
   },
   "patchedDependencies": {
     "lunr-languages@1.22.0": "patches/lunr-languages@1.22.0.patch"

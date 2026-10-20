@@ -34,13 +34,19 @@ Astro 5 сохранён ради совместимости текущего fr
 
 esbuild закреплён на 0.25.12: исправлен development CORS finding; более новая 0.28.1 несовместима с целевыми браузерами текущего Astro/Vite. [GHSA-g7r4-m6w7-qqqr](https://github.com/evanw/esbuild/security/advisories/GHSA-g7r4-m6w7-qqqr) относится к Windows development server; проект собирается на Linux/macOS и не использует esbuild serve. [GHSA-gv7w-rqvm-qjhr](https://github.com/evanw/esbuild/security/advisories/GHSA-gv7w-rqvm-qjhr) относится к Deno binary downloader; Deno не используется, зависимости npm установлены Bun по lockfile без install scripts. При добавлении Windows/Deno сценария сначала пересмотрите версию и ограничения.
 
+21 октября 2026 Vite закреплён на 6.4.4 для устранения [GHSA-698v-4r3x-3vcv](https://github.com/advisories/GHSA-698v-4r3x-3vcv). Advisory относится к Windows editor launcher; исправление применяется к сборочным зависимостям без нового исключения audit. Vite отсутствует в production runtime.
+
 grpc-js 1.14.5 и http-cache-semantics 4.3.0 закреплены overrides для устранения найденных transitive advisory Firebase Analytics.
 
 ## Cargo advisory
 
 19 октября 2026 rustls обновлён с 0.23.45 до 0.23.46 для устранения [RUSTSEC-2026-0347](https://rustsec.org/advisories/RUSTSEC-2026-0347.html). Advisory относится к отправке буферизованных данных после отказа ECH. Исправленная версия используется без дополнительного исключения audit.
 
-[RUSTSEC-2023-0071](https://rustsec.org/advisories/RUSTSEC-2023-0071.html) относится к `rsa` в optional SQLx MySQL зависимостях lockfile. MySQL не включён: production Linux graph с normal/build/dev dependencies не содержит rsa; используются только PostgreSQL и rustls-ring. Проверка графа обязательна перед принятием этого единственного finding. При включении RSA/MySQL исключение становится недействительным. Остальные Rust advisory/warnings блокируют проверку.
+21 октября 2026 обновлены rustls-webpki до 0.103.16, webpki-roots и webpki-root-certs до 1.0.10. Эти версии устраняют RUSTSEC-2026-0382, RUSTSEC-2026-0381 и RUSTSEC-2026-0383: проверка отклоняет скомпрометированные emSign intermediates, а наборы roots исключают соответствующий корневой сертификат.
+
+SQLx 0.8 сохраняет compatibility crate webpki-roots 0.26.11. Его исходник содержит только реэкспорт `parent::TLS_SERVER_ROOTS`, а Cargo.lock связывает его с исправленным webpki-roots 1.0.10. Для metadata finding RUSTSEC-2026-0381 audit принимает только этот точный shim и двухстрочный registry dependency graph с родителем 1.0.10. Старый родитель, другая версия, локальная подмена или дополнительная зависимость блокируют проверку. Срок пересмотра остаётся 4 ноября 2026.
+
+[RUSTSEC-2023-0071](https://rustsec.org/advisories/RUSTSEC-2023-0071.html) относится к `rsa` в optional SQLx MySQL зависимостях lockfile. MySQL не включён: production Linux graph с normal/build/dev dependencies не содержит rsa; используются только PostgreSQL и rustls-ring. Проверка графа обязательна перед принятием RSA finding. При включении RSA/MySQL исключение становится недействительным. Остальные Rust advisory/warnings блокируют проверку.
 
 ## Проверки
 
