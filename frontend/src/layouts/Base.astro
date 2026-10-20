@@ -61,12 +61,14 @@ const analyticsAvailable = isAnalyticsConfigured();
     <script>
       import { initCollectionCovers } from '../lib/collection-cover-player';
       import { initPageMotion } from '../lib/page-motion';
+      import { initGalleryEffects } from '../lib/gallery-effects';
       let cleanup = () => {};
       function initializePage() {
         cleanup();
         const motion = initPageMotion();
         const covers = initCollectionCovers();
-        cleanup = () => { motion(); covers(); };
+        const effects = initGalleryEffects();
+        cleanup = () => { motion(); covers(); effects(); };
       }
       document.addEventListener('astro:before-swap', () => cleanup());
       document.addEventListener('astro:page-load', initializePage);
@@ -74,10 +76,8 @@ const analyticsAvailable = isAnalyticsConfigured();
       import { initFeedbackDialog } from '../lib/feedback-dialog';
       import { initWallpaperNavigation } from '../lib/wallpaper-navigation';
       initWallpaperNavigation();
-      import { initGalleryEffects } from '../lib/gallery-effects';
       const locale = document.body.dataset.locale as import('../data/catalog').Locale;
       initFeedbackDialog(locale);
-      initGalleryEffects();
     </script>
     <CookieConsent locale={locale} analyticsAvailable={analyticsAvailable} client:load transition:persist="cookies" />
   </body>
