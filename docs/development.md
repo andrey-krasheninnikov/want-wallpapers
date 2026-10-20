@@ -205,3 +205,5 @@ See [DESIGN.md](../DESIGN.md) for visual tokens, typography, component compositi
 Run `bun run dev` and open `http://127.0.0.1:4321/ui-kit/` to browse the installed components and their states. The UI-kit route is development-only. Rebuild the local device scene with `bun frontend/scripts/device-scene.ts` after syncing previews.
 
 Патч `patches/lunr-languages@1.22.0.patch` сохраняет состояние арабского stemmer в локальном объекте: браузерные ESM-модули выполняются в strict mode. Bun применяет патч при установке; Docker копирует его до установки зависимостей.
+
+Браузерные тесты импортируют `test` и `expect` из `frontend/tests/browser.ts`. Общий fixture подменяет рекламный тег на уровне context до создания страниц; тесты рекламы задают собственные ответы без реальных показов и кликов.

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../browser';
 import { localPath } from '../../src/data/copy';
 import { collections, wallpapers } from '../../src/data/catalog';
 

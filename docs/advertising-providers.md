@@ -33,7 +33,7 @@ The owner confirmed site approval and no additional ads.txt or CMP/TCF requireme
 
 ## Verification
 
-Automated advertising tests block external traffic and substitute the tag, banner and popup pages. They cover consent, six locales, responsive layout, withdrawal, pending loads, timeout, navigation, CSP and native downloads. They produce no live advertising impressions or clicks.
+All Playwright suites import the shared browser fixture, which substitutes the provider tag in every page, including new tabs. Advertising integration tests additionally block external traffic and substitute the banner and popup pages. They cover consent, six locales, responsive layout, withdrawal, pending loads, timeout, navigation, CSP and native downloads. They produce no live advertising impressions or clicks.
 
 Before closing #136, record the deployed version, date and public URL. Using the provider-approved verification procedure, confirm actual banner content, expected popup behavior, withdrawal and both PNG variants. Do not click advertisements or manufacture traffic. Script loading and an empty iframe do not prove delivery or revenue.
 
