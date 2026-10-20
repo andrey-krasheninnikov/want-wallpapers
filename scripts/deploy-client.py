@@ -21,11 +21,11 @@ def transport(config, command):
     return value
 
 
-def deploy(config, tag, sha, digest, timeout=2700):
+def deploy(config, tag, sha, digest, timeout=2700, *, resume=False):
     intent = ' '.join((tag, sha, digest))
     request_command('deploy ' + intent, 'ci')
     try:
-        record = transport(config, 'deploy ' + intent)
+        record = transport(config, ('deploy-status ' if resume else 'deploy ') + intent)
     except (DeployError, ValueError):
         # Query the existing intent; never repeat a write after a lost response.
         record = transport(config, 'deploy-status ' + intent)

@@ -181,7 +181,7 @@ def image_matches(metadata, record):
 
 def public_record(record):
     keys = ('schemaVersion', 'requestId', 'tag', 'sourceSha', 'indexDigest', 'state', 'stage',
-            'errorCode', 'verificationRun', 'verificationProfile', 'skippedChecks', 'actualImageId', 'architecture', 'revision', 'backupVerified')
+            'errorCode', 'verificationRun', 'localVerification', 'verificationProfile', 'skippedChecks', 'actualImageId', 'architecture', 'revision', 'backupVerified')
     return {key: record[key] for key in keys if key in record}
 
 

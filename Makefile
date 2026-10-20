@@ -3,7 +3,7 @@ PYTHON ?= python3
 
 .PHONY: help install dev dev-backend build check test test-db test-backend test-frontend test-ci test-backup test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate
 help:
-	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n test-project-isolation test-cover-media generation-init generation-config generation-up generation-stop test-generation'
+	@echo 'install dev dev-backend build check test test-db test-backend test-frontend test-ci test-ui fmt catalog-pull catalog-add docker-build test-container audit deploy-config migrate n8n-config n8n-up n8n-stop n8n-status n8n-backup n8n-restore test-n8n test-project-isolation test-cover-media generation-init generation-config generation-up generation-stop test-generation release-local-check release-local deploy-local release-local-status'
 install:
 	bun install --frozen-lockfile --ignore-scripts
 	cargo fetch --locked
@@ -97,3 +97,15 @@ generation-stop:
 test-generation:
 	bun test frontend/tests/generation-draft.test.ts
 	$(PYTHON) -u -B scripts/test-generation-n8n.py
+
+.PHONY: release-local-check release-local deploy-local release-local-status
+TAG ?=
+PROFILE ?= full
+release-local-check:
+	PATH="$(HOME)/.local/share/want-wallpapers/tools/bin:$$PATH" $(PYTHON) -B scripts/local-release.py check --tag "$(TAG)" --profile "$(PROFILE)"
+release-local:
+	PATH="$(HOME)/.local/share/want-wallpapers/tools/bin:$$PATH" $(PYTHON) -B scripts/local-release.py prepare --tag "$(TAG)" --profile "$(PROFILE)" --publish
+deploy-local:
+	PATH="$(HOME)/.local/share/want-wallpapers/tools/bin:$$PATH" $(PYTHON) -B scripts/local-release.py deploy --tag "$(TAG)" --profile "$(PROFILE)"
+release-local-status:
+	PATH="$(HOME)/.local/share/want-wallpapers/tools/bin:$$PATH" $(PYTHON) -B scripts/local-release.py status --tag "$(TAG)"

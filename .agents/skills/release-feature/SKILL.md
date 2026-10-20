@@ -7,6 +7,10 @@ description: Выпускать Want Wallpapers по Gitflow из feature-вет
 
 Используйте этот порядок для `andrey-krasheninnikov/want-wallpapers`. Он поддерживает исходную feature-ветку и выпуск уже готового `origin/development`. Выполняйте публикацию веток, PR, merges, тега, GitHub Release и deployment в пределах разрешённого конкретного выпуска. Само наличие skill или protected tag разрешения не даёт. Изменения инфраструктуры и правил защиты требуют отдельного scope.
 
+## Способ выполнения
+
+`execution=github` используется по умолчанию и сохраняет ручной workflow. `$release-local` задаёт `execution=local`: все проверки, публикация и запуск deployment выполняются с MacBook по [локальному контракту](../../../docs/ci-releases.md#локальный-выпуск-с-macbook). Этот режим не вызывает Actions; защищённые refs и Gitflow остаются обязательными.
+
 ## Версия и профиль
 
 - `$release-patch` задаёт patch-инкремент и `profile=fast`; `$release-minor` задаёт minor-инкремент и `profile=full`.
@@ -30,7 +34,7 @@ description: Выпускать Want Wallpapers по Gitflow из feature-вет
 1. Опубликуйте согласованные изменения feature-ветки и подтвердите серверный HEAD.
 2. Выполните `make check`, `make test` и `git diff --check`.
 3. Создайте PR в `development` с описанием результата и проверок. Передайте многострочное тело через `--body-file`; проверьте текст и метаданные, сохраняя нейтральное авторство.
-4. Вручную запустите `Checks` на source-ветке по docs/ci-releases.md. Сверьте `head_sha` с HEAD PR; дождитесь успешных проверок текущего кандидата и обязательных checks. Новый source commit требует нового ручного run.
+4. Для `execution=local` подтвердите локальные проверки текущего дерева и обязательные merge protections, не запуская Actions. Для `execution=github` вручную запустите `Checks` на source-ветке по docs/ci-releases.md. Сверьте `head_sha` с HEAD PR; дождитесь успешных проверок текущего кандидата и обязательных checks. В режиме `execution=github` новый source commit требует нового ручного run.
 5. Выполните squash merge с явным Conventional Commit сообщением и `--match-head-commit <verified-feature-sha>`. Не используйте admin bypass.
 6. Прочитайте результат PR и обновите refs. У squash-коммита один родитель: проверенный прежний HEAD development. Его дерево сохраняет согласованные изменения обеих веток.
 
@@ -39,23 +43,24 @@ description: Выпускать Want Wallpapers по Gitflow из feature-вет
 1. Зафиксируйте актуальный `origin/development` и просмотрите весь diff относительно main. В выпуск входят все изменения выбранного development SHA. Несогласованный состав требует уточнения до публикации.
 2. Создайте `release/v<version>` от этого development SHA. Синхронизируйте корневой `package.json`, workspace version в `Cargo.toml` и пакет в `Cargo.lock` с будущим тегом. Добавьте в `CHANGELOG.md` фактическую дату, пользу для посетителей и известные ограничения.
 3. Опубликуйте release-коммит `chore(release): prepare v<version>` с собственным upstream release-ветки. Существующую подходящую ветку продолжайте только после проверки точного HEAD и diff.
-4. На окончательном кандидате выполните `make check`, `make test` и `git diff --check`: static/type/format, unit и bounded API на PostgreSQL 18. Повторно используйте подтверждённые результаты, если относящиеся к ним входные данные не изменились.
-5. Создайте PR в `main`, вручную запустите `Checks` на release-ветке и подтвердите успешный run на текущем HEAD. Тяжёлый audit/UI/native runtime gate выполнит release chain на protected tag после merge в main.
+4. Для `execution=local` на чистом окончательном release-кандидате выполните `make release-local-check TAG=v<version> PROFILE=<full-or-fast>`. Он сохраняет результаты до merge. Для `execution=github` выполните `make check`, `make test` и `git diff --check`: static/type/format, unit и bounded API на PostgreSQL 18. Повторно используйте подтверждённые результаты, если относящиеся к ним входные данные не изменились.
+5. Создайте PR в `main`. Для `execution=local` используйте подтверждённые локальные проверки текущего дерева; обязательные protections не обходите. Для `execution=github` вручную запустите `Checks` на release-ветке и подтвердите успешный run на текущем HEAD. Тяжёлый audit/UI/native runtime gate выполнит release chain на protected tag после merge в main.
 6. Выполните обычный merge без squash и rebase, с `--match-head-commit <verified-release-sha>` и без bypass. Подтвердите `MERGED` и два родителя: проверенный прежний main и проверенный release HEAD. Зафиксируйте итоговый SHA main.
 
 ## 3. Protected tag и production workflow
 
 - Сверьте `.github/release-policy.json` с полным readback активного tag ruleset `Protect release tags` для `refs/tags/v*`: запрет update/delete, пустой bypass list, совпадающие ID и `updatedAt`. Production environment допускает только tags `v*`, без branches. Несовпадение блокирует выпуск; не ослабляйте защиту и не меняйте policy без отдельного согласованного изменения.
-- До публикации тега проверьте готовность root-owned validator, production environment и вручную запущенного Mac backup worker по production instructions. Отсутствующие prerequisites блокируют тег; остальные согласованные этапы можно подготовить заранее.
+- До публикации тега проверьте готовность root-owned validator и приватной конфигурации backup. Для `execution=github` также проверьте production environment и вручную запущенный worker; для `execution=local` проверьте pinned signer и ключ в ssh-agent, worker управляется локальной командой. Отсутствующие prerequisites блокируют тег; остальные согласованные этапы можно подготовить заранее.
 - Создайте annotated тег `v<version>` на подтверждённом merge-коммите main с сообщением `Release <version>`. Опубликуйте только этот тег обычным push. Проверьте серверные tag object и peeled SHA; peeled SHA совпадает с зафиксированным main.
 - Существующий тег не перемещайте и не удаляйте. Совпадающий тег используйте для оставшихся этапов; другой target блокирует продолжение. Push тега ничего не запускает.
-- Вручную запустите workflow на том же tag ref и с тем же tag input, передав выбранный `fast` или `full`:
+- Для `execution=local` в чистом checkout опубликованного tag выполните `make release-local TAG=v<version> PROFILE=<full-or-fast>`, затем `make deploy-local TAG=v<version> PROFILE=<original-profile>`. Проверьте подписанный record, исходный digest, deployment request, backupVerified, running revision и public smoke; после этого перейдите к разделу 4. Actions и следующие команды workflow в этом режиме не выполняются.
+- Для `execution=github` вручную запустите workflow на том же tag ref и с тем же tag input, передав выбранный `fast` или `full`:
 
 ```sh
 gh workflow run deploy-production.yml --ref v<version> -f tag=v<version> -f profile=<fast-or-full>
 ```
 
-Одна цепочка выполняет проверки, публикацию checked images через artifacts без rebuild, один eligibility и deployment. `fast` пропускает только Full UI/E2E. Оба профиля сохраняют static/type/format, unit/API, security audit, collection drafts и native runtime PostgreSQL 18/TLS на linux/amd64 и linux/arm64. Backup, off-VPS restore, migrations, grants, readiness и public smoke обязательны.
+Цепочка `execution=github` выполняет проверки, публикацию checked images через artifacts без rebuild, один eligibility и deployment. `fast` пропускает только Full UI/E2E. Оба профиля сохраняют static/type/format, unit/API, security audit, collection drafts и native runtime PostgreSQL 18/TLS на linux/amd64 и linux/arm64. Backup, off-VPS restore, migrations, grants, readiness и public smoke обязательны.
 
 Дождитесь результата и сохраните tag, source SHA, профиль, пропущенные проверки, verification run/attempt, оба platform digests, оба config digests, OCI revisions и исходный `APP_IMAGE@sha256`. Отдельно подтвердите deployment request/status, `backupVerified`, running image/revision и public smoke. Успешный eligibility или публикация образа не подтверждают переключение VPS. Ошибка, timeout или `recovery-required` блокируют объявление успешного выпуска.
 
@@ -76,7 +81,7 @@ gh workflow run deploy-production.yml --ref v<version> -f tag=v<version> -f prof
 ## Возобновление и runtime
 
 - При неоднозначном результате сначала прочитайте серверные refs, PR, runs и deployment status. Не повторяйте публикацию или deployment вслепую.
-- После публикации OCI index повторяйте deployment с исходным digest и тем же профилем. Новый run пропускает build/publication и валидирует исходные evidence. Не выбирайте более новую публикацию того же SHA:
+- Для `execution=local` после публикации OCI index повторяйте `make deploy-local TAG=v<version> PROFILE=<original-profile>` с сохранённым состоянием: команда использует исходный digest без rebuild и reconciles существующий запрос. Для `execution=github` после публикации OCI index повторяйте deployment с исходным digest и тем же профилем. Новый run пропускает build/publication и валидирует исходные evidence. Не выбирайте более новую публикацию того же SHA:
 
 ```sh
 gh workflow run deploy-production.yml --ref v<version> -f tag=v<version> -f profile=<original-profile> -f index_digest=sha256:<original-digest>

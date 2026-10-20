@@ -11,6 +11,7 @@ import tempfile
 import uuid
 
 ROOT = Path(__file__).resolve().parent.parent
+SOURCE = Path(os.environ.get('TEST_SOURCE_ROOT', ROOT)).resolve()
 sys.path.insert(0, str(ROOT / 'scripts'))
 from deployment import DeployError, require, run
 spec = importlib.util.spec_from_file_location('worker', ROOT / 'scripts/backup-worker.py')
@@ -39,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='wallpapers-backup-test-') as directory:
             time.sleep(1)
         else:
             raise DeployError('fixture-database-unavailable')
-        migrations = sorted((ROOT / 'backend/migrations').glob('*.sql'))
+        migrations = sorted((SOURCE / 'backend/migrations').glob('*.sql'))
         setup = 'CREATE TABLE public._sqlx_migrations (version bigint PRIMARY KEY, checksum bytea NOT NULL, success boolean NOT NULL);\n'
         for migration in migrations:
             setup += migration.read_text() + '\n'
