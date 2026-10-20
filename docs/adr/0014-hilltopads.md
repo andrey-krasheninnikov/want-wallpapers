@@ -16,4 +16,4 @@ Full navigation gives up client transitions after advertising starts, while keep
 
 Only the provider tag changes its own request referrer policy. The global policy stays strict-origin-when-cross-origin. Parent-document CSP permits the confirmed script, frame and error-reporting origins without the previous advertising eval or inline-script exceptions. Additional origins require source verification.
 
-The ten-second placement timeout hides an unavailable banner and never delays the site. An iframe or successful tag request is not evidence of filled advertising. Actual delivery, popup frequency, account-specific ads.txt and CMP requirements require provider/account verification.
+The ten-second placement timeout hides the placement when no iframe appears and never delays the site. An existing but unfilled iframe may keep its reserved space. An iframe or successful tag request is not evidence of filled advertising. Actual delivery, popup frequency, account-specific ads.txt and CMP requirements require provider/account verification.

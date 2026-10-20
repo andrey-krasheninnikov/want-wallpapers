@@ -14,7 +14,7 @@ After the tag starts, navigation loads a new document. Wallpaper links preserve 
 
 The exact HTTPS tag URL and 300×250 size are defined in `frontend/src/lib/advertising-providers.ts`. The script receives empty settings, async loading and the supplied no-referrer-when-downgrade policy for that request only. The global Referrer-Policy header remains strict-origin-when-cross-origin. No global referrer meta tag is added.
 
-The tag starts at most once per document, without retries. Failure, blocking, no iframe or a ten-second timeout hides the placement. Browsing, search, social actions and original PNG downloads remain independent. The legacy document.write interception and global placement options are removed.
+The tag starts at most once per document, without retries. Loader failure or no iframe within ten seconds hides the placement. An existing iframe can remain empty if delivery is blocked or unfilled; the site does not treat iframe creation as proof of fill. Browsing, search, social actions and original PNG downloads remain independent. The legacy document.write interception and global placement options are removed.
 
 The public file `/2405ea2a7a861b5bc39f.txt` contains the supplied verification response. The matching DNS TXT record was confirmed publicly before implementation. File publication and DNS presence do not prove account moderation or live ad delivery.
 

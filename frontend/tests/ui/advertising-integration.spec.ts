@@ -15,7 +15,7 @@ async function network(page: Page, country: string | null, mode = 'ready') {
   await page.route('**/*.glb', route => route.abort());
   await page.route('https://ipwho.is/**', route => country === null ? route.abort() : route.fulfill({ json: { success: true, country_code: country } }));
   await page.route('**/api/v1/**', route => route.fulfill({ json: route.request().url().endsWith('/social') ? { counts: { cringe: 0, minus: 0, plus: 0, imba: 0 }, ownRating: null, ownUid: null, comments: [] } : { enabled: false } }));
-  await page.route('https://massivesalad.com/mock-banner', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Test banner</title><body style="margin:0;background:#252525;color:#e8e8e8">Test banner</body>' }));
+  await page.route('https://massivesalad.com/mock-banner', route => route.fulfill({ contentType: 'text/html', body: mode === 'empty-frame' ? '<!doctype html><title>Empty banner</title>' : '<!doctype html><title>Test banner</title><body style="margin:0;background:#252525;color:#e8e8e8">Test banner</body>' }));
   await page.route(hilltopAdvertisement.src, async route => {
     calls.push(route.request().url());
     if (mode === 'error') { await route.abort(); return; }
@@ -96,12 +96,13 @@ test('stored denial and cross-tab withdrawal prevent further ads', async ({ page
   await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(1); await second.close();
 });
 
-for (const mode of ['error', 'empty']) test(`failure and no-fill leave downloads and social actions working: ${mode}`, async ({ page }) => {
+for (const mode of ['error', 'empty', 'empty-frame']) test(`failure and no-fill leave downloads and social actions working: ${mode}`, async ({ page }) => {
   const calls = await network(page, 'US', mode);
   await page.unroute('**/api/v1/**');
   await page.goto('/wallpapers/contours-of-silence-1/'); await ready(page);
   await expect.poll(() => calls.length).toBe(1);
-  await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(0);
+  if (mode === 'empty-frame') await expect(page.locator(banner)).toBeVisible();
+  else await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(0);
   for (const variant of ['mobile', 'desktop'] as const) {
     await page.getByRole('tab', { name: copy.en[variant], exact: true }).click();
     const download = page.waitForEvent('download'); await page.locator('#download-link').click();

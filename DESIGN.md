@@ -103,7 +103,7 @@ Use one static pass and one cached-media source build for these revisions. Run f
 
 ## Advertising
 
-Public pages except localized homes, administration, errors and the development kit may load HilltopAds under the independent advertising preference. One labelled 300×250 banner sits after main content and before the footer, with 10 px side gutters at a 320 px viewport. Below 300 px of available space the tag does not start. Keep native dimensions without scaling or overlap. The owner-approved MultiTag also provides standard popup windows; their frequency belongs to the provider. Failed or empty placements remain hidden. Advertising never controls downloads. Once advertising requests start, navigation and consent withdrawal load a fresh document; wallpaper links retain locale, variant and the viewer fragment.
+Public pages except localized homes, administration, errors and the development kit may load HilltopAds under the independent advertising preference. One labelled 300×250 banner sits after main content and before the footer, with 10 px side gutters at a 320 px viewport. Below 300 px of available space the tag does not start. Keep native dimensions without scaling or overlap. The owner-approved MultiTag also provides standard popup windows; their frequency belongs to the provider. Loader failure or no iframe within ten seconds leaves the placement hidden. An existing iframe may remain empty because its presence does not confirm ad fill. Advertising never controls downloads. Once advertising requests start, navigation and consent withdrawal load a fresh document; wallpaper links retain locale, variant and the viewer fragment.
 
 ### Arabic direction
 
