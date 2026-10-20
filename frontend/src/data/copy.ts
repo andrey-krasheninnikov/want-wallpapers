@@ -35,6 +35,7 @@ export const copy = {
     essentialOnly: 'Essential only', acceptAll: 'Allow all', analyticsLabel: 'Analytics', advertisingLabel: 'Advertising',
     cookieSaved: 'Your cookie choice has been saved.',
     serviceError: 'Could not connect. Please try again.', loading: 'Loading…',
+    contactEmail: 'Email',
     owner: 'Andrey Krasheninnikov',
   },
   ru: {
@@ -71,6 +72,7 @@ export const copy = {
     essentialOnly: 'Только необходимые', acceptAll: 'Разрешить все', analyticsLabel: 'Аналитика', advertisingLabel: 'Реклама',
     cookieSaved: 'Настройки cookie сохранены.',
     serviceError: 'Не удалось подключиться. Попробуйте ещё раз.', loading: 'Загрузка…',
+    contactEmail: 'Почта',
     owner: 'Andrey Krasheninnikov',
   },
   'zh-cn': {
@@ -107,6 +109,7 @@ export const copy = {
     essentialOnly: '仅必要项', acceptAll: '全部允许', analyticsLabel: '分析', advertisingLabel: '广告',
     cookieSaved: 'Cookie 设置已保存。',
     serviceError: '连接失败，请重试。', loading: '加载中…',
+    contactEmail: '邮箱',
     owner: 'Andrey Krasheninnikov',
   },
   'pt-br': {
@@ -143,6 +146,7 @@ export const copy = {
     essentialOnly: 'Só essenciais', acceptAll: 'Permitir tudo', analyticsLabel: 'Análise', advertisingLabel: 'Publicidade',
     cookieSaved: 'Sua escolha de cookies foi salva.',
     serviceError: 'Não foi possível conectar. Tente novamente.', loading: 'Carregando…',
+    contactEmail: 'Email',
     owner: 'Andrey Krasheninnikov',
   },
 } as const;
