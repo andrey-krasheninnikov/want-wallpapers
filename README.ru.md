@@ -18,7 +18,11 @@
 
 <p align="center">
   <a href="https://wallpapers.want.foundation/ru/">
-    <img src="docs/assets/readme-banner.png" width="1600" alt="Want Wallpapers: обои «Фиолетовый горизонт» на горизонтальном и вертикальном экранах рядом с фирменным фиолетовым пиксельным логотипом.">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/cover-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="docs/assets/cover-light.png">
+      <img src="docs/assets/cover-light.png" width="1600" height="800" alt="Want Wallpapers: фиолетовый пиксельный логотип и три превью коллекций Neon Tide, A Night Beneath the Ice и Contours of Silence.">
+    </picture>
   </a>
 </p>
 
@@ -147,4 +151,4 @@ make dev
 
 Код и документация доступны по [лицензии MIT](LICENSE).
 
-Для обоев действуют отдельные [условия личного использования](https://wallpapers.want.foundation/ru/license/). Разрешены скачивание, показ на собственных устройствах и обрезка для себя. Продажа, распространение наборов и коммерческое использование требуют разрешения. Баннер содержит работу из каталога и не расширяет права на изображения. По вопросам лицензирования пишите на [wallpapers@want.foundation](mailto:wallpapers@want.foundation).
+Для обоев действуют отдельные [условия личного использования](https://wallpapers.want.foundation/ru/license/). Разрешены скачивание, показ на собственных устройствах и обрезка для себя. Продажа, распространение наборов и коммерческое использование требуют разрешения. Баннер содержит работы из каталога и не расширяет права на изображения. По вопросам лицензирования пишите на [wallpapers@want.foundation](mailto:wallpapers@want.foundation).
