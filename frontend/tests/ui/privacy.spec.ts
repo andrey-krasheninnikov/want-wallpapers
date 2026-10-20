@@ -84,9 +84,13 @@ for (const [legacy, analytics] of [['essential', false], ['analytics', true]] as
 
 test('allow all stores both choices and withdrawal persists in another tab', async ({ page, context }) => {
   const optional: string[] = [];
-  page.on('request', (request) => { if (/google-analytics|googletagmanager|firebaseinstallations/.test(request.url())) optional.push(request.url()); });
+  const measurementId = process.env.PUBLIC_FIREBASE_MEASUREMENT_ID;
+  const sdkLoaded = measurementId ? page.waitForResponse((response) => response.url().startsWith('https://www.googletagmanager.com/gtag/js?')) : undefined;
+  page.on('request', (request) => { if (/google-analytics|googletagmanager|firebase/.test(request.url())) optional.push(request.url()); });
   await page.goto('/ru/');
+  expect(optional).toEqual([]);
   await page.getByRole('button', { name: copy.ru.acceptAll, exact: true }).click();
+  await sdkLoaded;
   const second = await context.newPage();
   await second.route('https://ipwho.is/**', (route) => route.fulfill({ json: { success: true, country_code: 'DE' } }));
   await second.goto('/ru/');
@@ -95,7 +99,9 @@ test('allow all stores both choices and withdrawal persists in another tab', asy
   await openSettings(page);
   await expect(page.getByRole('switch', { name: copy.ru.analyticsLabel, exact: true })).not.toBeChecked();
   await expect(page.getByRole('switch', { name: copy.ru.advertisingLabel, exact: true })).not.toBeChecked();
-  expect(optional).toEqual([]);
+  if (measurementId) {
+    await expect.poll(() => page.evaluate((id) => Reflect.get(window, `ga-disable-${id}`), measurementId)).toBe(true);
+  }
 });
 
 test('country timeout never delays feedback and unknown results still allow an explicit choice', async ({ page }) => {
