@@ -16,9 +16,10 @@ export async function wallpaperCard(wallpaper: Wallpaper, locale: Locale): Promi
 
 export async function collectionCard(collection: Collection, locale: Locale): Promise<CollectionCardData> {
   const items = getCollectionWallpapers(collection.slug);
+  const image = await collectionCoverData(collection);
   return {
     href: localPath(locale, `/collections/${collection.slug}/`), title: collection.title[locale],
     description: collection.description[locale], countLabel: `${items.length} ${copy[locale].wallpapers}`,
-    image: await collectionCoverData(collection), video: collection.videoCover?.src, locale,
+    image: image ? { src: image.src, width: image.width, height: image.height } : undefined, video: collection.videoCover?.src, locale,
   };
 }

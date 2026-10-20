@@ -30,6 +30,16 @@ function loadPreview(src: string, signal: AbortSignal): Promise<boolean> {
   });
 }
 
+export function MosaicCard({ tile, locale }: { tile: MosaicTile; locale: Locale }) {
+  return <article data-wallpaper-card={tile.id} data-mosaic-variant={tile.variant}>
+          <Card className="group gallery-card">
+            <a href={tile.href + (tile.variant === 'mobile' ? '?variant=mobile' : '')} aria-label={`${tile.title} (${copy[locale][tile.variant]})`}>
+              <img src={tile[tile.variant].src} width={tile[tile.variant].width} height={tile[tile.variant].height} alt={tile.description} loading="lazy" data-mosaic-image className="gallery-image" />
+            </a>
+          </Card>
+  </article>;
+}
+
 export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { items: MosaicWallpaper[]; locale: Locale; dataUrl?: string }) {
   const { data, failed: dataFailed } = useGalleryData(dataUrl, locale);
   const items = data?.wallpapers ?? initialItems;
@@ -143,13 +153,7 @@ export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { i
   return <section ref={host} className="shell section-space home-mosaic-section" aria-label={copy[locale].latest}>
     <div className="home-mosaic-stage">
       <div className="home-mosaic" data-layout={frame.layout} data-count={frame.tiles.length}>
-        {frame.tiles.map(tile => <article key={tile.id} data-wallpaper-card={tile.id} data-mosaic-variant={tile.variant}>
-          <Card className="group gallery-card">
-            <a href={tile.href + (tile.variant === 'mobile' ? '?variant=mobile' : '')} aria-label={`${tile.title} (${copy[locale][tile.variant]})`}>
-              <img src={tile[tile.variant].src} width={tile[tile.variant].width} height={tile[tile.variant].height} alt={tile.description} loading="lazy" data-mosaic-image className="gallery-image" />
-            </a>
-          </Card>
-        </article>)}
+        {frame.tiles.map(tile => <MosaicCard key={tile.id} tile={tile} locale={locale} />)}
       </div>
       {outgoing && <div className="home-mosaic home-mosaic-outgoing" data-layout={outgoing.layout} data-count={outgoing.tiles.length} aria-hidden="true" onAnimationEnd={() => setOutgoing(null)}>
         {outgoing.tiles.map(tile => <div key={tile.id} className="gallery-card"><img src={tile[tile.variant].src} width={tile[tile.variant].width} height={tile[tile.variant].height} alt="" className="gallery-image" /></div>)}

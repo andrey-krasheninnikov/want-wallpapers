@@ -34,6 +34,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         None
     };
     let state = AppState {
+        runtime_catalog: Some(Arc::new(
+            want_wallpapers_server::discovery::BuildCatalog::load(&config.static_dir)?,
+        )),
         pool: pool.clone(),
         config: config.clone(),
         csp_hashes: Arc::new(hashes),

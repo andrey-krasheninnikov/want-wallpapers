@@ -1,6 +1,6 @@
 # 0009: Static gallery data and collection stories
 
-Status: accepted.
+Status: accepted. [ADR 0011](0011-runtime-listing-visibility.md) revises runtime listing projection and caching.
 
 ## Context
 
