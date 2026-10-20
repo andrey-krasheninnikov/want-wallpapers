@@ -125,7 +125,6 @@ def prepare(source, directory, state, config, *, build_images=True):
     require(state.get('inputFingerprint', fingerprint) == fingerprint, 'local-verification-inputs-changed')
     state.update(inputFingerprint=fingerprint, inputs=inputs)
     save(directory, state)
-    run(['docker', 'system', 'df'])
     require(os.statvfs(source).f_bavail * os.statvfs(source).f_frsize > 0, 'local-storage-unavailable')
     environment = {key: value for key, value in os.environ.items() if not key.startswith('GITHUB_') and key not in BUILD_KEYS}
     environment.update(config['buildEnvironment'])
