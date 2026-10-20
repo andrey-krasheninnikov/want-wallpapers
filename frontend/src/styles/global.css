@@ -470,15 +470,11 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
   }
 }
 
-.public-advertisements { display: flex; justify-content: center; }
+.public-advertisements { display: flex; justify-content: center; width: min(100% - 20px, 1280px); }
 .public-advertisements:has(.inline-advertisement:not([hidden])) { margin-top: 2rem; margin-bottom: 3rem; }
-.inline-advertisement { flex: none; }
-.wallpaper-advertising-layout { position: relative; }
-.wallpaper-advertisement { display: none; position: absolute; top: 0; width: 160px; }
-.wallpaper-advertisement[data-side="left"] { right: calc(100% + 24px); }
-.wallpaper-advertisement[data-side="right"] { left: calc(100% + 24px); }
-@media (min-width: 1712px) {
-  .wallpaper-advertisement { display: block; }
+.inline-advertisement { flex: none; width: 300px; }
+@media (max-width: 319px) {
+  .public-advertisements { display: none; }
 }
 
 @utility wallpaper-tag-link { &:hover { @apply bg-accent; } }

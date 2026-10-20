@@ -65,7 +65,7 @@ Browsing, search and downloads stay available; analytics and ads have separate c
 
 ## 💸 Monetization
 
-Yandex Auto Placement and Adsterra depend on country and advertising consent; home pages and administration are excluded. Ads never control downloads. See [provider details and production checks](docs/advertising-providers.md); integration alone does not confirm revenue.
+HilltopAds provides banners and popup windows according to advertising preferences; home pages and administration are excluded. Ads never control downloads. See [provider details and production checks](docs/advertising-providers.md); integration alone does not confirm revenue.
 
 There is no paid tier, shop or donation link. The ideas below are possible future income sources; published wallpapers remain free for personal use.
 

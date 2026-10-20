@@ -1,5 +1,5 @@
 import type { Wallpaper } from '@/data/catalog';
-import { advertisingPath, advertisingRequested, yandexAdvertisingRequested } from './advertising-providers';
+import { advertisingRequested } from './advertising-providers';
 
 export function wallpaperNeighbors(items: readonly Wallpaper[], id: string) {
   const index = items.findIndex((item) => item.id === id);
@@ -24,8 +24,9 @@ export function initWallpaperNavigation() {
   let viewportTop: number | undefined;
   let focus: 'previous' | 'next' | undefined;
   document.addEventListener('astro:before-preparation', (event) => {
-    if (yandexAdvertisingRequested() || (advertisingRequested() && !advertisingPath(event.to.pathname))) {
-      event.preventDefault(); window.location.assign(event.to.href); return;
+    if (advertisingRequested()) {
+      if (event.info?.wallpaperSlide) event.to.hash = 'wallpaper-view';
+      event.preventDefault(); return;
     }
     viewportTop = event.info?.wallpaperSlide ? document.getElementById('wallpaper-view')?.getBoundingClientRect().top : undefined;
     focus = document.activeElement?.hasAttribute('data-wallpaper-next') ? 'next' : document.activeElement?.hasAttribute('data-wallpaper-previous') ? 'previous' : undefined;

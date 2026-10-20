@@ -1,83 +1,40 @@
-# Реклама Яндекса и Adsterra
+# HilltopAds
 
-Интеграция [#16](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/16) использует публичные коды для https://wallpapers.want.foundation/. 20 октября 2026 года владелец подтвердил одобрение сайта и разрешение показов в обоих кабинетах. Документы, выплаты и доступ в кабинеты независимо не проверялись.
+HilltopAds is the only advertising provider. The owner supplied the public MultiTag and approved its 300×250 desktop/mobile banner and standard popup behavior in [#136](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/136). [ADR 0014](adr/0014-hilltopads.md) records the document boundary and trade-offs.
 
-## Страницы и согласие
+## Placement and consent
 
-Обе сети разрешены на публичных страницах коллекций, поиска, обоев, feedback, privacy, terms, cookies, license и contact во всех шести локалях. Главные, admin, 404, неизвестные маршруты и /ui-kit/ исключены.
+One labelled banner appears after the main content before the footer. It retains its original dimensions and has 10 px side gutters at a 320 px viewport. The tag does not start when the available width is below 300 px. No side towers, video or download interstitial are enabled. Popup frequency belongs to the provider configuration; the site does not add popup timers or use advertising as a download requirement.
 
-После определения страны RU/KZ/BY выбирают Яндекс, остальные страны Adsterra. Сохраняется независимая настройка advertising из [ADR 0005](adr/0005-regional-availability-and-consent.md). EEA и неизвестная страна требуют явного согласия; сохранённый отказ имеет приоритет. До разрешения выбранной сети её скрипты не запрашиваются. Google Analytics consent не передаёт согласие рекламным сетям.
+The same provider serves all six locales and countries where the account permits delivery. Country lookup determines consent defaults only. EEA and unknown-country visitors wait for an explicit choice; saved refusals take precedence. Advertising and analytics preferences remain independent. No advertising requests start on localized homes, administration, error pages, unknown routes or ui-kit.
 
-Отзыв в текущей или другой вкладке сохраняет отказ и перезагружает документ, если рекламные запросы уже начались. Новый документ не запускает сеть. Уже выполненные запросы нельзя отменить задним числом. Поиск, комментарии, оценки, CAPTCHA и PNG-скачивание независимы от рекламы.
+After the tag starts, navigation loads a new document. Wallpaper links preserve locale, desktop/mobile selection and the viewer fragment. Withdrawal in this or another tab reloads the document with advertising disabled. A document restored from the back-forward cache also reloads before resuming. Already opened advertising windows must be closed separately.
 
-## Публичные размещения
+## Public configuration
 
-Конфигурация находится в frontend/src/lib/advertising-providers.ts. ID в embed-коде публичны; отдельные production secrets для них не нужны.
+The exact HTTPS tag URL and 300×250 size are defined in `frontend/src/lib/advertising-providers.ts`. The script receives empty settings, async loading and the supplied no-referrer-when-downgrade policy for that request only. The global Referrer-Policy header remains strict-origin-when-cross-origin. No global referrer meta tag is added.
 
-Яндекс: Auto Placement 20177169. Сначала загружается https://yandex.ru/ads/system/context.js, затем https://yandex.ru/ads/system/ap-loader.js с data-page-id="20177169", один раз на документ. Расположение и набор блоков определяет кабинет Яндекса, включая возможные мобильные и полноэкранные форматы. Ненужные типы выключаются в [настройках авторасстановки](https://yandex.ru/support/partner/ru/web/auto-placement).
+The tag starts at most once per document, without retries. Loader failure or no iframe within ten seconds hides the placement. An existing iframe can remain empty if delivery is blocked or unfilled; the site does not treat iframe creation as proof of fill. Browsing, search, social actions and original PNG downloads remain independent. The legacy document.write interception and global placement options are removed.
 
-Яндекс предупреждает о дублях при SPA-навигации. После начала его загрузки переходы полностью загружают документ; переключение обоев сохраняет локаль, desktop/mobile и якорь viewer. Без запущенного Яндекса сохраняются Astro-переходы. При запущенной Adsterra переход на исключённую страницу также загружает новый документ.
+The public file `/2405ea2a7a861b5bc39f.txt` contains the supplied verification response. The matching DNS TXT record was confirmed publicly before implementation. File publication and DNS presence do not prove account moderation or live ad delivery.
 
-| Adsterra | Публичный ключ | Место |
-| --- | --- | --- |
-| 160×300 | `339b7a5469601900204fd9b13dfc12e0` | Слева от обоев при viewport ≥1712 px |
-| 160×600 | `382a4701b0e7f3beb6b211723ea1b3e7` | Справа от обоев при viewport ≥1712 px |
-| 728×90 | `3fa635949793b78eaef43a9cb55faa56` | Inline при доступной ширине ≥728 px |
-| 468×60 | `075afc57e2cd17e979192cd90af2e079` | Inline при доступной ширине 468–727 px |
-| 320×50 | `03475f80ec74fec0aed3dd477c5462b1` | Inline при доступной ширине 320–467 px |
-| 300×250 | `508d469c2a8d534af75b19da3b8346d6` | Inline при доступной ширине 300–319 px |
+## Content Security Policy
 
-URL тега: https://bauval.org/22/{key}. Сохраняются format iframe, размеры и пустой params. На широких страницах обоев показываются только два боковых блока: центр до 1280 px, зазор 24 px и не менее 32 px до края экрана. На остальных разрешённых страницах и более узких страницах обоев показывается один inline-блок после основного содержимого перед footer. При доступной ширине менее 300 px рекламы нет. Баннеры не масштабируются.
+Only known successful advertising HTML documents and their 304 responses receive these additions:
 
-[Adsterra требует разные коды для повторяющихся размещений](https://adsterra.com/blog/how-banner-ads-make-money/). Каждый активный ключ используется один раз на странице. Загрузки с общим atOptions выполняются последовательно. Синхронные document.write/writeln принадлежащих размещению тегов направляются в его контейнер; остальные записи сохраняют обычное поведение. Дополнительный iframe вокруг рекламного тега не создаётся.
-
-Ошибка или отсутствие iframe за 10 секунд оставляет размещение скрытым. Повторов при неизменном размере и разрешении нет. Изменение подходящего формата или новая страница создаёт новый запуск. Старые контейнеры очищаются при Astro-переходах. Уже вставленный legacy-скрипт может исполниться после удаления, поэтому его atOptions удерживается до load/error; отменённые записи в контейнер игнорируются. Следующий тег ожидает завершения предыдущего.
-
-## Исключения CSP
-
-Владелец согласовал исключения только для известных рекламных HTML-страниц. Backend проверяет маршрут, успешный HTML-ответ и наличие страницы в manifest сборки; 304 сохраняет политику документа. Главные, admin, API, ошибки, assets и неизвестные маршруты не получают рекламных разрешений.
-
-На рекламных документах script-src допускает unsafe-eval, а отдельная script-src-elem допускает inline-код. Это снижает защиту этих страниц от внедрения скриптов. object-src 'none', base-uri 'none' и frame-ancestors 'none' сохраняются. Произвольные HTTPS origin не разрешены.
-
-[Официальная CSP Яндекса](https://yandex.ru/support/partner/ru/web/adplatform/csp-configuration) определяет источники:
-
-| Директива | Дополнительные источники |
+| Directive | Confirmed origins |
 | --- | --- |
-| script | yastatic.net, yandex.ru и поддомены, поддомены adfox.ru, yandex.com, verify.yandex.ru, bauval.org |
-| connect | yastatic.net, поддомены yandex.net/adfox.ru/yandex.ru, yandex.ru, yandex.com, bauval.org, blob: |
-| frame | yandexadexchange.net и поддомены, yastatic.net, поддомены yandex.ru/adfox.ru, bauval.org |
-| image | поддомены yandex.net/adfox.ru/yandex.ru, yandex.ru, yandex.com, bauval.org |
-| media | yastatic.net, поддомены yandex.net/yandex.ru/adfox.ru, yandex.ru, yandex.com, blob:, data: |
-| style / font | yastatic.net; для style также поддомены adfox.ru; для font также data: |
+| script-src | https://massivesalad.com, https://phoroglopsu.com |
+| frame-src | https://massivesalad.com |
 
-Прежние источники сайта сохраняются. Поддомены в таблице соответствуют явным wildcard-источникам. Для Adsterra из переданного тега подтверждён только bauval.org; дополнительные origin не угадываются и не разрешаются автоматически. Ошибки CSP требуют проверки конкретного публичного origin перед изменением allowlist.
+The supplied script uses massivesalad.com for its loader and banner iframe. Its error reporter uses phoroglopsu.com. The integration adds no advertising eval, inline-script or wildcard exceptions. Existing analytics, CAPTCHA and gallery sources remain independently scoped. Additional sources require inspection of the actual provider response; a blocked unknown host is not sufficient reason to allow an entire scheme or wildcard.
 
-## Ограничения и проверка
+The owner confirmed site approval and no additional ads.txt or CMP/TCF requirements. No ads.txt entries are added. The site's independent preference controls are not represented as a certified CMP. Recheck public account instructions if the provider changes these requirements.
 
-При чтении публичный URL Adsterra возвращал HTTP 403. Это не подтверждает отказ кабинета или успешный показ. Реальная отдача рекламы, дополнительные домены, требования CMP/TCF и возможные записи ads.txt требуют отдельной разрешённой проверки провайдера. Данные для ads.txt не предоставлены и не создаются из предположений.
+## Verification
 
-Автоматические проверки подменяют все рекламные ответы, без реальных показов и кликов. Проверяются страны, consent, отзыв между вкладками, размеры, ошибки, пустой ответ, переходы и независимые скачивания. Локальные проверки не подтверждают фактическую работу production.
+Automated advertising tests block external traffic and substitute the tag, banner and popup pages. They cover consent, six locales, responsive layout, withdrawal, pending loads, timeout, navigation, CSP and native downloads. They produce no live advertising impressions or clicks.
 
-Видео не предоставлено и не включено. Стандартный [Yandex Rewarded](https://yandex.ru/support/partner/ru/web/units/types/rewarded) не используется для свободно доступного PNG. Подходящее видео Adsterra не подтверждено; модальное окно пропускается. [#28](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/28) остаётся отдельной задачей. Расширенные по решению владельца размещения заменяют исходное ограничение только боковыми баннерами в [#22](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/22); его production-проверка остаётся отдельной.
+Before closing #136, record the deployed version, date and public URL. Using the provider-approved verification procedure, confirm actual banner content, expected popup behavior, withdrawal and both PNG variants. Do not click advertisements or manufacture traffic. Script loading and an empty iframe do not prove delivery or revenue.
 
-## Доступ владельца и публикация
-
-Владелец управляет регистрацией, документами, выплатами и поддержкой в кабинетах. Пароли, OTP, cookies, API-токены и финансовые сведения не передаются в Git, PR или тикеты. Подтверждения кабинета сохраняются приватно вне репозитория.
-
-Merge в development не является production-деплоем. После отдельного feature release и деплоя владелец проверяет разрешённым сетью способом показ, исключённые страницы, отзыв согласия и скачивания. Не создавайте искусственный трафик и не кликайте по объявлениям ради проверки.
-
-
-## Проверка #22 перед закрытием
-
-`make test-ui` включает отдельный `bun run test:advertising-ui`. Для узкой проверки после сборки и подготовки локальной тестовой БД достаточно второй команды. Она запускает один browser worker и существующий Rust-сервер с собранным frontend. Ответы рекламных сетей подменяются; CSP поступает от Rust и остаётся включённой. Проверки охватывают en, ru, zh-cn, pt-br и ja. Эти результаты подтверждают интеграцию сайта, но не реальный показ.
-
-Перед закрытием #22 владелец проверяет обе сети разрешённым ими способом на одобренном домене. Используйте тестовый режим кабинета, если он предусмотрен. Не создавайте искусственный трафик и не нажимайте объявления ради проверки.
-
-1. Запишите дату, URL и проверяемую версию сайта или source commit. Если исправления ещё не задеплоены, проверка прежней версии не подтверждает исправления. Релиз и деплой выполняются отдельно.
-2. Подтвердите, что разрешённый для RU/KZ/BY сеанс загружает только Яндекс, а сеанс другой страны только Adsterra. Проверьте фактическое содержимое блока; загрузка тега и наличие пустого iframe не доказывают показ.
-3. На широкой странице обоев проверьте боковые Adsterra 160×300 и 160×600. На более узкой странице проверьте подходящий inline-формат. Баннеры не перекрывают изображение, навигацию или кнопку скачивания и не создают горизонтальную прокрутку. Форматы Auto Placement регулируются в кабинете Яндекса.
-4. Проверьте отказ, явное согласие при неизвестной стране или EEA и отзыв после начала загрузки. После отзыва документ перезагружается, и новые рекламные запросы не начинаются. Повторите отзыв из другой вкладки. Главные и admin остаются без рекламы.
-5. Проверьте скачивание desktop/mobile, поиск, оценку и комментарий при заблокированных рекламных скриптах. Реклама не является условием скачивания.
-6. Сверьте требования кабинетов к CMP и ads.txt. Передайте только необходимые публичные строки ads.txt и подтверждённые origin для CSP. Не присылайте полный HAR, cookies, токены, документы или сведения о выплатах.
-
-Для результата достаточно обезличенного подтверждения: дата, версия, URL, сеть и формат, показ виден, перекрытий нет, отказ/отзыв и скачивания работают, требования CMP/ads.txt проверены. При ошибке укажите публичный origin и директиву CSP либо код ошибки без приватных данных. Дополнительные origin не разрешаются по предположению. До подтверждения обеих сетей и устранения выявленных ограничений #22 остаётся открытым; PR использует `Refs #22`.
+[HilltopAds MultiTag documentation](https://hilltopads.com/publishers-help/en/articles/9065075-what-is-a-multitag-banner) describes the combined banner/popup format and manager-controlled settings. [#28](https://github.com/andrey-krasheninnikov/want-wallpapers/issues/28) remains separate video work.
