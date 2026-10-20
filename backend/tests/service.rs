@@ -2367,6 +2367,7 @@ async fn japanese_upgrade_preserves_records_and_existing_translations(pool: PgPo
     .execute(&pool)
     .await
     .unwrap();
+    arabic_backfill(&pool).await.unwrap();
     let exported = catalog::export(&pool).await.unwrap();
     assert_eq!(exported.collections.len(), 6);
     assert_eq!(exported.wallpapers.len(), 44);
