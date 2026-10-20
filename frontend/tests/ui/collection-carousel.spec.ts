@@ -147,9 +147,9 @@ test.describe('touch', () => {
   });
 });
 
-test('no-script collection links and unconstrained catalogue descriptions remain available', async ({ browser, page }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
-  const native = await context.newPage(); await native.goto('http://127.0.0.1:4341/');
+test('no-script collection links and unconstrained catalogue descriptions remain available', async ({ browser, page, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+  const native = await context.newPage(); await native.goto('/');
   const link = track(native).locator('.collection-card-link').first();
   await link.click(); await expect(native).toHaveURL(/\/collections\/[^/]+\/$/); await context.close();
   await page.goto('/collections/');
