@@ -1,0 +1,12 @@
+diff --git a/lunr.ar.js b/lunr.ar.js
+index 1650ede56c9b15ee8ce73e158333417606ab487c..a3e845724188ea4a0d1df45a2656b96a8ae1140b 100644
+--- a/lunr.ar.js
++++ b/lunr.ar.js
+@@ -82,6 +82,6 @@
+     /* lunr stemmer function */
+     lunr.ar.stemmer = (function() {
+-      var self = this;
++      var self = {};
+       var word = '';
+       self.result = false;
+       self.preRemoved = false;

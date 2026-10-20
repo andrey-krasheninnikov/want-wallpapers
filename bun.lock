@@ -46,6 +46,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "lunr-languages@1.22.0": "patches/lunr-languages@1.22.0.patch",
+  },
   "overrides": {
     "@grpc/grpc-js": "1.14.5",
     "esbuild": "0.25.12",

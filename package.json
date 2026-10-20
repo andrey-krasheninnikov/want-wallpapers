@@ -25,5 +25,8 @@
     "@grpc/grpc-js": "1.14.5",
     "http-cache-semantics": "4.3.0",
     "esbuild": "0.25.12"
+  },
+  "patchedDependencies": {
+    "lunr-languages@1.22.0": "patches/lunr-languages@1.22.0.patch"
   }
 }
