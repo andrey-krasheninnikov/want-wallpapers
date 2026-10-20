@@ -89,6 +89,8 @@ $release-minor Выпусти origin/development и задеплой minor-ре�
 
 Оба skill выполняют Gitflow через release PR в main, protected tag, ручной production deployment и обратный merge в development. [`$release-feature`](.agents/skills/release-feature/SKILL.md) сохраняет общий порядок, поддержку feature-ветки и явной версии; без выбора профиля использует full. Для добавления коллекции из CDN приоритет имеет `release-collection`. Изменение или изучение skill не запускает выпуск.
 
+Для выпуска с MacBook без Actions используйте [`$release-local`](.agents/skills/release-local/SKILL.md) с явной версией и необязательным `fast`. Он сохраняет весь Gitflow, публикует подписанные образы обеих архитектур в GHCR и запускает restricted deployment. Нужны установленный local validator и приватная конфигурация Mac; [подготовка и команды](docs/ci-releases.md#локальный-выпуск-с-macbook).
+
 Все GitHub workflows запускаются вручную. Checks проверяет выбранный HEAD без deployment. Один запуск Production deployment на protected annotated tag из истории main выполняет verification, публикацию тех же checked amd64/arm64 images без rebuild, eligibility и production backup/deploy. Full выбран по умолчанию; fast пропускает только полный UI/E2E suite. Создание тега ничего не запускает; повтор требует исходный digest и профиль. [CI и допуск релиза](docs/ci-releases.md) описывает команды и evidence; [production deployment](docs/production-deployments.md) описывает установку VPS validator, private backup worker и recovery.
 
 Зависимости и ограниченные исключения audit описаны в [безопасности](docs/security.md). Выполняйте `make audit` после установки cargo-audit 0.22.2. Проверка блокирует новые findings и просроченную оценку.

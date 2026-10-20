@@ -5,17 +5,20 @@ from datetime import datetime, timezone
 import json
 import hashlib
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
 import time
 import urllib.request
 
-repository = Path(__file__).resolve().parent.parent
+repository = Path(os.environ.get('TEST_SOURCE_ROOT', Path(__file__).resolve().parent.parent)).resolve()
 postgres = os.environ.get('TEST_DB_CONTAINER', 'want-wallpapers-test-pg')
 image = os.environ.get('TEST_APP_IMAGE', 'want-wallpapers:local')
 root = Path(os.environ.get('TEST_SECRETS_DIR', f'/tmp/want-wallpapers-test-{os.getuid()}'))
-nonce = secrets.token_hex(8)
+nonce = os.environ.get('TEST_RUNTIME_ID', secrets.token_hex(8))
+if not re.fullmatch(r'[0-9a-f]{16}', nonce):
+    raise SystemExit('Invalid isolated runtime identity.')
 network = f'wallpapers-egress-{nonce}'
 proxy = f'wallpapers-proxy-{nonce}'
 project = f'wallpapers-runtime-{nonce}'

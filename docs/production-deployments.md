@@ -87,3 +87,31 @@ Manual retry передаёт исходный digest и профиль. Branch 
 Первый deployment проходит под наблюдением владельца. Настоящие CAPTCHA assessment, password/TOTP login и logout проверяются приватно отдельно. HTTP smoke/synthetic tests этого не подтверждают. После успеха record и `/README.md` обновляются, сохраняя историю.
 
 `make test-ci` проверяет commands, events, digest/platform matching, lock contention, receipts и failure/recovery transitions на controlled external responses. `make test-backup` реально выполняет PostgreSQL 18 dump/encryption/restore synthetic data и отклоняет повреждённый ciphertext. `make test` включает оба набора. Local tests, actual CI, S3 privacy proof, production restore proof и deployment acceptance фиксируются отдельно.
+
+## Локальный validator
+
+Локальная запись v3 подписывается отдельным Ed25519 release key через ssh-agent. Private key остаётся на Mac. В `/etc/want-wallpapers/release-signers` root закрепляет public key, principal `wallpapers-release` и namespace `want-wallpapers-release-v1`. SSH deployment key и backup key остаются отдельными. Для отзыва локального выпуска удалите соответствующий signer контролируемым обновлением; не меняйте защиту tags и не принимайте unsigned evidence.
+
+Установка выполняется владельцем из чистого Git checkout точного проверенного и опубликованного commit. Не используйте operational directory как предположительно актуальный checkout. Передайте на VPS только release-signing.pub. На существующей установке выполните:
+
+```sh
+sudo python3 scripts/install-deployment.py \
+  --source <exact-reviewed-published-commit> \
+  --update-only \
+  --release-key /absolute/path/to/release-signing.pub
+```
+
+Этот режим не меняет SSH accounts, sudoers, authorized_keys, operational .env/Compose и не перезапускает приложение, Docker или Traefik. Он удерживает серверные locks, отказывает при running/recovery-required requests, сохраняет прежние файлы и trust в закрытом `installations/<id>`, устанавливает фиксированный набор файлов и сверяет bytes, Python syntax, signer и неизменность app identity. Ошибка возвращает прежние файлы. Существующие v1/v2 records продолжают использовать Actions verification; v3 требует локальную подпись и не обращается к Actions API.
+
+После установки сверьте hashes с выбранным commit, root ownership и отсутствие group/world write. Read-only resolver проверяет текущий релиз и тестовую локальную публикацию:
+
+```sh
+sudo python3 /usr/local/lib/wallpapers-deploy/scripts/ci-release.py resolve \
+  --tag <existing-protected-tag> --digest <exact-index-digest> --timeout 0
+```
+
+Для публичных GitHub/GHCR API задайте `WANT_RELEASE_PUBLIC_API=1` только этому read-only процессу. Это не deployment request и не выполняет backup, migrations или переключение app. Для проверки restricted SSH используйте только deploy-status существующего request ID. Не отправляйте deploy с тестовым digest.
+
+Для ручного возврата validator остановитесь при активном deployment, удерживайте те же locks и используйте `manifest.json` из конкретного snapshot. Сверьте hashes сохранённых файлов, восстановите только указанные fixed installation paths и прежние modes; файлы с existed=false удаляются только после проверки их принадлежности этой установке. Operational configuration и БД не входят в этот rollback. После возврата повторите read-only resolver текущего production digest и restricted status. Не понижайте validator ниже версии, необходимой активному приложению/release record.
+
+Новая локальная application release требует отдельного явного запуска `$release-local`. Установка validator и подписи сама такой выпуск не выполняет. Реальные password/TOTP/CAPTCHA проверки остаются отдельной приватной приёмкой владельца.

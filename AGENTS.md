@@ -16,6 +16,8 @@ Use a single-context glossary and ADR layout. See `docs/agents/domain.md`.
 
 Use [release-patch](.agents/skills/release-patch/SKILL.md) for a patch increment with the fast pipeline and [release-minor](.agents/skills/release-minor/SKILL.md) for a minor increment with the full pipeline. Both use the shared [release-feature procedure](.agents/skills/release-feature/SKILL.md), which also supports feature branches and releases with an explicit version.
 
+Use [release-local](.agents/skills/release-local/SKILL.md) for an explicitly requested MacBook release without GitHub Actions. The existing patch/minor defaults remain unchanged.
+
 ### Collection releases
 
 Use the project [release-collection skill](.agents/skills/release-collection/SKILL.md) when adding and releasing a collection from a CDN folder. This workflow takes precedence over `release-patch`, `release-minor` and `release-feature` for collection releases.
