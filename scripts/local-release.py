@@ -129,6 +129,7 @@ def prepare(source, directory, state, config, *, build_images=True):
     environment = {key: value for key, value in os.environ.items() if not key.startswith('GITHUB_') and key not in BUILD_KEYS}
     environment.update(config['buildEnvironment'])
     environment['ASTRO_TELEMETRY_DISABLED'] = '1'
+    environment['BUN_OPTIONS'] = '--timeout=30000'
     fixtures = Fixtures(directory / 'fixtures', state['id'])
     fixtures.cleanup()
     complete = set(required_checks(state['verificationProfile']) + ['Install'])

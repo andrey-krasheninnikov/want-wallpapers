@@ -56,6 +56,7 @@ class LocalPipelineTests(unittest.TestCase):
             with self.assertRaisesRegex(DeployError, 'static-failed'):
                 local.prepare(self.root, self.root, self.state, self.config)
         self.assertEqual(self.state['stages'], ['Install'])
+        self.assertEqual(fixtures.start.call_args.args[1]['BUN_OPTIONS'], '--timeout=30000')
         self.assertEqual(execute.call_count, 2)
         self.assertEqual(fixtures.cleanup.call_count, 2)
         self.assertFalse(self.state.get('published'))
