@@ -17,7 +17,8 @@
     "catalog:pull": "bun run --cwd frontend catalog:pull",
     "catalog:add": "bun run --cwd frontend catalog:add",
     "test:listing-ui": "bun run --cwd frontend test:listing-ui",
-    "test:advertising-ui": "bun run --cwd frontend test:advertising-ui"
+    "test:advertising-ui": "bun run --cwd frontend test:advertising-ui",
+    "collection": "bun frontend/scripts/collection.ts"
   },
   "trustedDependencies": [],
   "overrides": {
