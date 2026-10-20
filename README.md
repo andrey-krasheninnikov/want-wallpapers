@@ -18,7 +18,11 @@
 
 <p align="center">
   <a href="https://wallpapers.want.foundation/">
-    <img src="docs/assets/readme-banner.png" width="1600" alt="Want Wallpapers: the Violet Horizon desktop and mobile wallpapers on two screens, beside the violet pixel logo.">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/cover-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="docs/assets/cover-light.png">
+      <img src="docs/assets/cover-light.png" width="1600" height="800" alt="Want Wallpapers: the violet pixel logo and three catalog previews from Neon Tide, A Night Beneath the Ice and Contours of Silence.">
+    </picture>
   </a>
 </p>
 
