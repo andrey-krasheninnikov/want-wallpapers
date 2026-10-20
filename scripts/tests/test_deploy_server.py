@@ -20,7 +20,8 @@ spec.loader.exec_module(server)
 
 class ServerTransitions(unittest.TestCase):
     def exercise(self, *, wrong_image=False, worker_failure=False, migration_failure=False,
-                 schema_changes=False, readiness_failure=False, worker_unavailable=False, release_delay=0):
+                 schema_changes=False, readiness_failure=False, worker_unavailable=False, release_delay=0,
+                 profile=None, changed_profile=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             environment = root / '.env'
@@ -36,6 +37,8 @@ class ServerTransitions(unittest.TestCase):
                       'indexDigest': 'sha256:' + 'a' * 64, 'state': 'running', 'stage': 'requested',
                       'verificationRun': {'id': 73, 'attempt': 1}, 'createdAt': int(time.time()),
                       'platforms': {'linux/amd64': {'digest': 'sha256:' + 'b' * 64, 'configDigest': 'sha256:' + 'e' * 64}}}
+            if profile is not None:
+                record.update(schemaVersion=2, verificationProfile=profile, skippedChecks=[] if profile == 'full' else ['Full UI'])
             store.write(record)
             before = {'schema': '1' * 64, 'history': [{'version': 1, 'success': True, 'checksum': '2' * 96}], 'catalog': '3' * 64}
             migrated = [False]
@@ -90,7 +93,7 @@ class ServerTransitions(unittest.TestCase):
 
             def resolve(arguments):
                 clock[0] += release_delay
-                return record
+                return {**record, 'verificationProfile': 'full'} if changed_profile else record
 
             with patch.multiple(server, ENV=environment, COMPOSE=composition, STATE=root, DEPLOYMENT=root, README=notes), \
                  patch.dict(os.environ, {'WANT_RELEASE_PUBLIC_API': '0'}), \
@@ -109,11 +112,40 @@ class ServerTransitions(unittest.TestCase):
             result = store.read(record['requestId'])
             return result, environment.read_bytes(), migrated[0]
 
+    def test_public_readiness_waits_for_proxy_and_keeps_a_deadline(self):
+        with patch.object(server, 'https', side_effect=[DeployError('command-failed'), 'not ready', '{"status":"ok"}']) as request, \
+             patch.object(server.time, 'monotonic', return_value=0), patch.object(server.time, 'sleep') as pause:
+            server.wait_ready()
+            self.assertEqual(request.call_count, 3)
+            self.assertEqual(pause.call_count, 2)
+        with patch.object(server, 'https', side_effect=DeployError('command-failed')), \
+             patch.object(server.time, 'monotonic', side_effect=[0, 0, 90]), patch.object(server.time, 'sleep') as pause:
+            with self.assertRaisesRegex(DeployError, 'readiness-failed'):
+                server.wait_ready()
+            pause.assert_called_once_with(3)
+
     def test_success_switches_only_the_application_and_records_verified_backup(self):
         result, environment, _ = self.exercise()
         self.assertEqual(result['state'], 'succeeded')
         self.assertTrue(result['backupVerified'])
         self.assertIn(b'KEEP=preserved\n', environment)
+
+    def test_full_and_fast_keep_backup_gate_and_reject_changed_profile_before_stopping(self):
+        for profile in ['full', 'fast']:
+            with self.subTest(profile=profile):
+                result, _, _ = self.exercise(profile=profile)
+                self.assertEqual(result['state'], 'succeeded')
+                self.assertTrue(result['backupVerified'])
+                self.assertEqual(result['verificationProfile'], profile)
+                failed, environment, migrated = self.exercise(profile=profile, worker_failure=True)
+                self.assertEqual(failed['state'], 'failed')
+                self.assertFalse(migrated)
+                self.assertIn(('sha256:' + '6' * 64).encode(), environment)
+        failed, environment, migrated = self.exercise(profile='fast', changed_profile=True)
+        self.assertEqual(failed['errorCode'], 'release-verification-changed')
+        self.assertEqual(failed['state'], 'failed')
+        self.assertFalse(migrated)
+        self.assertIn(('sha256:' + '6' * 64).encode(), environment)
 
     def test_wrong_image_and_failed_worker_leave_the_old_app_config(self):
         for arguments in ({'wrong_image': True}, {'worker_failure': True}, {'worker_unavailable': True}):
@@ -158,6 +190,29 @@ class ServerTransitions(unittest.TestCase):
                 record = server.submit(store, evidence['tag'], evidence['sourceSha'], evidence['indexDigest'])
             self.assertEqual(record['state'], 'running')
             self.assertEqual(store.read(record['requestId'])['stage'], 'requested')
+
+    def test_server_rejects_invalid_evidence_before_starting_service(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(Path(directory))
+            with patch.object(server.release, 'resolve', side_effect=server.release.ReleaseError('profile mismatch')), \
+                 patch.object(server, 'run') as start:
+                with self.assertRaises(server.release.ReleaseError):
+                    server.submit(store, 'v1.5.0', 'a' * 40, 'sha256:' + 'b' * 64)
+                start.assert_not_called()
+            self.assertEqual(list(store.records()), [])
+
+    def test_existing_tag_cannot_silently_select_another_published_digest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(Path(directory))
+            original = {'requestId': 'c' * 32, 'tag': 'v1.5.0', 'sourceSha': 'a' * 40,
+                        'indexDigest': 'sha256:' + 'b' * 64, 'state': 'failed'}
+            store.write(original)
+            replacement = {**original, 'indexDigest': 'sha256:' + 'd' * 64}
+            with patch.object(server.release, 'resolve', return_value=replacement), patch.object(server, 'run') as start:
+                with self.assertRaisesRegex(DeployError, 'release-intent-digest-mismatch'):
+                    server.submit(store, replacement['tag'], replacement['sourceSha'], replacement['indexDigest'])
+                start.assert_not_called()
+            self.assertEqual(store.read(original['requestId']), original)
 
     def test_slow_receipt_has_a_deadline_and_does_not_hold_requests_lock(self):
         with tempfile.TemporaryDirectory() as directory:

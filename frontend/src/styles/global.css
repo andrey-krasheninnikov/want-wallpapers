@@ -26,8 +26,6 @@
   --primary-hover: #6357FF;
   --primary-active: #5549EB;
   --media-ground: #101010;
-  --pixel-grid: #383838;
-  --pixel-step: 40px;
   --motion-fast: 120ms;
   --motion-ease: cubic-bezier(.32, .72, 0, 1);
   --radius: .75rem;
@@ -209,7 +207,7 @@
   .hero-copy p { max-width: 34ch; }
   .hero-action { margin-top: 2rem; }
   .hero-meta { font-family: var(--font-mono); display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-top: 2rem; color: var(--muted-foreground); font-size: .875rem; }
-  .device-stage { min-width: 0; margin: 0; border-radius: 2rem; background: var(--media-ground); overflow: hidden; }
+  .device-stage { min-width: 0; margin: 0; border-radius: 2rem; background: transparent; overflow: hidden; }
   .device-canvas { position: relative; aspect-ratio: 1.12; isolation: isolate; }
   .device-poster { position: absolute; inset: 0; display: block; perspective: 1000px; border-radius: var(--panel-radius); }
   .device-monitor { position: absolute; left: 5%; top: 22%; width: 75%; border: 8px solid var(--secondary); border-bottom-width: 14px; border-radius: 18px; background: var(--background); box-shadow: 0 2px 0 var(--input), 0 28px 40px #14141488; transform: rotateY(-12deg) rotateZ(-4deg); }
@@ -220,11 +218,12 @@
   .device-phone::after { content: ''; position: absolute; top: 6px; left: 35%; width: 30%; height: 5px; border-radius: 99px; background: var(--background); }
   .device-model { position: absolute; inset: 0; }
   .device-model[data-ready="false"] { visibility: hidden; opacity: 0; pointer-events: none; }
-  .device-model model-viewer { display: block; width: 100%; height: 100%; background: var(--media-ground); }
+  .device-model model-viewer { display: block; width: 100%; height: 100%; background: transparent; }
   .device-model model-viewer::part(default-progress-bar) { display: none; }
   .device-caption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; padding: 1rem 1.25rem 1.25rem; }
   .device-caption > a { min-height: 44px; display: flex; align-items: center; font-size: .875rem; font-weight: 500; }
   .device-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+  .device-controls button { min-width: 44px; }
   .device-message { margin: 0; padding: 0 1.25rem 1rem; color: var(--muted-foreground); font-size: .875rem; }
   .collection-card-link { display: flex; height: 100%; flex-direction: column; border-radius: inherit; }
   .collection-grid { gap: 1.5rem; }
@@ -455,36 +454,41 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
 
 @utility wallpaper-tag-link { &:hover { @apply bg-accent; } }
 
-html[data-pixel-background] body { isolation: isolate; }
-html[data-pixel-background] body::before,
-html[data-pixel-background] body::after {
-  content: '';
+html[data-public-background] body { isolation: isolate; }
+.page-background {
   position: fixed;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
+  contain: paint;
   pointer-events: none;
 }
-html[data-pixel-background] body::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%236642F5' opacity='.4' d='M1 .1h.8v.8H1zM5 6.1h.8v.8H5z'/%3E%3C/svg%3E"), linear-gradient(var(--pixel-grid) 1px, transparent 1px), linear-gradient(90deg, var(--pixel-grid) 1px, transparent 1px);
-  background-size: calc(var(--pixel-step) * 8) calc(var(--pixel-step) * 8), var(--pixel-step) var(--pixel-step), var(--pixel-step) var(--pixel-step);
-  opacity: .12;
-  mask-image: radial-gradient(ellipse at 50% 35%, transparent 15%, #000 88%);
-}
-html[data-pixel-background] body::after {
-  background: radial-gradient(ellipse at 4% 12%, var(--primary), transparent 24%), radial-gradient(ellipse at 96% 80%, var(--primary-hover), transparent 24%);
-  opacity: .02;
-  animation: want-pixel-glow 24s ease-in-out infinite;
+.page-background::before {
+  content: '';
+  position: absolute;
+  left: 78%;
+  top: 22%;
+  width: clamp(24rem, 72vmax, 70rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--primary-hover), var(--primary) 42%, transparent 70%);
+  filter: blur(48px);
+  opacity: .18;
+  transform: translate3d(-50%, -50%, 0);
+  animation: want-gradient-sphere 36s ease-in-out infinite;
   animation-play-state: paused;
 }
-html[data-background-motion="running"] body::after { animation-play-state: running; }
+html[data-background-motion="running"] .page-background::before { animation-play-state: running; }
 .topic-links a:hover, .work-index a:hover { background: var(--accent); }
-@keyframes want-pixel-glow { 0%, 100% { opacity: .02; } 50% { opacity: .04; } }
-@media (max-width: 767px) { :root { --pixel-step: 32px; } }
+@keyframes want-gradient-sphere {
+  0%, 100% { transform: translate3d(-50%, -50%, 0); }
+  50% { transform: translate3d(calc(-50% - 4vw), calc(-50% + 3vh), 0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  html[data-pixel-background] body::after { animation: none; opacity: .02; }
+  .page-background::before { animation: none; }
 }
 @media (forced-colors: active) {
-  html[data-pixel-background] body::before, html[data-pixel-background] body::after { display: none; }
+  .page-background { display: none; }
 }
 
 @layer components {

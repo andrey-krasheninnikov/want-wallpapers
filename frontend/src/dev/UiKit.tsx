@@ -30,7 +30,7 @@ const palette = [
   ['Background', '--background', '#141414'], ['Card', '--card', '#1C1C1C'], ['Secondary', '--secondary', '#252525'],
   ['Foreground', '--foreground', '#E8E8E8'], ['Muted text', '--muted-foreground', '#ADADAD'],
   ['Accent', '--accent', '#303030'], ['Input', '--input', '#858585'], ['Destructive', '--destructive', '#FF738D'],
-  ['Grid', '--pixel-grid', '#383838'], ['Primary hover', '--primary-hover', '#6357FF'], ['Primary active', '--primary-active', '#5549EB'], ['Primary', '--primary', '#5B4FFF'], ['Text link', '--link', '#E8E8E8'], ['Field focus', '--ring', '#5B4FFF'],
+  ['Primary hover', '--primary-hover', '#6357FF'], ['Primary active', '--primary-active', '#5549EB'], ['Primary', '--primary', '#5B4FFF'], ['Text link', '--link', '#E8E8E8'], ['Field focus', '--ring', '#5B4FFF'],
 ] as const;
 
 export default function UiKit({ item }: { item: WallpaperCardData }) {
