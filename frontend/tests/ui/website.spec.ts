@@ -5,7 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { database } from './database';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
-import { collections, wallpapers, publicationDates, downloadUrl, previewUrl, tagLabels, type Locale } from '../../src/data/catalog';
+import { collections, wallpapers, publicationDates, downloadUrl, previewUrl, tagLabels, locales, type Locale } from '../../src/data/catalog';
 
 import { newestWallpapers } from '../../src/lib/catalog-order';
 
@@ -33,7 +33,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
       });
       for (const [index, path] of templates.entries()) {
         expect((await page.goto(localPath(locale, path)))?.status()).toBe(path === '/404/' ? 404 : 200);
-        await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+        await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
         if (index === 0) await dismissCookies(page, locale);
         await expect(page.locator('h1')).toHaveCount(1);
         await page.evaluate(() => document.fonts.ready);
@@ -59,7 +59,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         }
         await expect(page.locator('main')).not.toBeEmpty();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
-        await expect(page.locator('link[rel="alternate"]')).toHaveCount(['/search/', '/404/'].includes(path) ? 0 : 5);
+        await expect(page.locator('link[rel="alternate"]')).toHaveCount(['/search/', '/404/'].includes(path) ? 0 : locales.length + 1);
         if (path === '/search/') await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow');
         if (path === '/') {
           await expect(page.locator('main .eyebrow')).toHaveCount(0);
@@ -157,12 +157,12 @@ for (const [slug, number] of [['where-stars-graze', 4], ['a-night-beneath-the-ic
     }
     const design = designs.find((item) => item.number === number)!;
     await page.goto(localPath(locale, '/search/') + `?q=${encodeURIComponent(tagLabels.water[locale])}&category=fantasy&collection=${slug}`);
-    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
     await expect(page.locator('[data-wallpaper-card]')).toHaveCount(designs.filter((item) => item.category === 'fantasy' && item.tags.includes('water')).length);
     await expect(page.locator(`[data-wallpaper-card="${design.id}"]`)).toBeVisible();
     await page.locator(`[data-wallpaper-card="${design.id}"] a`).click();
     await expect(page.locator('h1')).toHaveText(design.title[locale]);
-    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
     for (const variant of ['mobile', 'desktop'] as const) {
       await page.getByRole('tab', { name: copy[locale][variant], exact: true }).click();
       await expect(page.locator('#detail-image')).toHaveAttribute('src', previewUrl(design, variant));
@@ -234,7 +234,7 @@ test('mobile menu and cookie dialog support keyboard focus and persistence', asy
   await page.getByRole('button', { name: interfaceCopy.ru.save, exact: true }).click();
   await expect(page.locator('[data-cookie-settings]')).toBeFocused();
   await page.reload();
-  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+  await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
   await expect(page.getByRole('button', { name: copy.ru.essentialOnly, exact: true })).toHaveCount(0);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: interfaceCopy.ru.skip })).toBeFocused();
@@ -345,7 +345,7 @@ test('FAQ keyboard interaction and language selection preserve the current page'
   await page.keyboard.press('Enter');
   await expect(page.getByText(interfaceCopy.ru.faq[0][1], { exact: true })).toBeHidden();
   await page.goto(`/ru/wallpapers/${wallpaper}/`);
-  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+  await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
   await page.getByRole('combobox', { name: interfaceCopy.ru.language }).click();
   await page.getByRole('option', { name: 'English', exact: true }).click();
   await expect(page).toHaveURL(`/wallpapers/${wallpaper}/`);
@@ -394,7 +394,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     await page.route('https://ipwho.is/**', (route) => route.abort());
     await page.goto(localPath(locale, `/wallpapers/${wallpaper}/`));
     await dismissCookies(page, locale);
-    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
     await page.evaluate(() => window.addEventListener('want:download', (event) => { document.body.dataset.lastDownload = JSON.stringify((event as CustomEvent).detail); }));
     for (const variant of ['desktop', 'mobile'] as const) {
       await page.getByRole('tab', { name: copy[locale][variant], exact: true }).click();

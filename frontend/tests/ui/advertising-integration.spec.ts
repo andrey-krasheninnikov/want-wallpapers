@@ -33,7 +33,7 @@ async function network(page: Page, country: string | null, mode = 'ready') {
 }
 async function ready(page: Page) {
   await expect(page.locator('html')).toHaveAttribute('data-country', /.+/);
-  await expect.poll(() => page.locator('astro-island[ssr]').evaluateAll(elements => elements.map(element => element.getAttribute('component-url')))).toEqual([]);
+  await expect.poll(() => page.locator('astro-island[ssr]:not([client="visible"])').evaluateAll(elements => elements.map(element => element.getAttribute('component-url')))).toEqual([]);
 }
 async function allow(page: Page) {
   await page.locator('[data-cookie-settings]').click();

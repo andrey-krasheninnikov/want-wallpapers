@@ -2510,9 +2510,18 @@ async fn japanese_catalog_roundtrip_requires_five_locales(pool: PgPool) {
     }
 }
 
-#[sqlx::test(migrations = "./migrations")]
-async fn japanese_public_not_found_uses_localized_document_and_http_status(pool: PgPool) {
-    let app = router(state(pool));
+#[tokio::test]
+async fn japanese_public_not_found_uses_localized_document_and_http_status() {
+    let directory = std::env::temp_dir().join(format!("want-wallpapers-ja-404-{}", Uuid::new_v4()));
+    std::fs::create_dir_all(directory.join("ja/404")).unwrap();
+    std::fs::write(
+        directory.join("ja/404/index.html"),
+        "<!doctype html><html lang=\"ja\"><body>このページは見つかりません。</body></html>",
+    )
+    .unwrap();
+    let mut state = state(PgPool::connect_lazy("postgresql://localhost/unused").unwrap());
+    Arc::get_mut(&mut state.config).unwrap().static_dir = directory.clone();
+    let app = router(state);
     for path in ["/ja/missing/", "/ja/404/"] {
         let response = app
             .clone()
@@ -2529,4 +2538,5 @@ async fn japanese_public_not_found_uses_localized_document_and_http_status(pool:
         assert!(text.contains("lang=\"ja\""));
         assert!(text.contains("このページは見つかりません。"));
     }
+    std::fs::remove_dir_all(directory).unwrap();
 }
