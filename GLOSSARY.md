@@ -33,3 +33,9 @@ _Avoid_: publication when referring only to an external announcement.
 
 **Collection announcement**:
 A post on an external channel that introduces an already published collection and directs readers to the site.
+
+**Distribution publication event**:
+A durable, allowlisted record binding the actually running healthy image to a successful verified server deployment and its public collection packages.
+
+**Delivery intent**:
+One immutable collection/destination/item payload tracked independently through attempts, remote receipts and reconciliation.

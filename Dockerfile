@@ -26,6 +26,7 @@ ARG VCS_REF="unknown"
 ENV RUSTUP_TOOLCHAIN=1.93.0 WALLPAPERS_REVISION=$VCS_REF
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY backend ./backend
+COPY deploy/verify-distribution-grants.sql ./deploy/verify-distribution-grants.sql
 RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,target=/app/target,sharing=locked \
     cargo build --locked --release -p want-wallpapers-server \

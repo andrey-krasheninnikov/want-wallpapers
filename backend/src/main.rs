@@ -8,8 +8,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .init();
     let _ = rustls::crypto::ring::default_provider().install_default();
     let command = env::args().nth(1).unwrap_or_else(|| "serve".into());
-    if !["serve", "migrate"].contains(&command.as_str()) {
-        return Err("Usage: want-wallpapers-server [serve|migrate]".into());
+    if !["serve", "migrate", "distribute"].contains(&command.as_str()) {
+        return Err("Usage: want-wallpapers-server [serve|migrate|distribute]".into());
+    }
+    if command == "distribute" {
+        match want_wallpapers_server::distribution::runtime::command(
+            &env::args().skip(2).collect::<Vec<_>>(),
+        )
+        .await
+        {
+            Ok(result) => println!("{result}"),
+            Err(error) => {
+                eprintln!("{}", serde_json::json!({"errorCode":error.0}));
+                return Err("distribution-command-failed".into());
+            }
+        }
+        return Ok(());
     }
     let production = config::production_mode()?;
     let pool = config::connect(production).await?;

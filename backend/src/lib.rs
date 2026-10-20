@@ -2,6 +2,7 @@ pub mod auth;
 pub mod catalog;
 pub mod config;
 pub mod discovery;
+pub mod distribution;
 pub mod error;
 pub mod models;
 pub mod moderation;
