@@ -24,7 +24,7 @@ for (const width of [320, 1440]) test('Japanese public surfaces and typography a
     ['/ja/', ui.heroTitle], ['/ja/collections/', ui.allCollections],
     ['/ja/collections/' + collection.slug + '/', collection.title.ja],
     ['/ja/wallpapers/' + wallpaper.slug + '/', wallpaper.title.ja],
-    ['/ja/license/', ui.license], ['/ja/feedback/', ui.feedbackTitle],
+    ['/ja/license/', ui.license], ['/ja/contact/', ui.contact], ['/ja/feedback/', ui.feedbackTitle],
   ]) {
     expect((await page.goto(path!))?.status()).toBe(200);
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
@@ -35,6 +35,7 @@ for (const width of [320, 1440]) test('Japanese public surfaces and typography a
     await noOverflow(page);
     if (path === '/ja/' || path === '/ja/feedback/') await page.screenshot({ path: info.outputPath((path === '/ja/' ? 'home-' : 'feedback-') + width + '.png') });
     if (path!.includes('/wallpapers/')) await expect(page.getByRole('alert')).toContainText(ui.serviceError);
+    if (path === '/ja/contact/') await expect(page.locator('[data-owner-contact] a[href="mailto:wallpapers@want.foundation"]')).toHaveAccessibleName('メール wallpapers@want.foundation');
   }
   expect(failedFonts).toEqual([]);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
