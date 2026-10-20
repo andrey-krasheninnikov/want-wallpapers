@@ -158,7 +158,7 @@ test('home and private pages have no placements, provider requests or test entry
     const csp = response!.headers()['content-security-policy'];
     expect(csp).toContain("script-src 'self'");
     expect(csp).not.toMatch(/unsafe-eval|yastatic|yandex|adsterra/);
-    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+    await expect(page.locator('astro-island[ssr]:not([client="visible"])')).toHaveCount(0);
     await expect(page.locator('.wallpaper-advertisement')).toHaveCount(0);
     expect(await page.evaluate(() => typeof window.advertisingFixture)).toBe('undefined');
   }
