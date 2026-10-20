@@ -76,6 +76,16 @@ class LocalPipelineTests(unittest.TestCase):
         self.assertEqual(execute.call_args_list[1].args[0], ['python3', '-B', str(ROOT / 'scripts/test-backup.py')])
         self.assertEqual(execute.call_args_list[1].args[2]['TEST_SOURCE_ROOT'], str(self.root))
 
+    def test_backup_sql_and_release_policy_change_tool_digest(self):
+        original = Path.read_bytes
+        expected = local.tool_digest()
+        for relative in ('deploy/backup-state.sql', '.github/release-policy.json'):
+            def changed(path):
+                body = original(path)
+                return body + b'\n' if path == ROOT / relative else body
+            with self.subTest(path=relative), patch.object(Path, 'read_bytes', changed):
+                self.assertNotEqual(local.tool_digest(), expected)
+
     def test_changed_inputs_cannot_reuse_completed_checks(self):
         self.state['inputFingerprint'] = 'old-inputs'
         with patch.object(local, 'verification_identity', return_value=self.identity), \

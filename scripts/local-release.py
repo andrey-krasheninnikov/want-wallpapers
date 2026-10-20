@@ -57,10 +57,11 @@ def host_architecture():
 
 def tool_digest():
     digest = hashlib.sha256()
-    for name in ('local-release.py', 'local_evidence.py', 'local_release_runtime.py', 'ci-release.py', 'deployment.py',
-                 'deploy-client.py', 'backup-worker.py', 'test-container.py', 'test-backup.py'):
+    for name in ('scripts/local-release.py', 'scripts/local_evidence.py', 'scripts/local_release_runtime.py',
+                 'scripts/ci-release.py', 'scripts/deployment.py', 'scripts/deploy-client.py', 'scripts/backup-worker.py',
+                 'scripts/test-container.py', 'scripts/test-backup.py', 'deploy/backup-state.sql', '.github/release-policy.json'):
         digest.update(name.encode())
-        digest.update((ROOT / 'scripts' / name).read_bytes())
+        digest.update((ROOT / name).read_bytes())
     return 'sha256:' + digest.hexdigest()
 
 
