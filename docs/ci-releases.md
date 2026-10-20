@@ -113,7 +113,7 @@ Image IDs прочитаны из исходных `checked-image.json` в runti
 cargo install cargo-audit --version 0.22.2 --locked --root ~/.local/share/want-wallpapers/tools
 ```
 
-В локальном процессе Bun получает default test timeout 30 секунд для обработки PNG под нагрузкой. Явные ограничения отдельных тестов сохраняются; assertions и состав проверок не меняются.
+В локальном процессе Bun получает default test timeout 30 секунд для обработки PNG под нагрузкой. Rust test runner выполняет не более двух тестов параллельно. Явные ограничения отдельных тестов сохраняются; assertions и состав проверок не меняются.
 
 Для профиля full после `make install` установите браузер из текущего lockfile: `(cd frontend && bunx playwright install chromium)`. Убедитесь, что `ffmpeg -version` и `ffprobe -version` выполняются; наличие файлов в PATH не доказывает работоспособность.
 

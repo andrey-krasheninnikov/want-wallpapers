@@ -130,6 +130,7 @@ def prepare(source, directory, state, config, *, build_images=True):
     environment.update(config['buildEnvironment'])
     environment['ASTRO_TELEMETRY_DISABLED'] = '1'
     environment['BUN_OPTIONS'] = '--timeout=30000'
+    environment['RUST_TEST_THREADS'] = '2'
     fixtures = Fixtures(directory / 'fixtures', state['id'])
     fixtures.cleanup()
     complete = set(required_checks(state['verificationProfile']) + ['Install'])
