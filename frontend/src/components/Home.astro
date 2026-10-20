@@ -6,8 +6,9 @@ import HomeMosaic from './HomeMosaic';
 import CollectionCarousel from './CollectionCarousel';
 import FAQ from './FAQ';
 import DeviceScene from './DeviceScene';
-import { collections, wallpapers, type Locale, type Wallpaper } from '../data/catalog';
+import { collections, wallpapers, type Locale } from '../data/catalog';
 import { previewData } from '../data/previews';
+import { buildGalleryData } from '../lib/build-gallery-data';
 import { copy, localPath } from '../data/copy';
 import { interfaceCopy } from '../data/interface-copy';
 import { collectionCard } from '../lib/view-models';
@@ -17,12 +18,8 @@ const ui = copy[locale];
 const text = interfaceCopy[locale];
 const hero = wallpapers.find((item) => item.slug === 'contours-of-silence-11')!;
 const image = await previewData(hero, 'desktop');
-// Keep both hydrated catalogs within the home page's text/HTML budget.
-const scenePreview = async (item: Wallpaper, variant: 'desktop' | 'mobile') => {
-  const { src, width, height } = await previewData(item, variant);
-  return { src, width, height };
-};
-const sceneItems = await Promise.all(wallpapers.map(async (item) => ({ id: item.id, desktop: await scenePreview(item, 'desktop'), mobile: await scenePreview(item, 'mobile'), title: item.title[locale], description: item.description[locale], href: localPath(locale, `/wallpapers/${item.slug}/`) })));
+const { data: gallery, url: dataUrl } = await buildGalleryData(locale);
+const sceneItems = gallery.wallpapers;
 const collectionCards = await Promise.all(collections.map((item) => collectionCard(item, locale)));
 const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Want Wallpapers', url: new URL(localPath(locale), Astro.site).href,
   potentialAction: { '@type': 'SearchAction', target: new URL(localPath(locale, '/search/') + '?q={search_term_string}', Astro.site).href, 'query-input': 'required name=search_term_string' } };
@@ -33,10 +30,10 @@ const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Wa
       <div class="hero-action"><ActionLink href="#collections" label={ui.explore} /></div>
       <div class="hero-meta"><span>{`${collections.length} ${ui.collections.toLocaleLowerCase(locale)}`}</span><span>{`${wallpapers.length} ${ui.wallpapers}`}</span><span>{`${ui.desktop} + ${ui.mobile}`}</span></div>
     </div>
-    <DeviceScene locale={locale} items={sceneItems} initialId={hero.id} client:load />
+    <DeviceScene locale={locale} items={sceneItems.filter(item => item.id === hero.id)} initialId={hero.id} dataUrl={dataUrl} client:load />
   </section>
   <section class="section-space" id="collections"><div class="shell section-heading"><div><h2 class="section-title">{ui.allCollections}</h2><p class="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">{ui.allCollectionsText}</p></div><ActionLink href={localPath(locale, '/collections/')} label={ui.explore} variant="ghost" /></div><CollectionCarousel items={collectionCards} locale={locale} client:load /></section>
-  <HomeMosaic items={sceneItems} locale={locale} client:visible />
+  <HomeMosaic items={sceneItems.slice(0, 6)} dataUrl={dataUrl} locale={locale} client:visible />
   <section class="shell section-space"><div class="grid gap-8 py-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16 lg:py-12"><h2 class="section-title max-w-lg">{text.benefitsTitle}</h2><ul class="benefit-list">{text.benefits.map(([title, description]) => <li><div><h3 class="text-lg font-semibold">{title}</h3><p class="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p></div></li>)}</ul></div></section>
   <section class="shell section-space"><div class="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-16"><h2 class="section-title max-w-lg">{text.faqTitle}</h2><FAQ items={text.faq} client:load /></div></section>
   <section class="shell section-space"><div class="info-panel grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center"><div><h2 class="section-title max-w-2xl">{text.finalTitle}</h2><p class="mt-4 text-base leading-relaxed text-muted-foreground">{text.finalText}</p></div><div><ActionLink href={localPath(locale, '/search/')} label={ui.viewAll} /></div></div></section>

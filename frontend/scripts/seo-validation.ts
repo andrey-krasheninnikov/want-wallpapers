@@ -193,7 +193,7 @@ export function validateLocalizedContent(page: Page): void {
   const text = editorialCopy[locale];
   let required: string[];
   if (path === '/' || path === '/collections/') {
-    required = [text.title, text.licenseText, ...collections.map((collection) => collectionStories[collection.slug]?.[locale][0] ?? '')];
+    required = [text.title, text.licenseText, ...collections.flatMap(collection => [collection.title[locale], collectionStories[collection.slug]?.[locale][0] ?? ''])];
   } else if (path.startsWith('/collections/') || path.startsWith('/wallpapers/')) {
     const slug = path.split('/')[2]!;
     const wallpaper = path.startsWith('/wallpapers/') ? getWallpaper(slug) : undefined;

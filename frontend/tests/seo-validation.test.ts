@@ -286,12 +286,12 @@ test('content validation keeps the 200-word boundary and reports noindex pages',
   expect(() => validateContentMetrics(search)).not.toThrow();
 });
 
-test('localized stories must be in the main content, not metadata or hidden markup', async () => {
+test('localized story cards must be in main content, not metadata or hidden markup', async () => {
   for (const locale of locales) {
     const path = (locale === 'en' ? '' : '/' + locale) + '/collections/';
     const title = editorialCopy[locale].title;
     const paragraphs = collections.map(collection => collectionStories[collection.slug]![locale][0]!);
-    const content = [title, editorialCopy[locale].licenseText, ...paragraphs].join(' ');
+    const content = [title, editorialCopy[locale].licenseText, ...collections.map(collection => collection.title[locale]), ...paragraphs].join(' ');
     const lang = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
     const page = await parsePage(`<html lang="${lang}"><body><main>${content}</main></body></html>`, path);
     expect(() => validateLocalizedContent(page)).not.toThrow();

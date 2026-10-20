@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Pause, Play, RotateCcw, RotateCw } from 'lucide-react';
 import type { ModelViewerElement } from '@google/model-viewer';
 import { Button } from '@/components/ui/button';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';
+import { useGalleryData } from '@/lib/use-gallery-data';
 import { randomWallpaperIndex } from '@/lib/device-wallpaper';
 import type { Preview } from '@/data/previews';
 
@@ -11,9 +12,11 @@ const initialOrbit = '12deg 83deg auto';
 
 type SceneWallpaper = { id: string; desktop: Preview; mobile: Preview; title: string; description: string; href: string };
 
-export default function DeviceScene({ locale, items, initialId }: {
-  locale: Locale; items: SceneWallpaper[]; initialId: string;
+export default function DeviceScene({ locale, items: initialItems, initialId, dataUrl }: {
+  locale: Locale; items: SceneWallpaper[]; initialId: string; dataUrl: string;
 }) {
+  const { data } = useGalleryData(dataUrl, locale);
+  const items = useMemo(() => data ? [...initialItems, ...data.wallpapers.filter(item => !initialItems.some(initial => initial.id === item.id))] : initialItems, [data, initialItems]);
   const text = designCopy[locale];
   const host = useRef<HTMLDivElement>(null);
   const model = useRef<ModelViewerElement | null>(null);

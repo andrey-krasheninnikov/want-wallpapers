@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { copy } from '@/data/copy';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';
+import { useGalleryData } from '@/lib/use-gallery-data';
 import { initialMosaic, nextMosaic, type MosaicFrame, type MosaicTile, type MosaicWallpaper } from '@/lib/home-mosaic';
 
 function loadPreview(src: string, signal: AbortSignal): Promise<boolean> {
@@ -29,7 +30,10 @@ function loadPreview(src: string, signal: AbortSignal): Promise<boolean> {
   });
 }
 
-export default function HomeMosaic({ items, locale }: { items: MosaicWallpaper[]; locale: Locale }) {
+export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { items: MosaicWallpaper[]; locale: Locale; dataUrl?: string }) {
+  const { data, failed: dataFailed } = useGalleryData(dataUrl, locale);
+  const items = data?.wallpapers ?? initialItems;
+  const catalogReady = !dataUrl || !!data;
   const host = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState(() => initialMosaic(items));
   const current = useRef(frame);
@@ -49,7 +53,7 @@ export default function HomeMosaic({ items, locale }: { items: MosaicWallpaper[]
     let repairing = false, repairVersion = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const available = () => items.filter(item => ![item.desktop.src, item.mobile.src].every(src => failed.current.has(src)));
-    const allowed = () => alive && pageActive && visible && !document.hidden && !motion.matches && !paused && !hovered && !root.contains(document.activeElement);
+    const allowed = () => catalogReady && alive && pageActive && visible && !document.hidden && !motion.matches && !paused && !hovered && !root.contains(document.activeElement);
     const stop = () => { clearTimeout(timer); timer = undefined; ++version; };
     function schedule() {
       stop();
@@ -105,7 +109,7 @@ export default function HomeMosaic({ items, locale }: { items: MosaicWallpaper[]
       const image = event.target;
       if (!(image instanceof HTMLImageElement) || !image.hasAttribute('data-mosaic-image')) return;
       failed.current.add(image.getAttribute('src')!);
-      stop(); void change(true);
+      if (catalogReady || dataFailed) { stop(); void change(true); }
     };
     const hide = () => { pageActive = false; stop(); };
     const show = () => { pageActive = true; update(); };
@@ -118,9 +122,9 @@ export default function HomeMosaic({ items, locale }: { items: MosaicWallpaper[]
     window.addEventListener('pagehide', hide); window.addEventListener('pageshow', show);
     setReady(true); update();
     const broken = [...root.querySelectorAll<HTMLImageElement>('[data-mosaic-image]')].filter(image => image.complete && !image.naturalWidth);
-    if (broken.length) {
+    if (broken.length && (catalogReady || dataFailed)) {
       broken.forEach(image => failed.current.add(image.getAttribute('src')!));
-      stop(); void change(true);
+      if (catalogReady || dataFailed) { stop(); void change(true); }
     }
     const dispose = () => {
       alive = false; stop(); controller.abort(); observer?.disconnect();
@@ -133,7 +137,7 @@ export default function HomeMosaic({ items, locale }: { items: MosaicWallpaper[]
     };
     document.addEventListener('astro:before-swap', dispose);
     return dispose;
-  }, [items, paused]);
+  }, [items, paused, catalogReady, dataFailed]);
 
   if (!frame.tiles.length) return null;
   return <section ref={host} className="shell section-space home-mosaic-section" aria-label={copy[locale].latest}>
