@@ -6,7 +6,7 @@ const output = join(tmpdir(), 'want-wallpapers-ui');
 
 export default defineConfig({
   testDir: './tests/ui',
-  testIgnore: '**/listing.spec.ts',
+  testIgnore: ['**/listing.spec.ts', '**/advertising-integration.spec.ts'],
   outputDir: join(output, 'results'),
   reporter: [['list'], ['html', { outputFolder: join(output, 'report'), open: 'never' }]],
   workers: 2,

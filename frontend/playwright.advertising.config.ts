@@ -1,14 +1,15 @@
 import { defineConfig } from '@playwright/test';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import uiKit from './playwright.ui-kit.config';
+import runtime from './playwright.config';
 
 export default defineConfig({
-  ...uiKit,
-  testDir: './tests/ui',
+  ...runtime,
   testMatch: 'advertising-integration.spec.ts',
-  expect: { timeout: 15000 },
+  testIgnore: [],
+  workers: 1,
+  fullyParallel: false,
   outputDir: join(tmpdir(), 'want-wallpapers-advertising', 'results'),
-  use: { ...uiKit.use, baseURL: 'http://127.0.0.1:4346' },
-  webServer: { command: 'bun run dev --host 127.0.0.1 --port 4346', url: 'http://127.0.0.1:4346/ui-kit/', reuseExistingServer: false, timeout: 60000 },
+  reporter: 'list',
+  use: { ...runtime.use, trace: 'off' },
 });
