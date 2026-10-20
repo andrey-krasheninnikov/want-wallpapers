@@ -81,8 +81,20 @@ def https(path, headers=False):
     return run([*arguments, 'https://wallpapers.want.foundation' + path], timeout=25)
 
 
+def wait_ready():
+    deadline = time.monotonic() + 90
+    while True:
+        try:
+            if json.loads(https('/health/ready')) == {'status': 'ok'}:
+                return
+        except (DeployError, ValueError):
+            pass
+        require(time.monotonic() < deadline, 'readiness-failed')
+        time.sleep(3)
+
+
 def smoke():
-    require(json.loads(https('/health/ready')) == {'status': 'ok'}, 'readiness-failed')
+    wait_ready()
     catalog = json.loads(https('/api/v1/catalog'))
     require(catalog.get('collections') and catalog.get('wallpapers'), 'catalog-failed')
     for prefix in ('/', '/ru/', '/zh-cn/', '/pt-br/'):
