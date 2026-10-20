@@ -32,7 +32,7 @@ export default function WallpaperAdvertisements({ locale, mount }: { locale: Loc
       stop();
     };
   }, [mount]);
-  // Approved publisher integrations are not connected until #16 is complete.
+  // Mount only an explicitly supplied placement integration.
   if (!mount) return null;
   const label = interfaceCopy[locale].advertisement;
   return <>

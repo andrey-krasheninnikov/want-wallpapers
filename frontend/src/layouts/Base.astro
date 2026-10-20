@@ -7,6 +7,8 @@ import logoUrl from '../../assets/logo.svg?url';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CookieConsent from '../components/CookieConsent';
+import PublicAdvertisements from '../components/PublicAdvertisements.astro';
+import { advertisingPath } from '../lib/advertising-providers';
 import { localPath } from '../data/copy';
 import { interfaceCopy } from '../data/interface-copy';
 import { locales, type Locale } from '../data/catalog';
@@ -56,19 +58,25 @@ const analyticsAvailable = isAnalyticsConfigured();
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
     <Header locale={locale} path={path} logo={logoUrl} client:load transition:persist="header" />
     <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
+    {advertisingPath(path) && <PublicAdvertisements locale={locale} />}
     <Fragment set:html={"<!--email_off-->"} /><Footer locale={locale} logo={logoUrl} /><Fragment set:html={"<!--/email_off-->"} />
     <div id="feedback-root" transition:persist="feedback-root"></div>
     <script>
       import { initCollectionCovers } from '../lib/collection-cover-player';
       import { initPageMotion } from '../lib/page-motion';
       import { initGalleryEffects } from '../lib/gallery-effects';
+      import { initAdvertisements } from '../lib/advertising';
       let cleanup = () => {};
+      let initializedBody: HTMLElement | undefined;
       function initializePage() {
+        if (initializedBody === document.body) return;
+        initializedBody = document.body;
         cleanup();
         const motion = initPageMotion();
         const covers = initCollectionCovers();
         const effects = initGalleryEffects();
-        cleanup = () => { motion(); covers(); effects(); };
+        const advertising = initAdvertisements();
+        cleanup = () => { motion(); covers(); effects(); advertising(); };
       }
       document.addEventListener('astro:before-swap', () => cleanup());
       document.addEventListener('astro:page-load', initializePage);

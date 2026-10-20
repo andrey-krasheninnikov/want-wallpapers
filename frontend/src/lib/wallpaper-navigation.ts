@@ -1,4 +1,5 @@
 import type { Wallpaper } from '@/data/catalog';
+import { advertisingPath, advertisingRequested, yandexAdvertisingRequested } from './advertising-providers';
 
 export function wallpaperNeighbors(items: readonly Wallpaper[], id: string) {
   const index = items.findIndex((item) => item.id === id);
@@ -23,6 +24,9 @@ export function initWallpaperNavigation() {
   let viewportTop: number | undefined;
   let focus: 'previous' | 'next' | undefined;
   document.addEventListener('astro:before-preparation', (event) => {
+    if (yandexAdvertisingRequested() || (advertisingRequested() && !advertisingPath(event.to.pathname))) {
+      event.preventDefault(); window.location.assign(event.to.href); return;
+    }
     viewportTop = event.info?.wallpaperSlide ? document.getElementById('wallpaper-view')?.getBoundingClientRect().top : undefined;
     focus = document.activeElement?.hasAttribute('data-wallpaper-next') ? 'next' : document.activeElement?.hasAttribute('data-wallpaper-previous') ? 'previous' : undefined;
     if (!event.info?.wallpaperSlide) return;
@@ -38,6 +42,10 @@ export function initWallpaperNavigation() {
   document.addEventListener('astro:before-swap', (event) => {
     event.newDocument.documentElement.dataset.wallpaperVariant = selectedWallpaperVariant(event.to.search);
     event.newDocument.documentElement.dataset.backgroundMotion = document.documentElement.dataset.backgroundMotion;
+    for (const key of ['country', 'countryGroup'] as const) {
+      const value = document.documentElement.dataset[key];
+      if (value) event.newDocument.documentElement.dataset[key] = value;
+    }
   });
   document.addEventListener('astro:after-swap', () => {
     const viewer = document.getElementById('wallpaper-view');

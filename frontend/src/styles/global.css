@@ -449,6 +449,9 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
   @media (max-width: 767px) { .feedback-submit-row .ui-button-base { width: 100%; } }
 }
 
+.public-advertisements { display: flex; justify-content: center; }
+.public-advertisements:has(.inline-advertisement:not([hidden])) { margin-top: 2rem; margin-bottom: 3rem; }
+.inline-advertisement { flex: none; }
 .wallpaper-advertising-layout { position: relative; }
 .wallpaper-advertisement { display: none; position: absolute; top: 0; width: 160px; }
 .wallpaper-advertisement[data-side="left"] { right: calc(100% + 24px); }

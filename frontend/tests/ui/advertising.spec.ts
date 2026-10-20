@@ -150,10 +150,10 @@ test('private pages exclude advertising even when an integration is supplied', a
   expect(lookups).toEqual([]);
 });
 
-test('normal pages have no placements, provider requests or test entrypoints', async ({ page }) => {
+test('home and private pages have no placements, provider requests or test entrypoints', async ({ page }) => {
   await country(page, 'RU'); await page.setViewportSize({ width: 1920, height: 900 });
   const requests: string[] = []; page.on('request', (request) => requests.push(request.url()));
-  for (const locale of locales) for (const path of ['/', '/search/', '/wallpapers/contours-of-silence-1/']) {
+  for (const locale of locales) for (const path of ['/']) {
     const response = await page.goto(localPath(locale, path));
     const csp = response!.headers()['content-security-policy'];
     expect(csp).toContain("script-src 'self'");
