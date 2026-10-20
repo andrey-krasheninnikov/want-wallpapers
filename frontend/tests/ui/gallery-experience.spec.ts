@@ -91,6 +91,8 @@ test('glow, wand and confetti respect reduced motion and preserve downloads', as
   await expect(card).toHaveCSS('transform', 'none');
   await expect.poll(() => card.evaluate(el => getComputedStyle(el, '::after').opacity)).toBe('1');
   await page.locator('[data-long-copy] p').first().hover();
+  await expect(page.locator('.wand-spark')).toHaveCount(0);
+  await page.locator('header a').first().hover();
   await expect(page.locator('.wand-spark').first()).toBeVisible();
   await page.emulateMedia({ reducedMotion: 'reduce' }); await card.hover();
   await expect(card).toHaveCSS('transform', 'none');
