@@ -1,0 +1,118 @@
+import { test, expect, type APIRequestContext } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createHmac } from 'node:crypto';
+import { database, secretDirectory } from './database';
+
+const token = readFileSync(join(secretDirectory, 'ui_catalog_token'), 'utf8').trim();
+async function setListing(request: APIRequestContext, kind: 'collections' | 'wallpapers', id: string, listed: boolean) {
+  const records = await (await request.get('/api/v1/admin/catalog', { headers: { Authorization: 'Bearer ' + token } })).json();
+  const record = records[kind].find((record: { item: { id: string } }) => record.item.id === id);
+  const response = await request.patch(`/api/v1/admin/catalog/${kind}/${id}/listing`, { headers: { Authorization: 'Bearer ' + token }, data: { version: record.version, listed } });
+  expect(response.status()).toBe(200);
+}
+test.beforeEach(async ({ page }) => {
+  await database`UPDATE collections SET listed=true`;
+  await database`UPDATE wallpapers SET listed=true`;
+  await page.route('https://ipwho.is/**', route => route.fulfill({ json: { success: true, country_code: 'DE' } }));
+});
+test.afterAll(async () => {
+  await database`UPDATE collections SET listed=true`;
+  await database`UPDATE wallpapers SET listed=true`;
+});
+for (const prefix of ['', '/ru', '/zh-cn', '/pt-br']) test('fresh discovery and direct pages retain correct state: ' + (prefix || 'en'), async ({ page, request }) => {
+  await setListing(request, 'collections', '0001-contours-of-silence', false);
+  await setListing(request, 'wallpapers', 'woven-spectrum-2', false);
+  await setListing(request, 'wallpapers', 'contours-of-silence-2', false);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error' && /hydration|Minified React error|didn't match/i.test(message.text())) errors.push(message.text()); });
+  const home = await page.goto(prefix + '/');
+  expect(home?.headers()['cache-control']).toBe('no-store');
+  await expect(page.locator('[data-collection-carousel] article')).toHaveCount(5);
+  await expect(page.locator('.hero-meta')).toContainText('29');
+  await expect(page.locator('[data-scene-wallpaper]')).not.toHaveAttribute('data-scene-wallpaper', /contours-of-silence|woven-spectrum-2/);
+  const dataUrl = await page.locator('astro-island[component-url*="DeviceScene"]').evaluate(element => JSON.parse(element.getAttribute('props')!).dataUrl[1] as string);
+  expect(dataUrl).toContain('?listing=');
+  const gallery = await request.get(dataUrl);
+  expect(gallery.headers()['cache-control']).toBe('no-store');
+  const payload = await gallery.json();
+  expect(payload.wallpapers).toHaveLength(29);
+  expect(payload.wallpapers.some((item: { id: string }) => /contours-of-silence|woven-spectrum-2/.test(item.id))).toBe(false);
+  expect(payload.stories['contours-of-silence']).toBeUndefined();
+  const rawHome = await request.get(prefix + '/index.html', { headers: { 'If-None-Match': '*', Range: 'bytes=0-20' } });
+  expect(rawHome.status()).toBe(200);
+  expect(await rawHome.text()).not.toContain('contours-of-silence');
+  await page.goto(prefix + '/search/');
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(29);
+  await expect(page.locator('[data-discovery-count="results"]')).toContainText('29');
+  await page.goto(prefix + '/collections/contours-of-silence/');
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(14);
+  expect((await request.get(prefix + '/collections/contours-of-silence/')).status()).toBe(200);
+  await page.goto(prefix + '/wallpapers/contours-of-silence-2/');
+  await expect(page.locator('#wallpaper-view')).toBeVisible();
+  await expect(page.locator('.wallpaper-position')).toHaveText('');
+  expect(await page.locator('meta[name="robots"]').count()).toBe(0);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://wallpapers.want.foundation' + prefix + '/wallpapers/contours-of-silence-2/');
+  for (const direction of ['previous', 'next']) expect(await page.locator(`[data-wallpaper-${direction}]`).getAttribute('href')).not.toMatch(/contours-of-silence|woven-spectrum-2/);
+  expect((await request.get('/api/v1/wallpapers/contours-of-silence-2/social')).status()).toBe(200);
+  const download = await request.head('/downloads/contours-of-silence-2-desktop.png');
+  expect(download.status()).toBe(200); expect(download.headers()['content-disposition']).toContain('attachment');
+  await setListing(request, 'collections', '0001-contours-of-silence', true);
+  await page.goto(prefix + '/search/');
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(43);
+  expect(await page.locator('[data-wallpaper-card="contours-of-silence-2"]').count()).toBe(0);
+  expect(errors).toEqual([]);
+});
+test('empty discovery remains usable and direct pages remain indexable', async ({ page, request }) => {
+  await database`UPDATE wallpapers SET listed=false`;
+  await page.goto('/');
+  await expect(page.locator('[data-collection-carousel] article')).toHaveCount(6);
+  expect(await page.locator('[data-scene-wallpaper], .home-mosaic').count()).toBe(0);
+  await expect(page.locator('.hero-meta')).toContainText('0');
+  await page.goto('/collections/contours-of-silence/');
+  expect(await page.locator('[data-wallpaper-card]').count()).toBe(0);
+  expect(await page.locator('[data-direct-collection-cover]').count()).toBe(0);
+  await page.goto('/wallpapers/contours-of-silence-1/');
+  expect(await page.locator('[data-wallpaper-previous], [data-wallpaper-next]').count()).toBe(0);
+  expect((await request.get('/sitemap-0.xml')).status()).toBe(200);
+  expect(await (await request.get('/sitemap-0.xml')).text()).toContain('/wallpapers/contours-of-silence-1/');
+  const head = await request.head('/search/'); expect(head.status()).toBe(200); expect(head.headers()['cache-control']).toBe('no-store');
+});
+test('administration confirms listing writes and preserves state on version errors', async ({ page }, testInfo) => {
+  const encoded = readFileSync(join(secretDirectory, 'ui_admin_totp'), 'utf8').trim();
+  const bits = [...encoded.replaceAll('=', '')].map(character => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(character).toString(2).padStart(5, '0')).join('');
+  const seed = Buffer.from((bits.match(/.{8}/g) ?? []).map(byte => parseInt(byte, 2)));
+  const counter = Buffer.alloc(8); counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  const hash = createHmac('sha1', seed).update(counter).digest(), offset = hash[19]! & 15;
+  const code = ((hash.readUInt32BE(offset) & 0x7fffffff) % 1000000).toString().padStart(6, '0');
+  await page.goto('/admin/login/');
+  await page.getByLabel('Логин', { exact: true }).fill('admin');
+  await page.getByLabel('Пароль', { exact: true }).fill(readFileSync(join(secretDirectory, 'ui_admin_password'), 'utf8').trim());
+  await page.getByLabel('Код аутентификатора').fill(code);
+  await page.getByRole('button', { name: 'Войти', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/$/);
+  const row = page.locator('li').filter({ hasText: '0001-contours-of-silence' });
+  await row.getByRole('button', { name: 'Скрыть', exact: false }).click();
+  await expect(row).toContainText('Скрыто');
+  await expect(page.getByRole('status')).toContainText('Прямая страница остаётся доступной');
+  await page.route('**/api/v1/admin/catalog/collections/*/listing', route => route.fulfill({ status: 409, json: { error: { code: 'conflict' } } }));
+  await row.getByRole('button', { name: 'Показать', exact: false }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Запись уже изменена' })).toContainText('Обновите список');
+  await expect(row).toContainText('Скрыто');
+  await expect(row.getByRole('button', { name: 'Показать', exact: false })).toBeEnabled();
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`listing-admin-${width}.png`), fullPage: true });
+  }
+});
+test('automatic collection covers use a listed wallpaper', async ({ page, request }) => {
+  await setListing(request, 'wallpapers', 'contours-of-silence-1', false);
+  await page.goto('/collections/contours-of-silence/');
+  await expect(page.locator('[data-direct-collection-cover] img')).toHaveAttribute('src', /contours-of-silence-2-desktop/);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /contours-of-silence-2-desktop/);
+  await page.goto('/');
+  await expect(page.locator('[data-collection-card="/collections/contours-of-silence/"] img').first()).toHaveAttribute('src', /contours-of-silence-2-desktop/);
+  await expect(page.locator('[data-collection-story-image="contours-of-silence"]')).toHaveAttribute('src', /contours-of-silence-2-desktop/);
+});

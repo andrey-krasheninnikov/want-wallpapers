@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { origin, parsePage, parseSitemap, pagePath, validatePages, validateRobots, validateLlms, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks, require, type Page } from './seo-validation';
 
 const root = resolve(import.meta.dir, '../dist');
+const runtime = JSON.parse(await readFile(resolve(root, '../runtime-catalog.json'), 'utf8'));
+require(runtime.schema === 1 && Object.keys(runtime.locales).length === 4, 'Missing runtime catalogue');
 const hashes = JSON.parse(await readFile(join(root, 'csp-hashes.json'), 'utf8')) as Record<string, string[]>;
 const files = new Set<string>();
 const pages = new Map<string, Page>();

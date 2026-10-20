@@ -1,7 +1,7 @@
 use crate::{
     AppState, auth,
     error::{ApiError, Result},
-    models::{Collection, Manifest, Snapshot, Wallpaper},
+    models::{Collection, ListingFlags, Manifest, Snapshot, Wallpaper},
 };
 use axum::{
     Json,
@@ -38,11 +38,21 @@ pub async fn export(pool: &PgPool) -> Result<Snapshot> {
     sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         .execute(&mut *transaction)
         .await?;
-    let collections = sqlx::query("SELECT c.id,c.data,to_char(c.published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS published_at, (SELECT count(*) FROM wallpapers w WHERE w.collection_id=c.id AND NOT w.archived) AS count FROM collections c WHERE NOT c.archived ORDER BY c.published_at DESC NULLS LAST,c.id COLLATE \"C\" DESC").fetch_all(&mut *transaction).await?;
-    let wallpapers: Vec<Value> = sqlx::query_scalar("SELECT w.data FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived ORDER BY w.collection_id,w.number").fetch_all(&mut *transaction).await?;
+    let collections = sqlx::query("SELECT c.id,c.data,c.listed,to_char(c.published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS published_at, (SELECT count(*) FROM wallpapers w WHERE w.collection_id=c.id AND NOT w.archived) AS count FROM collections c WHERE NOT c.archived ORDER BY c.published_at DESC NULLS LAST,c.id COLLATE \"C\" DESC").fetch_all(&mut *transaction).await?;
+    let wallpapers = sqlx::query("SELECT w.id,w.data,w.listed FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived ORDER BY w.collection_id,w.number").fetch_all(&mut *transaction).await?;
     let publication_dates = sqlx::query("SELECT w.id,to_char(w.published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS published_at FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived AND w.published_at IS NOT NULL")
         .fetch_all(&mut *transaction).await?.into_iter().map(|row| (row.get::<String, _>("id"), row.get::<String, _>("published_at"))).collect();
     let snapshot = Snapshot {
+        listing: Some(ListingFlags {
+            collections: collections
+                .iter()
+                .map(|row| (row.get("id"), row.get("listed")))
+                .collect(),
+            wallpapers: wallpapers
+                .iter()
+                .map(|row| (row.get("id"), row.get("listed")))
+                .collect(),
+        }),
         collection_publication_dates: collections
             .iter()
             .filter_map(|row| {
@@ -62,7 +72,7 @@ pub async fn export(pool: &PgPool) -> Result<Snapshot> {
             .collect::<Result<_>>()?,
         wallpapers: wallpapers
             .into_iter()
-            .map(|value| serde_json::from_value(value).map_err(|_| ApiError::invalid()))
+            .map(|row| serde_json::from_value(row.get("data")).map_err(|_| ApiError::invalid()))
             .collect::<Result<_>>()?,
     };
     transaction.commit().await?;
@@ -71,20 +81,46 @@ pub async fn export(pool: &PgPool) -> Result<Snapshot> {
 pub async fn snapshot(State(state): State<AppState>) -> Result<Json<Snapshot>> {
     Ok(Json(export(&state.pool).await?))
 }
+pub async fn discovery(State(state): State<AppState>) -> Result<Json<Snapshot>> {
+    let mut snapshot = export(&state.pool).await?;
+    let flags = snapshot.listing.take().ok_or_else(ApiError::invalid)?;
+    snapshot
+        .collections
+        .retain(|item| flags.collections.get(&item.id) == Some(&true));
+    snapshot.wallpapers.retain(|item| {
+        flags.wallpapers.get(&item.id) == Some(&true)
+            && flags.collections.get(&item.collection_id) == Some(&true)
+    });
+    for collection in &mut snapshot.collections {
+        collection.count = snapshot
+            .wallpapers
+            .iter()
+            .filter(|item| item.collection_id == collection.id)
+            .count() as i64;
+    }
+    snapshot
+        .publication_dates
+        .retain(|id, _| snapshot.wallpapers.iter().any(|item| &item.id == id));
+    snapshot
+        .collection_publication_dates
+        .retain(|id, _| snapshot.collections.iter().any(|item| &item.id == id));
+    Ok(Json(snapshot))
+}
 pub async fn listing(State(state): State<AppState>, headers: HeaderMap) -> Result<Json<Value>> {
     auth::catalog_access(&state, &headers, false).await?;
     let mut transaction = state.pool.begin().await?;
     sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         .execute(&mut *transaction)
         .await?;
-    let collections = sqlx::query("SELECT data,version,archived FROM collections ORDER BY published_at DESC NULLS LAST,id COLLATE \"C\" DESC")
+    let collections = sqlx::query("SELECT data,version,archived,listed FROM collections ORDER BY published_at DESC NULLS LAST,id COLLATE \"C\" DESC")
         .fetch_all(&mut *transaction)
         .await?;
-    let wallpapers =
-        sqlx::query("SELECT data,version,archived FROM wallpapers ORDER BY collection_id,number")
-            .fetch_all(&mut *transaction)
-            .await?;
-    let wrap = |row: sqlx::postgres::PgRow| json!({"item":row.get::<Value,_>("data"),"version":row.get::<i64,_>("version"),"archived":row.get::<bool,_>("archived")});
+    let wallpapers = sqlx::query(
+        "SELECT data,version,archived,listed FROM wallpapers ORDER BY collection_id,number",
+    )
+    .fetch_all(&mut *transaction)
+    .await?;
+    let wrap = |row: sqlx::postgres::PgRow| json!({"item":row.get::<Value,_>("data"),"version":row.get::<i64,_>("version"),"archived":row.get::<bool,_>("archived"),"listed":row.get::<bool,_>("listed")});
     let result = json!({"collections":collections.into_iter().map(wrap).collect::<Vec<_>>(),"wallpapers":wallpapers.into_iter().map(wrap).collect::<Vec<_>>(),"taxonomy":serde_json::from_str::<Value>(include_str!("../data/taxonomy.json")).map_err(|_| ApiError::invalid())?});
     transaction.commit().await?;
     Ok(Json(result))
@@ -288,4 +324,46 @@ pub async fn archive(
     .await?;
     transaction.commit().await?;
     Ok(Json(json!({"version":version})))
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ListingWrite {
+    listed: bool,
+    version: i64,
+}
+pub async fn set_listing(
+    State(state): State<AppState>,
+    Path((kind, id)): Path<(String, String)>,
+    headers: HeaderMap,
+    Json(input): Json<ListingWrite>,
+) -> Result<Json<Value>> {
+    let actor = auth::catalog_access(&state, &headers, true).await?;
+    let query = match kind.as_str() {
+        "collections" => {
+            "UPDATE collections SET listed=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING version"
+        }
+        "wallpapers" => {
+            "UPDATE wallpapers SET listed=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING version"
+        }
+        _ => return Err(ApiError::missing()),
+    };
+    let mut transaction = state.pool.begin().await?;
+    lock(&mut transaction).await?;
+    let version: i64 = sqlx::query_scalar(query)
+        .bind(&id)
+        .bind(input.listed)
+        .bind(input.version)
+        .fetch_optional(&mut *transaction)
+        .await?
+        .ok_or_else(ApiError::conflict)?;
+    audit(
+        &mut transaction,
+        if input.listed { "list" } else { "unlist" },
+        &id,
+        actor,
+    )
+    .await?;
+    transaction.commit().await?;
+    Ok(Json(json!({"version": version, "listed": input.listed})))
 }

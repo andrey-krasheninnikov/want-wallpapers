@@ -37,8 +37,17 @@ pub async fn headers(State(state): State<AppState>, request: Request, next: Next
         .headers()
         .get(header::CONTENT_TYPE)
         .is_some_and(|value| value.to_str().unwrap_or_default().starts_with("text/html"));
-    let csp = content_security_policy(&path, response.status(), html, &state.csp_hashes);
+    let dynamic = response
+        .extensions()
+        .get::<crate::discovery::DynamicHashes>();
+    let hashes = dynamic.map(|value| &value.0).unwrap_or(&state.csp_hashes);
+    let csp = content_security_policy(&path, response.status(), html, hashes);
+    let dynamic = dynamic.is_some();
     let llms = path == "/llms.txt" && response.status().is_success();
+    let no_store = response
+        .headers()
+        .get(header::CACHE_CONTROL)
+        .is_some_and(|value| value == "no-store");
     let headers = response.headers_mut();
     if llms {
         headers.insert(
@@ -68,7 +77,7 @@ pub async fn headers(State(state): State<AppState>, request: Request, next: Next
             HeaderValue::from_static("max-age=31536000"),
         );
     }
-    let cache = if api || admin {
+    let cache = if api || admin || dynamic || no_store {
         "no-store"
     } else if path.starts_with("/_astro/") {
         "public, max-age=31536000, immutable"

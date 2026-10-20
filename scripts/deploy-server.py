@@ -96,7 +96,7 @@ def wait_ready():
 def smoke():
     wait_ready()
     catalog = json.loads(https('/api/v1/catalog'))
-    require(catalog.get('collections') and catalog.get('wallpapers'), 'catalog-failed')
+    require(isinstance(catalog.get('collections'), list) and isinstance(catalog.get('wallpapers'), list), 'catalog-failed')
     for prefix in ('/', '/ru/', '/zh-cn/', '/pt-br/'):
         page = https(prefix)
         require('<html' in page and 'hreflang=' in page, 'locale-failed')

@@ -9,13 +9,13 @@ const { locale } = Astro.props;
 const { data, url } = await buildGalleryData(locale);
 const stories = Object.entries(data.stories);
 ---
-{stories.length > 0 && <section class="section-space" data-editorial>
+{stories.length > 0 && <section class="section-space" data-editorial data-story-group>
   <div class="shell section-heading"><h2 class="section-title">{storyCopy[locale].title}</h2></div>
   <StoryCarousel locale={locale} dataUrl={url} count={stories.length} client:visible>
-    {stories.map(([slug, story]) => <article class="min-w-0">
+    {stories.map(([slug, story]) => <article class="min-w-0" data-collection-card={slug}>
       <Card className="group gallery-card story-card">
         <a href={story.href} data-story={slug} class="story-card-link" aria-labelledby={'story-' + slug}>
-          {story.image && <img src={story.image.src} width={story.image.width} height={story.image.height} alt="" loading="lazy" />}
+          {story.image && <img data-collection-story-image={slug} src={story.image.src} width={story.image.width} height={story.image.height} alt="" loading="lazy" />}
           <CardContent className="p-5 sm:p-6">
             <h3 id={'story-' + slug} class="text-xl leading-snug font-semibold tracking-tight">{story.title}</h3>
             <p class="story-excerpt">{story.paragraphs[0]}</p>

@@ -29,7 +29,7 @@ export function loadGalleryData(url: string, locale: Locale): Promise<GalleryDat
   const key = locale + ':' + url;
   let request = requests.get(key);
   if (!request) {
-    request = fetch(url, { signal: AbortSignal.timeout(8000) }).then(async response => {
+    request = fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) }).then(async response => {
       if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('Gallery data unavailable');
       const data: unknown = await response.json();
       validateGalleryData(data, locale);

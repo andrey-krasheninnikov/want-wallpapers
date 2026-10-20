@@ -8,6 +8,7 @@ use axum::{
 use http_body_util::BodyExt;
 use serde_json::{Value, json};
 use sqlx::PgPool;
+use sqlx::Row;
 use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use totp_rs::{Algorithm, TOTP};
 use tower::ServiceExt;
@@ -45,6 +46,7 @@ fn state(pool: PgPool) -> AppState {
             recaptcha: None,
             trusted_proxies: vec!["10.0.0.0/24".parse().unwrap()],
         }),
+        runtime_catalog: None,
         csp_hashes: Arc::new(HashMap::new()),
         recaptcha: None,
         login_slots: Arc::new(tokio::sync::Semaphore::new(2)),
@@ -1389,7 +1391,7 @@ async fn collection_video_covers_preserve_authorization_versions_and_snapshot_ro
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/api/v1/catalog")
+                .uri("/api/v1/catalog/snapshot")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -1864,4 +1866,373 @@ async fn collection_publication_upgrade_uses_historical_evidence_including_archi
     );
     assert_eq!(dates["0006-neon-tide"], "2026-10-19T20:13:10.668531Z");
     assert_eq!(dates["0004-test-light"], Value::Null);
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn listing_visibility_preserves_direct_social_snapshot_and_individual_states(pool: PgPool) {
+    let app = router(state(pool.clone()));
+    let initial = serde_json::to_value(catalog::export(&pool).await.unwrap()).unwrap();
+    let collection_path = "/api/v1/admin/catalog/collections/0001-contours-of-silence/listing";
+    let wallpaper_path = "/api/v1/admin/catalog/wallpapers/contours-of-silence-1/listing";
+    assert_eq!(
+        request(
+            &app,
+            "PATCH",
+            collection_path,
+            Some(json!({"version":1,"listed":false})),
+            None,
+            None,
+            None
+        )
+        .await
+        .0,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PATCH",
+            collection_path,
+            Some(json!({"version":1,"listed":false})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PATCH",
+            collection_path,
+            Some(json!({"version":1,"listed":true})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::CONFLICT
+    );
+    let (_, general, _) = request(&app, "GET", "/api/v1/catalog", None, None, None, None).await;
+    assert_eq!(general["wallpapers"].as_array().unwrap().len(), 10);
+    assert!(
+        !general["collections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["id"] == "0001-contours-of-silence")
+    );
+    let (_, snapshot, _) = request(
+        &app,
+        "GET",
+        "/api/v1/catalog/snapshot",
+        None,
+        None,
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(snapshot["wallpapers"], initial["wallpapers"]);
+    assert_eq!(snapshot["publicationDates"], initial["publicationDates"]);
+    assert_eq!(
+        snapshot["listing"]["collections"]["0001-contours-of-silence"],
+        false
+    );
+    assert_eq!(
+        snapshot["listing"]["wallpapers"]["contours-of-silence-1"],
+        true
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PATCH",
+            wallpaper_path,
+            Some(json!({"version":1,"listed":false})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PATCH",
+            collection_path,
+            Some(json!({"version":2,"listed":true})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    let (_, general, _) = request(&app, "GET", "/api/v1/catalog", None, None, None, None).await;
+    assert_eq!(general["wallpapers"].as_array().unwrap().len(), 24);
+    assert_eq!(
+        general["collections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|item| item["id"] == "0001-contours-of-silence")
+            .unwrap()["count"],
+        14
+    );
+    let (cookie, csrf, _) = visitor(&app).await;
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            "/api/v1/wallpapers/contours-of-silence-1/rating",
+            Some(json!({"value":"imba"})),
+            Some(&cookie),
+            Some(&csrf),
+            None
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        request(
+            &app,
+            "POST",
+            "/api/v1/wallpapers/contours-of-silence-1/comments",
+            Some(json!({"text":"Kept on the direct page"})),
+            Some(&cookie),
+            Some(&csrf),
+            None
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    let (_, social, _) = request(
+        &app,
+        "GET",
+        "/api/v1/wallpapers/contours-of-silence-1/social",
+        None,
+        Some(&cookie),
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(social["counts"]["imba"], 1);
+    assert_eq!(social["comments"].as_array().unwrap().len(), 1);
+    let (left, right) = tokio::join!(
+        request(
+            &app,
+            "PATCH",
+            wallpaper_path,
+            Some(json!({"version":2,"listed":true})),
+            None,
+            None,
+            Some(TOKEN)
+        ),
+        request(
+            &app,
+            "PATCH",
+            wallpaper_path,
+            Some(json!({"version":2,"listed":true})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+    );
+    assert!(
+        (left.0 == StatusCode::OK && right.0 == StatusCode::CONFLICT)
+            || (right.0 == StatusCode::OK && left.0 == StatusCode::CONFLICT)
+    );
+    let restored = serde_json::to_value(catalog::export(&pool).await.unwrap()).unwrap();
+    assert_eq!(restored, initial);
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT count(*) FROM audit_log WHERE action IN ('list','unlist')"
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap(),
+        4
+    );
+    sqlx::query(
+        "UPDATE wallpapers SET listed=false WHERE collection_id='0001-contours-of-silence'",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let (_, general, _) = request(&app, "GET", "/api/v1/catalog", None, None, None, None).await;
+    assert_eq!(
+        general["collections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|item| item["id"] == "0001-contours-of-silence")
+            .unwrap()["count"],
+        0
+    );
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn listing_html_is_fresh_and_database_failure_does_not_serve_built_lists(pool: PgPool) {
+    let seed: Value = serde_json::from_str(include_str!("../data/catalog.json")).unwrap();
+    let localized = json!({"gallery":{"locale":"en","wallpapers":[],"stories":{}},"dataUrl":"/gallery-data/en/test.json","sceneHtml":{},"mosaicHtml":{},"coverHtml":{},"previousHtml":{},"nextHtml":{},"resultsLabel":"results","wallpapersLabel":"wallpapers","collectionsLabel":"collections","numbers":[]});
+    let build = serde_json::from_value(json!({"schema":1,"collections":seed["collections"],"wallpapers":seed["wallpapers"],"order":[],"locales":{"en":localized}})).unwrap();
+    let directory = std::env::temp_dir().join(format!("wallpapers-listing-{}", Uuid::new_v4()));
+    std::fs::create_dir(&directory).unwrap();
+    std::fs::write(directory.join("index.html"),"<html><body><article data-wallpaper-card=\"contours-of-silence-1\">First work</article><article data-wallpaper-card=\"contours-of-silence-2\">Second work</article></body></html>").unwrap();
+    let mut state = state(pool.clone());
+    Arc::get_mut(&mut state.config).unwrap().static_dir = directory.clone();
+    state.runtime_catalog = Some(Arc::new(build));
+    state.csp_hashes = Arc::new(HashMap::from([("/".into(), vec![])]));
+    let app = router(state);
+    let response = app
+        .clone()
+        .oneshot(
+            axum::http::Request::builder()
+                .uri("/")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()["cache-control"], "no-store");
+    assert!(
+        String::from_utf8(
+            response
+                .into_body()
+                .collect()
+                .await
+                .unwrap()
+                .to_bytes()
+                .to_vec()
+        )
+        .unwrap()
+        .contains("First work")
+    );
+    assert_eq!(
+        request(
+            &app,
+            "PATCH",
+            "/api/v1/admin/catalog/wallpapers/contours-of-silence-1/listing",
+            Some(json!({"version":1,"listed":false})),
+            None,
+            None,
+            Some(TOKEN)
+        )
+        .await
+        .0,
+        StatusCode::OK
+    );
+    let response = app
+        .clone()
+        .oneshot(
+            axum::http::Request::builder()
+                .uri("/")
+                .header("if-none-match", "*")
+                .header("range", "bytes=0-10")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(response.headers().get("etag").is_none());
+    let html = String::from_utf8(
+        response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes()
+            .to_vec(),
+    )
+    .unwrap();
+    assert!(!html.contains("First work") && html.contains("Second work"));
+    let response = app
+        .clone()
+        .oneshot(
+            axum::http::Request::builder()
+                .method("HEAD")
+                .uri("/")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(
+        response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes()
+            .is_empty()
+    );
+    pool.close().await;
+    let response = app
+        .oneshot(
+            axum::http::Request::builder()
+                .uri("/")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(response.headers()["cache-control"], "no-store");
+    std::fs::remove_file(directory.join("index.html")).unwrap();
+    std::fs::remove_dir(directory).unwrap();
+}
+
+#[sqlx::test(migrations = false)]
+async fn listing_upgrade_preserves_archive_versions_and_records(pool: PgPool) {
+    for migration in [
+        include_str!("../migrations/202610040001_schema.sql"),
+        include_str!("../migrations/202610040002_catalog.sql"),
+        include_str!("../migrations/202610130001_publication_dates.sql"),
+        include_str!("../migrations/202610200001_collection_publication_dates.sql"),
+    ] {
+        sqlx::raw_sql(migration).execute(&pool).await.unwrap();
+    }
+    sqlx::query(
+        "UPDATE collections SET archived=true,version=7 WHERE id='0001-contours-of-silence'",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let before: Value =
+        sqlx::query_scalar("SELECT data FROM collections WHERE id='0001-contours-of-silence'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    sqlx::raw_sql(include_str!(
+        "../migrations/202610200002_listing_visibility.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+    let row = sqlx::query(
+        "SELECT listed,archived,version,data FROM collections WHERE id='0001-contours-of-silence'",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert!(row.get::<bool, _>("listed") && row.get::<bool, _>("archived"));
+    assert_eq!(row.get::<i64, _>("version"), 7);
+    assert_eq!(row.get::<Value, _>("data"), before);
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT count(*) FROM wallpapers WHERE listed")
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+        25
+    );
 }

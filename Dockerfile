@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY --from=backend /app/want-wallpapers-server /usr/local/bin/want-wallpapers-server
 COPY --from=frontend /app/frontend/dist /app/frontend/dist
+COPY --from=frontend /app/frontend/runtime-catalog.json /app/frontend/runtime-catalog.json
 USER 10001:10001
 ENV APP_ENV=production BIND_ADDR=0.0.0.0:8080 STATIC_DIR=/app/frontend/dist SITE_URL=https://wallpapers.want.foundation
 EXPOSE 8080

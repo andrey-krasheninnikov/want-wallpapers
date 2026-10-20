@@ -178,13 +178,15 @@ try:
     else: raise RuntimeError('Production image did not become ready.')
     initial = json.loads((repository / 'backend/data/catalog.json').read_text())
     expected = json.loads((repository / 'frontend/src/data/catalog-live.json').read_text())
+    for snapshot in (initial, expected):
+        snapshot.setdefault('listing', {kind: {item['id']: True for item in snapshot[kind]} for kind in ['collections', 'wallpapers']})
     for field in ['publicationDates', 'collectionPublicationDates']:
         expected[field] = {key: datetime.fromisoformat(value.replace('Z', '+00:00')).strftime('%Y-%m-%dT%H:%M:%S.%fZ') for key, value in expected[field].items()}
     expected['collections'].sort(key=lambda item: (expected['collectionPublicationDates'].get(item['id'], ''), item['id']), reverse=True)
     initial['publicationDates'] = {item['id']: expected['publicationDates'][item['id']] for item in initial['wallpapers']}
     initial['collectionPublicationDates'] = {item['id']: expected['collectionPublicationDates'][item['id']] for item in initial['collections']}
     initial['collections'].sort(key=lambda item: (initial['collectionPublicationDates'][item['id']], item['id']), reverse=True)
-    with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
+    with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
         assert json.load(response) == initial, 'Initial migrations changed.'
     import_started = datetime.now(timezone.utc)
     for collection in expected['collections']:
@@ -194,14 +196,14 @@ try:
             with urllib.request.urlopen(request) as response:
                 result = json.load(response)['result']
                 assert result in ['created', 'unchanged'] if attempt == 0 else result == 'unchanged'
-            with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
+            with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
                 exported = json.load(response)
                 dates = {field: exported[field] for field in ['publicationDates', 'collectionPublicationDates']}
             if attempt == 0:
                 first_dates = dates
             else:
                 assert dates == first_dates, 'Exact-repeat import changed publication dates.'
-    with urllib.request.urlopen(origin + '/api/v1/catalog') as response:
+    with urllib.request.urlopen(origin + '/api/v1/catalog/snapshot') as response:
         actual = json.load(response)
         assert {key: value for key, value in actual.items() if key != 'publicationDates'} == {key: value for key, value in expected.items() if key != 'publicationDates'}, 'Runtime catalogue differs from the build snapshot.'
         assert actual['publicationDates'].keys() == expected['publicationDates'].keys()

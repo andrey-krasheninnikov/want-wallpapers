@@ -75,8 +75,15 @@ pub struct Manifest {
     pub collection: Collection,
     pub wallpapers: Vec<Wallpaper>,
 }
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct ListingFlags {
+    pub collections: BTreeMap<String, bool>,
+    pub wallpapers: BTreeMap<String, bool>,
+}
 #[derive(Serialize)]
 pub struct Snapshot {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub listing: Option<ListingFlags>,
     #[serde(rename = "collectionPublicationDates")]
     pub collection_publication_dates: BTreeMap<String, String>,
     #[serde(rename = "publicationDates")]
