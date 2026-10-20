@@ -2,6 +2,7 @@ import { test, expect, type Page } from '../browser';
 import AxeBuilder from '@axe-core/playwright';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
+import { isAnalyticsConfigured } from '../../src/lib/privacy';
 import type { Locale } from '../../src/data/catalog';
 
 const preferenceKey = 'want-cookie-preferences-v2';
@@ -84,7 +85,7 @@ for (const [legacy, analytics] of [['essential', false], ['analytics', true]] as
 
 test('allow all stores both choices and withdrawal persists in another tab', async ({ page, context }) => {
   const optional: string[] = [];
-  const measurementId = process.env.PUBLIC_FIREBASE_MEASUREMENT_ID;
+  const measurementId = isAnalyticsConfigured() ? process.env.PUBLIC_FIREBASE_MEASUREMENT_ID : undefined;
   const sdkLoaded = measurementId ? page.waitForResponse((response) => response.url().startsWith('https://www.googletagmanager.com/gtag/js?')) : undefined;
   page.on('request', (request) => { if (/google-analytics|googletagmanager|firebase/.test(request.url())) optional.push(request.url()); });
   await page.goto('/ru/');
