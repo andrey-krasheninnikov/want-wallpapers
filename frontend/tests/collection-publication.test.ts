@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { PublicationJournal, catalogueBaseline, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
+import { PublicationJournal, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
@@ -94,6 +94,13 @@ test('catalogue baseline rejects unrelated changes between import and feature ex
   exported.listing.collections[collection.manifest.collection.id] = true;
   for (const item of collection.manifest.wallpapers) exported.listing.wallpapers[item.id] = true;
   expect(catalogueBaseline(exported, collection)).toBe(baseline);
+  const exportedHash = catalogueExportHash(exported, collection, baseline);
+  for (const mutate of [(value: any) => value.collections.at(-1).title = 'Unapproved title', (value: any) => value.wallpapers.at(-1).category = 'Unapproved category', (value: any) => value.listing.collections[collection.manifest.collection.id] = false]) {
+    const changed = structuredClone(exported); mutate(changed);
+    expect(() => catalogueExportHash(changed, collection, baseline)).toThrow('approved-catalogue-export-mismatch');
+  }
+  const changedDate = structuredClone(exported); changedDate.collectionPublicationDates[collection.manifest.collection.id] = '2026-10-03T00:00:00Z';
+  expect(catalogueExportHash(changedDate, collection, baseline)).not.toBe(exportedHash);
   for (const mutate of [(value: any) => value.collections[0].title = 'Unapproved change', (value: any) => value.listing.wallpapers['old-1'] = false, (value: any) => value.publicationDates['old-1'] = '2026-10-02T00:00:00Z']) {
     const changed = structuredClone(exported); mutate(changed); expect(catalogueBaseline(changed, collection)).not.toBe(baseline);
   }

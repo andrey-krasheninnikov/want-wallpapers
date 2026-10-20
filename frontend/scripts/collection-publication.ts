@@ -211,6 +211,18 @@ export function catalogueBaseline(input: any, collection: PublicCollectionPackag
   }));
 }
 
+export function catalogueExportHash(input: any, collection: PublicCollectionPackage, baseline: string) {
+  requirePackage(catalogueBaseline(input, collection) === baseline, 'unrelated-catalogue-changes');
+  const id = collection.manifest.collection.id, items = input.wallpapers.filter((item: any) => item.collectionId === id);
+  requirePackage(input.collections.filter((item: any) => item.id === id).length === 1
+    && input.collections.some((item: any) => isDeepStrictEqual(item, collection.manifest.collection))
+    && items.length === 5 && collection.manifest.wallpapers.every(item => items.some((candidate: unknown) => isDeepStrictEqual(item, candidate)))
+    && input.listing.collections[id] === true && items.every((item: any) => input.listing.wallpapers[item.id] === true), 'approved-catalogue-export-mismatch');
+  return digest(canonical({ collections: [...input.collections].sort((a, b) => a.id.localeCompare(b.id)),
+    wallpapers: [...input.wallpapers].sort((a, b) => a.id.localeCompare(b.id)), listing: input.listing,
+    publicationDates: input.publicationDates, collectionPublicationDates: input.collectionPublicationDates }));
+}
+
 export async function publishCollection(input: string, configPath: string) {
   const checked = await approvedPackage(input), { root, packageHash, value } = checked;
   const config = readPackageJson(configPath) as Config;
@@ -256,14 +268,17 @@ export async function publishCollection(input: string, configPath: string) {
     requirePackage(verified.collections.some(record => !record.archived && isDeepStrictEqual(record.item, value.manifest.collection))
       && verified.wallpapers.filter(record => record.item.collectionId === value.manifest.collection.id).length === 5
       && value.manifest.wallpapers.every(item => verified.wallpapers.some(record => !record.archived && isDeepStrictEqual(record.item, item))), 'catalogue-import-not-confirmed');
-    return { collectionId: value.manifest.collection.id, designs: 5, baseline };
+    const refreshed = await fetch(production + '/api/v1/catalog/snapshot', { cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000) });
+    requirePackage(refreshed.ok, 'catalogue-snapshot-unavailable');
+    const exportHash = catalogueExportHash(await refreshed.json(), collection, baseline);
+    return { collectionId: value.manifest.collection.id, designs: 5, baseline, exportHash };
   });
   const featureBranch = `feature/add-${value.manifest.collection.id}`;
   const feature = await step('feature', { development: config.expectedDevelopment, packageHash }, async () => {
     assertRefs(config.expectedDevelopment, config.expectedMain);
     const path = worktree(stateRoot, 'feature', config.expectedDevelopment, featureBranch);
     command(['bun', 'scripts/catalog-pull.ts'], join(path, 'frontend'));
-    requirePackage(catalogueBaseline(JSON.parse(readFileSync(join(path, 'frontend/src/data/catalog-live.json'), 'utf8')), collection) === catalogue.baseline, 'unrelated-catalogue-changes');
+    requirePackage(catalogueExportHash(JSON.parse(readFileSync(join(path, 'frontend/src/data/catalog-live.json'), 'utf8')), collection, catalogue.baseline) === catalogue.exportHash, 'catalogue-export-changed');
     const registry = join(path, 'frontend/src/data/collection-publications.json'), publications = JSON.parse(readFileSync(registry, 'utf8'));
     requirePackage(!publications[value.manifest.collection.id] || isDeepStrictEqual(publications[value.manifest.collection.id], collection), 'publication-registry-conflict');
     publications[value.manifest.collection.id] = collection; writeJson(registry, publications);
