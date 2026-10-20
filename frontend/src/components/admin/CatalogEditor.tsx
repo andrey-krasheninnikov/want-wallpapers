@@ -24,7 +24,7 @@ export default function CatalogEditor({ editor, collections, session, close, sav
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setCoverError('');
     const missing = locales.find((locale) => !item.title[locale].trim() || !item.description[locale].trim());
-    if (missing) { setLocale(missing); setError('Заполните название и описание на всех пяти языках, включая японский.'); return; }
+    if (missing) { setLocale(missing); setError('Заполните название и описание на всех языках.'); return; }
     let value = item;
     if (!existing) {
       if (wallpaper) value = { ...wallpaper, id: `${wallpaper.collection}-${wallpaper.number}`, slug: `${wallpaper.collection}-${wallpaper.number}` };
