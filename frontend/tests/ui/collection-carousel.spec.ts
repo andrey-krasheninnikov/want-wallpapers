@@ -66,7 +66,7 @@ for (const locale of locales) test(`two-line descriptions keep their text and pa
   await ready(page, localPath(locale));
   const description = track(page).locator('.collection-card-description').first();
   const original = (await description.textContent())!;
-  const short = { en: 'Short.', ru: 'Коротко.', 'zh-cn': '简短。', 'pt-br': 'Breve.' }[locale];
+  const short = { en: 'Short.', ru: 'Коротко.', 'zh-cn': '简短。', 'pt-br': 'Breve.', ja: '短い説明。' }[locale];
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(description.locator('..')).toHaveCSS('padding-left', width < 640 ? '20px' : '24px');

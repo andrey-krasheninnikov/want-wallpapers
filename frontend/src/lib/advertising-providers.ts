@@ -14,7 +14,7 @@ export function inlineAdvertisement(width: number) {
 }
 
 export function advertisingPath(path: string): boolean {
-  const route = path.replace(/\/index\.html$/, '/').replace(/^\/(ru|zh-cn|pt-br)(?=\/|$)/, '').replace(/\/$/, '');
+  const route = path.replace(/\/index\.html$/, '/').replace(/^\/(ru|zh-cn|pt-br|ja)(?=\/|$)/, '').replace(/\/$/, '');
   return /^\/(collections(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?|wallpapers\/[a-z0-9]+(?:-[a-z0-9]+)*|search|feedback|privacy|terms|cookies|license|contact)$/.test(route);
 }
 

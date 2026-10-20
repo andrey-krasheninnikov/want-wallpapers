@@ -2,7 +2,7 @@ use crate::error::{ApiError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 
-pub const LOCALES: [&str; 4] = ["en", "ru", "zh-cn", "pt-br"];
+pub const LOCALES: [&str; 5] = ["en", "ru", "zh-cn", "pt-br", "ja"];
 pub type Localized = BTreeMap<String, String>;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -91,7 +91,7 @@ pub struct Taxonomy {
     pub tag_labels: Vec<String>,
 }
 fn localized(value: &Localized, max: usize) -> Result<()> {
-    if value.len() != 4
+    if value.len() != LOCALES.len()
         || LOCALES.iter().any(|key| {
             value.get(*key).is_none_or(|text| {
                 text.trim().is_empty() || text.encode_utf16().count() > max || text.contains('\0')

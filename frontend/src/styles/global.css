@@ -39,6 +39,13 @@
   --card-glow: color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
+:lang(ja) {
+  --font-display: "Noto Sans JP Variable", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-sans: "Noto Sans JP Variable", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  line-break: strict;
+  word-break: normal;
+}
+
 @theme inline {
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "PingFang SC", "Microsoft YaHei", monospace;
   --font-display: "Onest Variable", Onest, "PingFang SC", "Microsoft YaHei", sans-serif;

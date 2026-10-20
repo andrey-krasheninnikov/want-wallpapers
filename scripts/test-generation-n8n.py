@@ -188,7 +188,7 @@ throw Error('Fixture redirect limit.');
             initial=request('/form/collection-draft-review',headers={'Authorization':owner_header}).decode()
             fields=Fields(); fields.feed(initial)
             page=request('/form/collection-draft-review', {**fields.hidden,fields.names[0]:'900026-test-light'}, {'Authorization':owner_header}).decode()
-            missing=[value for value in ['Дизайн 1','Дизайн 5','zh-cn','pt-br','collection-draft-media'] if value not in page]
+            missing=[value for value in ['Дизайн 1','Дизайн 5','zh-cn','pt-br','ja:','collection-draft-media'] if value not in page]
             assert not missing, 'Review response missing '+repr(missing)+': '+page[-2000:]
             media=request('/webhook/collection-draft-media?runId='+view()['runId']+'&version=1&variant=1-desktop&preview=true',headers={'Authorization':owner_header})
             assert media[:4]==b'RIFF' and media[8:12]==b'WEBP'
@@ -201,7 +201,7 @@ throw Error('Fixture redirect limit.');
             request('/webhook/generation-check-advance'); time.sleep(2)
             stats=json.loads(compose('exec','-T','provider','node','-e',"fetch('http://127.0.0.1:8092/stats').then(r=>r.json()).then(v=>console.log(JSON.stringify(v)))"))
             assert stats=={'images':10,'texts':1},stats
-            print('PASS: ten PNGs, four locales, private media, restart and snapshot recovery; provider calls 10 image + 1 text.', flush=True)
+            print('PASS: ten PNGs, five locales, private media, restart and snapshot recovery; provider calls 10 image + 1 text.', flush=True)
         finally:
             compose('down','--timeout','15','--remove-orphans')
             existing = run('docker','volume','ls','--format','{{.Name}}').decode().split()
