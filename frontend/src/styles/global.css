@@ -54,7 +54,7 @@
 }
 :lang(ar) :is(h1, h2, h3) { line-height: 1.5; letter-spacing: normal; }
 :lang(ar) :is(p, input, textarea, button) { letter-spacing: normal; }
-[dir="rtl"] :is(.carousel-pagination, .wallpaper-nav) svg,
+[dir="rtl"] :is(.carousel-pagination, .wallpaper-nav, [data-slot="breadcrumb-separator"]) svg,
 [dir="rtl"] .contact-arrow { transform: scaleX(-1); }
 [dir="rtl"] [data-slot="switch-thumb"][data-state="checked"] { translate: -1.5rem 0; }
 [dir="rtl"] [data-slot="switch-thumb"][data-state="unchecked"] { translate: -.25rem 0; }

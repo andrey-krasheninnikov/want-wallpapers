@@ -34,12 +34,22 @@ for (const width of [320, 1440]) test('Arabic public surfaces and typography at 
     await expect(page.locator('h1')).toHaveCSS('font-family', /Noto Sans Arabic Variable/);
     expect(await page.evaluate(() => document.fonts.check('16px "Noto Sans Arabic Variable"', 'خلفيات'))).toBe(true);
     await noOverflow(page);
+    await expect(page.locator('footer a[href="https://github.com/andrey-krasheninnikov/want-wallpapers"]')).toHaveText(interfaceCopy.ar.githubProject);
+    if (path === '/ar/') await expect(page.locator('[data-slot="accordion-trigger"]').first()).toHaveCSS('text-align', 'start');
+    if (path!.includes('/collections/') && path !== '/ar/collections/') await expect(page.locator('[data-slot="breadcrumb-separator"] svg').first()).toHaveCSS('transform', 'matrix(-1, 0, 0, 1, 0, 0)');
     if (path === '/ar/' || path === '/ar/feedback/') await page.screenshot({ path: info.outputPath((path === '/ar/' ? 'home-' : 'feedback-') + width + '.png') });
     if (path!.includes('/wallpapers/')) await expect(page.getByRole('alert')).toContainText(ui.serviceError);
     if (path === '/ar/contact/') await expect(page.locator('[data-owner-contact] a[href="mailto:wallpapers@want.foundation"]')).toHaveAccessibleName('البريد الإلكتروني wallpapers@want.foundation');
   }
   expect(failedFonts).toEqual([]);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+test('Existing English FAQ, footer and breadcrumbs preserve LTR', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('[data-slot="accordion-trigger"]').first()).toHaveCSS('text-align', 'start');
+  await expect(page.locator('footer a[href="https://github.com/andrey-krasheninnikov/want-wallpapers"]')).toHaveText('GitHub Project');
+  await page.goto('/collections/' + collection.slug + '/');
+  await expect(page.locator('[data-slot="breadcrumb-separator"] svg').first()).toHaveCSS('transform', 'none');
 });
 test('Arabic story dialogs, consent and feedback keep keyboard focus and drafts', async ({ page }) => {
   await page.goto('/ar/');
