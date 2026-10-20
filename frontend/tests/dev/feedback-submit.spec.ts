@@ -1,4 +1,4 @@
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '../browser';
 import AxeBuilder from '@axe-core/playwright';
 import { copy, localPath } from '../../src/data/copy';
 import type { Locale } from '../../src/data/catalog';

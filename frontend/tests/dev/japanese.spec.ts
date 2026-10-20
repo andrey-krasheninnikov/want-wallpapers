@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../browser';
 import AxeBuilder from '@axe-core/playwright';
 import { collections, wallpapers } from '../../src/data/catalog';
 import { copy, languageLabels } from '../../src/data/copy';

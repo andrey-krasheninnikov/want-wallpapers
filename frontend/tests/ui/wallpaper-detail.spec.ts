@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../browser';
 import { copy, languageFlags, languageLabels, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
 import { locales } from '../../src/data/catalog';

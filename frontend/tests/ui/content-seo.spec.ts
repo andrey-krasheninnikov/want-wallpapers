@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../browser';
 import AxeBuilder from '@axe-core/playwright';
 import { getCollection, getWallpaper, locales } from '../../src/data/catalog';
 import { collectionStories } from '../../src/data/editorial';

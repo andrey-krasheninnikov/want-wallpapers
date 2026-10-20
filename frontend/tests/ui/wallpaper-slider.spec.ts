@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../browser';
 import { copy, localPath } from '../../src/data/copy';
 import { designCopy } from '../../src/data/design-copy';
 import { wallpapers as catalogue, publicationDates, type Locale } from '../../src/data/catalog';
