@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { PublicationJournal, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
+import { PublicationJournal, catalogueBaseline, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
@@ -41,8 +41,8 @@ test('stale development or main refuses the publication boundary', () => {
   requireRefs({ development: sha, main: sha }, { development: sha, main: sha });
   for (const name of ['main', 'development']) expect(() => requireRefs({ development: sha, main: sha, [name]: 'd'.repeat(40) }, { development: sha, main: sha })).toThrow('publication-refs-changed');
 });
-const collection = { packageHash: hash, manifest: { collection: { id: '0007-test', slug: 'test', title: Object.fromEntries(locales.map(locale => [locale, 'Test collection'])) },
-  wallpapers: Array.from({ length: 5 }, (_, index) => ({ id: `test-${index + 1}`, slug: `test-${index + 1}`, number: index + 1 })) },
+const collection = { packageHash: hash, manifest: { collection: { id: '0007-test', slug: 'test', title: Object.fromEntries(locales.map(locale => [locale, 'Water & <Stone>'])) },
+  wallpapers: Array.from({ length: 5 }, (_, index) => ({ id: `test-${index + 1}`, slug: `test-${index + 1}`, collectionId: '0007-test', number: index + 1 })) },
   stories: Object.fromEntries(locales.map(locale => [locale, ['Story text']])),
   assets: Array.from({ length: 5 }, (_, index) => ['desktop', 'mobile'].map(variant => ({ role: 'final', design: index + 1, variant, sha256: digest('PNG') }))).flat(),
 } as unknown as PublicCollectionPackage;
@@ -74,10 +74,27 @@ test('live proof checks the running revision, 36 localized pages and all ten exa
     if (path === '/api/v1/catalog/snapshot') return Response.json({ collections: [collection.manifest.collection], wallpapers: collection.manifest.wallpapers });
     if (path.startsWith('/downloads/')) return new Response('PNG', { headers: { 'Content-Type': 'image/png' } });
     const locale = locales.find(locale => locale !== 'en' && path.startsWith('/' + locale + '/')) ?? 'en';
-    return new Response(`<html lang="${locale}">https://wallpapers.want.foundation${path} Test collection Story text</html>`, { headers: { 'Content-Type': 'text/html' } });
+    const languageTag = locale === 'zh-cn' ? 'zh-CN' : locale === 'pt-br' ? 'pt-BR' : locale;
+    const route = path.replace(/^\/(ru|zh-cn|pt-br|ja|ar)(?=\/)/, '');
+    const alternates = locales.map(language => `<link rel="alternate" hreflang="${language}" href="https://wallpapers.want.foundation${language === 'en' ? '' : '/' + language}${route}">`).join('');
+    return new Response(`<html lang="${languageTag}" dir="${locale === 'ar' ? 'rtl' : 'ltr'}"><head><link rel="canonical" href="https://wallpapers.want.foundation${path}">${alternates}</head><body><main>Water &amp; &lt;Stone&gt; Story text</main></body></html>`, { headers: { 'Content-Type': 'text/html' } });
   }) as typeof fetch;
   try {
     expect(await verifyLiveCollection(collection, sha)).toMatchObject({ pages: 36, downloads: 10, revision: sha }); expect(paths).toHaveLength(48);
     await expect(verifyLiveCollection(collection, 'e'.repeat(40))).rejects.toThrow('collection-live-revision-mismatch');
   } finally { globalThis.fetch = original; }
+});
+
+
+test('catalogue baseline rejects unrelated changes between import and feature export', () => {
+  const original = { collections: [{ id: 'old', title: 'Existing collection' }], wallpapers: [{ id: 'old-1', collectionId: 'old' }],
+    listing: { collections: { old: true }, wallpapers: { 'old-1': true } }, publicationDates: { 'old-1': '2026-10-01T00:00:00Z' }, collectionPublicationDates: { old: '2026-10-01T00:00:00Z' } };
+  const baseline = catalogueBaseline(original, collection), exported = structuredClone(original) as any;
+  exported.collections.push(collection.manifest.collection); exported.wallpapers.push(...collection.manifest.wallpapers);
+  exported.listing.collections[collection.manifest.collection.id] = true;
+  for (const item of collection.manifest.wallpapers) exported.listing.wallpapers[item.id] = true;
+  expect(catalogueBaseline(exported, collection)).toBe(baseline);
+  for (const mutate of [(value: any) => value.collections[0].title = 'Unapproved change', (value: any) => value.listing.wallpapers['old-1'] = false, (value: any) => value.publicationDates['old-1'] = '2026-10-02T00:00:00Z']) {
+    const changed = structuredClone(exported); mutate(changed); expect(catalogueBaseline(changed, collection)).not.toBe(baseline);
+  }
 });

@@ -1,3 +1,4 @@
+import { parsePage } from './seo-validation';
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
@@ -177,9 +178,12 @@ export async function verifyLiveCollection(collection: PublicCollectionPackage, 
   for (const locale of locales) for (const path of [`/collections/${collection.manifest.collection.slug}/`, ...collection.manifest.wallpapers.map(item => `/wallpapers/${item.slug}/`)]) {
     const route = localPath(locale, path), response = await fetch(production + route, { redirect: 'error', signal: AbortSignal.timeout(20000) });
     requirePackage(response.ok && response.headers.get('content-type')?.includes('text/html'), 'collection-page-unavailable');
-    const html = await response.text();
-    requirePackage(html.includes(`lang="${locale}"`) && html.includes(production + route) && html.includes(collection.manifest.collection.title[locale])
-      && collection.stories[locale].some(paragraph => html.includes(paragraph.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))), 'collection-page-content-mismatch');
+    const page = await parsePage(await response.text(), route), normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+    requirePackage(page.lang.toLowerCase() === locale && page.dir === (locale === 'ar' ? 'rtl' : 'ltr')
+      && isDeepStrictEqual(page.canonical, [production + route]) && locales.every(language => page.alternates.filter(alternate =>
+        alternate.lang.toLowerCase() === language && alternate.href === production + localPath(language, path)).length === 1)
+      && page.mainText.includes(normalize(collection.manifest.collection.title[locale]))
+      && collection.stories[locale].every(paragraph => page.mainText.includes(normalize(paragraph))), 'collection-page-content-mismatch');
   }
   for (const wallpaper of collection.manifest.wallpapers) for (const variant of ['desktop', 'mobile'] as const) {
     const asset = collection.assets.find(item => item.role === 'final' && item.design === wallpaper.number && item.variant === variant)!;
@@ -193,6 +197,18 @@ export async function verifyLiveCollection(collection: PublicCollectionPackage, 
     requirePackage(digest(Buffer.concat(chunks)) === asset.sha256, 'collection-live-download-mismatch');
   }
   return { pages: locales.length * 6, downloads: 10, revision: sha, verifiedAt: new Date().toISOString() };
+}
+
+export function catalogueBaseline(input: any, collection: PublicCollectionPackage) {
+  const ids = new Set(collection.manifest.wallpapers.map(item => item.id)), id = collection.manifest.collection.id;
+  return digest(canonical({
+    collections: input.collections.filter((item: any) => item.id !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
+    wallpapers: input.wallpapers.filter((item: any) => item.collectionId !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
+    publicationDates: Object.fromEntries(Object.entries(input.publicationDates ?? {}).filter(([key]) => !ids.has(key))),
+    collectionPublicationDates: Object.fromEntries(Object.entries(input.collectionPublicationDates ?? {}).filter(([key]) => key !== id)),
+    listing: { collections: Object.fromEntries(Object.entries(input.listing.collections).filter(([key]) => key !== id)),
+      wallpapers: Object.fromEntries(Object.entries(input.listing.wallpapers).filter(([key]) => !ids.has(key))) },
+  }));
 }
 
 export async function publishCollection(input: string, configPath: string) {
@@ -224,18 +240,13 @@ export async function publishCollection(input: string, configPath: string) {
     protectTag(tag); return { tag };
   });
   await step('upload', { packageHash }, async () => { await uploadApprovedCollection(root, new TimewebCollectionStore(root, config.awsProfile, `wallpapers/assets/collections/${value.manifest.collection.id}/`)); return { complete: true }; });
-  await step('catalogue', { packageHash }, async () => {
+  const catalogue = await step('catalogue', { packageHash }, async () => {
     assertRefs(config.expectedDevelopment, config.expectedMain);
     const response = await fetch(production + '/api/v1/catalog/snapshot', { redirect: 'error', signal: AbortSignal.timeout(15000) });
     requirePackage(response.ok, 'catalogue-snapshot-unavailable'); const snapshot = await response.json();
     const expected = JSON.parse(git(source, 'show', `${config.expectedDevelopment}:frontend/src/data/catalog-live.json`));
-    const omit = (input: any) => ({ collections: input.collections.filter((item: any) => item.id !== collection.manifest.collection.id),
-      wallpapers: input.wallpapers.filter((item: any) => item.collectionId !== collection.manifest.collection.id),
-      publicationDates: Object.fromEntries(Object.entries(input.publicationDates ?? {}).filter(([id]) => !collection.manifest.wallpapers.some(item => item.id === id))),
-      collectionPublicationDates: Object.fromEntries(Object.entries(input.collectionPublicationDates ?? {}).filter(([id]) => id !== collection.manifest.collection.id)),
-      listing: { collections: Object.fromEntries(Object.entries(input.listing.collections).filter(([id]) => id !== collection.manifest.collection.id)),
-        wallpapers: Object.fromEntries(Object.entries(input.listing.wallpapers).filter(([id]) => !collection.manifest.wallpapers.some(item => item.id === id))) } });
-    requirePackage(isDeepStrictEqual(omit(snapshot), omit(expected)), 'unrelated-catalogue-changes');
+    const baseline = catalogueBaseline(snapshot, collection);
+    requirePackage(baseline === catalogueBaseline(expected, collection), 'unrelated-catalogue-changes');
     const saved = await catalogRequest<{ collections: { item: Collection; archived: boolean }[]; wallpapers: { item: Wallpaper; archived: boolean }[] }>('');
     const existing = saved.collections.find(record => record.item.id === collection.manifest.collection.id);
     if (!existing) {
@@ -245,13 +256,14 @@ export async function publishCollection(input: string, configPath: string) {
     requirePackage(verified.collections.some(record => !record.archived && isDeepStrictEqual(record.item, value.manifest.collection))
       && verified.wallpapers.filter(record => record.item.collectionId === value.manifest.collection.id).length === 5
       && value.manifest.wallpapers.every(item => verified.wallpapers.some(record => !record.archived && isDeepStrictEqual(record.item, item))), 'catalogue-import-not-confirmed');
-    return { collectionId: value.manifest.collection.id, designs: 5 };
+    return { collectionId: value.manifest.collection.id, designs: 5, baseline };
   });
   const featureBranch = `feature/add-${value.manifest.collection.id}`;
   const feature = await step('feature', { development: config.expectedDevelopment, packageHash }, async () => {
     assertRefs(config.expectedDevelopment, config.expectedMain);
     const path = worktree(stateRoot, 'feature', config.expectedDevelopment, featureBranch);
     command(['bun', 'scripts/catalog-pull.ts'], join(path, 'frontend'));
+    requirePackage(catalogueBaseline(JSON.parse(readFileSync(join(path, 'frontend/src/data/catalog-live.json'), 'utf8')), collection) === catalogue.baseline, 'unrelated-catalogue-changes');
     const registry = join(path, 'frontend/src/data/collection-publications.json'), publications = JSON.parse(readFileSync(registry, 'utf8'));
     requirePackage(!publications[value.manifest.collection.id] || isDeepStrictEqual(publications[value.manifest.collection.id], collection), 'publication-registry-conflict');
     publications[value.manifest.collection.id] = collection; writeJson(registry, publications);

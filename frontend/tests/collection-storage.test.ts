@@ -3,7 +3,7 @@ import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { approvePackage, digest, validatePackage, writePrivate } from '../scripts/collection-package';
-import { TimewebCollectionStore, uploadApprovedCollection, type CollectionStore, type UploadObject } from '../scripts/collection-storage';
+import { TimewebCollectionStore, publicCollection, uploadApprovedCollection, type CollectionStore, type UploadObject } from '../scripts/collection-storage';
 import { createTestPackage } from './fixtures/collection-package';
 
 const root = mkdtempSync(join(realpathSync(tmpdir()), 'wallpapers-upload-'));
@@ -95,4 +95,12 @@ test('Timeweb adapter rejects backup profiles and foreign prefixes before any re
   expect(() => new TimewebCollectionStore(root, 'timeweb-admin', 'backups/')).toThrow('collection-prefix-required');
   const store = new TimewebCollectionStore(root, 'timeweb-admin', 'wallpapers/assets/collections/0999-test-light/');
   await expect(store.read('another-prefix/file.png', 1)).rejects.toThrow('collection-prefix-required');
+});
+
+
+test('public copy projection excludes unreviewed private post fields', () => {
+  const value = JSON.parse(original); value.copy.telegram[0].privateNotes = '/private/source';
+  const result = publicCollection(value, hash);
+  expect(result.copy.telegram[0]).toEqual({ title: 'Light', description: 'Quiet light.' });
+  expect(JSON.stringify(result)).not.toContain('/private/source');
 });

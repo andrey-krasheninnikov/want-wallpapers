@@ -2,7 +2,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, unlinkSyn
 import { randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { approvedPackage, canonical, digest, packagePath, privateRoot, readPackageJson, requirePackage, writePrivate, type Asset, type CollectionPackage } from './collection-package';
+import { approvedPackage, canonical, digest, packagePath, privateRoot, readPackageJson, requirePackage, writePrivate, destinations, type Asset, type CollectionPackage } from './collection-package';
 
 const origin = 'https://want-foundation.s3.twcstorage.ru';
 const publicRoles = ['final', 'preview', 'social', 'emoji'];
@@ -15,7 +15,8 @@ export interface CollectionStore {
 }
 export function publicCollection(value: CollectionPackage, packageHash: string): PublicCollectionPackage {
   const prefix = `wallpapers/assets/collections/${value.manifest.collection.id}/`;
-  return { schemaVersion: 1, revision: value.revision, packageHash, manifest: value.manifest, stories: value.stories, copy: value.copy,
+  return { schemaVersion: 1, revision: value.revision, packageHash, manifest: value.manifest, stories: value.stories,
+    copy: Object.fromEntries(destinations.map(destination => [destination, value.copy[destination].map(post => ({ title: post.title, description: post.description }))])) as CollectionPackage['copy'],
     assets: value.assets.filter(asset => publicRoles.includes(asset.role)).map(asset => {
       const file = asset.role === 'social' ? `social-${asset.design}.jpg` : asset.role === 'emoji' ? `emoji-${asset.design}.png`
         : `${value.manifest.collection.slug}-${asset.variant}-${asset.design}.${asset.role === 'preview' ? 'webp' : 'png'}`;

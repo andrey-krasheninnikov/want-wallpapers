@@ -25,4 +25,7 @@ async function main() {
     else throw new Error('unknown-collection-command');
   } finally { state.close(); }
 }
-if (import.meta.main) main().catch(() => { console.error('Collection command failed. Check package structure, private permissions, media and approval. No credential values were printed.'); process.exitCode = 1; });
+if (import.meta.main) main().catch(error => {
+  const code = error instanceof Error && /^[a-z][a-z0-9-]*(?::(?:git|gh|bun|python3|check|prepare|deploy))?$/.test(error.message) ? error.message : 'invalid-collection-command';
+  console.error(`Collection command failed: ${code}. No credential values were printed.`); process.exitCode = 1;
+});
