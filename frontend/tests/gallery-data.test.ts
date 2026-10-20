@@ -1,9 +1,20 @@
-import { expect, test, spyOn } from 'bun:test';
+import { afterAll, expect, test, spyOn } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { collections, locales, wallpapers } from '../src/data/catalog';
+import { collections, locales, wallpapers, previewUrl, downloadUrl, s3Url } from '../src/data/catalog';
+import * as previews from '../src/data/previews';
 import { collectionStories } from '../src/data/editorial';
 import { buildGalleryData } from '../src/lib/build-gallery-data';
 import { loadGalleryData, validateGalleryData } from '../src/lib/gallery-data';
+
+// Serialization tests use fixed metadata independently of the local media cache.
+const preview = spyOn(previews, 'previewData').mockImplementation(async (wallpaper, variant) => ({
+  src: previewUrl(wallpaper, variant), width: 1280, height: 720,
+  download: downloadUrl(wallpaper, variant), original: s3Url(wallpaper, variant), originalWidth: 2560, originalHeight: 1440,
+}));
+const cover = spyOn(previews, 'collectionCoverData').mockImplementation(async collection => ({
+  src: `/previews/collection-${collection.id}.webp`, width: 1280, height: 720,
+}));
+afterAll(() => { preview.mockRestore(); cover.mockRestore(); });
 
 for (const locale of locales) test('gallery payload preserves public data: ' + locale, async () => {
   const payload = await buildGalleryData(locale);
