@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import { context, plan } from './generation-fixtures';
 import { draftApi } from '../scripts/generation-api';
+import { DraftStore } from '../scripts/generation-store';
+import { packageArchive } from '../scripts/generation-media';
+import { reviewFields } from '../scripts/generation-review';
 
 const roots: string[] = [];
 const openApis: ReturnType<typeof draftApi>[] = [];
@@ -272,4 +275,29 @@ test('cancellation records final overspend and cannot resume around the cap', as
   expect(complete.body.spentPollen).toBe(11);
   expect(complete.body.errorCode).toBe('actual-pollen-limit-exceeded');
   expect((await request(`/runs/${runId}/decision`,{action:'resume',version:1})).status).toBe(409);
+});
+
+
+test('legacy drafts keep their assets and text but require Japanese before approval and packaging', async () => {
+  const { root, request } = await client();
+  const created = (await request('/runs', { collectionId: '900026-test-light', theme: 'Quiet mountains' })).body;
+  const store = new DraftStore(root);
+  try {
+    const run = store.get(created.runId);
+    run.manifest = plan().manifest;
+    for (const item of [run.manifest.collection, ...run.manifest.wallpapers]) {
+      delete (item.title as Partial<typeof item.title>).ja;
+      delete (item.description as Partial<typeof item.description>).ja;
+    }
+    run.assets = { '1-desktop': { hash: 'preserved', previewHash: 'preserved-preview', width: 3840, height: 2160 } };
+    run.status = 'approved'; run.packageHash = 'legacy'; run.approval = { version: run.version, packageHash: 'legacy', approvedAt: '2026-10-01T00:00:00Z' };
+    store.save(run);
+    expect(JSON.stringify(reviewFields({ ...run, spentPollen: 0, reservedPollen: 0 }, 'http://localhost:5678'))).toContain('ja: Перевод отсутствует');
+    const result = await request(`/runs/${run.runId}/decision`, { action: 'approve', version: run.version, packageHash: run.packageHash, contentChecked: true });
+    expect(result.status).toBe(422); expect(result.body.error.code).toBe('draft-translations-required');
+    const failure = await packageArchive(root, run).then(() => '', error => error.code);
+    expect(failure).toBe('draft-translations-required');
+    expect(store.get(run.runId)).toEqual(run);
+    expect(run.assets['1-desktop']!.hash).toBe('preserved');
+  } finally { store.database.close(); }
 });

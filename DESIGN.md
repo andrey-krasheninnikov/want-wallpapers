@@ -2,7 +2,7 @@
 
 ## Direction
 
-Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and four locales remain authoritative.
+Want Wallpapers is a gallery on neutral graphite planes with a saturated violet accent and one softly blurred violet gradient sphere. Artwork carries the visual weight; compact headings and distinct fills organize navigation, reading and actions. The supplied pixel portfolio reference guides the violet identity. Dark surfaces and soft white text temper its contrast. Want Keep supplies the filled surface language. Want Brief informs depth. Flutter Grades informs the controlled type scale. The existing logo, catalog imagery, public routes and five locales remain authoritative.
 
 The device stage stays beside the home introduction. Home collections form a paginated horizontal carousel. Wallpaper results retain a regular comparison grid. Long supporting content becomes readable sections for stories, works, file formats, licensing and topics. Legal pages place their explanatory continuation inside the same reading surface.
 
@@ -31,7 +31,7 @@ The single source is frontend/src/styles/global.css. Border aliases do not presc
 
 ## Type and geometry
 
-Onest Variable carries headings; Manrope Variable carries body text and controls. Fonts are served locally. Small indices and metadata use system monospace. Chinese text retains PingFang SC and Microsoft YaHei fallbacks.
+Onest Variable carries headings; Manrope Variable carries body text and controls. Fonts are served locally. Small indices and metadata use system monospace. Chinese text retains PingFang SC and Microsoft YaHei fallbacks. Japanese uses locally served Noto Sans JP with strict Japanese line breaking.
 
 - Hero: clamp(2rem, 3.5vw, 3.125rem), 32–50 px, weight 600, leading 1.15.
 - Page heading: clamp(1.75rem, 3.2vw, 2.5rem), 28–40 px, weight 650, leading 1.12.
@@ -63,7 +63,7 @@ Comments follow the viewer and controls, ahead of collection context and long re
 
 Long stories, legal sections and support text use up to three balanced columns with an 18rem minimum and 32 px gaps. The available width and text size determine two or one column. Headings remain outside paragraph flow; comments and form fields keep ordinary reading order. Home and collection-list stories use the same finite horizontal carousel with static covers, localized titles and three-line excerpts. Selecting a card opens its complete localized story in a named dialog, with a collection link, focus trapping, Escape/close and focus restoration. Dialog reading stays in one column up to 65ch; its opaque surface scrolls on narrow screens. Native card links target the collection story without JavaScript. Initial cards remain in HTML; full stories and the shared scene/mosaic catalogue load from one versioned static JSON per locale. Failed data loads retain initial previews and native links. Keep the full story on collection and wallpaper pages.
 
-Language choices show decorative flags beside their existing labels: en 🇬🇧, ru 🇷🇺, zh-cn 🇨🇳 and pt-br 🇧🇷. Flags appear in the selected control, its options and native fallback links; locale identifiers do not change.
+Language choices show decorative flags beside their existing labels: en 🇬🇧, ru 🇷🇺, zh-cn 🇨🇳 pt-br 🇧🇷 and ja 🇯🇵. Flags appear in the selected control, its options and native fallback links; locale identifiers do not change.
 
 The viewer provides previous/next links across the complete catalog in newest-first search order. It wraps at both ends and hides links for a single item. Horizontal swipes and ArrowLeft/ArrowRight on the page outside editing, selection, widgets and open dialogs use the same destinations. Vertical gestures remain page scrolling; tab and text-field keys remain local to their controls.
 

@@ -867,7 +867,14 @@ async fn missing_error_documents_do_not_mask_server_errors_or_api_boundaries(poo
     Arc::get_mut(&mut state.config).unwrap().static_dir =
         std::env::temp_dir().join(format!("want-wallpapers-missing-{}", Uuid::new_v4()));
     let app = router(state);
-    for path in ["/404/", "/ru/missing/", "/zh-cn/404/", "/pt-br/missing/"] {
+    for path in [
+        "/404/",
+        "/ru/missing/",
+        "/zh-cn/404/",
+        "/pt-br/missing/",
+        "/ja/missing/",
+        "/ja/404/",
+    ] {
         let (status, body, _) = request(&app, "GET", path, None, None, None, None).await;
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
         assert_eq!(body, json!({"error":{"code":"unavailable"}}));
@@ -1864,4 +1871,262 @@ async fn collection_publication_upgrade_uses_historical_evidence_including_archi
     );
     assert_eq!(dates["0006-neon-tide"], "2026-10-19T20:13:10.668531Z");
     assert_eq!(dates["0004-test-light"], Value::Null);
+}
+
+async fn before_japanese(pool: &PgPool) {
+    for migration in [
+        include_str!("../migrations/202610040001_schema.sql"),
+        include_str!("../migrations/202610040002_catalog.sql"),
+        include_str!("../migrations/202610130001_publication_dates.sql"),
+        include_str!("../migrations/202610200001_collection_publication_dates.sql"),
+    ] {
+        sqlx::raw_sql(migration).execute(pool).await.unwrap();
+    }
+}
+
+async fn japanese_backfill(pool: &PgPool) -> Result<(), sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    sqlx::raw_sql(include_str!(
+        "../migrations/202610200002_japanese_catalog.sql"
+    ))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await
+}
+
+async fn catalog_rows(pool: &PgPool) -> Vec<Value> {
+    sqlx::query_scalar(
+        "SELECT item FROM (SELECT id,to_jsonb(c) AS item FROM collections c UNION ALL SELECT id,to_jsonb(w) AS item FROM wallpapers w) records ORDER BY id",
+    )
+    .fetch_all(pool)
+    .await
+    .unwrap()
+}
+
+#[sqlx::test(migrations = false)]
+async fn japanese_upgrade_preserves_records_and_existing_translations(pool: PgPool) {
+    before_japanese(&pool).await;
+    let source: Value =
+        serde_json::from_str(include_str!("../../frontend/src/data/catalog-live.json")).unwrap();
+    for collection in source["collections"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["id"].as_str().unwrap() >= "0004")
+    {
+        let mut item = collection.clone();
+        for field in ["title", "description"] {
+            item[field].as_object_mut().unwrap().remove("ja");
+        }
+        sqlx::query("INSERT INTO collections(id,folder_number,slug,data,published_at) VALUES($1,$2,$3,$4,initial_collection_publication($1))")
+            .bind(item["id"].as_str().unwrap()).bind(item["id"].as_str().unwrap().split('-').next().unwrap().parse::<i64>().unwrap())
+            .bind(item["slug"].as_str().unwrap()).bind(&item).execute(&pool).await.unwrap();
+        for wallpaper in source["wallpapers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|wallpaper| wallpaper["collectionId"] == item["id"])
+        {
+            let mut wallpaper = wallpaper.clone();
+            for field in ["title", "description"] {
+                wallpaper[field].as_object_mut().unwrap().remove("ja");
+            }
+            sqlx::query("INSERT INTO wallpapers(id,collection_id,number,data,published_at) VALUES($1,$2,$3,$4,initial_wallpaper_publication($1))")
+                .bind(wallpaper["id"].as_str().unwrap()).bind(wallpaper["collectionId"].as_str().unwrap())
+                .bind(wallpaper["number"].as_i64().unwrap()).bind(&wallpaper).execute(&pool).await.unwrap();
+        }
+    }
+    sqlx::query("UPDATE wallpapers SET archived=true,version=7,data=jsonb_set(data,'{title,ru}',to_jsonb('Сохранённый перевод'::text)) WHERE id='contours-of-silence-1'").execute(&pool).await.unwrap();
+    sqlx::query("UPDATE collections SET data=jsonb_set(jsonb_set(data,'{title,ja}',to_jsonb('既存の日本語'::text)),'{description,ja}',to_jsonb('既存の説明'::text)) WHERE id='0001-contours-of-silence'").execute(&pool).await.unwrap();
+    let before = catalog_rows(&pool).await;
+    assert_eq!(before.len(), 51);
+    japanese_backfill(&pool).await.unwrap();
+    let after = catalog_rows(&pool).await;
+    for mut row in after {
+        let previous = before
+            .iter()
+            .find(|value| value["id"] == row["id"])
+            .unwrap();
+        let changed = previous["data"]["title"].get("ja").is_none();
+        for field in ["title", "description"] {
+            let japanese = row["data"][field]["ja"].as_str().unwrap();
+            assert!(!japanese.is_empty());
+            if let Some(existing) = previous["data"][field].get("ja") {
+                assert_eq!(japanese, existing.as_str().unwrap());
+            } else {
+                row["data"][field].as_object_mut().unwrap().remove("ja");
+            }
+        }
+        assert_eq!(
+            row["version"].as_i64().unwrap(),
+            previous["version"].as_i64().unwrap() + i64::from(changed)
+        );
+        row["version"] = previous["version"].clone();
+        assert_eq!(&row, previous);
+    }
+    let once = catalog_rows(&pool).await;
+    japanese_backfill(&pool).await.unwrap();
+    assert_eq!(catalog_rows(&pool).await, once);
+    let exported = catalog::export(&pool).await.unwrap();
+    assert_eq!(exported.collections.len(), 6);
+    assert_eq!(exported.wallpapers.len(), 44);
+    for collection in exported.collections {
+        collection.folder_number().unwrap();
+    }
+}
+
+#[sqlx::test(migrations = false)]
+async fn japanese_upgrade_rolls_back_unknown_records_and_changed_sources(pool: PgPool) {
+    before_japanese(&pool).await;
+    sqlx::query("UPDATE wallpapers SET data=jsonb_set(data,'{description,en}',to_jsonb('Changed source'::text)) WHERE id='contours-of-silence-1'").execute(&pool).await.unwrap();
+    let before = catalog_rows(&pool).await;
+    let error = japanese_backfill(&pool).await.unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("Japanese translation source changed: contours-of-silence-1")
+    );
+    assert_eq!(catalog_rows(&pool).await, before);
+    let source: Value = serde_json::from_str(include_str!("../data/catalog.json")).unwrap();
+    let original = source["wallpapers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["id"] == "contours-of-silence-1")
+        .unwrap();
+    sqlx::query("UPDATE wallpapers SET data=jsonb_set(data,'{description,en}',$1) WHERE id='contours-of-silence-1'")
+        .bind(&original["description"]["en"]).execute(&pool).await.unwrap();
+    let mut unknown = json!(manifest().collection);
+    for field in ["title", "description"] {
+        unknown[field].as_object_mut().unwrap().remove("ja");
+    }
+    sqlx::query("INSERT INTO collections(id,folder_number,slug,data) VALUES('0004-test-light',4,'test-light',$1)")
+        .bind(unknown).execute(&pool).await.unwrap();
+    let before = catalog_rows(&pool).await;
+    let error = japanese_backfill(&pool).await.unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("Japanese translation required before upgrade: 0004-test-light")
+    );
+    assert_eq!(catalog_rows(&pool).await, before);
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn japanese_catalog_roundtrip_requires_five_locales(pool: PgPool) {
+    let input = manifest();
+    assert_eq!(
+        catalog::import_manifest(&pool, &input, CatalogActor::Token)
+            .await
+            .unwrap(),
+        "created"
+    );
+    assert_eq!(
+        catalog::import_manifest(&pool, &input, CatalogActor::Token)
+            .await
+            .unwrap(),
+        "unchanged"
+    );
+    let app = router(state(pool.clone()));
+    let mut collection = json!(input.collection);
+    collection["title"]["ja"] = json!("編集した日本語の題名");
+    let version: i64 = sqlx::query_scalar("SELECT version FROM collections WHERE id=$1")
+        .bind(&input.collection.id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let (status, _, _) = request(
+        &app,
+        "PUT",
+        "/api/v1/admin/catalog/collections",
+        Some(json!({"item":collection,"version":version})),
+        None,
+        None,
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let mut wallpaper = json!(input.wallpapers[0]);
+    wallpaper["description"]["ja"] = json!("保存された日本語の説明。");
+    let (status, _, _) = request(
+        &app,
+        "PUT",
+        "/api/v1/admin/catalog/wallpapers",
+        Some(json!({"item":wallpaper,"version":1})),
+        None,
+        None,
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    for (path, item) in [("collections", &collection), ("wallpapers", &wallpaper)] {
+        let mut legacy = item.clone();
+        legacy["title"].as_object_mut().unwrap().remove("ja");
+        let (status, _, _) = request(
+            &app,
+            "PUT",
+            &format!("/api/v1/admin/catalog/{path}"),
+            Some(json!({"item":legacy,"version":2})),
+            None,
+            None,
+            Some(TOKEN),
+        )
+        .await;
+        assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    }
+    let exported = catalog::export(&pool).await.unwrap();
+    assert_eq!(
+        exported
+            .collections
+            .iter()
+            .find(|item| item.id == input.collection.id)
+            .unwrap()
+            .title["ja"],
+        "編集した日本語の題名"
+    );
+    assert_eq!(
+        exported
+            .wallpapers
+            .iter()
+            .find(|item| item.id == input.wallpapers[0].id)
+            .unwrap()
+            .description["ja"],
+        "保存された日本語の説明。"
+    );
+    for invalid in [Value::Null, json!(""), json!("a".repeat(201)), json!(42)] {
+        let mut value = json!(input);
+        value["collection"]["title"]["ja"] = invalid;
+        let (status, _, _) = request(
+            &app,
+            "POST",
+            "/api/v1/admin/catalog/import",
+            Some(value),
+            None,
+            None,
+            Some(TOKEN),
+        )
+        .await;
+        assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    }
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn japanese_public_not_found_uses_localized_document_and_http_status(pool: PgPool) {
+    let app = router(state(pool));
+    for path in ["/ja/missing/", "/ja/404/"] {
+        let response = app
+            .clone()
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_eq!(
+            response.headers()["cache-control"],
+            "public, max-age=0, must-revalidate"
+        );
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let text = std::str::from_utf8(&body).unwrap();
+        assert!(text.contains("lang=\"ja\""));
+        assert!(text.contains("このページは見つかりません。"));
+    }
 }

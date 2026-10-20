@@ -31,7 +31,7 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       <div className="flex shrink-0 items-center gap-2">
         <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
           <SelectTrigger aria-label={text.language} className="h-11! w-auto min-w-0 gap-2 rounded-pill px-3 sm:px-4 bg-secondary shadow-none hover:bg-accent">
-            <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
+            <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'ja' ? '日本語' : locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
           </SelectTrigger>
           <SelectContent><SelectGroup>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11"><span aria-hidden="true">{languageFlags[value as Locale]}</span>{title}</SelectItem>)}</SelectGroup></SelectContent>
         </Select>

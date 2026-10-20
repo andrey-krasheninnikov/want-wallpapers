@@ -11,13 +11,14 @@
     "test:ui": "bunx --bun playwright test",
     "catalog:pull": "bun scripts/catalog-pull.ts",
     "catalog:add": "bun scripts/catalog-add.ts",
-    "test": "bun test tests/gallery-data.test.ts tests/home-mosaic.test.ts tests/wallpaper-navigation.test.ts tests/seo-validation.test.ts tests/catalog-search.test.ts tests/search-filters.test.ts tests/catalog-add.test.ts tests/collection-covers.test.ts tests/privacy.test.ts tests/privacy-runtime.test.ts tests/advertising.test.ts tests/generation-draft.test.ts && bun tests/privacy-sdk.mjs",
+    "test": "bun test tests/i18n.test.ts tests/gallery-data.test.ts tests/home-mosaic.test.ts tests/wallpaper-navigation.test.ts tests/seo-validation.test.ts tests/catalog-search.test.ts tests/search-filters.test.ts tests/catalog-add.test.ts tests/collection-covers.test.ts tests/privacy.test.ts tests/privacy-runtime.test.ts tests/advertising.test.ts tests/generation-draft.test.ts && bun tests/privacy-sdk.mjs",
     "test:ui-kit": "bunx --bun playwright test --config playwright.ui-kit.config.ts"
   },
   "dependencies": {
     "@astrojs/react": "^4",
     "@astrojs/sitemap": "^3.6.0",
     "@fontsource-variable/manrope": "^5.2.8",
+    "@fontsource-variable/noto-sans-jp": "5.3.1",
     "@fontsource-variable/onest": "5.3.1",
     "@google/model-viewer": "4.4.0",
     "@tailwindcss/vite": "^4",

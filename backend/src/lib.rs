@@ -81,6 +81,7 @@ pub fn router(state: AppState) -> Router {
         .route("/ru/404/", get(not_found))
         .route("/zh-cn/404/", get(not_found))
         .route("/pt-br/404/", get(not_found))
+        .route("/ja/404/", get(not_found))
         .with_state(state.clone());
     let not_found_service = Router::new().fallback(not_found).with_state(state.clone());
     let fallback = ServeDir::new(&state.config.static_dir).fallback(not_found_service);
@@ -97,6 +98,7 @@ fn not_found_route(path: &str) -> &'static str {
         Some("ru") => "/ru/404/",
         Some("zh-cn") => "/zh-cn/404/",
         Some("pt-br") => "/pt-br/404/",
+        Some("ja") => "/ja/404/",
         _ => "/404/",
     }
 }
