@@ -85,7 +85,8 @@ def wait_ready():
     deadline = time.monotonic() + 90
     while True:
         try:
-            if json.loads(https('/health/ready')) == {'status': 'ok'}:
+            response = json.loads(https('/health/ready'))
+            if isinstance(response, dict) and response.get('status') == 'ok':
                 return
         except (DeployError, ValueError):
             pass
