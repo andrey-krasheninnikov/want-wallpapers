@@ -28,15 +28,6 @@ DO $$ BEGIN
             WHERE namespace.nspname='public' AND acl.grantee IN (0,worker.oid) AND acl.is_grantable
         )
         AND NOT EXISTS (
-            SELECT 1 FROM pg_catalog.pg_attribute attribute JOIN pg_catalog.pg_class relation ON relation.oid=attribute.attrelid
-            JOIN pg_catalog.pg_namespace namespace ON namespace.oid=relation.relnamespace, LATERAL aclexplode(attribute.attacl) acl
-            WHERE namespace.nspname='public' AND acl.grantee IN (0,worker.oid) AND acl.is_grantable
-        )
-        AND NOT EXISTS (
-            SELECT 1 FROM pg_catalog.pg_proc function JOIN pg_catalog.pg_namespace namespace ON namespace.oid=function.pronamespace
-            WHERE namespace.nspname='public' AND function.prosecdef AND has_function_privilege(worker.oid,function.oid,'EXECUTE')
-        )
-        AND NOT EXISTS (
             SELECT 1 FROM (VALUES ('distribution_state'),('distribution_batches'),('distribution_publications'),('distribution_deliveries'),('distribution_attempts')) required(name)
             WHERE NOT has_table_privilege(worker.oid, 'public.'||required.name, 'SELECT')
               OR has_table_privilege(worker.oid, 'public.'||required.name, 'DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')

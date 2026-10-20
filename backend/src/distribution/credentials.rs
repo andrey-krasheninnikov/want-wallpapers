@@ -146,7 +146,17 @@ mod tests {
                 credentials.get("tumblr").unwrap()["refreshToken"],
                 "rotated"
             );
+            let owner_lock = File::open(root.join("credentials.lock")).unwrap();
+            owner_lock.lock().unwrap();
+            assert_eq!(
+                credentials
+                    .replace("tumblr", serde_json::json!({}))
+                    .unwrap_err()
+                    .0,
+                "credentials-busy"
+            );
             fs::write(&path, b"{}").unwrap();
+            drop(owner_lock);
             assert_eq!(
                 credentials
                     .replace("tumblr", serde_json::json!({}))

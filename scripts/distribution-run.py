@@ -98,9 +98,11 @@ def run(arguments):
         require(output.returncode == 0 and len(output.stdout) <= 256 * 1024, 'distribution-output-invalid')
         value = json.loads(output.stdout.splitlines()[-1])
         fields = {'processed', 'memoryPeakBytes', 'selected', 'resolved'}
-        if isinstance(value, list):
-            fields = {'collectionId', 'destination', 'item', 'state', 'attempts', 'payloadHash', 'nextAttemptAt', 'errorCode'}
-            require(all(isinstance(row, dict) and set(row) <= fields for row in value), 'distribution-output-invalid')
+        if isinstance(value, dict) and set(value) == {'deliveries', 'publicationConflicts'}:
+            delivery_fields = {'collectionId', 'destination', 'item', 'state', 'attempts', 'payloadHash', 'nextAttemptAt', 'errorCode'}
+            require(isinstance(value['deliveries'], list) and all(isinstance(row, dict) and set(row) <= delivery_fields for row in value['deliveries']), 'distribution-output-invalid')
+            require(isinstance(value['publicationConflicts'], list) and all(isinstance(row, dict) and set(row) == {'requestId', 'conflicts'}
+                    and isinstance(row['conflicts'], list) and all(isinstance(conflict, dict) and set(conflict) == {'collectionId', 'expectedPayloadHash', 'incomingPayloadHash'} for conflict in row['conflicts']) for row in value['publicationConflicts']), 'distribution-output-invalid')
         else:
             require(isinstance(value, dict) and set(value) <= fields, 'distribution-output-invalid')
         print(json.dumps(value))

@@ -308,6 +308,7 @@ mod tests {
         ));
         assert!(matches!(reply(403).rejection(), Some(Outcome::Blocked(_))));
         assert!(matches!(reply(503).rejection(), Some(Outcome::Unknown(_))));
+        assert!(matches!(reply(302).rejection(), Some(Outcome::Blocked(_))));
         assert!(reply(200).rejection().is_none());
     }
     #[test]

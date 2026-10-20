@@ -145,7 +145,10 @@ pub async fn command(arguments: &[String]) -> Result<Value> {
     let store = connect().await?;
     if arguments == ["status"] {
         let rows = sqlx::query("SELECT collection_id,destination,item,state,generation,payload_hash,next_attempt_at::text,error_code FROM public.distribution_deliveries ORDER BY collection_id DESC,destination,item LIMIT 500").fetch_all(&store.0).await.map_err(|_| Error("distribution-database"))?;
-        return Ok(Value::Array(rows.iter().map(|row| json!({"collectionId":row.get::<String,_>("collection_id"),"destination":row.get::<String,_>("destination"),"item":row.get::<String,_>("item"),"state":row.get::<String,_>("state"),"attempts":row.get::<i64,_>("generation"),"payloadHash":row.get::<String,_>("payload_hash"),"nextAttemptAt":row.get::<String,_>("next_attempt_at"),"errorCode":row.get::<Option<String>,_>("error_code")})).collect()));
+        let deliveries = Value::Array(rows.iter().map(|row| json!({"collectionId":row.get::<String,_>("collection_id"),"destination":row.get::<String,_>("destination"),"item":row.get::<String,_>("item"),"state":row.get::<String,_>("state"),"attempts":row.get::<i64,_>("generation"),"payloadHash":row.get::<String,_>("payload_hash"),"nextAttemptAt":row.get::<String,_>("next_attempt_at"),"errorCode":row.get::<Option<String>,_>("error_code")})).collect());
+        let conflicts: Vec<Value> = sqlx::query_scalar("SELECT jsonb_build_object('requestId',request_id,'conflicts',jsonb_build_array(conflict)) FROM public.distribution_batches CROSS JOIN LATERAL jsonb_array_elements(publication_conflicts) AS expanded(conflict) ORDER BY ingested_at DESC,conflict->>'collectionId' LIMIT 100")
+            .fetch_all(&store.0).await.map_err(|_| Error("distribution-database"))?;
+        return Ok(json!({"deliveries":deliveries,"publicationConflicts":conflicts}));
     }
     let mut lock = store
         .0

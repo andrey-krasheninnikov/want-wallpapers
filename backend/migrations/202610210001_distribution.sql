@@ -9,6 +9,7 @@ CREATE TABLE public.distribution_batches (
     file_hash text NOT NULL CHECK (file_hash ~ '^[0-9a-f]{64}$'),
     receipt jsonb NOT NULL CHECK (jsonb_typeof(receipt) = 'object'),
     verified_at bigint NOT NULL CHECK (verified_at > 0),
+    publication_conflicts jsonb NOT NULL DEFAULT '[]' CHECK (jsonb_typeof(publication_conflicts) = 'array'),
     ingested_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 CREATE TABLE public.distribution_publications (

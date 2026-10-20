@@ -88,11 +88,15 @@ def evidence(active, records, image):
     return {key: record[key] for key in ('requestId', 'tag', 'sourceSha', 'indexDigest', 'revision', 'architecture', 'state', 'stage', 'backupVerified')}
 
 
-def publications(metadata, identities):
+def publications(metadata, catalogue):
+    require(isinstance(catalogue, dict) and isinstance(catalogue.get('collections'), list)
+            and isinstance(catalogue.get('wallpapers'), list), 'distribution-invalid-catalogue')
+    identities = [value['id'] for value in catalogue['collections']]
     require(isinstance(identities, list) and 0 < len(identities) <= 1000 and len(set(identities)) == len(identities)
             and all(isinstance(value, str) and re.fullmatch(r'[0-9]+-[a-z0-9]+(?:-[a-z0-9]+)*', value) for value in identities),
             'distribution-invalid-catalogue')
     require(isinstance(metadata, dict) and metadata.get('schemaVersion') == 1 and isinstance(metadata.get('collections'), list), 'distribution-invalid-build-metadata')
+    require('catalogueIds' not in metadata or sorted(metadata['catalogueIds']) == sorted(identities), 'distribution-package-catalogue-mismatch')
     packages = {}
     for value in metadata['collections']:
         require(isinstance(value, dict) and set(value) == {'schemaVersion', 'revision', 'packageHash', 'manifest', 'stories', 'copy', 'assets'}
@@ -119,6 +123,11 @@ def publications(metadata, identities):
                 and all(isinstance(url, str) for url in cover.values())), 'distribution-private-cover-field')
         identifier = value['manifest']['collection']['id']
         require(identifier in identities and identifier not in packages, 'distribution-package-catalogue-mismatch')
+        actual_collection = next(item for item in catalogue['collections'] if item['id'] == identifier)
+        actual_wallpapers = [item for item in catalogue['wallpapers'] if item['collectionId'] == identifier]
+        require(manifest['collection'] == actual_collection
+                and sorted(manifest['wallpapers'], key=lambda item: item['id']) == sorted(actual_wallpapers, key=lambda item: item['id']),
+                'distribution-package-catalogue-mismatch')
         packages[identifier] = value
     return [{'collectionId': identifier, 'package': packages.get(identifier)} for identifier in sorted(identities)]
 
@@ -165,13 +174,10 @@ def main():
         image = docker('image', 'inspect', '--format', '{"id":{{json .Id}},"os":{{json .Os}},"architecture":{{json .Architecture}},"revision":{{json (index .Config.Labels "org.opencontainers.image.revision")}}}', active['imageId'])
         receipt = evidence(active, store.records(), image)
         metadata = copy_json(active['id'], 'runtime-publications.json', optional=True)
-        identities = metadata.get('catalogueIds') if isinstance(metadata, dict) else None
-        if identities is None:
-            catalogue = copy_json(active['id'], 'runtime-catalog.json')
-            identities = [value['id'] for value in catalogue['collections']]
+        catalogue = copy_json(active['id'], 'runtime-catalog.json')
         if metadata is None:
             metadata = {'schemaVersion': 1, 'collections': []}
-        batch = {'schemaVersion': 1, 'verifiedAt': int(time.time()), 'receipt': receipt, 'publications': publications(metadata, identities)}
+        batch = {'schemaVersion': 1, 'verifiedAt': int(time.time()), 'receipt': receipt, 'publications': publications(metadata, catalogue)}
         require(container() == active, 'distribution-app-changed')
         created = save(OUTBOX, batch)
         print(json.dumps({'requestId': receipt['requestId'], 'collections': len(batch['publications']), 'created': created}))

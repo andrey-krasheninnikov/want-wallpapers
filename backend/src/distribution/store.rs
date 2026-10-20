@@ -40,36 +40,43 @@ impl Store {
         if !super::hexadecimal(file_hash, 64) || verified_at == 0 || verified_at > i64::MAX as u64 {
             return Err(Error("invalid-publication-evidence"));
         }
-        let inserted = sqlx::query("INSERT INTO public.distribution_batches(request_id,file_hash,receipt,verified_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING")
-            .bind(request).bind(file_hash).bind(receipt).bind(verified_at as i64).execute(&mut *transaction).await.map_err(|_| Error("distribution-database"))?.rows_affected();
-        let stored: String = sqlx::query_scalar(
+        let stored: Option<String> = sqlx::query_scalar(
             "SELECT file_hash FROM public.distribution_batches WHERE request_id=$1",
         )
         .bind(request)
-        .fetch_one(&mut *transaction)
+        .fetch_optional(&mut *transaction)
         .await
         .map_err(|_| Error("distribution-database"))?;
-        if stored != file_hash {
-            return Err(Error("publication-receipt-conflict"));
-        }
-        if inserted == 0 {
+        if let Some(stored) = stored {
+            if stored != file_hash {
+                return Err(Error("publication-receipt-conflict"));
+            }
             return transaction
                 .commit()
                 .await
                 .map_err(|_| Error("distribution-database"));
         }
+        let mut accepted = Vec::new();
+        let mut conflicts = Vec::new();
         for (id, package_hash, payload) in publications {
             let payload_hash = hash(payload)?;
             let existing = sqlx::query("SELECT payload_hash,package_hash FROM public.distribution_publications WHERE collection_id=$1")
                 .bind(id).fetch_optional(&mut *transaction).await.map_err(|_| Error("distribution-database"))?;
             if let Some(existing) = existing {
-                if existing.get::<String, _>("payload_hash") != payload_hash
+                let expected = existing.get::<String, _>("payload_hash");
+                if expected != payload_hash
                     || existing.get::<Option<String>, _>("package_hash") != *package_hash
                 {
-                    return Err(Error("distribution-publication-conflict"));
+                    conflicts.push(json!({"collectionId":id,"expectedPayloadHash":expected,"incomingPayloadHash":payload_hash}));
                 }
-                continue;
+            } else {
+                accepted.push((id, package_hash, payload, payload_hash));
             }
+        }
+        sqlx::query("INSERT INTO public.distribution_batches(request_id,file_hash,receipt,verified_at,publication_conflicts) VALUES($1,$2,$3,$4,$5)")
+            .bind(request).bind(file_hash).bind(receipt).bind(verified_at as i64).bind(json!(conflicts))
+            .execute(&mut *transaction).await.map_err(|_| Error("distribution-database"))?;
+        for (id, package_hash, payload, payload_hash) in accepted {
             sqlx::query("INSERT INTO public.distribution_publications(collection_id,package_hash,payload_hash,payload,receipt,baseline) VALUES($1,$2,$3,$4,$5,$6)")
                 .bind(id).bind(package_hash).bind(payload_hash).bind(payload).bind(receipt).bind(!initialized)
                 .execute(&mut *transaction).await.map_err(|_| Error("distribution-database"))?;
@@ -221,8 +228,12 @@ impl Store {
         expected_hash: &str,
         receipt: Option<&Value>,
     ) -> Result<()> {
-        if receipt.is_some_and(|value| !value.is_object()) {
-            return Err(Error("invalid-resolution-receipt"));
+        if let Some(value) = receipt {
+            let resolution: super::ResolutionReceipt = serde_json::from_value(value.clone())
+                .map_err(|_| Error("invalid-resolution-receipt"))?;
+            if !resolution.matches(collection, destination, item) {
+                return Err(Error("invalid-resolution-receipt"));
+            }
         }
         let changed = sqlx::query("UPDATE public.distribution_deliveries SET state=$1,remote_receipt=$2,error_code=NULL,next_attempt_at=clock_timestamp(),resolved_at=clock_timestamp() WHERE collection_id=$3 AND destination=$4 AND item=$5 AND payload_hash=$6 AND state='unknown'")
             .bind(if receipt.is_some() { "delivered" } else { "pending" }).bind(receipt).bind(collection).bind(destination).bind(item).bind(expected_hash)

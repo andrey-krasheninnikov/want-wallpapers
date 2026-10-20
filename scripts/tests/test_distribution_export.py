@@ -33,25 +33,29 @@ class ExportTests(unittest.TestCase):
                 module.evidence(dict(self.active, **{field: value}), [self.record], self.image)
 
     def test_old_build_baseline_and_manual_missing_metadata_remain_discoverable(self):
-        values = module.publications({'schemaVersion': 1, 'collections': []}, ['0001-first', '0002-second'])
+        values = module.publications({'schemaVersion': 1, 'collections': []}, {'collections':[{'id':'0001-first'},{'id':'0002-second'}],'wallpapers':[]})
         self.assertEqual(values, [{'collectionId': '0001-first', 'package': None}, {'collectionId': '0002-second', 'package': None}])
         with self.assertRaises(module.DeployError):
-            module.publications({'schemaVersion': 1, 'collections': []}, ['0001-first', '0001-first'])
+            module.publications({'schemaVersion': 1, 'collections': []}, {'collections':[{'id':'0001-first'},{'id':'0001-first'}],'wallpapers':[]})
 
     def test_private_copy_assets_and_foreign_collections_are_rejected(self):
         package = {'schemaVersion': 1, 'revision': 1, 'packageHash': 'f' * 64,
             'manifest': {'collection': {'id': '0007-test'}, 'wallpapers': []}, 'stories': {}, 'copy': {'telegram': [{'title': 'Test', 'description': 'Text'}]}, 'assets': []}
         metadata = {'schemaVersion': 1, 'collections': [package]}
-        self.assertEqual(module.publications(metadata, ['0007-test'])[0]['package']['packageHash'], 'f' * 64)
+        catalogue = {'collections':[{'id':'0007-test'}],'wallpapers':[]}
+        self.assertEqual(module.publications(metadata, catalogue)[0]['package']['packageHash'], 'f' * 64)
         for mutate in [lambda value: value['copy']['telegram'][0].update(privateNotes='private'),
                        lambda value: value['assets'].append({'role': 'native', 'path': 'private.png'}),
-                       lambda value: value['manifest']['collection'].update(privateNotes='private')]:
+                       lambda value: value['manifest']['collection'].update(privateNotes='private'),
+                       lambda value: value['manifest']['collection'].update(title={'en':'Stale title'})]:
             changed = copy.deepcopy(package)
             mutate(changed)
             with self.assertRaises(module.DeployError):
-                module.publications({'schemaVersion': 1, 'collections': [changed]}, ['0007-test'])
+                module.publications({'schemaVersion': 1, 'collections': [changed]}, catalogue)
         with self.assertRaises(module.DeployError):
-            module.publications(metadata, ['0008-other'])
+            module.publications(metadata, {'collections':[{'id':'0008-other'}],'wallpapers':[]})
+        with self.assertRaises(module.DeployError):
+            module.publications(dict(metadata, catalogueIds=['0008-other']), catalogue)
 
 
 if __name__ == '__main__':

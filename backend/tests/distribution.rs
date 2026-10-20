@@ -59,25 +59,42 @@ async fn baseline_repeat_missed_manual_and_payload_conflicts(pool: PgPool) {
             .await
             .is_err()
     );
-    let mut changed = batch(2, &["0001-old"]);
+    let mut changed = batch(2, &["0001-old", "0004-independent"]);
     changed.publications[0].package = Some(
         json!({"schemaVersion":1,"packageHash":"e".repeat(64),"manifest":{"collection":{"id":"0001-old"}}}),
     );
+    changed
+        .ingest(
+            &store,
+            &["telegram".to_owned()].into_iter().collect(),
+            &"c".repeat(64),
+        )
+        .await
+        .unwrap();
+    let conflicts: Value = sqlx::query_scalar(
+        "SELECT publication_conflicts FROM distribution_batches WHERE request_id=$1",
+    )
+    .bind(format!("{:032x}", 2))
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(conflicts.as_array().unwrap().len(), 1);
+    assert_eq!(conflicts[0]["collectionId"], "0001-old");
     assert_eq!(
-        changed
-            .ingest(&store, &BTreeSet::new(), &"c".repeat(64))
-            .await
-            .unwrap_err()
-            .0,
-        "distribution-publication-conflict"
+        count(
+            &pool,
+            "collection_id='0004-independent' AND state='pending'"
+        )
+        .await,
+        2
     );
-    assert!(
-        !store
-            .known_batches()
-            .await
-            .unwrap()
-            .contains_key(&format!("{:032x}", 2))
-    );
+    let original: Value = sqlx::query_scalar(
+        "SELECT payload FROM distribution_publications WHERE collection_id='0001-old'",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(original, json!({"collectionId":"0001-old"}));
     assert_eq!(store.select("0001-old", "tumblr").await.unwrap(), 1);
     assert_eq!(store.select("0001-old", "tumblr").await.unwrap(), 0);
     let mut failed = batch(3, &["0004-failed"]);
@@ -205,6 +222,26 @@ async fn restart_fences_old_attempts_and_requires_explicit_reconciliation(pool: 
             .await
             .is_err()
     );
+    let credentials =
+        json!({"enabled":true,"accessToken":"private-value","refreshToken":"private-value"});
+    assert_eq!(
+        store
+            .resolve(
+                &first.collection_id,
+                &first.destination,
+                &first.item,
+                &hash(&first.payload).unwrap(),
+                Some(&credentials)
+            )
+            .await
+            .unwrap_err()
+            .0,
+        "invalid-resolution-receipt"
+    );
+    assert_eq!(
+        count(&pool, "state='unknown' AND remote_receipt IS NULL").await,
+        1
+    );
     store
         .resolve(
             &first.collection_id,
@@ -271,4 +308,42 @@ async fn worker_grants_exclude_application_data_ddl_and_migrations(pool: PgPool)
             .await
             .is_err()
     );
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn manual_receipt_binds_exact_delivery_and_remote_ids(pool: PgPool) {
+    let store = Store(pool.clone());
+    ingest(&store, 0, &["0001-old"], &[]).await;
+    ingest(&store, 1, &["0002-new"], &["tumblr"]).await;
+    let delivery = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&delivery, Outcome::Unknown("unconfirmed"))
+        .await
+        .unwrap();
+    let mut receipt = json!({"schemaVersion":1,"collectionId":delivery.collection_id,"destination":delivery.destination,"item":delivery.item,"remoteIds":["123456"]});
+    receipt["item"] = json!("wrong");
+    assert!(
+        store
+            .resolve(
+                &delivery.collection_id,
+                &delivery.destination,
+                &delivery.item,
+                &hash(&delivery.payload).unwrap(),
+                Some(&receipt)
+            )
+            .await
+            .is_err()
+    );
+    receipt["item"] = json!(delivery.item);
+    store
+        .resolve(
+            &delivery.collection_id,
+            &delivery.destination,
+            &delivery.item,
+            &hash(&delivery.payload).unwrap(),
+            Some(&receipt),
+        )
+        .await
+        .unwrap();
+    assert_eq!(count(&pool, "state='delivered'").await, 1);
 }

@@ -81,6 +81,32 @@ pub enum Outcome {
     Unknown(&'static str),
     Blocked(&'static str),
 }
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ResolutionReceipt {
+    schema_version: u8,
+    collection_id: String,
+    destination: String,
+    item: String,
+    remote_ids: Vec<String>,
+}
+impl ResolutionReceipt {
+    pub fn matches(&self, collection: &str, destination: &str, item: &str) -> bool {
+        self.schema_version == 1
+            && self.collection_id == collection
+            && self.destination == destination
+            && self.item == item
+            && !self.remote_ids.is_empty()
+            && self.remote_ids.len() <= 200
+            && self.remote_ids.iter().all(|id| {
+                !id.is_empty()
+                    && id.len() <= 160
+                    && id.bytes().all(|byte| {
+                        byte.is_ascii_alphanumeric() || [b'-', b'_', b':', b'.'].contains(&byte)
+                    })
+            })
+    }
+}
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Receipt {
