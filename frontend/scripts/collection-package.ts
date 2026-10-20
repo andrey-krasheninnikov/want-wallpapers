@@ -13,7 +13,7 @@ export type Destination = typeof destinations[number];
 export type Asset = {
   path: string; role: 'native' | 'composition' | 'final' | 'preview' | 'social' | 'emoji' | 'emoji-source';
   design: number; variant?: 'desktop' | 'mobile'; sha256: string; width: number; height: number;
-  source?: string;
+  source?: string; name?: string; emoji?: string;
 };
 export type CollectionPackage = {
   schemaVersion: 1; revision: number; theme: string; manifest: CollectionManifest;
@@ -99,6 +99,12 @@ export async function validatePackage(input: string): Promise<{ root: string; va
     requirePackage(asset && Number.isInteger(asset.design) && asset.design >= 1 && asset.design <= 5
       && ['native', 'composition', 'final', 'preview', 'social', 'emoji', 'emoji-source'].includes(asset.role)
       && /^[a-f0-9]{64}$/.test(asset.sha256), 'invalid-package-asset');
+    if (asset.name !== undefined || asset.emoji !== undefined) {
+      requirePackage(['emoji', 'emoji-source'].includes(asset.role), 'emoji-metadata-role-required');
+      text(asset.name, 80);
+      requirePackage(typeof asset.emoji === 'string' && asset.emoji.length <= 32
+        && new RegExp('^\\p{RGI_Emoji}$', 'v').test(asset.emoji), 'one-unicode-emoji-required');
+    }
     const variantRole = ['native', 'composition', 'final', 'preview'].includes(asset.role);
     requirePackage(variantRole ? ['desktop', 'mobile'].includes(asset.variant ?? '') : asset.variant === undefined, 'invalid-asset-variant');
     const slot = `${asset.role}:${asset.design}:${asset.variant ?? ''}`;
@@ -112,7 +118,11 @@ export async function validatePackage(input: string): Promise<{ root: string; va
     requirePackage(metadata.width === asset.width && metadata.height === asset.height && (metadata.pages ?? 1) === 1, 'asset-dimensions-mismatch');
     requirePackage(metadata.format === (asset.role === 'preview' ? 'webp' : asset.role === 'social' ? 'jpeg' : 'png'), 'invalid-asset-format');
     await image.clone().raw().toBuffer();
-    if (asset.role === 'emoji') requirePackage(asset.width === 100 && asset.height === 100 && metadata.hasAlpha && (await image.stats()).isOpaque === false, 'transparent-emoji-required');
+    if (asset.role === 'emoji') {
+      requirePackage(asset.width === 100 && asset.height === 100 && metadata.hasAlpha && (await image.stats()).isOpaque === false, 'transparent-emoji-required');
+      const source = value.assets.find(item => item.path === asset.source && item.role === 'emoji-source' && item.design === asset.design);
+      requirePackage(source && source.name === asset.name && source.emoji === asset.emoji, 'emoji-metadata-mismatch');
+    }
     if (asset.role === 'final') {
       requirePackage(asset.width === (asset.variant === 'desktop' ? 3840 : 2160) && asset.height === (asset.variant === 'desktop' ? 2160 : 3840), 'final-4k-required');
       const source = value.assets.find(item => item.path === asset.source);

@@ -119,6 +119,7 @@ test('review and command lock reject symlinks without touching outside data', as
 test('pixel quantization extends edges while retaining the exact native file', async () => {
   const value = JSON.parse(original), source = value.assets.find((asset: any) => asset.role === 'native' && asset.variant === 'desktop');
   const path = join(root, source.path), previous = readFileSync(path);
+  const outputs = value.assets.filter((asset: any) => asset.design === 1 && asset.variant === 'desktop' && ['final', 'preview'].includes(asset.role)).map((asset: any) => [join(root, asset.path), readFileSync(join(root, asset.path))] as const);
   const bytes = await sharp({ create: { width: 1672, height: 941, channels: 3, background: '#346756' } }).png().toBuffer();
   writePrivate(path, bytes);
   const composition = join(root, 'compositions/test-light-desktop-1.png');
@@ -126,5 +127,33 @@ test('pixel quantization extends edges while retaining the exact native file', a
     const checked = await prepareMedia(root); expect(readFileSync(path).equals(bytes)).toBe(true);
     const extended = checked.value.assets.find(asset => asset.role === 'composition' && asset.design === 1)!;
     expect([extended.width, extended.height]).toEqual([1680, 945]);
-  } finally { writePrivate(path, previous); writePrivate(join(root, 'package.json'), original); rmSync(composition, { force: true }); }
+  } finally { for (const [output, bytes] of outputs) writePrivate(output, bytes); writePrivate(path, previous); writePrivate(join(root, 'package.json'), original); rmSync(composition, { force: true }); }
+}, 30000);
+
+
+test('emoji names and Unicode bind approval and remain consistent with their source', async () => {
+  const value = JSON.parse(original);
+  for (const asset of value.assets.filter((asset: any) => asset.design === 1 && ['emoji', 'emoji-source'].includes(asset.role))) Object.assign(asset, { name: 'Chrome fern', emoji: '\u{1F33F}' });
+  writePrivate(join(root, 'package.json'), JSON.stringify(value));
+  try {
+    const checked = await prepareMedia(root);
+    expect(checked.value.assets.find(asset => asset.role === 'emoji' && asset.design === 1)?.emoji).toBe('\u{1F33F}');
+    expect(checked.packageHash).not.toBe(digest(canonical(JSON.parse(original))));
+    const html = readFileSync(await reviewPackage(root), 'utf8');
+    expect(html).toContain('Chrome fern'); expect(html).toContain('emoji-light'); expect(html).toContain('width="32"');
+    for (const emoji of ['\u{1F1EF}\u{1F1F5}', '1\uFE0F\u20E3']) {
+      const changed = structuredClone(value);
+      for (const asset of changed.assets.filter((asset: any) => asset.design === 1 && ['emoji', 'emoji-source'].includes(asset.role))) asset.emoji = emoji;
+      writePrivate(join(root, 'package.json'), JSON.stringify(changed));
+      expect((await validatePackage(root)).value.assets.find(asset => asset.role === 'emoji')?.emoji).toBe(emoji);
+    }
+    for (const invalid of ['fern', '\u{1F33F}\u{1F30A}', '\u{1F33F}\u0301', '']) {
+      const changed = structuredClone(value); changed.assets.find((asset: any) => asset.role === 'emoji').emoji = invalid;
+      writePrivate(join(root, 'package.json'), JSON.stringify(changed));
+      await expect(validatePackage(root)).rejects.toThrow('one-unicode-emoji-required');
+    }
+    value.assets.find((asset: any) => asset.role === 'emoji').name = 'Different name';
+    writePrivate(join(root, 'package.json'), JSON.stringify(value));
+    await expect(validatePackage(root)).rejects.toThrow('emoji-metadata-mismatch');
+  } finally { writePrivate(join(root, 'package.json'), original); }
 }, 30000);
