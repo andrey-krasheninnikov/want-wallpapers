@@ -342,7 +342,7 @@
   .feedback-fields { gap: 1.5rem; }
   .feedback-message { min-height: 12rem; }
   .feedback-footer { display: grid; gap: 1rem; margin-top: 1.5rem; }
-  .feedback-submit-row { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .feedback-submit-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .feedback-private { display: flex; align-items: center; gap: .5rem; max-width: 36ch; color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
   .feedback-private svg { width: 18px; height: 18px; flex-shrink: 0; }
   .feedback-status { display: flex; align-items: center; gap: .75rem; color: var(--link); line-height: 1.6; }
@@ -463,12 +463,11 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
   .support-topic h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--link); }
   .support-topic p { margin-top: .75rem; }
   .feedback-support { grid-column: 1 / -1; margin-top: 0; }
-  .feedback-submit-row .ui-button-base { min-width: 180px; font-size: 1rem; }
+  .feedback-submit-row .ui-button-base { width: 100%; min-width: 0; font-size: 1rem; }
   @container support (min-width: 48rem) {
     .support-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
     .support-topic:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
-  @media (max-width: 767px) { .feedback-submit-row .ui-button-base { width: 100%; } }
 }
 
 .public-advertisements { display: flex; justify-content: center; }
