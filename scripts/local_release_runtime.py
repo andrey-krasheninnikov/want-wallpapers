@@ -176,8 +176,7 @@ def registry_auth():
         original = Path(os.environ.get('DOCKER_CONFIG', str(Path.home() / '.docker'))) / 'config.json'
         settings = json.loads(original.read_text()) if original.exists() else {}
         configuration = {'auths': {'ghcr.io': {'auth': base64.b64encode((actor + ':' + token).encode()).decode()}}}
-        if 'cliPluginsExtraDirs' in settings:
-            configuration['cliPluginsExtraDirs'] = settings['cliPluginsExtraDirs']
+        configuration['cliPluginsExtraDirs'] = settings.get('cliPluginsExtraDirs', []) + [str(original.parent / 'cli-plugins')]
         atomic_json(Path(directory) / 'config.json', configuration)
         previous = {key: os.environ.get(key) for key in ('DOCKER_CONFIG', 'DOCKER_HOST', 'DOCKER_CONTEXT')}
         os.environ.update(DOCKER_CONFIG=directory, DOCKER_HOST=endpoint)

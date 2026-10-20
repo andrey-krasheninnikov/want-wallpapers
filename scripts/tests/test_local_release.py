@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from deployment import DeployError, Store, atomic_json
 from local_evidence import required_checks
-from local_release_runtime import Fixtures, execute, validate_ssh
+from local_release_runtime import Fixtures, execute, registry_auth, validate_ssh
 
 spec = importlib.util.spec_from_file_location('local_release_test', ROOT / 'scripts/local-release.py')
 local = importlib.util.module_from_spec(spec)
@@ -194,6 +194,26 @@ class LocalPipelineTests(unittest.TestCase):
                 validate_ssh('private-config')
             with patch('local_release_runtime.run', side_effect=[profile, '']), self.assertRaisesRegex(DeployError, 'host-key-missing'):
                 validate_ssh('private-config')
+
+    def test_private_registry_config_preserves_plugins_without_copying_credentials(self):
+        original = self.root / 'docker'
+        original.mkdir()
+        settings = {'cliPluginsExtraDirs': ['/extra/plugins'], 'credsStore': 'desktop', 'auths': {'private.example': {}}}
+        (original / 'config.json').write_text(json.dumps(settings))
+        context = json.dumps([{'Endpoints': {'docker': {'Host': 'unix:///synthetic/docker.sock'}}}])
+        with patch.dict(os.environ, {'DOCKER_CONFIG': str(original), 'DOCKER_CONTEXT': 'desktop-linux', 'GHCR_TOKEN': 'synthetic-token'}), \
+             patch('local_release_runtime.run', side_effect=['owner', context]):
+            with registry_auth():
+                temporary = Path(os.environ['DOCKER_CONFIG'])
+                private = json.loads((temporary / 'config.json').read_text())
+                self.assertEqual(private['cliPluginsExtraDirs'], ['/extra/plugins', str(original / 'cli-plugins')])
+                self.assertNotIn('credsStore', private)
+                self.assertEqual(set(private['auths']), {'ghcr.io'})
+                self.assertEqual((temporary / 'config.json').stat().st_mode & 0o777, 0o600)
+            self.assertFalse(temporary.exists())
+            self.assertEqual(os.environ['DOCKER_CONFIG'], str(original))
+            self.assertEqual(os.environ['DOCKER_CONTEXT'], 'desktop-linux')
+        self.assertEqual(json.loads((original / 'config.json').read_text()), settings)
 
     def test_test_process_uses_normal_modes_while_its_log_stays_private(self):
         previous = os.umask(0o077)
