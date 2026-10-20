@@ -9,7 +9,7 @@ export default defineConfig({
   testIgnore: [],
   workers: 1,
   fullyParallel: false,
-  outputDir: join(tmpdir(), 'want-wallpapers-advertising', 'results'),
+  outputDir: join(tmpdir(), 'want-wallpapers-ui', 'advertising', 'results'),
   reporter: 'list',
   use: { ...runtime.use, trace: 'off' },
 });
