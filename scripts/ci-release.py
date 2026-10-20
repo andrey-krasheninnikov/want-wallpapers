@@ -77,9 +77,10 @@ def registry(reference, output='--raw'):
     if os.environ.get('WANT_RELEASE_PUBLIC_API') == '1':
         return public_registry(reference, output)
     arguments = ['docker', 'buildx', 'imagetools', 'inspect', reference]
-    arguments += ['--raw'] if output == '--raw' else ['--format', output]
-    value = command(arguments)
-    return value if output == '{{.Manifest.Digest}}' else document(value)
+    template = '{{json .Manifest}}' if output == '{{.Manifest.Digest}}' else output
+    arguments += ['--raw'] if output == '--raw' else ['--format', template]
+    value = document(command(arguments))
+    return digest(value['digest']) if output == '{{.Manifest.Digest}}' else value
 
 
 def public_registry(reference, output):
