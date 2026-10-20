@@ -89,13 +89,18 @@ test('review is local, escaped, RTL aware and distinguishes enlarged output', as
 }, 30000);
 
 
-test('preparation refuses source/output collisions before changing native bytes', async () => {
-  const value = JSON.parse(original), source = value.assets.find((asset: any) => asset.role === 'native' && asset.variant === 'desktop');
-  const path = `public/test-light-desktop-${source.design}.png`, target = join(root, path), previous = readFileSync(target);
-  const native = readFileSync(join(root, source.path)); writePrivate(target, native); source.path = path;
-  writePrivate(join(root, 'package.json'), JSON.stringify(value));
-  try { await expect(prepareMedia(root)).rejects.toThrow('source-output-path-conflict'); expect(readFileSync(target).equals(native)).toBe(true); }
-  finally { writePrivate(target, previous); writePrivate(join(root, 'package.json'), original); }
+test('preparation refuses source/output aliases before changing native bytes', async () => {
+  for (const directory of ['public', 'PUBLIC']) {
+    const value = JSON.parse(original), source = value.assets.find((asset: any) => asset.role === 'native' && asset.variant === 'desktop');
+    const path = `${directory}/test-light-desktop-${source.design}.png`, canonical = join(root, `public/test-light-desktop-${source.design}.png`), previous = readFileSync(canonical);
+    const native = readFileSync(join(root, source.path));
+    // Both spellings address one file on the supported MacBook filesystem.
+    if (directory === 'PUBLIC' && !Bun.file(join(root, 'PUBLIC/test-light-desktop-1.png')).size) continue;
+    writePrivate(canonical, native); source.path = path;
+    writePrivate(join(root, 'package.json'), JSON.stringify(value));
+    try { await expect(prepareMedia(root)).rejects.toThrow('source-output-path-conflict'); expect(readFileSync(canonical).equals(native)).toBe(true); }
+    finally { writePrivate(canonical, previous); writePrivate(join(root, 'package.json'), original); }
+  }
 });
 
 test('review and command lock reject symlinks without touching outside data', async () => {

@@ -32,7 +32,7 @@ export async function prepareMedia(input: string) {
     `public/social-${design}.jpg`, `public/emoji-${design}.png`,
     ...['desktop', 'mobile'].filter(variant => !sources.some(source => source.role === 'composition' && source.design === design && source.variant === variant)).map(variant => `compositions/${slug}-${variant}-${design}.png`),
   ]);
-  requirePackage(sources.every(source => !outputs.includes(source.path)), 'source-output-path-conflict');
+  requirePackage(sources.every(source => !outputs.some(output => output.toLowerCase() === source.path.toLowerCase())), 'source-output-path-conflict');
   outputs.forEach(path => packagePath(root, path));
   for (let design = 1; design <= 5; design++) {
     for (const variant of ['desktop', 'mobile'] as const) {
