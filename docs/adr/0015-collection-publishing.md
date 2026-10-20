@@ -1,4 +1,4 @@
-# 0014 Collection packages and durable distribution
+# 0015 Collection packages and durable distribution
 
 Status: accepted. Extends 0013 for #123.
 

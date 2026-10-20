@@ -58,7 +58,7 @@ export async function prepareMedia(input: string) {
     }
     const source = assets.find(asset => asset.role === 'emoji-source' && asset.design === design);
     requirePackage(source, 'emoji-source-required');
-    await save(`public/emoji-${design}.png`, await sharp(readFileSync(packagePath(root, source.path))).resize(100, 100, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer(), { role: 'emoji', design, source: source.path });
+    await save(`public/emoji-${design}.png`, await sharp(readFileSync(packagePath(root, source.path))).resize(100, 100, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer(), { role: 'emoji', design, source: source.path, ...(source.name === undefined ? {} : { name: source.name, emoji: source.emoji }) });
   }
   value.assets = assets; value.revision++;
   writePrivate(packagePath(root, 'package.json'), JSON.stringify(value, null, 2) + '\n');

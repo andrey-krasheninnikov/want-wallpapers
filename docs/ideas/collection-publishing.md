@@ -18,7 +18,7 @@ The catalogue importer and signed local release path already exist. The previous
 
 ## 4 Architecture
 
-Private preparation produces a provider-independent package. Bun validates and reviews it, then binds approval to its canonical SHA-256. The publisher uploads only public allowlisted files, imports the catalogue and drives the established local release. Server deployment evidence supplies durable publication events. Rust processes independent per-destination delivery intents in PostgreSQL.
+Private preparation uses `wallpaper-concepts` for five text concepts, `wallpaper-pairs` for ten separately composed wallpapers, and `telegram-emoji-pack` for five transparent emoji with retained sources, a manifest, contrast previews and a ZIP. The agreed collection dimensions and private output directory take precedence over skill defaults. This produces a provider-independent package. Bun validates and reviews it, then binds approval to its canonical SHA-256. The publisher uploads only public allowlisted files, imports the catalogue and drives the established local release. Server deployment evidence supplies durable publication events. Rust processes independent per-destination delivery intents in PostgreSQL.
 
 ## 5 Lifecycle
 
