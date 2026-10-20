@@ -38,11 +38,18 @@ pub async fn export(pool: &PgPool) -> Result<Snapshot> {
     sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         .execute(&mut *transaction)
         .await?;
-    let collections = sqlx::query("SELECT c.data, (SELECT count(*) FROM wallpapers w WHERE w.collection_id=c.id AND NOT w.archived) AS count FROM collections c WHERE NOT c.archived ORDER BY c.id").fetch_all(&mut *transaction).await?;
+    let collections = sqlx::query("SELECT c.id,c.data,to_char(c.published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS published_at, (SELECT count(*) FROM wallpapers w WHERE w.collection_id=c.id AND NOT w.archived) AS count FROM collections c WHERE NOT c.archived ORDER BY c.published_at DESC NULLS LAST,c.id COLLATE \"C\" DESC").fetch_all(&mut *transaction).await?;
     let wallpapers: Vec<Value> = sqlx::query_scalar("SELECT w.data FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived ORDER BY w.collection_id,w.number").fetch_all(&mut *transaction).await?;
     let publication_dates = sqlx::query("SELECT w.id,to_char(w.published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS published_at FROM wallpapers w JOIN collections c ON c.id=w.collection_id WHERE NOT w.archived AND NOT c.archived AND w.published_at IS NOT NULL")
         .fetch_all(&mut *transaction).await?.into_iter().map(|row| (row.get::<String, _>("id"), row.get::<String, _>("published_at"))).collect();
     let snapshot = Snapshot {
+        collection_publication_dates: collections
+            .iter()
+            .filter_map(|row| {
+                row.get::<Option<String>, _>("published_at")
+                    .map(|date| (row.get::<String, _>("id"), date))
+            })
+            .collect(),
         publication_dates,
         collections: collections
             .iter()
@@ -70,7 +77,7 @@ pub async fn listing(State(state): State<AppState>, headers: HeaderMap) -> Resul
     sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         .execute(&mut *transaction)
         .await?;
-    let collections = sqlx::query("SELECT data,version,archived FROM collections ORDER BY id")
+    let collections = sqlx::query("SELECT data,version,archived FROM collections ORDER BY published_at DESC NULLS LAST,id COLLATE \"C\" DESC")
         .fetch_all(&mut *transaction)
         .await?;
     let wallpapers =
@@ -118,7 +125,7 @@ pub async fn import_manifest(
         }
         return Err(ApiError::conflict());
     }
-    sqlx::query("INSERT INTO collections(id,folder_number,slug,data) VALUES($1,$2,$3,$4)")
+    sqlx::query("INSERT INTO collections(id,folder_number,slug,data,published_at) VALUES($1,$2,$3,$4,COALESCE(initial_collection_publication($1),transaction_timestamp()))")
         .bind(&manifest.collection.id)
         .bind(manifest.collection.folder_number()?)
         .bind(&manifest.collection.slug)
@@ -230,6 +237,10 @@ pub async fn save_wallpaper(
             return Err(ApiError::invalid());
         }
         let version=sqlx::query_scalar("INSERT INTO wallpapers(id,collection_id,number,data,published_at) VALUES($1,$2,$3,$4,COALESCE(initial_wallpaper_publication($1),transaction_timestamp())) RETURNING version").bind(&w.id).bind(&w.collection_id).bind(w.number).bind(json!(w)).fetch_one(&mut *transaction).await?;
+        if collection.count == 0 {
+            sqlx::query("UPDATE collections SET published_at=COALESCE(published_at,initial_collection_publication(id),transaction_timestamp()) WHERE id=$1")
+                .bind(&w.collection_id).execute(&mut *transaction).await?;
+        }
         sqlx::query("UPDATE collections SET data=jsonb_set(data,'{count}',to_jsonb((data->>'count')::bigint+1)),version=version+1 WHERE id=$1").bind(&w.collection_id).execute(&mut *transaction).await?;
         version
     };

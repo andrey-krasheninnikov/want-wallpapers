@@ -103,3 +103,21 @@ test('glow, wand and confetti respect reduced motion and preserve downloads', as
   await expect(page.locator('.download-confetti')).toHaveCount(18);
   await expect(page.locator('.download-confetti')).toHaveCount(0);
 });
+
+
+for (const locale of locales) {
+  test(`collection listings keep first-publication order: ${locale}`, async ({ page }) => {
+    const prefix = locale === 'en' ? '' : `/${locale}`;
+    const expected = collections.map(item => `${prefix}/collections/${item.slug}/`);
+    expect(collections[0]!.slug).toBe('neon-tide');
+    for (const width of [375, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${prefix}/`);
+      await expect.poll(() => page.locator('[data-collection-carousel] .collection-card-link').evaluateAll(cards => cards.map(card => card.getAttribute('href')))).toEqual(expected);
+      await expect.poll(() => page.locator('[data-editorial] .story-disclosure .long-copy > a').evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(expected);
+      await page.goto(`${prefix}/collections/`);
+      await expect.poll(() => page.locator('.collection-grid .collection-card-link').evaluateAll(cards => cards.map(card => card.getAttribute('href')))).toEqual(expected);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  });
+}
