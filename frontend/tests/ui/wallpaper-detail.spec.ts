@@ -45,6 +45,7 @@ for (const locale of locales) test(`wallpaper composition, portrait fit and lang
       expect(positions.comments.top).toBeGreaterThanOrEqual(positions.stage.bottom);
       expect(await page.locator('[data-editorial]').evaluate(element => element.getBoundingClientRect().top)).toBeGreaterThanOrEqual(positions.comments.bottom);
       if (width < 1024) expect(positions.controls.top).toBeGreaterThanOrEqual(positions.stage.bottom);
+      else if (locale === 'ar') expect(positions.controls.right).toBeLessThan(positions.viewer.left);
       else expect(positions.controls.left).toBeGreaterThan(positions.viewer.right);
       await expect(page.locator('#detail-image')).toHaveCSS('object-fit', 'contain');
       await expect(page.locator('.rating-tile').first()).toHaveCSS('min-height', '56px');
