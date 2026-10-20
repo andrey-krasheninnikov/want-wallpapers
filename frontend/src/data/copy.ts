@@ -150,6 +150,7 @@ export const copy = {
     owner: 'Andrey Krasheninnikov',
   },
   ja: {
+  contactEmail: "メール",
     "recaptchaRejected": "セキュリティ確認に失敗しました。もう一度お試しください。",
     "recaptchaUnavailable": "セキュリティ確認を利用できません。入力内容は保存されています。時間をおいてお試しください。",
     "recaptchaNotice": "このサイトは reCAPTCHA によって保護されており、Google の",

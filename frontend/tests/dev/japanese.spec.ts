@@ -99,4 +99,3 @@ test('Japanese translation tab fits the existing Russian administration', async 
   await page.setViewportSize({ width: 320, height: 900 }); await noOverflow(page);
   await expect(dialog.getByRole('tab', { name: languageLabels.ja, exact: true })).toBeInViewport();
 });
-
