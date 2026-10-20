@@ -1,10 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
-import type { Locale } from '../../src/data/catalog';
+import { locales } from '../../src/data/catalog';
 import { adsterraUnits } from '../../src/lib/advertising-providers';
 
-const locales = ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[];
 const preferenceKey = 'want-cookie-preferences-v2';
 
 async function network(page: Page, country: string | null, mode = 'ready') {
@@ -123,6 +123,7 @@ test('stored denial and cross-tab withdrawal stop further requests', async ({ pa
 
 for (const mode of ['error', 'empty']) test(`failed and empty placements keep native downloads available: ${mode}`, async ({ page }) => {
   const calls = await network(page, 'US', mode);
+  await page.unroute('**/api/v1/**');
   await page.goto('/wallpapers/contours-of-silence-1/'); await ready(page);
   await expect.poll(() => calls.length).toBe(1);
   if (mode === 'empty') await page.waitForTimeout(10500);
@@ -133,6 +134,14 @@ for (const mode of ['error', 'empty']) test(`failed and empty placements keep na
     expect((await download).suggestedFilename()).toBe(`contours-of-silence-1-${variant}.png`);
   }
   await expect(page.locator('h1')).toBeVisible(); expect(calls).toHaveLength(1);
+  await page.getByRole('radio', { name: copy.en.plus, exact: true }).click();
+  await expect(page.getByText(interfaceCopy.en.ratingSaved)).toBeVisible();
+  await page.getByRole('textbox', { name: interfaceCopy.en.commentTitle, exact: true }).fill(`Advertisement ${mode} does not block comments.`);
+  await page.getByRole('button', { name: copy.en.commentSubmit, exact: true }).click();
+  await expect(page.getByText(`Advertisement ${mode} does not block comments.`, { exact: true })).toBeVisible();
+  await page.goto('/search/?q=ice'); await ready(page);
+  await expect(page.getByRole('searchbox')).toHaveValue('ice');
+  await expect(page.locator('[data-wallpaper-card]').first()).toBeVisible();
 });
 
 test('Yandex navigation reloads, preserves variant and never gates downloads', async ({ page }) => {
@@ -196,4 +205,86 @@ test('repeated initialization cannot cancel a pending Yandex loader', async ({ p
   release();
   await expect(page.locator('[data-test-yandex]')).toHaveCount(1);
   await expect(page.locator('script[data-page-id="20177169"]')).toHaveCount(1);
+});
+
+
+test('Rust CSP permits selected providers only on known advertising documents', async ({ page, request }) => {
+  for (const locale of locales) {
+    for (const route of ['/wallpapers/contours-of-silence-1/', '/search/']) {
+      const response = await request.get(localPath(locale, route));
+      expect(response.status()).toBe(200);
+      const policy = response.headers()['content-security-policy'];
+      expect(policy).toContain('https://bauval.org'); expect(policy).toContain('https://yandex.ru');
+      expect(policy).toContain("object-src 'none'"); expect(policy).toContain("frame-ancestors 'none'");
+    }
+    for (const route of ['/', '/404/', '/unknown/']) {
+      const response = await request.get(localPath(locale, route));
+      const policy = response.headers()['content-security-policy'];
+      expect(policy).not.toContain('bauval.org'); expect(policy).not.toContain('yandex.ru');
+      expect(policy).not.toContain("'unsafe-eval'"); expect(policy).not.toContain('script-src-elem');
+    }
+  }
+  for (const route of ['/admin/login/', '/api/v1/catalog', '/ui-kit/']) {
+    const policy = (await request.get(route)).headers()['content-security-policy'];
+    expect(policy).not.toContain('bauval.org'); expect(policy).not.toContain('yandex.ru');
+  }
+  await network(page, 'US');
+  const response = await page.goto('/search/'); await ready(page);
+  expect(response!.headers()['content-security-policy']).toContain('https://bauval.org');
+  await expect(page.locator('iframe[data-test-unit]')).toHaveCount(1);
+  await page.evaluate(() => {
+    const violations: string[] = [];
+    Object.assign(window, { advertisingCspViolations: violations });
+    document.addEventListener('securitypolicyviolation', event => violations.push(event.blockedURI));
+    const script = document.createElement('script'); script.src = 'https://ads.invalid/unapproved.js'; document.head.append(script);
+  });
+  await expect.poll(() => page.evaluate(() => Reflect.get(window, 'advertisingCspViolations'))).toContain('https://ads.invalid/unapproved.js');
+});
+
+test('without JavaScript native PNG bytes and filenames remain available', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  try {
+    const page = await context.newPage();
+    const calls = await network(page, 'US');
+    await page.goto('/ja/wallpapers/contours-of-silence-1/');
+    const url = page.url(), download = page.waitForEvent('download');
+    await page.locator('a[download]').first().click();
+    const saved = await download;
+    expect(saved.suggestedFilename()).toBe('contours-of-silence-1-desktop.png');
+    expect(await readFile((await saved.path())!)).toEqual(await readFile(new URL('../../public/downloads/contours-of-silence-1-desktop.png', import.meta.url)));
+    expect(page.url()).toBe(url); expect(calls).toEqual([]);
+  } finally { await context.close(); }
+});
+
+test('blocked Yandex leaves the artwork and PNG download available', async ({ page }) => {
+  const calls = await network(page, 'RU', 'error');
+  await page.goto('/wallpapers/contours-of-silence-1/'); await ready(page);
+  await expect.poll(() => calls).toEqual(['yandex:context']);
+  await expect(page.locator('script[data-page-id="20177169"], iframe[data-test-unit]')).toHaveCount(0);
+  await expect(page.locator('#wallpaper-view')).toBeVisible();
+  const download = page.waitForEvent('download'); await page.locator('#download-link').click();
+  expect((await download).suggestedFilename()).toBe('contours-of-silence-1-desktop.png');
+});
+
+for (const country of ['RU', 'US']) test(`withdrawal during a pending provider script prevents later advertising: ${country}`, async ({ page }) => {
+  const calls = await network(page, country);
+  const scriptUrl = country === 'RU' ? 'https://yandex.ru/ads/system/context.js' : `https://bauval.org/22/${adsterraUnits.leaderboard.key}`;
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  const requests: string[] = [];
+  await page.route(scriptUrl, async route => {
+    requests.push(route.request().url()); await pending;
+    await route.fulfill({ contentType: 'text/javascript', body: 'window.testLateAdvertising = true;' }).catch(() => {});
+  });
+  try {
+    await page.goto('/wallpapers/contours-of-silence-1/', { waitUntil: 'domcontentloaded' }); await ready(page);
+    await expect.poll(() => requests.length).toBe(1);
+    await page.locator('[data-cookie-settings]').click();
+    const reload = page.waitForEvent('domcontentloaded');
+    await page.getByRole('dialog').getByRole('button', { name: copy.en.essentialOnly, exact: true }).click();
+    await reload; await ready(page); release();
+    await expect(page.locator('script[data-page-id="20177169"], iframe[data-test-unit]')).toHaveCount(0);
+    expect(requests).toHaveLength(1); expect(calls).toEqual([]);
+    expect(await page.evaluate(() => (window as Window & { testLateAdvertising?: boolean }).testLateAdvertising)).toBeUndefined();
+  } finally { release(); }
 });

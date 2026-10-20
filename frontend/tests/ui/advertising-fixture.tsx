@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client';
 import WallpaperAdvertisements from '../../src/components/WallpaperAdvertisements';
 import WallpaperView from '../../src/components/WallpaperView';
 import CookieConsent from '../../src/components/CookieConsent';
-import { wallpapers, type Locale } from '../../src/data/catalog';
+import { locales, wallpapers } from '../../src/data/catalog';
 import { copy } from '../../src/data/copy';
 import type { MountAdvertisement } from '../../src/lib/advertising';
 
@@ -12,7 +12,7 @@ declare global {
   }
 }
 const query = new URLSearchParams(location.search);
-const locale = (['ru', 'en', 'zh-cn', 'pt-br'].find((value) => value === query.get('locale')) ?? 'en') as Locale;
+const locale = locales.find((value) => value === query.get('locale')) ?? 'en';
 const mode = query.get('mode');
 const pending: (() => void)[] = [];
 const fixture = window.advertisingFixture = { calls: [] as string[], cancelled: [] as string[], disposed: [] as string[], finish: () => { for (const finish of pending.splice(0)) finish(); }, unmount: () => {} };
