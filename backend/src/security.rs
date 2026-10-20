@@ -165,7 +165,7 @@ fn content_security_policy(
     let connect = if admin {
         "'self'"
     } else {
-        "'self' https://ipwho.is https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://firebaseinstallations.googleapis.com"
+        "'self' https://ipwho.is https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com"
     };
     let captcha = !admin || path == "/admin/login/";
     let captcha_scripts = if captcha {
@@ -205,6 +205,28 @@ fn content_security_policy(
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    #[test]
+    fn analytics_configuration_is_allowed_only_on_public_pages() {
+        for path in ["/", "/ru/", "/ar/wallpapers/contours-of-silence-1/"] {
+            let csp = content_security_policy(path, StatusCode::OK, true, &HashMap::new());
+            let connect = csp
+                .split("; ")
+                .find(|value| value.starts_with("connect-src "))
+                .unwrap();
+            assert!(connect.contains("https://firebase.googleapis.com "));
+            assert!(
+                !csp.split("; ")
+                    .find(|value| value.starts_with("script-src "))
+                    .unwrap()
+                    .contains("firebase.googleapis.com")
+            );
+        }
+        for path in ["/admin", "/admin/", "/admin/login/"] {
+            let csp = content_security_policy(path, StatusCode::OK, true, &HashMap::new());
+            assert!(!csp.contains("firebase.googleapis.com"));
+        }
+    }
 
     #[test]
     fn advertising_csp_is_limited_to_known_successful_public_documents() {
