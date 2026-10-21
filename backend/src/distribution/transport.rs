@@ -170,6 +170,7 @@ impl Asset {
         Ok(bytes)
     }
 }
+#[derive(Clone)]
 pub struct Prepared {
     pub manifest: Manifest,
     pub title: String,
@@ -184,7 +185,14 @@ pub fn prepare(delivery: &Delivery) -> Result<Prepared> {
     manifest
         .validate()
         .map_err(|_| Error("invalid-publication-manifest"))?;
-    if manifest.collection.id != delivery.collection_id || manifest.wallpapers.len() != 5 {
+    if manifest.collection.id != delivery.collection_id
+        || manifest.wallpapers.len() != 5
+        || manifest
+            .wallpapers
+            .iter()
+            .enumerate()
+            .any(|(index, wallpaper)| wallpaper.number != index as i64 + 1)
+    {
         return Err(Error("invalid-publication-manifest"));
     }
     let index = delivery.payload["index"]
@@ -282,12 +290,21 @@ pub async fn check_page(client: &Client, prepared: &Prepared, collection: bool) 
     }
     Ok(url)
 }
-pub async fn send(delivery: &Delivery, credentials: &mut Credentials, _store: &Store) -> Outcome {
+pub async fn send(delivery: &Delivery, credentials: &mut Credentials, store: &Store) -> Outcome {
     if credentials.get(&delivery.destination).is_none() {
         return Outcome::Blocked("destination-not-configured");
     }
-    if let Err(error) = prepare(delivery) {
-        return Outcome::Blocked(error.0);
+    let prepared = match prepare(delivery) {
+        Ok(prepared) => prepared,
+        Err(error) => return Outcome::Blocked(error.0),
+    };
+    if delivery.destination == "telegram" {
+        return tokio::time::timeout(
+            Duration::from_secs(60),
+            super::telegram::send(delivery, credentials, store, &prepared),
+        )
+        .await
+        .unwrap_or(Outcome::Unknown("telegram-attempt-interrupted"));
     }
     Outcome::Blocked("destination-adapter-unavailable")
 }

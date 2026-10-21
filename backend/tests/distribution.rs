@@ -421,3 +421,118 @@ async fn metadata_conflict_blocks_only_unsent_work_and_cannot_be_selected(pool: 
             .is_err()
     );
 }
+
+#[sqlx::test(migrations = "./migrations")]
+async fn telegram_serializes_shared_set_and_only_reconciles_unknown_emoji(pool: PgPool) {
+    let store = Store(pool.clone());
+    ingest(&store, 0, &["0001-old"], &[]).await;
+    ingest(&store, 1, &["0002-first", "0003-next"], &["telegram"]).await;
+    let first = store.claim().await.unwrap().unwrap();
+    assert_eq!(
+        (&*first.collection_id, &*first.item),
+        ("0002-first", "emoji-set")
+    );
+    assert!(!first.reconcile);
+    assert!(store.claim().await.unwrap().is_none());
+    store
+        .finish(
+            &first,
+            Outcome::Progress(json!({"schemaVersion":1,"stage":"prepared"})),
+        )
+        .await
+        .unwrap();
+    let first = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&first, Outcome::Unknown("worker-interrupted"))
+        .await
+        .unwrap();
+    assert!(store.claim().await.unwrap().is_none());
+    sqlx::query("UPDATE distribution_deliveries SET next_attempt_at=clock_timestamp() WHERE state='unknown'").execute(&pool).await.unwrap();
+    let recovered = store.claim().await.unwrap().unwrap();
+    assert!(recovered.reconcile);
+    assert_eq!(
+        recovered.progress,
+        json!({"schemaVersion":1,"stage":"prepared"})
+    );
+    assert_eq!(recovered.generation, first.generation + 1);
+    store
+        .finish(&recovered, Outcome::Delivered(json!({"native":"receipt"})))
+        .await
+        .unwrap();
+    assert_eq!(
+        store.telegram_receipt(Some("0002-first")).await.unwrap(),
+        Some(json!({"native":"receipt"}))
+    );
+    let next = store.claim().await.unwrap().unwrap();
+    assert_eq!(next.item, "album");
+    store
+        .finish(&next, Outcome::Unknown("telegram-album-timeout"))
+        .await
+        .unwrap();
+    sqlx::query("UPDATE distribution_deliveries SET next_attempt_at=clock_timestamp() WHERE state='unknown'").execute(&pool).await.unwrap();
+    let second = store.claim().await.unwrap().unwrap();
+    assert_eq!(
+        (&*second.collection_id, &*second.item),
+        ("0003-next", "emoji-set")
+    );
+    store
+        .finish(&second, Outcome::Progress(json!({"stage":"uploads"})))
+        .await
+        .unwrap();
+    let second = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&second, Outcome::Unknown("worker-interrupted"))
+        .await
+        .unwrap();
+    let mut changed = batch(2, &["0003-next"]);
+    changed.publications[0].package.as_mut().unwrap()["packageHash"] = json!("e".repeat(64));
+    changed
+        .ingest(&store, &BTreeSet::new(), &"d".repeat(64))
+        .await
+        .unwrap();
+    sqlx::query("UPDATE distribution_deliveries SET next_attempt_at=clock_timestamp() WHERE state='unknown'").execute(&pool).await.unwrap();
+    assert!(store.claim().await.unwrap().is_none());
+    assert_eq!(count(&pool, "item='album' AND state='unknown'").await, 1);
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn shared_set_receipt_follows_delivery_order_including_selected_older_collections(
+    pool: PgPool,
+) {
+    let store = Store(pool.clone());
+    ingest(&store, 0, &["0001-baseline"], &[]).await;
+    ingest(&store, 1, &["0002-recent"], &["telegram"]).await;
+    let recent = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&recent, Outcome::Delivered(json!({"set":"recent"})))
+        .await
+        .unwrap();
+    store.select("0001-baseline", "telegram").await.unwrap();
+    let older = store.claim().await.unwrap().unwrap();
+    // The recent album can be selected before the older set, without changing set history.
+    let older = if older.item == "album" {
+        store
+            .finish(&older, Outcome::Blocked("test-album-held"))
+            .await
+            .unwrap();
+        store.claim().await.unwrap().unwrap()
+    } else {
+        older
+    };
+    assert_eq!(
+        (&*older.collection_id, &*older.item),
+        ("0001-baseline", "emoji-set")
+    );
+    store
+        .finish(&older, Outcome::Delivered(json!({"set":"latest"})))
+        .await
+        .unwrap();
+    assert_eq!(
+        store.telegram_receipt(None).await.unwrap(),
+        Some(json!({"set":"latest"}))
+    );
+    assert_eq!(
+        store.telegram_receipt(Some("0002-recent")).await.unwrap(),
+        Some(json!({"set":"recent"}))
+    );
+}

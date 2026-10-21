@@ -2,6 +2,7 @@
 pub mod credentials;
 pub mod runtime;
 pub mod store;
+mod telegram;
 pub mod transport;
 pub const DESTINATIONS: [(&str, u8); 5] = [
     ("telegram", 2),
@@ -73,6 +74,7 @@ pub struct Delivery {
     pub generation: i64,
     pub payload: Value,
     pub progress: Value,
+    pub reconcile: bool,
 }
 pub enum Outcome {
     Delivered(Value),
