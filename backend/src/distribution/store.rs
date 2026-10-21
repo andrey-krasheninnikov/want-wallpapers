@@ -112,7 +112,24 @@ impl Store {
             .begin()
             .await
             .map_err(|_| Error("distribution-database"))?;
-        let row = sqlx::query("WITH candidate AS MATERIALIZED (SELECT collection_id,destination,item FROM public.distribution_deliveries WHERE state IN ('pending','retryable') AND next_attempt_at <= clock_timestamp() ORDER BY next_attempt_at,collection_id,destination,item FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE public.distribution_deliveries delivery SET state='in-flight',generation=delivery.generation+1,claim_id=$1,claimed_at=clock_timestamp(),error_code=NULL FROM candidate WHERE (delivery.collection_id,delivery.destination,delivery.item)=(candidate.collection_id,candidate.destination,candidate.item) RETURNING delivery.*")
+        let row = sqlx::query("WITH candidate AS MATERIALIZED (
+SELECT delivery.collection_id,delivery.destination,delivery.item,delivery.state='unknown' AS reconcile
+FROM public.distribution_deliveries delivery JOIN public.distribution_publications publication USING(collection_id)
+WHERE (delivery.state IN ('pending','retryable') OR (delivery.state='unknown' AND delivery.destination='telegram' AND delivery.item='emoji-set'))
+AND delivery.next_attempt_at <= clock_timestamp()
+AND NOT EXISTS(SELECT 1 FROM public.distribution_batches batch WHERE batch.publication_conflicts @> jsonb_build_array(jsonb_build_object('collectionId',delivery.collection_id)))
+AND (delivery.destination<>'telegram' OR delivery.item<>'album' OR EXISTS(
+    SELECT 1 FROM public.distribution_deliveries emoji WHERE emoji.collection_id=delivery.collection_id AND emoji.destination='telegram' AND emoji.item='emoji-set' AND emoji.state='delivered'))
+AND (delivery.destination<>'telegram' OR delivery.item<>'emoji-set' OR NOT EXISTS(
+    SELECT 1 FROM public.distribution_deliveries earlier JOIN public.distribution_publications prior USING(collection_id)
+    WHERE earlier.destination='telegram' AND earlier.item='emoji-set'
+    AND earlier.collection_id<>delivery.collection_id
+    AND ((earlier.state<>'delivered' AND earlier.progress<>'{}'::jsonb) OR earlier.state='in-flight'
+        OR (delivery.progress='{}'::jsonb AND earlier.state IN ('pending','retryable','unknown')
+            AND (prior.created_at,earlier.collection_id)<(publication.created_at,delivery.collection_id)))))
+ORDER BY delivery.next_attempt_at,delivery.collection_id,delivery.destination,delivery.item FOR UPDATE OF delivery SKIP LOCKED LIMIT 1)
+UPDATE public.distribution_deliveries delivery SET state='in-flight',generation=delivery.generation+1,claim_id=$1,claimed_at=clock_timestamp(),error_code=NULL
+FROM candidate WHERE (delivery.collection_id,delivery.destination,delivery.item)=(candidate.collection_id,candidate.destination,candidate.item) RETURNING delivery.*,candidate.reconcile")
             .bind(claim).fetch_optional(&mut *transaction).await.map_err(|_| Error("distribution-database"))?;
         let Some(row) = row else {
             return Ok(None);
@@ -125,6 +142,7 @@ impl Store {
             generation: row.get("generation"),
             payload: row.get("payload"),
             progress: row.get("progress"),
+            reconcile: row.get("reconcile"),
         };
         sqlx::query("INSERT INTO public.distribution_attempts(claim_id,collection_id,destination,item,generation,outcome) VALUES($1,$2,$3,$4,$5,'in-flight')")
             .bind(claim).bind(&delivery.collection_id).bind(&delivery.destination).bind(&delivery.item).bind(delivery.generation)
@@ -134,6 +152,11 @@ impl Store {
             .await
             .map_err(|_| Error("distribution-database"))?;
         Ok(Some(delivery))
+    }
+
+    pub async fn telegram_receipt(&self, collection: Option<&str>) -> Result<Option<Value>> {
+        sqlx::query_scalar("SELECT delivery.remote_receipt FROM public.distribution_deliveries delivery JOIN public.distribution_publications publication USING(collection_id) LEFT JOIN public.distribution_attempts attempt ON (attempt.collection_id,attempt.destination,attempt.item,attempt.generation)=(delivery.collection_id,delivery.destination,delivery.item,delivery.generation) AND attempt.outcome='delivered' WHERE delivery.destination='telegram' AND delivery.item='emoji-set' AND delivery.state='delivered' AND ($1::text IS NULL OR delivery.collection_id=$1) ORDER BY COALESCE(attempt.finished_at,delivery.resolved_at,publication.created_at) DESC,delivery.collection_id DESC LIMIT 1")
+            .bind(collection).fetch_optional(&self.0).await.map_err(|_| Error("distribution-database"))
     }
 
     pub async fn finish(&self, delivery: &Delivery, outcome: Outcome) -> Result<()> {
@@ -153,7 +176,7 @@ impl Store {
                 seconds,
                 Some(code),
             ),
-            Outcome::Unknown(code) => ("unknown", None, delivery.progress.clone(), 0, Some(code)),
+            Outcome::Unknown(code) => ("unknown", None, delivery.progress.clone(), 300, Some(code)),
             Outcome::Blocked(code) => ("blocked", None, delivery.progress.clone(), 0, Some(code)),
         };
         if delay > i32::MAX as u32

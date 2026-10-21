@@ -39,3 +39,6 @@ A durable, allowlisted record binding the actually running healthy image to a su
 
 **Delivery intent**:
 One immutable collection/destination/item payload tracked independently through attempts, remote receipts and reconciliation.
+
+**Managed emoji set**:
+The single Telegram custom emoji set whose creation intent, owner ID, bot permission, complete membership and per-collection upload identities are retained in native distribution receipts.
