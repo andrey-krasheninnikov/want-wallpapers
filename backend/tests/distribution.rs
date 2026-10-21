@@ -7,7 +7,7 @@ fn batch(number: u8, ids: &[&str]) -> Batch {
     serde_json::from_value(json!({"schemaVersion":1,"verifiedAt":u64::from(number)+1,"receipt":{
         "requestId":format!("{number:032x}"),"tag":"v1.10.0","sourceSha":"a".repeat(40),"revision":"a".repeat(40),
         "indexDigest":format!("sha256:{}","b".repeat(64)),"architecture":"amd64","state":"succeeded","stage":"complete","backupVerified":true},
-        "publications":ids.iter().map(|id|json!({"collectionId":id,"package":null})).collect::<Vec<_>>() })).unwrap()
+        "publications":ids.iter().map(|id|json!({"collectionId":id,"package":if ["0001-old","0003-manual"].contains(id) {Value::Null} else {json!({"schemaVersion":1,"packageHash":"0".repeat(64),"manifest":{"collection":{"id":id}}})}})).collect::<Vec<_>>() })).unwrap()
 }
 async fn ingest(store: &Store, number: u8, ids: &[&str], configured: &[&str]) {
     batch(number, ids)
@@ -34,7 +34,7 @@ async fn count(pool: &PgPool, condition: &str) -> i64 {
 #[sqlx::test(migrations = "./migrations")]
 async fn baseline_repeat_missed_manual_and_payload_conflicts(pool: PgPool) {
     let store = Store(pool.clone());
-    ingest(&store, 0, &["0001-old"], &["telegram"]).await;
+    ingest(&store, 0, &["0001-old", "0000-baseline"], &["telegram"]).await;
     assert_eq!(count(&pool, "true").await, 0);
     ingest(
         &store,
@@ -43,8 +43,8 @@ async fn baseline_repeat_missed_manual_and_payload_conflicts(pool: PgPool) {
         &["telegram"],
     )
     .await;
-    assert_eq!(count(&pool, "state='pending'").await, 4);
-    assert_eq!(count(&pool, "state='blocked'").await, 32);
+    assert_eq!(count(&pool, "state='pending'").await, 2);
+    assert_eq!(count(&pool, "state='blocked'").await, 34);
     ingest(
         &store,
         1,
@@ -94,9 +94,16 @@ async fn baseline_repeat_missed_manual_and_payload_conflicts(pool: PgPool) {
     .fetch_one(&pool)
     .await
     .unwrap();
-    assert_eq!(original, json!({"collectionId":"0001-old"}));
-    assert_eq!(store.select("0001-old", "tumblr").await.unwrap(), 1);
-    assert_eq!(store.select("0001-old", "tumblr").await.unwrap(), 0);
+    assert_eq!(
+        original,
+        json!({"collectionId":"0001-old","blockedReason":"publication-package-unverified"})
+    );
+    assert_eq!(store.select("0000-baseline", "tumblr").await.unwrap(), 1);
+    assert_eq!(store.select("0000-baseline", "tumblr").await.unwrap(), 0);
+    assert_eq!(
+        store.select("0001-old", "tumblr").await.unwrap_err().0,
+        "publication-metadata-conflict"
+    );
     let mut failed = batch(3, &["0004-failed"]);
     failed.receipt.state = "failed".into();
     assert!(
@@ -346,4 +353,71 @@ async fn manual_receipt_binds_exact_delivery_and_remote_ids(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(count(&pool, "state='delivered'").await, 1);
+}
+
+#[sqlx::test(migrations = "./migrations")]
+async fn metadata_conflict_blocks_only_unsent_work_and_cannot_be_selected(pool: PgPool) {
+    let store = Store(pool.clone());
+    ingest(&store, 0, &["0001-old"], &[]).await;
+    ingest(&store, 1, &["0002-new"], &["pinterest"]).await;
+    let delivered = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&delivered, Outcome::Delivered(json!({"remoteId":"one"})))
+        .await
+        .unwrap();
+    let unknown = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&unknown, Outcome::Unknown("unconfirmed"))
+        .await
+        .unwrap();
+    let mut changed = batch(2, &["0002-new", "0004-independent"]);
+    changed.publications[0].package.as_mut().unwrap()["packageHash"] = json!("f".repeat(64));
+    changed
+        .ingest(
+            &store,
+            &["tumblr".to_owned()].into_iter().collect(),
+            &"c".repeat(64),
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        count(&pool, "collection_id='0002-new' AND state='delivered'").await,
+        1
+    );
+    assert_eq!(
+        count(&pool, "collection_id='0002-new' AND state='unknown'").await,
+        1
+    );
+    assert_eq!(
+        count(
+            &pool,
+            "collection_id='0002-new' AND state IN ('pending','retryable')"
+        )
+        .await,
+        0
+    );
+    assert_eq!(
+        count(
+            &pool,
+            "collection_id='0004-independent' AND state='pending'"
+        )
+        .await,
+        1
+    );
+    assert_eq!(
+        store.select("0002-new", "pinterest").await.unwrap_err().0,
+        "publication-metadata-conflict"
+    );
+    assert!(
+        store
+            .resolve(
+                &unknown.collection_id,
+                &unknown.destination,
+                &unknown.item,
+                &hash(&unknown.payload).unwrap(),
+                None
+            )
+            .await
+            .is_err()
+    );
 }

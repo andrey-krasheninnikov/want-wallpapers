@@ -204,7 +204,7 @@ impl Batch {
                     publication.collection_id.clone(),
                     package_hash,
                     publication.package.clone().unwrap_or_else(
-                        || serde_json::json!({"collectionId": publication.collection_id}),
+                        || serde_json::json!({"collectionId": publication.collection_id,"blockedReason":"publication-package-unverified"}),
                     ),
                 )
             })

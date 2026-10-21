@@ -88,6 +88,37 @@ def evidence(active, records, image):
     return {key: record[key] for key in ('requestId', 'tag', 'sourceSha', 'indexDigest', 'revision', 'architecture', 'state', 'stage', 'backupVerified')}
 
 
+def public_package(value, identifier, catalogue):
+    require(isinstance(value, dict) and set(value) == {'schemaVersion', 'revision', 'packageHash', 'manifest', 'stories', 'copy', 'assets'}
+            and value.get('schemaVersion') == 1 and re.fullmatch(r'[0-9a-f]{64}', value.get('packageHash', '')), 'distribution-invalid-package')
+    require(isinstance(value['copy'], dict) and set(value['copy']) <= {'telegram', 'pinterest', 'tumblr', 'deviantart', 'flickr'}
+            and all(isinstance(posts, list) and all(isinstance(post, dict) and set(post) == {'title', 'description'}
+                and all(isinstance(text, str) for text in post.values()) for post in posts) for posts in value['copy'].values()), 'distribution-private-copy-field')
+    require(isinstance(value['assets'], list) and all(isinstance(asset, dict)
+            and set(asset) <= {'role', 'design', 'variant', 'sha256', 'width', 'height', 'name', 'emoji', 'file', 'url'}
+            and asset.get('role') in ('final', 'preview', 'social', 'emoji') for asset in value['assets']), 'distribution-private-asset-field')
+    manifest = value['manifest']
+    require(isinstance(manifest, dict) and set(manifest) == {'collection', 'wallpapers'}
+            and set(manifest['collection']) <= {'id', 'slug', 'count', 'title', 'description', 'videoCover'}
+            and all(set(item) == {'id', 'slug', 'collection', 'collectionId', 's3Folder', 'fileStem', 'number', 'category', 'tags', 'title', 'description'} for item in manifest['wallpapers']), 'distribution-private-manifest-field')
+    localized = [manifest['collection'].get(field, {}) for field in ('title', 'description')]
+    localized += [item.get(field, {}) for item in manifest['wallpapers'] for field in ('title', 'description')]
+    require(all(isinstance(texts, dict) and set(texts) <= {'en', 'ru', 'zh-cn', 'pt-br', 'ja', 'ar'}
+                and all(isinstance(text, str) for text in texts.values()) for texts in localized), 'distribution-private-localized-field')
+    require(isinstance(value['stories'], dict) and set(value['stories']) <= {'en', 'ru', 'zh-cn', 'pt-br', 'ja', 'ar'}
+            and all(isinstance(paragraphs, list) and all(isinstance(text, str) for text in paragraphs)
+                for paragraphs in value['stories'].values()), 'distribution-private-story-field')
+    cover = manifest['collection'].get('videoCover')
+    require(cover is None or (isinstance(cover, dict) and set(cover) == {'src', 'poster'}
+            and all(isinstance(url, str) for url in cover.values())), 'distribution-private-cover-field')
+    actual_collection = next(item for item in catalogue['collections'] if item['id'] == identifier)
+    actual_wallpapers = [item for item in catalogue['wallpapers'] if item['collectionId'] == identifier]
+    require(manifest['collection'] == actual_collection
+            and sorted(manifest['wallpapers'], key=lambda item: item['id']) == sorted(actual_wallpapers, key=lambda item: item['id']),
+            'distribution-package-catalogue-mismatch')
+    return value
+
+
 def publications(metadata, catalogue):
     require(isinstance(catalogue, dict) and isinstance(catalogue.get('collections'), list)
             and isinstance(catalogue.get('wallpapers'), list), 'distribution-invalid-catalogue')
@@ -96,39 +127,23 @@ def publications(metadata, catalogue):
             and all(isinstance(value, str) and re.fullmatch(r'[0-9]+-[a-z0-9]+(?:-[a-z0-9]+)*', value) for value in identities),
             'distribution-invalid-catalogue')
     require(isinstance(metadata, dict) and metadata.get('schemaVersion') == 1 and isinstance(metadata.get('collections'), list), 'distribution-invalid-build-metadata')
-    require('catalogueIds' not in metadata or sorted(metadata['catalogueIds']) == sorted(identities), 'distribution-package-catalogue-mismatch')
     packages = {}
+    seen = set()
     for value in metadata['collections']:
-        require(isinstance(value, dict) and set(value) == {'schemaVersion', 'revision', 'packageHash', 'manifest', 'stories', 'copy', 'assets'}
-                and value.get('schemaVersion') == 1 and re.fullmatch(r'[0-9a-f]{64}', value.get('packageHash', '')), 'distribution-invalid-package')
-        require(isinstance(value['copy'], dict) and set(value['copy']) <= {'telegram', 'pinterest', 'tumblr', 'deviantart', 'flickr'}
-                and all(isinstance(posts, list) and all(isinstance(post, dict) and set(post) == {'title', 'description'}
-                    and all(isinstance(text, str) for text in post.values()) for post in posts) for posts in value['copy'].values()), 'distribution-private-copy-field')
-        require(isinstance(value['assets'], list) and all(isinstance(asset, dict)
-                and set(asset) <= {'role', 'design', 'variant', 'sha256', 'width', 'height', 'name', 'emoji', 'file', 'url'}
-                and asset.get('role') in ('final', 'preview', 'social', 'emoji') for asset in value['assets']), 'distribution-private-asset-field')
-        manifest = value['manifest']
-        require(isinstance(manifest, dict) and set(manifest) == {'collection', 'wallpapers'}
-                and set(manifest['collection']) <= {'id', 'slug', 'count', 'title', 'description', 'videoCover'}
-                and all(set(item) == {'id', 'slug', 'collection', 'collectionId', 's3Folder', 'fileStem', 'number', 'category', 'tags', 'title', 'description'} for item in manifest['wallpapers']), 'distribution-private-manifest-field')
-        localized = [manifest['collection'].get(field, {}) for field in ('title', 'description')]
-        localized += [item.get(field, {}) for item in manifest['wallpapers'] for field in ('title', 'description')]
-        require(all(isinstance(texts, dict) and set(texts) <= {'en', 'ru', 'zh-cn', 'pt-br', 'ja', 'ar'}
-                    and all(isinstance(text, str) for text in texts.values()) for texts in localized), 'distribution-private-localized-field')
-        require(isinstance(value['stories'], dict) and set(value['stories']) <= {'en', 'ru', 'zh-cn', 'pt-br', 'ja', 'ar'}
-                and all(isinstance(paragraphs, list) and all(isinstance(text, str) for text in paragraphs)
-                    for paragraphs in value['stories'].values()), 'distribution-private-story-field')
-        cover = manifest['collection'].get('videoCover')
-        require(cover is None or (isinstance(cover, dict) and set(cover) == {'src', 'poster'}
-                and all(isinstance(url, str) for url in cover.values())), 'distribution-private-cover-field')
-        identifier = value['manifest']['collection']['id']
-        require(identifier in identities and identifier not in packages, 'distribution-package-catalogue-mismatch')
-        actual_collection = next(item for item in catalogue['collections'] if item['id'] == identifier)
-        actual_wallpapers = [item for item in catalogue['wallpapers'] if item['collectionId'] == identifier]
-        require(manifest['collection'] == actual_collection
-                and sorted(manifest['wallpapers'], key=lambda item: item['id']) == sorted(actual_wallpapers, key=lambda item: item['id']),
-                'distribution-package-catalogue-mismatch')
-        packages[identifier] = value
+        identifier = None
+        try:
+            identifier = value['manifest']['collection']['id']
+            if identifier not in identities:
+                continue
+            if identifier in seen:
+                packages[identifier] = None
+                continue
+            seen.add(identifier)
+            require('catalogueIds' not in metadata or identifier in metadata['catalogueIds'], 'distribution-package-catalogue-mismatch')
+            packages[identifier] = public_package(value, identifier, catalogue)
+        except (DeployError, KeyError, TypeError):
+            if identifier in identities:
+                packages[identifier] = None
     return [{'collectionId': identifier, 'package': packages.get(identifier)} for identifier in sorted(identities)]
 
 

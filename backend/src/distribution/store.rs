@@ -68,6 +68,8 @@ impl Store {
                     || existing.get::<Option<String>, _>("package_hash") != *package_hash
                 {
                     conflicts.push(json!({"collectionId":id,"expectedPayloadHash":expected,"incomingPayloadHash":payload_hash}));
+                    sqlx::query("UPDATE public.distribution_deliveries SET state='blocked',error_code='publication-payload-conflict' WHERE collection_id=$1 AND state IN ('pending','retryable','blocked')")
+                        .bind(id).execute(&mut *transaction).await.map_err(|_| Error("distribution-database"))?;
                 }
             } else {
                 accepted.push((id, package_hash, payload, payload_hash));
@@ -203,6 +205,15 @@ impl Store {
             .begin()
             .await
             .map_err(|_| Error("distribution-database"))?;
+        sqlx::query("SELECT initialized FROM public.distribution_state WHERE singleton FOR UPDATE")
+            .execute(&mut *transaction)
+            .await
+            .map_err(|_| Error("distribution-database"))?;
+        let conflict: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM public.distribution_batches WHERE publication_conflicts @> $1::jsonb)")
+            .bind(json!([{"collectionId":collection}])).fetch_one(&mut *transaction).await.map_err(|_|Error("distribution-database"))?;
+        if conflict {
+            return Err(Error("publication-metadata-conflict"));
+        }
         let payload: Value = sqlx::query_scalar(
             "SELECT payload FROM public.distribution_publications WHERE collection_id=$1 FOR SHARE",
         )
@@ -210,6 +221,9 @@ impl Store {
         .fetch_one(&mut *transaction)
         .await
         .map_err(|_| Error("publication-not-found"))?;
+        if payload.get("blockedReason").is_some() {
+            return Err(Error("publication-package-unverified"));
+        }
         enqueue(&mut transaction, collection, &payload, destination, false).await?;
         let changed = sqlx::query("UPDATE public.distribution_deliveries SET state='pending',error_code=NULL,next_attempt_at=clock_timestamp(),selected_at=clock_timestamp() WHERE collection_id=$1 AND destination=$2 AND state='blocked'")
             .bind(collection).bind(destination).execute(&mut *transaction).await.map_err(|_| Error("distribution-database"))?.rows_affected();
@@ -235,8 +249,8 @@ impl Store {
                 return Err(Error("invalid-resolution-receipt"));
             }
         }
-        let changed = sqlx::query("UPDATE public.distribution_deliveries SET state=$1,remote_receipt=$2,error_code=NULL,next_attempt_at=clock_timestamp(),resolved_at=clock_timestamp() WHERE collection_id=$3 AND destination=$4 AND item=$5 AND payload_hash=$6 AND state='unknown'")
-            .bind(if receipt.is_some() { "delivered" } else { "pending" }).bind(receipt).bind(collection).bind(destination).bind(item).bind(expected_hash)
+        let changed = sqlx::query("UPDATE public.distribution_deliveries SET state=$1,remote_receipt=$2,error_code=NULL,next_attempt_at=clock_timestamp(),resolved_at=clock_timestamp() WHERE collection_id=$3 AND destination=$4 AND item=$5 AND payload_hash=$6 AND state='unknown' AND ($2::jsonb IS NOT NULL OR NOT EXISTS(SELECT 1 FROM public.distribution_batches WHERE publication_conflicts @> $7::jsonb))")
+            .bind(if receipt.is_some() { "delivered" } else { "pending" }).bind(receipt).bind(collection).bind(destination).bind(item).bind(expected_hash).bind(json!([{"collectionId":collection}]))
             .execute(&self.0).await.map_err(|_| Error("distribution-database"))?.rows_affected();
         if changed != 1 {
             return Err(Error("resolution-intent-mismatch"));
@@ -257,6 +271,9 @@ async fn enqueue(
         .find(|(name, _)| *name == destination)
         .ok_or(Error("invalid-destination"))?
         .1;
+    let unavailable = payload.get("blockedReason").and_then(Value::as_str)
+        == Some("publication-package-unverified");
+    let ready = ready && !unavailable;
     for index in 1..=count {
         let item = if destination == "telegram" {
             if index == 1 {
@@ -271,7 +288,7 @@ async fn enqueue(
         let payload_hash = hash(&intent)?;
         sqlx::query("INSERT INTO public.distribution_deliveries(collection_id,destination,item,payload_hash,payload,state,error_code) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING")
             .bind(id).bind(destination).bind(&item).bind(&payload_hash).bind(intent)
-            .bind(if ready { "pending" } else { "blocked" }).bind(if ready { None } else { Some("destination-not-configured") })
+            .bind(if ready { "pending" } else { "blocked" }).bind(if ready { None } else { Some(if unavailable {"publication-package-unverified"} else {"destination-not-configured"}) })
             .execute(&mut **transaction).await.map_err(|_| Error("distribution-database"))?;
         let saved: String = sqlx::query_scalar("SELECT payload_hash FROM public.distribution_deliveries WHERE collection_id=$1 AND destination=$2 AND item=$3")
             .bind(id).bind(destination).bind(item).fetch_one(&mut **transaction).await.map_err(|_| Error("distribution-database"))?;

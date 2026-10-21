@@ -50,12 +50,15 @@ class ExportTests(unittest.TestCase):
                        lambda value: value['manifest']['collection'].update(title={'en':'Stale title'})]:
             changed = copy.deepcopy(package)
             mutate(changed)
-            with self.assertRaises(module.DeployError):
-                module.publications({'schemaVersion': 1, 'collections': [changed]}, catalogue)
-        with self.assertRaises(module.DeployError):
-            module.publications(metadata, {'collections':[{'id':'0008-other'}],'wallpapers':[]})
-        with self.assertRaises(module.DeployError):
-            module.publications(dict(metadata, catalogueIds=['0008-other']), catalogue)
+            self.assertIsNone(module.publications({'schemaVersion': 1, 'collections': [changed]}, catalogue)[0]['package'])
+        self.assertIsNone(module.publications(metadata, {'collections':[{'id':'0008-other'}],'wallpapers':[]})[0]['package'])
+        self.assertIsNone(module.publications(dict(metadata, catalogueIds=['0008-other']), catalogue)[0]['package'])
+        fresh = copy.deepcopy(package)
+        fresh['manifest']['collection']['id'] = '0008-fresh'
+        catalogue['collections'] = [{'id':'0007-test','title':{'en':'Edited'}},{'id':'0008-fresh'}]
+        values = module.publications({'schemaVersion':1,'collections':[package,fresh]},catalogue)
+        self.assertIsNone(values[0]['package'])
+        self.assertEqual(values[1]['package'],fresh)
 
 
 if __name__ == '__main__':
