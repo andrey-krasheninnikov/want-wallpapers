@@ -99,8 +99,10 @@ def public_package(value, identifier, catalogue):
             and asset.get('role') in ('final', 'preview', 'social', 'emoji') for asset in value['assets']), 'distribution-private-asset-field')
     manifest = value['manifest']
     require(isinstance(manifest, dict) and set(manifest) == {'collection', 'wallpapers'}
+            and isinstance(manifest['collection'], dict)
             and set(manifest['collection']) <= {'id', 'slug', 'count', 'title', 'description', 'videoCover'}
-            and all(set(item) == {'id', 'slug', 'collection', 'collectionId', 's3Folder', 'fileStem', 'number', 'category', 'tags', 'title', 'description'} for item in manifest['wallpapers']), 'distribution-private-manifest-field')
+            and isinstance(manifest['wallpapers'], list)
+            and all(isinstance(item, dict) and set(item) == {'id', 'slug', 'collection', 'collectionId', 's3Folder', 'fileStem', 'number', 'category', 'tags', 'title', 'description'} for item in manifest['wallpapers']), 'distribution-private-manifest-field')
     localized = [manifest['collection'].get(field, {}) for field in ('title', 'description')]
     localized += [item.get(field, {}) for item in manifest['wallpapers'] for field in ('title', 'description')]
     require(all(isinstance(texts, dict) and set(texts) <= {'en', 'ru', 'zh-cn', 'pt-br', 'ja', 'ar'}

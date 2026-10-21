@@ -47,7 +47,8 @@ class ExportTests(unittest.TestCase):
         for mutate in [lambda value: value['copy']['telegram'][0].update(privateNotes='private'),
                        lambda value: value['assets'].append({'role': 'native', 'path': 'private.png'}),
                        lambda value: value['manifest']['collection'].update(privateNotes='private'),
-                       lambda value: value['manifest']['collection'].update(title={'en':'Stale title'})]:
+                       lambda value: value['manifest']['collection'].update(title={'en':'Stale title'}),
+                       lambda value: value['manifest'].update(wallpapers=[['id','slug','collection','collectionId','s3Folder','fileStem','number','category','tags','title','description']])]:
             changed = copy.deepcopy(package)
             mutate(changed)
             self.assertIsNone(module.publications({'schemaVersion': 1, 'collections': [changed]}, catalogue)[0]['package'])
@@ -57,6 +58,11 @@ class ExportTests(unittest.TestCase):
         fresh['manifest']['collection']['id'] = '0008-fresh'
         catalogue['collections'] = [{'id':'0007-test','title':{'en':'Edited'}},{'id':'0008-fresh'}]
         values = module.publications({'schemaVersion':1,'collections':[package,fresh]},catalogue)
+        self.assertIsNone(values[0]['package'])
+        self.assertEqual(values[1]['package'],fresh)
+        malformed = copy.deepcopy(package)
+        malformed['manifest']['wallpapers'] = [['id','slug','collection','collectionId','s3Folder','fileStem','number','category','tags','title','description']]
+        values = module.publications({'schemaVersion':1,'collections':[malformed,fresh]},catalogue)
         self.assertIsNone(values[0]['package'])
         self.assertEqual(values[1]['package'],fresh)
 
