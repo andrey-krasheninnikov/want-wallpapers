@@ -411,8 +411,8 @@ async fn malformed_media_and_permission_identity_fail_before_public_write() {
     assert!(!transparent_png(&png(100, Some(255))));
     assert!(!transparent_png(&png(100, Some(0))));
     assert!(transparent_png(&png(100, Some(128))));
-    assert!(!jpeg(b"invalid"));
-    assert!(jpeg(&photo()));
+    assert!(!transport::social_jpeg(b"invalid"));
+    assert!(transport::social_jpeg(&photo()));
 }
 #[tokio::test]
 async fn album_requires_verified_emoji_plain_captions_and_response_identity() {

@@ -1,5 +1,6 @@
 //! Durable publication and delivery state for the private distribution command.
 pub mod credentials;
+mod pinterest;
 pub mod runtime;
 pub mod store;
 mod telegram;
