@@ -97,6 +97,12 @@ def public_package(value, identifier, catalogue):
     require(isinstance(value['assets'], list) and all(isinstance(asset, dict)
             and set(asset) <= {'role', 'design', 'variant', 'sha256', 'width', 'height', 'name', 'emoji', 'file', 'url'}
             and asset.get('role') in ('final', 'preview', 'social', 'emoji') for asset in value['assets']), 'distribution-private-asset-field')
+    for asset in value['assets']:
+        require(isinstance(asset.get('file'), str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,179}', asset['file'])
+                and asset.get('url') == 'https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/' + identifier + '/' + asset['file']
+                and isinstance(asset.get('sha256'), str) and re.fullmatch(r'[0-9a-f]{64}', asset['sha256'])
+                and type(asset.get('design')) is int and 1 <= asset['design'] <= 5
+                and all(type(asset.get(size)) is int and asset[size] > 0 for size in ('width', 'height')), 'distribution-invalid-public-asset')
     manifest = value['manifest']
     require(isinstance(manifest, dict) and set(manifest) == {'collection', 'wallpapers'}
             and isinstance(manifest['collection'], dict)

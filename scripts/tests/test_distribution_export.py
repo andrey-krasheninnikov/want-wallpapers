@@ -46,6 +46,7 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(module.publications(metadata, catalogue)[0]['package']['packageHash'], 'f' * 64)
         for mutate in [lambda value: value['copy']['telegram'][0].update(privateNotes='private'),
                        lambda value: value['assets'].append({'role': 'native', 'path': 'private.png'}),
+                       lambda value: value['assets'].append({'role':'social','file':'social-1.jpg','url':'https://user:private@other.test/media.jpg','sha256':'a'*64,'design':1,'width':1080,'height':1920}),
                        lambda value: value['manifest']['collection'].update(privateNotes='private'),
                        lambda value: value['manifest']['collection'].update(title={'en':'Stale title'}),
                        lambda value: value['manifest'].update(wallpapers=[['id','slug','collection','collectionId','s3Folder','fileStem','number','category','tags','title','description']])]:
