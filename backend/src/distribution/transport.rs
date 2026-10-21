@@ -105,6 +105,46 @@ pub async fn write(request: RequestBuilder) -> std::result::Result<Reply, Outcom
         retry_after,
     })
 }
+// shortcut: JPEG framing and dimensions rely on approved source hashes; decode fully if that approval boundary changes.
+pub fn social_jpeg(bytes: &[u8]) -> bool {
+    if !bytes.starts_with(&[0xff, 0xd8]) || !bytes.ends_with(&[0xff, 0xd9]) {
+        return false;
+    }
+    let mut cursor = 2;
+    while cursor + 4 <= bytes.len() {
+        if bytes[cursor] != 0xff {
+            return false;
+        }
+        while cursor < bytes.len() && bytes[cursor] == 0xff {
+            cursor += 1;
+        }
+        let Some(&marker) = bytes.get(cursor) else {
+            return false;
+        };
+        cursor += 1;
+        if marker == 0xda || marker == 0xd9 {
+            return false;
+        }
+        if marker == 1 || (0xd0..=0xd7).contains(&marker) {
+            continue;
+        }
+        if cursor + 2 > bytes.len() {
+            return false;
+        }
+        let length = u16::from_be_bytes([bytes[cursor], bytes[cursor + 1]]) as usize;
+        if length < 2 || cursor + length > bytes.len() {
+            return false;
+        }
+        if [0xc0, 0xc1, 0xc2].contains(&marker) {
+            return length >= 8
+                && bytes[cursor + 2] == 8
+                && u16::from_be_bytes([bytes[cursor + 3], bytes[cursor + 4]]) == 1920
+                && u16::from_be_bytes([bytes[cursor + 5], bytes[cursor + 6]]) == 1080;
+        }
+        cursor += length;
+    }
+    false
+}
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Asset {
@@ -305,6 +345,14 @@ pub async fn send(delivery: &Delivery, credentials: &mut Credentials, store: &St
         )
         .await
         .unwrap_or(Outcome::Unknown("telegram-attempt-interrupted"));
+    }
+    if delivery.destination == "pinterest" {
+        return tokio::time::timeout(
+            Duration::from_secs(60),
+            super::pinterest::send(delivery, credentials, &prepared),
+        )
+        .await
+        .unwrap_or(Outcome::Unknown("pinterest-attempt-interrupted"));
     }
     Outcome::Blocked("destination-adapter-unavailable")
 }

@@ -1,6 +1,6 @@
 # Collection distribution on the VPS
 
-Part of #123 and #126. The Rust `distribute` command provides the durable queue shared by #127 and #31–#34. Telegram delivery is implemented below; the other adapters and real platform acceptance belong to their separate issues. An unavailable adapter leaves its items `blocked` with `destination-adapter-unavailable`.
+Part of #123 and #126. The Rust `distribute` command provides the durable queue shared by #127 and #31–#34. Telegram and Pinterest delivery are implemented below; the remaining adapters and real platform acceptance belong to their separate issues. An unavailable adapter leaves its items `blocked` with `destination-adapter-unavailable`.
 
 ## Publication and delivery contracts
 
@@ -81,3 +81,27 @@ A whole adapter attempt has a 60-second deadline within the existing worker budg
 For the first live acceptance, keep the timer disabled until #126 provisioning and resource checks pass. Release the exact approved package, verify its deployed pages, install the private configuration, and select only that collection for Telegram. Observe one controlled run, inspect the new set's five additions and channel album, then confirm their native receipts before enabling the timer. Subsequent ticks and restarts must leave confirmed messages unchanged. Unconfigured platforms remain blocked independently.
 
 Primary API contracts: [Bot API methods and responses](https://core.telegram.org/bots/api), [static emoji requirements](https://core.telegram.org/stickers#static-stickers-and-emoji). Local fixtures cover recovery and validation; only real provider readback completes #127 acceptance.
+
+## Pinterest configuration and acceptance
+
+The owner registers the site account and app, creates a public board, completes domain/access verification required by Pinterest and obtains Standard API access. Trial Pins and boards are visible only to their creator and do not complete #31 acceptance. `accessTier: "standard"` is an operator declaration, not a live API proof of the tier. Actual public visibility is checked separately during acceptance.
+
+Complete the [Authorization Code flow](https://developer.pinterest.com/docs/getting-started/set-up-authentication-and-authorization/) with the registered redirect URI and a private random state, verifying the returned state before exchanging the code. Use the official connection flow; never collect passwords or session cookies. Request exactly `boards:read boards:write pins:read pins:write user_accounts:read`. Record the returned scope and the absolute Unix access-token expiry. New apps use continuous refresh tokens; retain both returned tokens privately. Authorization codes, client secrets and tokens must not appear in command arguments, history, GitHub or logs.
+
+Install `pinterest.json` as 10002:10002/0600 inside the same locked credentials directory, with the timer stopped and worker absent. Its required fields are:
+
+```json
+{"enabled":true,"accessTier":"standard","username":"<public account username>","boardId":"<numeric board ID>","clientId":"<app ID>","clientSecret":"<private client secret>","accessToken":"<private pina token>","refreshToken":"<private pinr token>","accessTokenExpiresAt":1800000000,"scope":"boards:read boards:write pins:read pins:write user_accounts:read"}
+```
+
+`refreshPending` defaults to false. Before refresh, the worker atomically saves it as true. A successful refresh validates and saves the rotated access/refresh tokens before any Pin request, then clears the marker. A confirmed rate-limit rejection clears the marker and schedules retry. A lost, malformed or interrupted refresh retains the marker and blocks Pinterest for owner reauthorization, preserving the other destinations. Never clear this marker based only on a timeout. Normal rotation uses the shared file lock and previous-file hash check. A revoked token or missing permission also requires reauthorization.
+
+The worker checks the authenticated username and configured board's owner, public privacy and advertising-only state. Each of the five delivery intents selects its matching approved English copy, social preview and live English canonical wallpaper page. Only the hash-bound 1080×1920 JPEG preview is sent, as `image_base64`; full originals are excluded. Titles, descriptions and alternative text respect the native 100/800/500 character limits. Invalid copy is blocked without truncating the approved text. The JPEG framing/dimension check is shared with Telegram and relies on the existing approved source hash boundary.
+
+The optional private `aiDisclosures` array accepts only the API's `AI_MODIFIED` and `SYNTHETIC_PERFORMER` declarations. When supplied, the worker sends the native `ai_disclosures.values` field and verifies it during Pin readback. It does not insert a declaration by default. The owner checks the platform's current content and disclosure requirements before enabling publication. Unknown declarations are rejected.
+
+A confirmed create response saves the numeric Pin ID and exact request/source hashes as progress. The next claim reads that same Pin and confirms its account, board, image type, English copy and canonical link before recording delivery. A retry or restart with a saved ID never issues another create request. A lost create response remains unknown for explicit provider inspection; a known Pin disappearing or changing blocks the intent instead of silently posting a replacement. Manual delivered receipts use the shared recovery format after actual account inspection. Only confirmed absence permits explicit retry of an unknown creation. Successful Pins remain delivered across another Pin's failure.
+
+Before first acceptance, release the approved collection and worker, complete the resource checks, install this private connection and select only that collection for Pinterest. Verify five actual public Pins and their canonical links outside the owner's Sandbox view. Retain their native receipts, repeat a tick/restart and confirm no extra Pins. Keep #31 open until this public readback succeeds. Unavailable Standard access leaves Pinterest blocked independently.
+
+Primary contracts: [Pinterest OpenAPI](https://github.com/pinterest/api-description/blob/main/v5/openapi.json), [access tiers](https://developers.pinterest.com/docs/key-concepts/access-tiers/), [image Pin creation](https://developer.pinterest.com/docs/work-with-organic-content-and-users/create-boards-and-pins/).

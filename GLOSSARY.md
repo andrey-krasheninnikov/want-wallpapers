@@ -42,3 +42,6 @@ One immutable collection/destination/item payload tracked independently through 
 
 **Managed emoji set**:
 The single Telegram custom emoji set whose creation intent, owner ID, bot permission, complete membership and per-collection upload identities are retained in native distribution receipts.
+
+**Pinterest Pin progress**:
+A persisted numeric Pin ID bound to the exact publication request and preview hashes, used to resume readback without creating the same Pin again.
