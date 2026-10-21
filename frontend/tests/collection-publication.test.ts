@@ -6,6 +6,7 @@ import { PublicationJournal, catalogueBaseline, catalogueExportHash, deploymentR
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
+import buildSnapshot from '../src/data/catalog-live.json';
 const root = mkdtempSync(join(realpathSync(tmpdir()), 'wallpapers-publication-')); chmodSync(root, 0o700);
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 const sha = 'a'.repeat(40), hash = 'b'.repeat(64), image = 'sha256:' + 'c'.repeat(64), tag = 'v1.10.0';
@@ -104,4 +105,20 @@ test('catalogue baseline rejects unrelated changes between import and feature ex
   for (const mutate of [(value: any) => value.collections[0].title = 'Unapproved change', (value: any) => value.listing.wallpapers['old-1'] = false, (value: any) => value.publicationDates['old-1'] = '2026-10-02T00:00:00Z']) {
     const changed = structuredClone(exported); mutate(changed); expect(catalogueBaseline(changed, collection)).not.toBe(baseline);
   }
+});
+
+test('legacy build snapshots default to visible without relaxing remote listing validation', () => {
+  const { listing: _, ...legacy } = buildSnapshot as typeof buildSnapshot & { listing?: unknown };
+  const remote = { ...legacy, listing: { collections: Object.fromEntries(legacy.collections.map(item => [item.id, true])), wallpapers: Object.fromEntries(legacy.wallpapers.map(item => [item.id, true])) } };
+  const baseline = catalogueBaseline(legacy, collection, 'build-snapshot');
+  expect(catalogueBaseline(remote, collection)).toBe(baseline);
+  expect(catalogueBaseline(remote, collection, 'build-snapshot')).toBe(baseline);
+  const hidden = structuredClone(remote); hidden.listing.wallpapers[legacy.wallpapers[0]!.id] = false;
+  expect(catalogueBaseline(hidden, collection)).not.toBe(baseline);
+  expect(catalogueBaseline(hidden, collection, 'build-snapshot')).toBe(catalogueBaseline(hidden, collection));
+  for (const listing of [undefined, null, {}, { collections: remote.listing.collections }, { ...remote.listing, wallpapers: {} }, { ...remote.listing, collections: { ...remote.listing.collections, unexpected: true } }]) {
+    expect(() => catalogueBaseline({ ...legacy, listing }, collection)).toThrow('invalid-catalogue-listing');
+    expect(() => catalogueBaseline({ ...legacy, listing }, collection, 'build-snapshot')).toThrow('invalid-catalogue-listing');
+  }
+  expect(() => catalogueBaseline(legacy, collection)).toThrow('invalid-catalogue-listing');
 });

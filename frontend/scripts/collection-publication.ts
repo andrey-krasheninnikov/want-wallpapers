@@ -199,15 +199,23 @@ export async function verifyLiveCollection(collection: PublicCollectionPackage, 
   return { pages: locales.length * 6, downloads: 10, revision: sha, verifiedAt: new Date().toISOString() };
 }
 
-export function catalogueBaseline(input: any, collection: PublicCollectionPackage) {
+export function catalogueBaseline(input: any, collection: PublicCollectionPackage, source: 'remote' | 'build-snapshot' = 'remote') {
+  // Snapshots predating listing controls contain only visible records.
+  const listing = source === 'build-snapshot' && !Object.hasOwn(input, 'listing')
+    ? { collections: Object.fromEntries(input.collections.map((item: any) => [item.id, true])), wallpapers: Object.fromEntries(input.wallpapers.map((item: any) => [item.id, true])) }
+    : input.listing;
+  requirePackage(listing && [input.collections, input.wallpapers].every((items, index) => {
+    const flags = index === 0 ? listing.collections : listing.wallpapers;
+    return flags && typeof flags === 'object' && Object.keys(flags).length === items.length && items.every((item: any) => typeof flags[item.id] === 'boolean');
+  }), 'invalid-catalogue-listing');
   const ids = new Set(collection.manifest.wallpapers.map(item => item.id)), id = collection.manifest.collection.id;
   return digest(canonical({
     collections: input.collections.filter((item: any) => item.id !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
     wallpapers: input.wallpapers.filter((item: any) => item.collectionId !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
     publicationDates: Object.fromEntries(Object.entries(input.publicationDates ?? {}).filter(([key]) => !ids.has(key))),
     collectionPublicationDates: Object.fromEntries(Object.entries(input.collectionPublicationDates ?? {}).filter(([key]) => key !== id)),
-    listing: { collections: Object.fromEntries(Object.entries(input.listing.collections).filter(([key]) => key !== id)),
-      wallpapers: Object.fromEntries(Object.entries(input.listing.wallpapers).filter(([key]) => !ids.has(key))) },
+    listing: { collections: Object.fromEntries(Object.entries(listing.collections).filter(([key]) => key !== id)),
+      wallpapers: Object.fromEntries(Object.entries(listing.wallpapers).filter(([key]) => !ids.has(key))) },
   }));
 }
 
@@ -258,7 +266,7 @@ export async function publishCollection(input: string, configPath: string) {
     requirePackage(response.ok, 'catalogue-snapshot-unavailable'); const snapshot = await response.json();
     const expected = JSON.parse(git(source, 'show', `${config.expectedDevelopment}:frontend/src/data/catalog-live.json`));
     const baseline = catalogueBaseline(snapshot, collection);
-    requirePackage(baseline === catalogueBaseline(expected, collection), 'unrelated-catalogue-changes');
+    requirePackage(baseline === catalogueBaseline(expected, collection, 'build-snapshot'), 'unrelated-catalogue-changes');
     const saved = await catalogRequest<{ collections: { item: Collection; archived: boolean }[]; wallpapers: { item: Wallpaper; archived: boolean }[] }>('');
     const existing = saved.collections.find(record => record.item.id === collection.manifest.collection.id);
     if (!existing) {
