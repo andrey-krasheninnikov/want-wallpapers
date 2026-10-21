@@ -122,3 +122,17 @@ test('legacy build snapshots default to visible without relaxing remote listing 
   }
   expect(() => catalogueBaseline(legacy, collection)).toThrow('invalid-catalogue-listing');
 });
+
+test('baseline ignores zero-only timestamp fractions while retaining microsecond changes', () => {
+  const original = { collections: [], wallpapers: [], listing: { collections: {}, wallpapers: {} }, publicationDates: { old: '2026-10-02T21:44:58Z' }, collectionPublicationDates: { old: '2026-10-02T21:44:58Z' } };
+  const baseline = catalogueBaseline(original, collection);
+  const formatted = structuredClone(original);
+  formatted.publicationDates.old = '2026-10-02T21:44:58.000000Z';
+  formatted.collectionPublicationDates.old = '2026-10-02T21:44:58.000Z';
+  expect(catalogueBaseline(formatted, collection)).toBe(baseline);
+  formatted.publicationDates.old = '2026-10-02T21:44:58.000001Z';
+  expect(catalogueBaseline(formatted, collection)).not.toBe(baseline);
+  formatted.publicationDates.old = original.publicationDates.old;
+  formatted.collectionPublicationDates.old = '2026-10-02T21:44:58.000001Z';
+  expect(catalogueBaseline(formatted, collection)).not.toBe(baseline);
+});

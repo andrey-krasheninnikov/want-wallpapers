@@ -209,11 +209,12 @@ export function catalogueBaseline(input: any, collection: PublicCollectionPackag
     return flags && typeof flags === 'object' && Object.keys(flags).length === items.length && items.every((item: any) => typeof flags[item.id] === 'boolean');
   }), 'invalid-catalogue-listing');
   const ids = new Set(collection.manifest.wallpapers.map(item => item.id)), id = collection.manifest.collection.id;
+  const dates = (values: Record<string, string>) => Object.entries(values).map(([key, value]) => [key, value.replace(/\.0+Z$/, 'Z')] as const);
   return digest(canonical({
     collections: input.collections.filter((item: any) => item.id !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
     wallpapers: input.wallpapers.filter((item: any) => item.collectionId !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
-    publicationDates: Object.fromEntries(Object.entries(input.publicationDates ?? {}).filter(([key]) => !ids.has(key))),
-    collectionPublicationDates: Object.fromEntries(Object.entries(input.collectionPublicationDates ?? {}).filter(([key]) => key !== id)),
+    publicationDates: Object.fromEntries(dates(input.publicationDates ?? {}).filter(([key]) => !ids.has(key))),
+    collectionPublicationDates: Object.fromEntries(dates(input.collectionPublicationDates ?? {}).filter(([key]) => key !== id)),
     listing: { collections: Object.fromEntries(Object.entries(listing.collections).filter(([key]) => key !== id)),
       wallpapers: Object.fromEntries(Object.entries(listing.wallpapers).filter(([key]) => !ids.has(key))) },
   }));
