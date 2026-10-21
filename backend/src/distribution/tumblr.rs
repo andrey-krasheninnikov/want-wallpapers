@@ -366,6 +366,35 @@ fn progress(
     }
     Ok(progress)
 }
+fn image_media_valid(value: &Value) -> bool {
+    let Some(items) = value.as_array() else {
+        return false;
+    };
+    items.iter().all(|item| {
+        let url = item["url"]
+            .as_str()
+            .and_then(|value| url::Url::parse(value).ok());
+        url.is_some_and(|url| {
+            url.scheme() == "https"
+                && url
+                    .host_str()
+                    .is_some_and(|host| host.ends_with(".media.tumblr.com"))
+                && url.username().is_empty()
+                && url.password().is_none()
+        }) && item["width"]
+            .as_u64()
+            .zip(item["height"].as_u64())
+            .is_some_and(|(w, h)| w > 0 && h > 0 && w <= 4096 && h <= 4096)
+    }) && items.iter().any(|item| {
+        item.get("cropped").is_none_or(|value| value == false)
+            && item["width"]
+                .as_u64()
+                .zip(item["height"].as_u64())
+                .is_some_and(|(w, h)| {
+                    w > 0 && h > 0 && w <= 1080 && h <= 1920 && (w * 16).abs_diff(h * 9) <= 16
+                })
+    })
+}
 fn confirm(
     post: &Value,
     progress: &Progress,
@@ -418,33 +447,7 @@ fn confirm(
             return Err(blocked("tumblr-post-readback-mismatch"));
         }
         if index < 5 {
-            if actual["alt_text"] != expected["alt_text"]
-                || actual["media"].as_array().is_none_or(|items| {
-                    items.is_empty()
-                        || items.iter().any(|item| {
-                            let url = item["url"]
-                                .as_str()
-                                .and_then(|value| url::Url::parse(value).ok());
-                            url.is_none_or(|url| {
-                                url.scheme() != "https"
-                                    || !url
-                                        .host_str()
-                                        .is_some_and(|host| host.ends_with(".media.tumblr.com"))
-                                    || !url.username().is_empty()
-                                    || url.password().is_some()
-                            }) || item["width"]
-                                .as_u64()
-                                .zip(item["height"].as_u64())
-                                .is_none_or(|(w, h)| {
-                                    w == 0
-                                        || h == 0
-                                        || w > 1080
-                                        || h > 1920
-                                        || (w * 16).abs_diff(h * 9) > 16
-                                })
-                        })
-                })
-            {
+            if actual["alt_text"] != expected["alt_text"] || !image_media_valid(&actual["media"]) {
                 return Err(blocked("tumblr-post-readback-mismatch"));
             }
         } else if actual["text"] != expected["text"]

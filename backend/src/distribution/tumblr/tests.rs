@@ -536,3 +536,35 @@ async fn unknown_creation_cannot_reenter_publication_through_send() {
         Outcome::Unknown("tumblr-reconciliation-required")
     ));
 }
+
+#[tokio::test]
+async fn cropped_thumbnails_are_allowed_beside_an_uncropped_preview() {
+    let fake = Fake::new();
+    let prepared = prepared();
+    let settings = Settings::parse(&configuration()).ok().unwrap();
+    let mut delivery = delivery(&prepared);
+    let Ok(Outcome::Progress(progress)) = deliver(&fake, &delivery, &prepared, &settings).await
+    else {
+        panic!("creation failed");
+    };
+    delivery.progress = progress;
+    {
+        let mut post = fake.post.borrow_mut();
+        post["content"][0]["media"].as_array_mut().unwrap().push(json!({"url":"https://64.media.tumblr.com/square.jpg","type":"image/jpeg","width":250,"height":250,"cropped":true}));
+    }
+    assert!(matches!(
+        deliver(&fake, &delivery, &prepared, &settings).await,
+        Ok(Outcome::Delivered(_))
+    ));
+    {
+        let mut post = fake.post.borrow_mut();
+        for item in post["content"][0]["media"].as_array_mut().unwrap() {
+            item["cropped"] = json!(true);
+        }
+    }
+    assert!(matches!(
+        deliver(&fake, &delivery, &prepared, &settings).await,
+        Err(Outcome::Blocked("tumblr-post-readback-mismatch"))
+    ));
+    assert_eq!(fake.creates.get(), 1);
+}
