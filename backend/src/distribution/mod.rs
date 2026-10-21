@@ -5,6 +5,7 @@ pub mod runtime;
 pub mod store;
 mod telegram;
 pub mod transport;
+mod tumblr;
 pub const DESTINATIONS: [(&str, u8); 5] = [
     ("telegram", 2),
     ("pinterest", 5),

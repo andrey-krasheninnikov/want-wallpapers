@@ -1,6 +1,6 @@
 # Collection distribution on the VPS
 
-Part of #123 and #126. The Rust `distribute` command provides the durable queue shared by #127 and #31–#34. Telegram and Pinterest delivery are implemented below; the remaining adapters and real platform acceptance belong to their separate issues. An unavailable adapter leaves its items `blocked` with `destination-adapter-unavailable`.
+Part of #123 and #126. The Rust `distribute` command provides the durable queue shared by #127 and #31–#34. Telegram, Pinterest and Tumblr delivery are implemented below; the remaining adapters and real platform acceptance belong to their separate issues. An unavailable adapter leaves its items `blocked` with `destination-adapter-unavailable`.
 
 ## Publication and delivery contracts
 
@@ -105,3 +105,25 @@ A confirmed create response saves the numeric Pin ID and exact request/source ha
 Before first acceptance, release the approved collection and worker, complete the resource checks, install this private connection and select only that collection for Pinterest. Verify five actual public Pins and their canonical links outside the owner's Sandbox view. Retain their native receipts, repeat a tick/restart and confirm no extra Pins. Keep #31 open until this public readback succeeds. Unavailable Standard access leaves Pinterest blocked independently.
 
 Primary contracts: [Pinterest OpenAPI](https://github.com/pinterest/api-description/blob/main/v5/openapi.json), [access tiers](https://developers.pinterest.com/docs/key-concepts/access-tiers/), [image Pin creation](https://developer.pinterest.com/docs/work-with-organic-content-and-users/create-boards-and-pins/).
+
+## Tumblr configuration and acceptance
+
+The owner creates the public blog and registers the site application in [Tumblr OAuth apps](https://www.tumblr.com/oauth/apps). Complete the Authorization Code flow with the registered redirect URI and `basic write offline_access`, verifying the private random state before exchanging the returned code. Record the authorized account name, blog name and stable `t:` blog UUID from the API. The UUID identifies the target across domain changes; a changed configured blog name requires owner review of saved progress. No public blog identity has been confirmed yet. Do not enable this destination until that identity and the owner's posting rights are verified.
+
+Install `tumblr.json` as 10002:10002/0600 in the locked private credentials directory with the timer stopped and worker absent:
+
+```json
+{"enabled":true,"username":"<authorized account name>","blogName":"<public blog name>","blogUuid":"t:<blog UUID>","clientId":"<private consumer key>","clientSecret":"<private consumer secret>","accessToken":"<private access token>","refreshToken":"<private refresh token>","accessTokenExpiresAt":1800000000,"scope":"basic write offline_access"}
+```
+
+Use the official OAuth connection flow. Keep codes, client secrets and tokens outside arguments, history, GitHub and logs. Save the absolute Unix expiry from the returned lifetime. Refresh uses Tumblr's form-encoded `/v2/oauth2/token` exchange and atomically preserves both rotated tokens. The persisted `refreshPending` marker follows the same recovery rules as Pinterest: confirmed rate limits permit retry; an interrupted or malformed refresh requires owner reauthorization. Replacing one connection does not unblock old work automatically or affect another platform.
+
+Each attempt checks `/user/info` for the expected account and the exact blog UUID/name in the user's writable blogs, with `type: public`. One Neue Post Format post contains the five approved 1080×1920 JPEG social previews, English collection title/copy and six live canonical links. Images form two rows of two and three; text and links follow without truncation. Alternative text uses each approved English wallpaper title. Multipart starts with an `application/json` part named `json`, followed by the five matching file identifiers. The full wallpaper PNGs are never uploaded. Text blocks respect the native 4096-code-point limit, and each preview has the shared 5 MiB limit. A stable User-Agent accompanies every Tumblr request.
+
+A `201` response with matching JSON status and a valid string post ID saves that ID, blog identity, five source hashes and the exact request hash as progress. A later claim fetches that same post in NPF, checks its published state, blog, ordered image descriptions, media dimensions/URLs, text, link formatting and complete row layout, then records delivery. Tumblr can resize uploaded media; source hashes bind the bytes sent, while API readback checks the returned media references and composition. It does not prove byte equality after Tumblr's processing. A saved post ID never triggers another create, even if the post disappears or changes.
+
+Lost or malformed creation responses remain unknown for explicit provider inspection. Known-ID read failures can retry readback; authorization failures block the connection. Rate limits honor Retry-After. A 60-second adapter deadline fits the shared worker budget and conservatively leaves an interrupted attempt unknown. Use the common status and reconciliation commands; only confirmed absence permits an explicit retry after an unknown creation.
+
+For live acceptance, release the approved collection and worker, pass #126 resource checks, install the authorized private connection and select only that collection for Tumblr. Verify one public post with five faithful previews and working canonical links, retain its native receipt and confirm a later tick/restart creates no duplicate. Check the current [Community Guidelines](https://www.tumblr.com/policy/en/community) and [API agreement](https://www.tumblr.com/docs/api_agreement) before enabling publication; those policy pages were unavailable during implementation. Account access, live public visibility and content-policy acceptance remain outstanding, so #32 stays open.
+
+Primary contracts: [Tumblr API and OAuth2](https://github.com/tumblr/docs/blob/master/api.md), [NPF content, multipart references and limits](https://github.com/tumblr/docs/blob/master/npf-spec.md). Local tests exercise protocol and recovery without calling a real blog.

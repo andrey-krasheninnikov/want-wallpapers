@@ -354,6 +354,14 @@ pub async fn send(delivery: &Delivery, credentials: &mut Credentials, store: &St
         .await
         .unwrap_or(Outcome::Unknown("pinterest-attempt-interrupted"));
     }
+    if delivery.destination == "tumblr" {
+        return tokio::time::timeout(
+            Duration::from_secs(60),
+            super::tumblr::send(delivery, credentials, &prepared),
+        )
+        .await
+        .unwrap_or(Outcome::Unknown("tumblr-attempt-interrupted"));
+    }
     Outcome::Blocked("destination-adapter-unavailable")
 }
 
