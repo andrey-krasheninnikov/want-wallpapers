@@ -536,3 +536,56 @@ async fn shared_set_receipt_follows_delivery_order_including_selected_older_coll
         Some(json!({"set":"recent"}))
     );
 }
+
+#[sqlx::test(migrations = "./migrations")]
+async fn partial_set_owner_survives_selection_of_an_older_baseline(pool: PgPool) {
+    let store = Store(pool.clone());
+    ingest(&store, 0, &["0001-baseline"], &[]).await;
+    ingest(&store, 1, &["0002-current"], &["telegram"]).await;
+    let current = store.claim().await.unwrap().unwrap();
+    store
+        .finish(&current, Outcome::Progress(json!({"stage":"partial-set"})))
+        .await
+        .unwrap();
+    store.select("0001-baseline", "telegram").await.unwrap();
+    let owner = store.claim().await.unwrap().unwrap();
+    assert_eq!(
+        (&*owner.collection_id, &*owner.item),
+        ("0002-current", "emoji-set")
+    );
+    store
+        .finish(&owner, Outcome::Unknown("worker-interrupted"))
+        .await
+        .unwrap();
+    assert!(store.claim().await.unwrap().is_none());
+    sqlx::query("UPDATE distribution_deliveries SET next_attempt_at=clock_timestamp() WHERE state='unknown'").execute(&pool).await.unwrap();
+    let owner = store.claim().await.unwrap().unwrap();
+    assert_eq!(owner.collection_id, "0002-current");
+    assert!(owner.reconcile);
+    store
+        .finish(&owner, Outcome::Blocked("owner-review-required"))
+        .await
+        .unwrap();
+    assert!(store.claim().await.unwrap().is_none());
+    store.select("0002-current", "telegram").await.unwrap();
+    let owner = store.claim().await.unwrap().unwrap();
+    assert_eq!(owner.collection_id, "0002-current");
+    store
+        .finish(&owner, Outcome::Delivered(json!({"set":"current"})))
+        .await
+        .unwrap();
+    let next = store.claim().await.unwrap().unwrap();
+    let next = if next.item == "album" {
+        store
+            .finish(&next, Outcome::Blocked("test-album-held"))
+            .await
+            .unwrap();
+        store.claim().await.unwrap().unwrap()
+    } else {
+        next
+    };
+    assert_eq!(
+        (&*next.collection_id, &*next.item),
+        ("0001-baseline", "emoji-set")
+    );
+}

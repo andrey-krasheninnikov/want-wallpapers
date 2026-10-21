@@ -123,8 +123,10 @@ AND (delivery.destination<>'telegram' OR delivery.item<>'album' OR EXISTS(
 AND (delivery.destination<>'telegram' OR delivery.item<>'emoji-set' OR NOT EXISTS(
     SELECT 1 FROM public.distribution_deliveries earlier JOIN public.distribution_publications prior USING(collection_id)
     WHERE earlier.destination='telegram' AND earlier.item='emoji-set'
-    AND (earlier.state IN ('pending','retryable','unknown','in-flight') OR (earlier.state='blocked' AND earlier.progress<>'{}'::jsonb))
-    AND (prior.created_at,earlier.collection_id)<(publication.created_at,delivery.collection_id)))
+    AND earlier.collection_id<>delivery.collection_id
+    AND ((earlier.state<>'delivered' AND earlier.progress<>'{}'::jsonb) OR earlier.state='in-flight'
+        OR (delivery.progress='{}'::jsonb AND earlier.state IN ('pending','retryable','unknown')
+            AND (prior.created_at,earlier.collection_id)<(publication.created_at,delivery.collection_id)))))
 ORDER BY delivery.next_attempt_at,delivery.collection_id,delivery.destination,delivery.item FOR UPDATE OF delivery SKIP LOCKED LIMIT 1)
 UPDATE public.distribution_deliveries delivery SET state='in-flight',generation=delivery.generation+1,claim_id=$1,claimed_at=clock_timestamp(),error_code=NULL
 FROM candidate WHERE (delivery.collection_id,delivery.destination,delivery.item)=(candidate.collection_id,candidate.destination,candidate.item) RETURNING delivery.*,candidate.reconcile")
