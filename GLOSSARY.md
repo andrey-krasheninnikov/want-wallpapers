@@ -48,3 +48,6 @@ A persisted numeric Pin ID bound to the exact publication request and preview ha
 
 **Tumblr photoset progress**:
 A persisted string post ID bound to its blog UUID, exact NPF request and five preview hashes, used to verify the existing post after restart without creating a replacement.
+
+**Flickr photo progress**:
+A saved photo ID bound to its account, preview and metadata hashes, with a private upload phase followed by a persisted publication phase after license verification.
