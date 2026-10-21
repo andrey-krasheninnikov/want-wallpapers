@@ -24,6 +24,7 @@ STATE = Path('/var/lib/want-deploy/wallpapers')
 SECRETS = Path('/etc/want-wallpapers/secrets')
 CONTAINER = 'want-wallpapers-app-1'
 README = Path('/README.md')
+DISTRIBUTION_PROFILE = Path('/etc/want-wallpapers/distribution')
 ACTORS = {'ci': 'wallpapers-deploy', 'worker': 'wallpapers-backup'}
 spec = importlib.util.spec_from_file_location('release', ROOT / 'scripts/ci-release.py')
 release = importlib.util.module_from_spec(spec)
@@ -150,6 +151,22 @@ def migration_active():
     return any(state not in ('exited', 'dead') for state in states)
 
 
+def distribution_handoff():
+    helper = ROOT / 'scripts/distribution-run.py'
+    if not DISTRIBUTION_PROFILE.is_dir():
+        return
+    require(helper.is_file(), 'distribution-launcher-missing')
+    spec = importlib.util.spec_from_file_location('distribution_runner', helper)
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+    deadline = time.monotonic() + 250
+    while runner.worker() is not None:
+        require(time.monotonic() < deadline, 'distribution-did-not-stop')
+        time.sleep(2)
+    # Capture the previous successful image before another deployment can replace it.
+    run(['/usr/bin/python3', '-I', str(ROOT / 'scripts/distribution-export.py')], timeout=90)
+
+
 def preflight():
     require(not migration_active(), 'migration-already-active')
     for path in (ENV, COMPOSE, ROOT / 'deploy/runtime-grants.sql', ROOT / 'deploy/verify-runtime-grants.sql'):
@@ -210,6 +227,7 @@ def execute(store, record):
                 if record['state'] != 'running':
                     return
             publish(store, record, 'preflight')
+            distribution_handoff()
             previous, environment, database_id = preflight()
             record['databaseId'] = database_id
             before = database_state(environment)
@@ -274,6 +292,9 @@ def execute(store, record):
             grants = (ROOT / 'deploy/runtime-grants.sql').read_text()
             grants = grants.replace('GRANT USAGE ON SCHEMA public TO :"runtime_role";\n', '')
             psql(environment, grants)
+            distribution_grants = ROOT / 'deploy/distribution-grants.sql'
+            if distribution_grants.is_file():
+                psql(environment, distribution_grants.read_text())
             verify_privileges(environment)
             record['after'] = database_state(environment)
             require(ENV.read_bytes() == original_env and COMPOSE.read_bytes() == original_compose,

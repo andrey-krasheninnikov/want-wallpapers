@@ -204,3 +204,7 @@ SQLx фиксирует новую миграцию, поэтому автома
 ### Арабский каталог
 
 Миграция `202610200004_arabic_catalog.sql` расширяет контракт до шести обязательных переводов. Перед релизом сверяйте свежий защищённый export с переводами всех существующих записей, включая скрытые и архивные. При неизвестной записи без `ar` или изменившемся английском исходнике миграция отменяется целиком; сначала подготовьте проверенный перевод. Имеющиеся непустые арабские переводы и остальные поля сохраняются, версии изменённых записей увеличиваются. Применяйте через действующую процедуру с остановленным app. После запуска проверьте `/ar/`, арабский 404, поиск, RTL-меню, карусели, прямые скрытые страницы и оба PNG. Не удаляйте переводы для отката и не запускайте старый runtime без подтверждения совместимости шестиязычного контракта.
+
+## Private collection distribution
+
+The bounded Rust worker, separate database role, root exporter, five-minute timer and recovery operations are described in [collections-distribution.md](collections-distribution.md). Provisioning and measured VPS acceptance precede timer enablement; merging source does not enable posting.

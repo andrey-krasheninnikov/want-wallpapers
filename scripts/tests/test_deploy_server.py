@@ -115,6 +115,23 @@ class ServerTransitions(unittest.TestCase):
             result = store.read(record['requestId'])
             return result, environment.read_bytes(), migrated[0]
 
+    def test_distribution_handoff_waits_and_exports_before_replacement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'scripts').mkdir()
+            (root / 'scripts/distribution-run.py').write_text("values=iter([{'id':'owned'},None])\ndef worker(): return next(values)\n")
+            with patch.multiple(server, ROOT=root, DISTRIBUTION_PROFILE=root), patch.object(server, 'run') as execute, \
+                 patch.object(server.time, 'monotonic', return_value=0), patch.object(server.time, 'sleep') as pause:
+                server.distribution_handoff()
+                pause.assert_called_once_with(2)
+                execute.assert_called_once_with(['/usr/bin/python3', '-I', str(root / 'scripts/distribution-export.py')], timeout=90)
+            (root / 'scripts/distribution-run.py').write_text("def worker(): return {'id':'owned'}\n")
+            with patch.multiple(server, ROOT=root, DISTRIBUTION_PROFILE=root), patch.object(server, 'run') as execute, \
+                 patch.object(server.time, 'monotonic', side_effect=[0, 251]):
+                with self.assertRaisesRegex(DeployError, 'distribution-did-not-stop'):
+                    server.distribution_handoff()
+                execute.assert_not_called()
+
     def test_public_readiness_accepts_revision_without_accepting_other_states(self):
         with patch.object(server, 'https', side_effect=['[]', '{"status":"starting"}', '{"status":"ok","revision":"' + 'a' * 40 + '"}']) as request, \
              patch.object(server.time, 'sleep') as sleep:
