@@ -45,3 +45,6 @@ The single Telegram custom emoji set whose creation intent, owner ID, bot permis
 
 **Pinterest Pin progress**:
 A persisted numeric Pin ID bound to the exact publication request and preview hashes, used to resume readback without creating the same Pin again.
+
+**Tumblr photoset progress**:
+A persisted string post ID bound to its blog UUID, exact NPF request and five preview hashes, used to verify the existing post after restart without creating a replacement.
