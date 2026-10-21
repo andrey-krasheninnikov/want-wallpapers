@@ -1,6 +1,6 @@
 # Collection distribution on the VPS
 
-Part of #123 and #126. The Rust `distribute` command provides the durable queue shared by #127 and #31–#34. Telegram, Pinterest and Tumblr delivery are implemented below; the remaining adapters and real platform acceptance belong to their separate issues. An unavailable adapter leaves its items `blocked` with `destination-adapter-unavailable`.
+Part of #123 and #126. The Rust `distribute` command provides the durable queue shared by #127 and #31–#34. Telegram, Pinterest, Tumblr and Flickr delivery are implemented below; the remaining adapters and real platform acceptance belong to their separate issues. An unavailable adapter leaves its items `blocked` with `destination-adapter-unavailable`.
 
 ## Publication and delivery contracts
 
@@ -127,3 +127,27 @@ Lost or malformed creation responses remain unknown for explicit provider inspec
 For live acceptance, release the approved collection and worker, pass #126 resource checks, install the authorized private connection and select only that collection for Tumblr. Verify one public post with five faithful previews and working canonical links, retain its native receipt and confirm a later tick/restart creates no duplicate. Check the current [Community Guidelines](https://www.tumblr.com/policy/en/community) and [API agreement](https://www.tumblr.com/docs/api_agreement) before enabling publication; those policy pages were unavailable during implementation. Account access, live public visibility and content-policy acceptance remain outstanding, so #32 stays open.
 
 Primary contracts: [Tumblr API and OAuth2](https://github.com/tumblr/docs/blob/master/api.md), [NPF content, multipart references and limits](https://github.com/tumblr/docs/blob/master/npf-spec.md). Local tests exercise protocol and recovery without calling a real blog.
+
+## Flickr configuration and acceptance
+
+The site promotes a service with advertising. Before enabling Flickr, the owner obtains approval for that commercial API use and confirms a Pro account that permits commercial content. API permission and a Pro subscription are separate requirements. Use an existing authorized subscription and budget; this workflow does not purchase access. Missing approval or account capability leaves Flickr blocked while other destinations continue. Confirm the public profile and account NSID privately during connection; neither has been supplied yet.
+
+Complete Flickr's three-step OAuth 1.0a authorization with `perms=write`, using the registered callback and its verifier. Retain the API key/secret, access token and token secret privately. Do not use OAuth 2 refresh fields: revoked or invalid OAuth 1 credentials require owner reauthorization. Install `flickr.json` as 10002:10002/0600 in the shared private directory, with the timer stopped, worker absent and credentials lock held:
+
+```json
+{"enabled":true,"commercialApiApproved":true,"userId":"123456789@N00","apiKey":"<private consumer key>","apiSecret":"<private consumer secret>","accessToken":"<private OAuth token>","tokenSecret":"<private token secret>"}
+```
+
+`commercialApiApproved` records the owner's verified arrangement; it is not an API proof or permission to buy access. Keep the evidence and credentials outside GitHub, logs and command arguments. Each attempt verifies the token's exact NSID, token identity and write permission. Every request uses a fresh nonce/timestamp and HMAC-SHA1 signature. REST calls use form encoding and JSON; uploads use Flickr's multipart signing contract, covering all non-file parameters and excluding the photo. OAuth credentials remain in the Authorization header. Secrets and provider messages never enter receipts or error codes.
+
+Five independent intents map approved English copy, one live canonical wallpaper page and its hash-bound 1080×1920 JPEG social preview. Only previews are uploaded, with a 5 MiB cap. Copy is escaped for Flickr's limited HTML and the canonical link remains clickable. Uploads explicitly use content type `3` (art/illustration), safety `1` (safe), private visibility with no friends/family access and search inclusion after publication. Account defaults cannot make the initial upload public. Before upload, the worker confirms Pro status, file-size allowance and available bandwidth; quota failures block without uploading another item.
+
+The XML upload response saves only the numeric photo ID, account, source/request hashes and `uploaded` phase. Flickr photo secrets are discarded. XML parsing rejects DTDs, multiple roots, malformed/duplicate IDs and unexpected response fields. A lost upload response stays unknown; inspect the account for a private staging item before any explicit retry. Do not delete or recreate that item blindly.
+
+Readback of the saved ID checks owner, English title/description and private visibility. The worker sets license `0` (All Rights Reserved) while private and verifies it in another read before saving the `publish` phase. Only that persisted phase can make the same photo public. A later read confirms public visibility and license before recording delivery. If content-type or safety metadata is returned, it must match the requested values; actual platform classification remains part of live acceptance when those fields are absent. Known-ID retries never upload again. A changed owner, copy or licence blocks that item instead of publishing a replacement. A lost public transition remains unknown for explicit inspection of the saved ID; the history and other successful items remain intact.
+
+The adapter shares Retry-After handling, read retries and the 60-second attempt limit. An interrupted or malformed write remains unknown. Use the common status and reconciliation commands. Native readback and owner checks, rather than a timeout, establish whether the saved photo is public. Retain private staging IDs for recovery; cleanup of provider content requires explicit inspection and authorization.
+
+For #34 acceptance, install the approved connection after the collection/worker release and #126 resource checks. Select only the approved collection, inspect five public artworks with correct art/safety/license settings and canonical links, retain native IDs, then repeat a tick/restart and confirm no extra uploads. Account registration, commercial arrangement, any subscription decision and this real publication remain outstanding. Keep #34 open until public readback succeeds.
+
+Primary contracts: [OAuth 1.0a](https://www.flickr.com/services/api/auth.oauth.html), [upload API](https://www.flickr.com/services/api/upload.api.html), [official upload implementation](https://github.com/flickr/flickr-sdk/blob/main/src/services/upload.ts), [content filters](https://www.flickrhelp.com/hc/en-us/articles/4404064206996-Flickr-Content-Filters), [API use](https://www.flickr.com/services/api/), [licenses](https://www.flickr.com/services/api/flickr.photos.licenses.getInfo.html), [license update](https://www.flickr.com/services/api/flickr.photos.licenses.setLicense.html) and [visibility](https://www.flickr.com/services/api/flickr.photos.setPerms.html).
