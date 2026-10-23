@@ -1,8 +1,10 @@
 import { test, expect } from 'bun:test';
 import type { APIContext } from 'astro';
 import { GET } from '../src/pages/llms.txt';
-import { collections, locales } from '../src/data/catalog';
-import { collectionStories, editorialCopy } from '../src/data/editorial';
+import { encodeHTML } from 'entities';
+import publications from '../src/data/collection-publications.json';
+import { collections, getCollectionWallpapers, locales } from '../src/data/catalog';
+import { collectionStories, editorialCopy, supportCopy } from '../src/data/editorial';
 import { origin, parsePage, parseSitemap, validatePages, validateRobots, validateLlms, wordCount, pageMetrics, validateContentMetrics, validateLocalizedContent, validateCityLinks } from '../scripts/seo-validation';
 
 const languages = ['en', 'ru', 'zh-CN', 'pt-BR', 'ja', 'ar'];
@@ -331,4 +333,27 @@ test('same-origin PNG download anchors retain download semantics', async () => {
 test('Arabic SEO requires RTL document direction', async () => {
   const pages = await localizedPages(); pages.get('/ar/')!.dir = 'ltr';
   expect(() => validatePages(pages, new Set())).toThrow('incorrect document direction');
+});
+
+test('package wallpaper context is visible and localized while legacy pages retain their contract', async () => {
+  const registered = collections.find(item => Object.hasOwn(publications, item.id))!;
+  const legacy = collections.find(item => !Object.hasOwn(publications, item.id))!;
+  expect(registered).toBeDefined(); expect(legacy).toBeDefined();
+  for (const locale of locales) {
+    for (const collection of [registered, legacy]) {
+      const designs = getCollectionWallpapers(collection.slug), wallpaper = designs[0]!;
+      const text = editorialCopy[locale];
+      const required = [text.story, text.files, text.licenseText, collection.title[locale], ...collectionStories[collection.slug]![locale], wallpaper.description[locale]];
+      const context = [collection.description[locale], ...designs.flatMap(item => [item.title[locale], item.description[locale]]), ...supportCopy[locale].license.slice(1)];
+      const markup = (phrases: string[]) => phrases.map(phrase => `<p>${encodeHTML(phrase)}</p>`).join('');
+      const path = `${locale === 'en' ? '' : '/' + locale}/wallpapers/${wallpaper.slug}/`;
+      const page = await parsePage(`<html lang="${locale}"><body><main>${markup(required)}</main></body></html>`, path);
+      if (collection === legacy) { expect(() => validateLocalizedContent(page)).not.toThrow(); continue; }
+      expect(() => validateLocalizedContent(page)).toThrow(/localized main content/);
+      const complete = await parsePage(`<html lang="${locale}"><body><main>${markup(required)}${markup(context)}</main></body></html>`, path);
+      expect(() => validateLocalizedContent(complete)).not.toThrow();
+      const hidden = await parsePage(`<html lang="${locale}"><body><main>${markup(required)}<div hidden>${markup(context)}</div></main></body></html>`, path);
+      expect(() => validateLocalizedContent(hidden)).toThrow(/localized main content/);
+    }
+  }
 });
