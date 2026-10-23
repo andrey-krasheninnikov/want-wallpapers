@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { PublicationJournal, applyListingApproval, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
+import { PublicationJournal, applyListingApproval, releaseCorrections, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
@@ -152,4 +152,15 @@ test('approved legacy listing is bound to the package and revision and remains p
   expect(() => applyListingApproval(accepted, approval, hash, sha)).toThrow('listing-approval-mismatch');
   const partial = applyListingApproval(snapshot, { ...approval, listing: { collections: {}, wallpapers: {} } }, hash, sha);
   expect(() => catalogueBaseline(partial, collection, 'build-snapshot')).toThrow('invalid-catalogue-listing');
+});
+
+test('release corrections preserve a package-bound append-only revision chain', () => {
+  const correction = { pullRequest: 156, previousSha: sha, sha: 'd'.repeat(40) };
+  const input = { schemaVersion: 1, packageHash: hash, originalSha: sha, corrections: [correction] };
+  expect(releaseCorrections(input, hash, sha)).toEqual([correction]);
+  const second = { pullRequest: 157, previousSha: correction.sha, sha: 'e'.repeat(40) };
+  expect(releaseCorrections({ ...input, corrections: [correction, second] }, hash, sha)).toHaveLength(2);
+  for (const changed of [null, { ...input, packageHash: 'wrong' }, { ...input, originalSha: 'wrong' }, { ...input, extra: true }, { ...input, corrections: [] }, { ...input, corrections: [second] }, { ...input, corrections: [correction, correction] }, { ...input, corrections: [correction, { ...second, sha }] }, { ...input, corrections: [{ ...correction, pullRequest: 1.5 }] }, { ...input, corrections: [{ ...correction, sha: 'wrong' }] }]) {
+    expect(() => releaseCorrections(changed, hash, sha)).toThrow('release-correction-mismatch');
+  }
 });
