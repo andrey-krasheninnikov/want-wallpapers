@@ -1,1 +1,596 @@
-{}
+{
+  "0007-organic-resonance": {
+    "schemaVersion": 1,
+    "revision": 4,
+    "packageHash": "51446e56c738e28f96b9e6edb279f012f3808b0474e502f43b4c0370b0416cbf",
+    "manifest": {
+      "collection": {
+        "id": "0007-organic-resonance",
+        "slug": "organic-resonance",
+        "count": 5,
+        "title": {
+          "en": "Organic Resonance",
+          "ru": "Природный резонанс",
+          "zh-cn": "自然共鸣",
+          "pt-br": "Ressonância natural",
+          "ja": "自然の共鳴",
+          "ar": "صدى الطبيعة"
+        },
+        "description": {
+          "en": "Fern spirals, fractured stone, liquid tides, tree rings and torn leaves in chrome, neon accents and distressed textures.",
+          "ru": "Спирали папоротника, каменные разломы, жидкие приливы, годовые кольца и рваные листья с хромом, неоновыми акцентами и потёртыми фактурами.",
+          "zh-cn": "蕨叶螺旋、岩石裂隙、液态潮汐、树木年轮与撕裂叶片，呈现铬色反光、霓虹点缀和粗粝纹理。",
+          "pt-br": "Espirais de samambaia, pedra fraturada, marés líquidas, anéis de madeira e folhas rasgadas com cromo, neon e texturas gastas.",
+          "ja": "シダの渦、岩の裂け目、液体の潮、木の年輪、裂けた葉。クロームの反射とネオン、擦れた質感で描く抽象作品。",
+          "ar": "لوالب سرخس وصدوع صخرية ومد سائل وحلقات خشب وأوراق ممزقة، بانعكاسات كرومية ولمسات نيون وملامس خشنة."
+        }
+      },
+      "wallpapers": [
+        {
+          "id": "organic-resonance-1",
+          "slug": "organic-resonance-1",
+          "collection": "organic-resonance",
+          "collectionId": "0007-organic-resonance",
+          "s3Folder": "0007-organic-resonance",
+          "fileStem": "organic-resonance",
+          "number": 1,
+          "category": "abstract",
+          "tags": [
+            "forest",
+            "light"
+          ],
+          "title": {
+            "en": "Chrome Fern",
+            "ru": "Хромовый папоротник",
+            "zh-cn": "铬色蕨叶",
+            "pt-br": "Samambaia cromada",
+            "ja": "クロームのシダ",
+            "ar": "سرخس كرومي"
+          },
+          "description": {
+            "en": "A curling silver fern opens around an acid-lime core, its scratched leaves set against torn charcoal textures.",
+            "ru": "Серебряный папоротник закручивается вокруг кислотно-лаймового центра на фоне рваной угольной фактуры.",
+            "zh-cn": "银色蕨叶围绕酸橙色核心卷曲，带有划痕的叶片衬着撕裂的炭黑纹理。",
+            "pt-br": "Uma samambaia prateada se enrola em torno de um centro verde-lima, sobre texturas de carvão e papel rasgado.",
+            "ja": "銀色のシダがライム色の芯を囲んで渦を巻きます。傷のある葉に、破れた炭色の質感を重ねました。",
+            "ar": "يلتف سرخس فضي حول قلب بلون الليموني الفاقع، بأوراق مخدوشة فوق ملمس فحمي ممزق."
+          }
+        },
+        {
+          "id": "organic-resonance-2",
+          "slug": "organic-resonance-2",
+          "collection": "organic-resonance",
+          "collectionId": "0007-organic-resonance",
+          "s3Folder": "0007-organic-resonance",
+          "fileStem": "organic-resonance",
+          "number": 2,
+          "category": "abstract",
+          "tags": [
+            "stone",
+            "blue"
+          ],
+          "title": {
+            "en": "Fault Line",
+            "ru": "Линия разлома",
+            "zh-cn": "裂隙",
+            "pt-br": "Linha de fratura",
+            "ja": "断層線",
+            "ar": "خط الصدع"
+          },
+          "description": {
+            "en": "Ultramarine seams cut through fractured obsidian, following a thin yellow fault into the dark.",
+            "ru": "Ультрамариновые пласты расколотого обсидиана сходятся вдоль тонкого жёлтого разлома.",
+            "zh-cn": "群青色岩层穿过破裂的黑曜石，沿着细窄的黄色裂缝隐入暗处。",
+            "pt-br": "Camadas ultramarinas atravessam obsidiana fraturada e seguem uma fenda amarela até a escuridão.",
+            "ja": "割れた黒曜石を群青の層が横切り、細い黄色の断層が暗闇へ続きます。",
+            "ar": "تشق طبقات زرقاء داكنة حجر السبج المتصدع، وتتبع شقًا أصفر رفيعًا إلى العتمة."
+          }
+        },
+        {
+          "id": "organic-resonance-3",
+          "slug": "organic-resonance-3",
+          "collection": "organic-resonance",
+          "collectionId": "0007-organic-resonance",
+          "s3Folder": "0007-organic-resonance",
+          "fileStem": "organic-resonance",
+          "number": 3,
+          "category": "abstract",
+          "tags": [
+            "water",
+            "motion"
+          ],
+          "title": {
+            "en": "Liquid Tide",
+            "ru": "Жидкий прилив",
+            "zh-cn": "液态潮汐",
+            "pt-br": "Maré líquida",
+            "ja": "液体の潮",
+            "ar": "مد سائل"
+          },
+          "description": {
+            "en": "A chrome tide coils through black space, catching cyan and magenta along its liquid edges.",
+            "ru": "Хромовый прилив закручивается в чёрном пространстве, отражая циан и мадженту по краям.",
+            "zh-cn": "铬色潮汐在黑色空间中盘旋，流动的边缘映出青色与品红色。",
+            "pt-br": "Uma maré de cromo se curva no espaço preto, refletindo ciano e magenta nas bordas líquidas.",
+            "ja": "クロームの潮が黒い空間でうねり、液体の縁にシアンとマゼンタが映ります。",
+            "ar": "يلتف مد كرومي في فضاء أسود، وتعكس حوافه السائلة اللونين السماوي والأرجواني."
+          }
+        },
+        {
+          "id": "organic-resonance-4",
+          "slug": "organic-resonance-4",
+          "collection": "organic-resonance",
+          "collectionId": "0007-organic-resonance",
+          "s3Folder": "0007-organic-resonance",
+          "fileStem": "organic-resonance",
+          "number": 4,
+          "category": "abstract",
+          "tags": [
+            "light",
+            "night"
+          ],
+          "title": {
+            "en": "Signal Rings",
+            "ru": "Кольца сигнала",
+            "zh-cn": "信号年轮",
+            "pt-br": "Anéis de sinal",
+            "ja": "信号の年輪",
+            "ar": "حلقات الإشارة"
+          },
+          "description": {
+            "en": "Charred growth rings gather around a silver knot, interrupted by a narrow red arc.",
+            "ru": "Обугленные годовые кольца собираются вокруг серебряного сучка, прерываясь узкой красной дугой.",
+            "zh-cn": "焦黑的年轮围拢在银色木结周围，被一道细窄的红色弧线打断。",
+            "pt-br": "Anéis de madeira carbonizada se juntam ao redor de um nó prateado, interrompidos por um arco vermelho.",
+            "ja": "焦げた年輪が銀色の節を囲み、その流れを細い赤い弧が断ち切ります。",
+            "ar": "تلتف حلقات خشب متفحم حول عقدة فضية، ويقطع امتدادها قوس أحمر ضيق."
+          }
+        },
+        {
+          "id": "organic-resonance-5",
+          "slug": "organic-resonance-5",
+          "collection": "organic-resonance",
+          "collectionId": "0007-organic-resonance",
+          "s3Folder": "0007-organic-resonance",
+          "fileStem": "organic-resonance",
+          "number": 5,
+          "category": "abstract",
+          "tags": [
+            "violet",
+            "colour"
+          ],
+          "title": {
+            "en": "Torn Canopy",
+            "ru": "Рваный полог",
+            "zh-cn": "撕裂叶幕",
+            "pt-br": "Copa rasgada",
+            "ja": "裂けた葉の天蓋",
+            "ar": "مظلة ممزقة"
+          },
+          "description": {
+            "en": "Violet and lime leaves overlap like torn print sheets, with metallic veins and worn edges.",
+            "ru": "Фиолетовые и лаймовые листья перекрываются как рваные печатные листы с металлическими прожилками.",
+            "zh-cn": "紫色与酸橙色叶片像撕裂的印刷纸张一样重叠，带有金属叶脉与磨损边缘。",
+            "pt-br": "Folhas violetas e verde-lima se sobrepõem como impressões rasgadas, com nervuras metálicas e bordas gastas.",
+            "ja": "紫とライム色の葉が、破れた印刷紙のように重なります。金属の葉脈と擦れた縁が輪郭を描きます。",
+            "ar": "تتراكب أوراق بنفسجية وليمونية كصفحات مطبوعة ممزقة، بعروق معدنية وحواف بالية."
+          }
+        }
+      ]
+    },
+    "stories": {
+      "en": [
+        "Organic Resonance studies five natural structures: a fern spiral, rock strata, moving water, growth rings and leaf veins. Each keeps a recognizable silhouette while its surface shifts toward chrome, charred material and rough print.",
+        "Lime cuts through the fern, yellow follows the rock fault, and cyan and magenta skim the liquid tide. A red arc breaks the tree rings; violet and lime separate the torn leaves. Scratches, grain and worn edges give the dark spaces texture.",
+        "Each work has its own landscape and portrait composition. The desktop versions spread their shapes across a wide field; the phone versions gather them lower in the frame and leave quieter space above."
+      ],
+      "ru": [
+        "«Природный резонанс» рассматривает пять природных структур: спираль папоротника, каменные пласты, движение воды, годовые кольца и прожилки листьев. Узнаваемые силуэты получают хромированные поверхности, обугленные участки и грубую печатную фактуру.",
+        "Лайм подсвечивает папоротник, жёлтый проходит по каменному разлому, циан и маджента отражаются в жидком приливе. Красная дуга разрывает древесные кольца, а фиолетовый и лаймовый разделяют рваные листья. Царапины, зерно и потёртые края заполняют тёмные участки.",
+        "Для каждой работы создана отдельная горизонтальная и вертикальная композиция. На широком экране формы расходятся по сторонам; на телефоне собираются ниже, оставляя сверху более свободное пространство."
+      ],
+      "zh-cn": [
+        "《自然共鸣》观察五种自然结构：蕨叶螺旋、岩层、水流、年轮与叶脉。每幅作品保留可辨认的轮廓，同时将表面转化为铬色反光、焦黑材质和粗粝的印刷纹理。",
+        "酸橙色照亮蕨叶，黄色沿着岩石裂缝延伸，青色与品红色掠过液态潮汐。一道红弧切开年轮，紫色与酸橙色区分撕裂的叶片。划痕、颗粒和磨损的边缘让暗部也有了质感。",
+        "每幅作品都有独立的横向与纵向构图。桌面版本让形体在宽阔画面中展开；手机版本将主体集中在较低位置，在上方留出更安静的空间。"
+      ],
+      "pt-br": [
+        "Ressonância natural observa cinco estruturas: a espiral da samambaia, camadas de pedra, água em movimento, anéis de crescimento e nervuras de folhas. As silhuetas continuam reconhecíveis, com superfícies de cromo, material carbonizado e impressão áspera.",
+        "O verde-lima ilumina a samambaia, o amarelo percorre a fenda na pedra e ciano e magenta deslizam pela maré líquida. Um arco vermelho corta os anéis; violeta e verde-lima separam as folhas rasgadas. Riscos, grão e bordas gastas dão textura às áreas escuras.",
+        "Cada obra tem uma composição horizontal e outra vertical. No desktop, as formas se espalham pelo quadro; no celular, ficam mais abaixo e deixam uma área mais calma no alto."
+      ],
+      "ja": [
+        "「自然の共鳴」が見つめるのは、シダの渦、岩の層、水の動き、年輪、葉脈という五つの構造です。形の特徴を残しながら、表面をクローム、焦げた素材、粗い印刷の質感へと置き換えています。",
+        "シダにはライム色、岩の断層には黄色、水の縁にはシアンとマゼンタ。赤い弧が年輪を切り、紫とライム色が裂けた葉を分けます。傷や粒子、擦れた縁が暗い部分にも手触りを与えます。",
+        "各作品には別々に構成した横向きと縦向きの画像があります。デスクトップ版では形を横へ広げ、スマートフォン版では下側にまとめて、上部に静かな余白を残しました。"
+      ],
+      "ar": [
+        "تتأمل مجموعة «صدى الطبيعة» خمس بنى طبيعية: لولب السرخس وطبقات الصخر وحركة الماء وحلقات النمو وعروق الأوراق. تحتفظ كل صورة بشكل يمكن تمييزه، بينما تتحول أسطحها إلى الكروم والمواد المتفحمة وملامس الطباعة الخشنة.",
+        "يضيء الليموني السرخس، ويمتد الأصفر على طول الصدع، ويمر السماوي والأرجواني على حواف المد السائل. يقطع قوس أحمر حلقات الخشب، ويفصل البنفسجي والليموني بين الأوراق الممزقة. تضيف الخدوش والحبيبات والحواف البالية ملمسًا إلى المساحات الداكنة.",
+        "لكل عمل تكوين أفقي وآخر عمودي مستقل. تنتشر الأشكال عبر المساحة العريضة في نسخة سطح المكتب، وتتجمع في الجزء السفلي من نسخة الهاتف لتترك مساحة أهدأ في الأعلى."
+      ]
+    },
+    "copy": {
+      "telegram": [
+        {
+          "title": "Organic Resonance",
+          "description": "Organic Resonance: five abstract nature wallpapers in chrome, neon and rough print textures. Fern, stone, water, tree rings and leaves, each with a separate desktop and phone composition. Wallpapers: https://wallpapers.want.foundation/collections/organic-resonance/ Matching emoji: https://t.me/addemoji/want_wallpapers_collections_by_want_wallpapers_bot"
+        }
+      ],
+      "pinterest": [
+        {
+          "title": "Chrome Fern | Organic Resonance",
+          "description": "A curling silver fern opens around an acid-lime core, its scratched leaves set against torn charcoal textures. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-1/"
+        },
+        {
+          "title": "Fault Line | Organic Resonance",
+          "description": "Ultramarine seams cut through fractured obsidian, following a thin yellow fault into the dark. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-2/"
+        },
+        {
+          "title": "Liquid Tide | Organic Resonance",
+          "description": "A chrome tide coils through black space, catching cyan and magenta along its liquid edges. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-3/"
+        },
+        {
+          "title": "Signal Rings | Organic Resonance",
+          "description": "Charred growth rings gather around a silver knot, interrupted by a narrow red arc. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-4/"
+        },
+        {
+          "title": "Torn Canopy | Organic Resonance",
+          "description": "Violet and lime leaves overlap like torn print sheets, with metallic veins and worn edges. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-5/"
+        }
+      ],
+      "tumblr": [
+        {
+          "title": "Organic Resonance",
+          "description": "Organic Resonance: five abstract nature wallpapers in chrome, neon and rough print textures. Fern, stone, water, tree rings and leaves, each with a separate desktop and phone composition. Explore the collection: https://wallpapers.want.foundation/collections/organic-resonance/"
+        }
+      ],
+      "deviantart": [
+        {
+          "title": "Chrome Fern | Organic Resonance",
+          "description": "A curling silver fern opens around an acid-lime core, its scratched leaves set against torn charcoal textures. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-1/"
+        },
+        {
+          "title": "Fault Line | Organic Resonance",
+          "description": "Ultramarine seams cut through fractured obsidian, following a thin yellow fault into the dark. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-2/"
+        },
+        {
+          "title": "Liquid Tide | Organic Resonance",
+          "description": "A chrome tide coils through black space, catching cyan and magenta along its liquid edges. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-3/"
+        },
+        {
+          "title": "Signal Rings | Organic Resonance",
+          "description": "Charred growth rings gather around a silver knot, interrupted by a narrow red arc. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-4/"
+        },
+        {
+          "title": "Torn Canopy | Organic Resonance",
+          "description": "Violet and lime leaves overlap like torn print sheets, with metallic veins and worn edges. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-5/"
+        }
+      ],
+      "flickr": [
+        {
+          "title": "Chrome Fern | Organic Resonance",
+          "description": "A curling silver fern opens around an acid-lime core, its scratched leaves set against torn charcoal textures. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-1/"
+        },
+        {
+          "title": "Fault Line | Organic Resonance",
+          "description": "Ultramarine seams cut through fractured obsidian, following a thin yellow fault into the dark. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-2/"
+        },
+        {
+          "title": "Liquid Tide | Organic Resonance",
+          "description": "A chrome tide coils through black space, catching cyan and magenta along its liquid edges. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-3/"
+        },
+        {
+          "title": "Signal Rings | Organic Resonance",
+          "description": "Charred growth rings gather around a silver knot, interrupted by a narrow red arc. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-4/"
+        },
+        {
+          "title": "Torn Canopy | Organic Resonance",
+          "description": "Violet and lime leaves overlap like torn print sheets, with metallic veins and worn edges. Part of Organic Resonance. Desktop and phone wallpapers: https://wallpapers.want.foundation/wallpapers/organic-resonance-5/"
+        }
+      ]
+    },
+    "assets": [
+      {
+        "file": "organic-resonance-desktop-1.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-1.png",
+        "role": "final",
+        "design": 1,
+        "variant": "desktop",
+        "sha256": "ea6232906b5c5d1b6a848078d57a5bb97ee8b04b184314c8c346df4f43f91d1a",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "file": "organic-resonance-desktop-1.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-1.webp",
+        "role": "preview",
+        "design": 1,
+        "variant": "desktop",
+        "sha256": "b42de152cc8d930feaa51b6c591c529766cc45d8cd61c0aae63a9b8624752d48",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "file": "organic-resonance-mobile-1.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-1.png",
+        "role": "final",
+        "design": 1,
+        "variant": "mobile",
+        "sha256": "c400c8fec7052bfc31134fb33f9921f6a30718667b8b7f9d9feeebdc6eef2555",
+        "width": 2160,
+        "height": 3840
+      },
+      {
+        "file": "organic-resonance-mobile-1.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-1.webp",
+        "role": "preview",
+        "design": 1,
+        "variant": "mobile",
+        "sha256": "99e3b8f21286073852625ee61457846733987810c4647390410af23cdf9f0279",
+        "width": 540,
+        "height": 960
+      },
+      {
+        "file": "social-1.jpg",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/social-1.jpg",
+        "role": "social",
+        "design": 1,
+        "sha256": "aa69a094480e8cf9fc3e8a106084662999d3139b97973a4269f28bce5f28d6c4",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "file": "emoji-1.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/emoji-1.png",
+        "role": "emoji",
+        "design": 1,
+        "sha256": "159c5ec6c8cb751e8b9ebd924e17fbbb8d76ff0aca1c21e8e7bf4afba57ed32e",
+        "width": 100,
+        "height": 100,
+        "name": "Chrome fern",
+        "emoji": "🌿"
+      },
+      {
+        "file": "organic-resonance-desktop-2.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-2.png",
+        "role": "final",
+        "design": 2,
+        "variant": "desktop",
+        "sha256": "92397d8bc35ce974521f6dcfe3714a4421ff282b1dc019caca9ce85edbb65638",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "file": "organic-resonance-desktop-2.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-2.webp",
+        "role": "preview",
+        "design": 2,
+        "variant": "desktop",
+        "sha256": "6ab9f5c8cdcdb0c11ba8542cf7a78e982dad47c8b4034828a64adab12af1d309",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "file": "organic-resonance-mobile-2.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-2.png",
+        "role": "final",
+        "design": 2,
+        "variant": "mobile",
+        "sha256": "508974fa01f780654d421af99eb0f768d21d31b1cdeefde8dbad83923f7a7f79",
+        "width": 2160,
+        "height": 3840
+      },
+      {
+        "file": "organic-resonance-mobile-2.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-2.webp",
+        "role": "preview",
+        "design": 2,
+        "variant": "mobile",
+        "sha256": "c567c7e72d30c0442f984bc840bbe519f2751cf50a1ed285ef508cdfe5bfeecb",
+        "width": 540,
+        "height": 960
+      },
+      {
+        "file": "social-2.jpg",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/social-2.jpg",
+        "role": "social",
+        "design": 2,
+        "sha256": "2981fe59c8e9dc81124f3b9631448d653bc60b1d53894485aa759a1424492f6d",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "file": "emoji-2.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/emoji-2.png",
+        "role": "emoji",
+        "design": 2,
+        "sha256": "dc19e3bf5b31dc30ea3ce470e25d01e30f725f23b85ef3819c29a21c6fa21e3e",
+        "width": 100,
+        "height": 100,
+        "name": "Fault shard",
+        "emoji": "🪨"
+      },
+      {
+        "file": "organic-resonance-desktop-3.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-3.png",
+        "role": "final",
+        "design": 3,
+        "variant": "desktop",
+        "sha256": "646b7d6931bd49e6d8df522110cd5fbde8b28d3caf2dd13e619e3b32deaeea8b",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "file": "organic-resonance-desktop-3.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-3.webp",
+        "role": "preview",
+        "design": 3,
+        "variant": "desktop",
+        "sha256": "31d8f114278f9952c9e0bbc212e0e71de5dcd2d407901a6c77db07a47cdded64",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "file": "organic-resonance-mobile-3.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-3.png",
+        "role": "final",
+        "design": 3,
+        "variant": "mobile",
+        "sha256": "209b008fea38d7935dc8d7abac7452207d47462688d52f50b215f883b69147e9",
+        "width": 2160,
+        "height": 3840
+      },
+      {
+        "file": "organic-resonance-mobile-3.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-3.webp",
+        "role": "preview",
+        "design": 3,
+        "variant": "mobile",
+        "sha256": "35eade1807b86143424d2e489c580a91d9c76e12ddbc25da729530fae817f461",
+        "width": 540,
+        "height": 960
+      },
+      {
+        "file": "social-3.jpg",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/social-3.jpg",
+        "role": "social",
+        "design": 3,
+        "sha256": "f89f5bcc89b0d04ac25ae3c1cced9823c3e99315459b9e2de6f8cddbc625cd4e",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "file": "emoji-3.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/emoji-3.png",
+        "role": "emoji",
+        "design": 3,
+        "sha256": "f6944ddaf14950b36b65647cfc2bf0e4da47f769a4fd9d7e2d5857666b45bd57",
+        "width": 100,
+        "height": 100,
+        "name": "Liquid tide",
+        "emoji": "💧"
+      },
+      {
+        "file": "organic-resonance-desktop-4.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-4.png",
+        "role": "final",
+        "design": 4,
+        "variant": "desktop",
+        "sha256": "244e60e26548a5e91bbbde9a983c4f17b5c04c7f3eef4ecec569e35945471e27",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "file": "organic-resonance-desktop-4.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-4.webp",
+        "role": "preview",
+        "design": 4,
+        "variant": "desktop",
+        "sha256": "936af0f53217a882b77af457082ca839dd27f57ea36ea52890810bc525f27e26",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "file": "organic-resonance-mobile-4.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-4.png",
+        "role": "final",
+        "design": 4,
+        "variant": "mobile",
+        "sha256": "c7d07980743d4d2ef044ca2c11890aeb307e75d7575aada8b5df4862b0b85587",
+        "width": 2160,
+        "height": 3840
+      },
+      {
+        "file": "organic-resonance-mobile-4.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-4.webp",
+        "role": "preview",
+        "design": 4,
+        "variant": "mobile",
+        "sha256": "d7cd154d133a2efc5ecbbdcbdd44e7cd38cc9ad4b45e9b8ba224478bac1fcf1d",
+        "width": 540,
+        "height": 960
+      },
+      {
+        "file": "social-4.jpg",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/social-4.jpg",
+        "role": "social",
+        "design": 4,
+        "sha256": "02fbfa9e44d4baf62289881f9e382b947f51528f0b2fb9071e2c9069a4ce1799",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "file": "emoji-4.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/emoji-4.png",
+        "role": "emoji",
+        "design": 4,
+        "sha256": "61d59ac0f377a813dafcfe0248cc51b050e735b8cd4d8d1a10d04005660994dc",
+        "width": 100,
+        "height": 100,
+        "name": "Signal rings",
+        "emoji": "🪵"
+      },
+      {
+        "file": "organic-resonance-desktop-5.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-5.png",
+        "role": "final",
+        "design": 5,
+        "variant": "desktop",
+        "sha256": "834e35087c61d48d1c8200b2f2ae24f69c120e1b81c032afd7738b0ca10e9e1a",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "file": "organic-resonance-desktop-5.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-desktop-5.webp",
+        "role": "preview",
+        "design": 5,
+        "variant": "desktop",
+        "sha256": "b4fc42cd13752cc13535f9b21249222dcae580dc07e4244c2d1208d7f8394c5a",
+        "width": 960,
+        "height": 540
+      },
+      {
+        "file": "organic-resonance-mobile-5.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-5.png",
+        "role": "final",
+        "design": 5,
+        "variant": "mobile",
+        "sha256": "895e9614f991d0008f5dbb84ea4de63b7f87a4d8192a98c300b4ab8a0f3df8e1",
+        "width": 2160,
+        "height": 3840
+      },
+      {
+        "file": "organic-resonance-mobile-5.webp",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/organic-resonance-mobile-5.webp",
+        "role": "preview",
+        "design": 5,
+        "variant": "mobile",
+        "sha256": "fa6442b6d4177d38506686e924a812d171acde47a1488e88d2df4eebb6f7fc19",
+        "width": 540,
+        "height": 960
+      },
+      {
+        "file": "social-5.jpg",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/social-5.jpg",
+        "role": "social",
+        "design": 5,
+        "sha256": "d19a6fc24536df8719050c65c3a7b48541749818639cf234d421c8309b813016",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "file": "emoji-5.png",
+        "url": "https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0007-organic-resonance/emoji-5.png",
+        "role": "emoji",
+        "design": 5,
+        "sha256": "e4238768d1b479704311d47529c0031dadaa43dfb74ee9f19b0d329aebe5ed18",
+        "width": 100,
+        "height": 100,
+        "name": "Torn canopy",
+        "emoji": "🍃"
+      }
+    ]
+  }
+}
