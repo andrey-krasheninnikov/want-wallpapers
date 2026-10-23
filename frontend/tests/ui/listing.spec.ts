@@ -3,6 +3,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHmac } from 'node:crypto';
 import { database, secretDirectory } from './database';
+import { collections, wallpapers } from '../../src/data/catalog';
+
+const collectionDesigns = wallpapers.filter(item => item.collectionId === '0001-contours-of-silence');
+const discoveryDesigns = wallpapers.filter(item => item.collectionId !== '0001-contours-of-silence' && item.id !== 'woven-spectrum-2');
 
 const token = readFileSync(join(secretDirectory, 'ui_catalog_token'), 'utf8').trim();
 async function setListing(request: APIRequestContext, kind: 'collections' | 'wallpapers', id: string, listed: boolean) {
@@ -29,25 +33,25 @@ for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) test('fresh discove
   page.on('console', message => { if (message.type() === 'error' && /hydration|Minified React error|didn't match/i.test(message.text())) errors.push(message.text()); });
   const home = await page.goto(prefix + '/');
   expect(home?.headers()['cache-control']).toBe('no-store');
-  await expect(page.locator('[data-collection-carousel] article')).toHaveCount(5);
-  await expect(page.locator('.hero-meta')).toContainText('29');
+  await expect(page.locator('[data-collection-carousel] article')).toHaveCount(collections.length - 1);
+  await expect(page.locator('.hero-meta')).toContainText(String(discoveryDesigns.length));
   await expect(page.locator('[data-scene-wallpaper]')).not.toHaveAttribute('data-scene-wallpaper', /contours-of-silence|woven-spectrum-2/);
   const dataUrl = await page.locator('astro-island[component-url*="DeviceScene"]').evaluate(element => JSON.parse(element.getAttribute('props')!).dataUrl[1] as string);
   expect(dataUrl).toContain('?listing=');
   const gallery = await request.get(dataUrl);
   expect(gallery.headers()['cache-control']).toBe('no-store');
   const payload = await gallery.json();
-  expect(payload.wallpapers).toHaveLength(29);
+  expect(payload.wallpapers).toHaveLength(discoveryDesigns.length);
   expect(payload.wallpapers.some((item: { id: string }) => /contours-of-silence|woven-spectrum-2/.test(item.id))).toBe(false);
   expect(payload.stories['contours-of-silence']).toBeUndefined();
   const rawHome = await request.get(prefix + '/index.html', { headers: { 'If-None-Match': '*', Range: 'bytes=0-20' } });
   expect(rawHome.status()).toBe(200);
   expect(await rawHome.text()).not.toContain('contours-of-silence');
   await page.goto(prefix + '/search/');
-  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(29);
-  await expect(page.locator('[data-discovery-count="results"]')).toContainText('29');
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(discoveryDesigns.length);
+  await expect(page.locator('[data-discovery-count="results"]')).toContainText(String(discoveryDesigns.length));
   await page.goto(prefix + '/collections/contours-of-silence/');
-  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(14);
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(collectionDesigns.length - 1);
   expect((await request.get(prefix + '/collections/contours-of-silence/')).status()).toBe(200);
   await page.goto(prefix + '/wallpapers/contours-of-silence-2/');
   await expect(page.locator('#wallpaper-view')).toBeVisible();
@@ -60,7 +64,7 @@ for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) test('fresh discove
   expect(download.status()).toBe(200); expect(download.headers()['content-disposition']).toContain('attachment');
   await setListing(request, 'collections', '0001-contours-of-silence', true);
   await page.goto(prefix + '/search/');
-  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(43);
+  await expect(page.locator('[data-wallpaper-card]')).toHaveCount(wallpapers.length - 2);
   expect(await page.locator('[data-wallpaper-card="contours-of-silence-2"]').count()).toBe(0);
   expect(errors).toEqual([]);
 });
@@ -77,7 +81,7 @@ test('empty discovery remains usable and direct pages remain indexable', async (
   expect(await page.locator('.gallery-grid').count()).toBe(0);
   expect(errors).toEqual([]);
   await page.goto('/');
-  await expect(page.locator('[data-collection-carousel] article')).toHaveCount(6);
+  await expect(page.locator('[data-collection-carousel] article')).toHaveCount(collections.length);
   expect(await page.locator('[data-scene-wallpaper], .home-mosaic').count()).toBe(0);
   await expect(page.locator('.hero-meta')).toContainText('0');
   await page.goto('/collections/contours-of-silence/');

@@ -14,7 +14,8 @@ target
 **/.env.*
 **/*.pem
 **/*.key
-deploy
+deploy/*
+!deploy/verify-distribution-grants.sql
 scripts
 docs
 **/tests

@@ -131,21 +131,25 @@ async function mergePullRequest(number: number, base: string, previous: string, 
     && merged.tree.sha === tree, 'publication-merge-result-changed');
   return value.merge_commit_sha as string;
 }
+export function workspaceVersion(input: { package: { version?: unknown }; cargo: string; lock: string }) {
+  const version = input.package?.version;
+  requirePackage(typeof version === 'string' && /^\d+\.\d+\.\d+$/.test(version)
+    && input.cargo.match(/^version = "([^"]+)"/m)?.[1] === version
+    && input.lock.match(/name = "want-wallpapers-server"\nversion = "([^"]+)"/)?.[1] === version, 'workspace-release-version-mismatch');
+  return version;
+}
 function minorVersion(main: string, version: string) {
-  const old = JSON.parse(git(source, 'show', `${main}:package.json`)).version;
-  requirePackage(/^\d+\.\d+\.\d+$/.test(old) && version === `${old.split('.')[0]}.${Number(old.split('.')[1]) + 1}.0`, 'next-minor-version-required');
+  const old = workspaceVersion({ package: JSON.parse(git(source, 'show', `${main}:package.json`)), cargo: git(source, 'show', `${main}:Cargo.toml`), lock: git(source, 'show', `${main}:Cargo.lock`) });
+  requirePackage(version === `${old.split('.')[0]}.${Number(old.split('.')[1]) + 1}.0`, 'next-minor-version-required');
   const latest = git(source, 'tag', '--merged', main, '--sort=-version:refname').split('\n').find(value => /^v\d+\.\d+\.\d+$/.test(value));
   requirePackage(latest === 'v' + old, 'main-release-version-mismatch');
-  const cargo = git(source, 'show', `${main}:Cargo.toml`).match(/^version = "([^"]+)"/m)?.[1];
-  const lock = git(source, 'show', `${main}:Cargo.lock`).match(/name = "want-wallpapers-server"\nversion = "([^"]+)"/)?.[1];
-  requirePackage(cargo === old && lock === old, 'main-release-version-mismatch');
 }
-async function localRelease(mode: 'check' | 'prepare' | 'deploy', path: string, tag: string) {
+async function localRelease(mode: 'check' | 'prepare' | 'deploy', path: string, tag: string, stateRoot = join(homedir(), '.local/state/want-wallpapers/releases')) {
   const environment = { ...process.env, PATH: join(homedir(), '.local/share/want-wallpapers/tools/bin') + ':' + process.env.PATH };
-  const child = Bun.spawn(['python3', '-B', join(source, 'scripts/local-release.py'), mode, '--tag', tag, '--profile', 'full', '--source-root', path, ...(mode === 'prepare' ? ['--publish'] : [])],
+  const child = Bun.spawn(['python3', '-B', join(source, 'scripts/local-release.py'), mode, '--tag', tag, '--profile', 'full', '--source-root', path, '--state-root', stateRoot, ...(mode === 'prepare' ? ['--publish'] : [])],
     { cwd: path, env: environment, stdout: 'inherit', stderr: 'inherit' });
   requirePackage(await child.exited === 0, 'collection-local-release-failed:' + mode);
-  const result = readPackageJson(join(homedir(), `.local/state/want-wallpapers/releases/${tag}/release.json`));
+  const result = readPackageJson(join(stateRoot, tag, 'release.json'));
   requirePackage(result.tag === tag && result.verificationProfile === 'full', 'collection-local-release-identity-mismatch'); return result;
 }
 function protectTag(tag: string) {
@@ -199,15 +203,45 @@ export async function verifyLiveCollection(collection: PublicCollectionPackage, 
   return { pages: locales.length * 6, downloads: 10, revision: sha, verifiedAt: new Date().toISOString() };
 }
 
-export function catalogueBaseline(input: any, collection: PublicCollectionPackage) {
+export function releaseCorrections(input: any, packageHash: string, originalSha: string): { pullRequest: number; previousSha: string; sha: string }[] {
+  requirePackage(input?.schemaVersion === 1 && input.packageHash === packageHash && input.originalSha === originalSha
+    && Object.keys(input).sort().join(',') === 'corrections,originalSha,packageHash,schemaVersion'
+    && Array.isArray(input.corrections) && input.corrections.length > 0 && input.corrections.length <= 8, 'release-correction-mismatch');
+  let previous = originalSha; const numbers = new Set<number>(), revisions = new Set([originalSha]);
+  for (const correction of input.corrections) {
+    requirePackage(correction && Object.keys(correction).sort().join(',') === 'previousSha,pullRequest,sha'
+      && Number.isSafeInteger(correction.pullRequest) && correction.pullRequest > 0 && !numbers.has(correction.pullRequest)
+      && correction.previousSha === previous && shaPattern.test(correction.sha) && !revisions.has(correction.sha), 'release-correction-mismatch');
+    numbers.add(correction.pullRequest); revisions.add(correction.sha); previous = correction.sha;
+  }
+  return input.corrections;
+}
+
+export function applyListingApproval(snapshot: any, approval: any, packageHash: string, development: string) {
+  requirePackage(!Object.hasOwn(snapshot, 'listing') && approval?.schemaVersion === 1
+    && Object.keys(approval).sort().join(',') === 'expectedDevelopment,listing,packageHash,schemaVersion'
+    && approval.packageHash === packageHash && approval.expectedDevelopment === development, 'listing-approval-mismatch');
+  return { ...snapshot, listing: approval.listing };
+}
+
+export function catalogueBaseline(input: any, collection: PublicCollectionPackage, source: 'remote' | 'build-snapshot' = 'remote') {
+  // Snapshots predating listing controls contain only visible records.
+  const listing = source === 'build-snapshot' && !Object.hasOwn(input, 'listing')
+    ? { collections: Object.fromEntries(input.collections.map((item: any) => [item.id, true])), wallpapers: Object.fromEntries(input.wallpapers.map((item: any) => [item.id, true])) }
+    : input.listing;
+  requirePackage(listing && [input.collections, input.wallpapers].every((items, index) => {
+    const flags = index === 0 ? listing.collections : listing.wallpapers;
+    return flags && typeof flags === 'object' && Object.keys(flags).length === items.length && items.every((item: any) => typeof flags[item.id] === 'boolean');
+  }), 'invalid-catalogue-listing');
   const ids = new Set(collection.manifest.wallpapers.map(item => item.id)), id = collection.manifest.collection.id;
+  const dates = (values: Record<string, string>) => Object.entries(values).map(([key, value]) => [key, value.replace(/\.0+Z$/, 'Z')] as const);
   return digest(canonical({
     collections: input.collections.filter((item: any) => item.id !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
     wallpapers: input.wallpapers.filter((item: any) => item.collectionId !== id).sort((a: any, b: any) => a.id.localeCompare(b.id)),
-    publicationDates: Object.fromEntries(Object.entries(input.publicationDates ?? {}).filter(([key]) => !ids.has(key))),
-    collectionPublicationDates: Object.fromEntries(Object.entries(input.collectionPublicationDates ?? {}).filter(([key]) => key !== id)),
-    listing: { collections: Object.fromEntries(Object.entries(input.listing.collections).filter(([key]) => key !== id)),
-      wallpapers: Object.fromEntries(Object.entries(input.listing.wallpapers).filter(([key]) => !ids.has(key))) },
+    publicationDates: Object.fromEntries(dates(input.publicationDates ?? {}).filter(([key]) => !ids.has(key))),
+    collectionPublicationDates: Object.fromEntries(dates(input.collectionPublicationDates ?? {}).filter(([key]) => key !== id)),
+    listing: { collections: Object.fromEntries(Object.entries(listing.collections).filter(([key]) => key !== id)),
+      wallpapers: Object.fromEntries(Object.entries(listing.wallpapers).filter(([key]) => !ids.has(key))) },
   }));
 }
 
@@ -256,9 +290,11 @@ export async function publishCollection(input: string, configPath: string) {
     assertRefs(config.expectedDevelopment, config.expectedMain);
     const response = await fetch(production + '/api/v1/catalog/snapshot', { redirect: 'error', signal: AbortSignal.timeout(15000) });
     requirePackage(response.ok, 'catalogue-snapshot-unavailable'); const snapshot = await response.json();
-    const expected = JSON.parse(git(source, 'show', `${config.expectedDevelopment}:frontend/src/data/catalog-live.json`));
+    let expected = JSON.parse(git(source, 'show', `${config.expectedDevelopment}:frontend/src/data/catalog-live.json`));
+    const listingApproval = packagePath(root, 'publication/listing-approval.json');
+    if (existsSync(listingApproval)) expected = applyListingApproval(expected, readPackageJson(listingApproval), packageHash, config.expectedDevelopment);
     const baseline = catalogueBaseline(snapshot, collection);
-    requirePackage(baseline === catalogueBaseline(expected, collection), 'unrelated-catalogue-changes');
+    requirePackage(baseline === catalogueBaseline(expected, collection, 'build-snapshot'), 'unrelated-catalogue-changes');
     const saved = await catalogRequest<{ collections: { item: Collection; archived: boolean }[]; wallpapers: { item: Wallpaper; archived: boolean }[] }>('');
     const existing = saved.collections.find(record => record.item.id === collection.manifest.collection.id);
     if (!existing) {
@@ -289,7 +325,7 @@ export async function publishCollection(input: string, configPath: string) {
   const featurePr = await step('feature-pr', { head: feature.sha }, resuming => pullRequest('development', featureBranch, feature.sha, `feat: add ${value.manifest.collection.id} collection`, featureBody, resuming));
   const development = await step('feature-merge', { head: feature.sha, base: config.expectedDevelopment }, () => mergePullRequest(featurePr, 'development', config.expectedDevelopment, feature.sha, `feat: add ${value.manifest.collection.id} collection`, 'squash', config.expectedDevelopment, config.expectedMain));
   const releaseBranch = `release/${tag}`;
-  const release = await step('release-candidate', { development, main: config.expectedMain, version: config.version }, async () => {
+  const initialRelease = await step('release-candidate', { development, main: config.expectedMain, version: config.version }, async () => {
     assertRefs(development, config.expectedMain); git(source, 'fetch', '--all', '--prune');
     requirePackage(git(source, 'merge-base', config.expectedMain, development) === config.expectedMain, 'main-backmerge-required-before-collection-release');
     const path = worktree(stateRoot, 'release', development, releaseBranch);
@@ -307,7 +343,39 @@ export async function publishCollection(input: string, configPath: string) {
     const sha = commit(path, development, ['package.json', 'Cargo.toml', 'Cargo.lock', 'CHANGELOG.md'], `chore(release): prepare ${tag}`);
     publishBranch(path, releaseBranch, sha); return { path, sha, notes };
   });
-  await step('release-checks', { tree: git(release.path, 'rev-parse', 'HEAD^{tree}'), tag }, async () => { assertRefs(development, config.expectedMain); await localRelease('check', release.path, tag); return { profile: 'full' }; });
+  const correctionsPath = packagePath(root, 'publication/release-corrections.json');
+  const corrections = existsSync(correctionsPath) ? releaseCorrections(readPackageJson(correctionsPath), packageHash, initialRelease.sha) : [];
+  const correctionPhases = corrections.map(item => 'release-correction-' + item.sha);
+  requirePackage(Object.keys(journal.value.phases).filter(name => name.startsWith('release-correction-')).every(name => correctionPhases.includes(name)), 'release-correction-history-mismatch');
+  let release = initialRelease;
+  for (const correction of corrections) {
+    release = await step('release-correction-' + correction.sha, correction, async () => {
+      assertRefs(development, config.expectedMain);
+      requirePackage(!journal.value.phases['release-pr']
+        && gh(`pulls?state=all&head=andrey-krasheninnikov:${releaseBranch}&base=main&per_page=100`).length === 0
+        && !git(source, 'ls-remote', 'origin', `refs/tags/${tag}`), 'release-correction-too-late');
+      const pr = gh(`pulls/${correction.pullRequest}`);
+      requirePackage(pr.merged && pr.base.ref === releaseBranch && pr.head.repo.full_name === repository && pr.base.repo.full_name === repository
+        && pr.merge_commit_sha === correction.sha, 'release-correction-pr-mismatch');
+      const merged = gh(`git/commits/${correction.sha}`);
+      requirePackage(isDeepStrictEqual(merged.parents.map((item: any) => item.sha), [release.sha, pr.head.sha])
+        && merged.tree.sha === gh(`git/commits/${pr.head.sha}`).tree.sha, 'release-correction-merge-mismatch');
+      git(source, 'fetch', 'origin', releaseBranch);
+      requirePackage(workspaceVersion({ package: JSON.parse(git(source, 'show', `${correction.sha}:package.json`)), cargo: git(source, 'show', `${correction.sha}:Cargo.toml`), lock: git(source, 'show', `${correction.sha}:Cargo.lock`) }) === config.version, 'release-correction-version-mismatch');
+      git(source, 'diff', '--exit-code', initialRelease.sha, correction.sha, '--', 'CHANGELOG.md', 'frontend/src/data/catalog-live.json', 'frontend/src/data/collection-publications.json');
+      return { ...initialRelease, sha: correction.sha };
+    });
+  }
+  if (corrections.length) {
+    const remote = git(source, 'ls-remote', 'origin', `refs/heads/${releaseBranch}`);
+    requirePackage(remote.split('\t')[0] === release.sha || !remote && journal.value.phases.cleanup?.state === 'confirmed', 'release-correction-branch-changed');
+    requirePackage(!git(release.path, 'status', '--porcelain'), 'dirty-release-checkout');
+    requirePackage([initialRelease.sha, ...corrections.map(item => item.sha)].includes(git(release.path, 'rev-parse', 'HEAD')), 'unexpected-release-correction-checkout');
+    git(release.path, 'merge', '--ff-only', release.sha);
+    requirePackage(git(release.path, 'rev-parse', 'HEAD') === release.sha, 'release-correction-checkout-mismatch');
+  }
+  const localStateRoot = corrections.length ? join(homedir(), '.local/state/want-wallpapers/collection-releases', packageHash, release.sha) : undefined;
+  await step(corrections.length ? 'release-checks-' + release.sha : 'release-checks', { tree: git(release.path, 'rev-parse', 'HEAD^{tree}'), tag }, async () => { assertRefs(development, config.expectedMain); await localRelease('check', release.path, tag, localStateRoot); return { profile: 'full' }; });
   const releaseBody = `Releases ${value.manifest.collection.id} as ${tag}.\n\nCollection PR: https://github.com/${repository}/pull/${featurePr}\nPackage: ${packageHash}\nRelease commit: ${release.sha}\n\nThe full local release gate passed. The existing MacBook publisher and restricted SSH deployment retain backup, PostgreSQL 18 restore verification, migrations and readiness checks. No Actions are dispatched.`;
   const releasePr = await step('release-pr', { head: release.sha }, resuming => pullRequest('main', releaseBranch, release.sha, `chore(release): publish ${tag}`, releaseBody, resuming));
   const main = await step('release-merge', { head: release.sha, base: config.expectedMain }, () => mergePullRequest(releasePr, 'main', config.expectedMain, release.sha, `chore(release): publish ${tag}`, 'merge', development, config.expectedMain));
@@ -328,9 +396,9 @@ export async function publishCollection(input: string, configPath: string) {
     requirePackage(saved.length === 2 && saved.some(line => line === main + `\trefs/tags/${tag}^{}`), 'release-tag-not-confirmed'); return { tag, sha: main };
   });
   const tagged = worktree(stateRoot, 'tag', main);
-  const publication = await step('image', { tag, sha: main }, async () => { assertRefs(development, main); const state = await localRelease('prepare', tagged, tag); return { digest: state.indexDigest }; });
+  const publication = await step('image', { tag, sha: main }, async () => { assertRefs(development, main); const state = await localRelease('prepare', tagged, tag, localStateRoot); return { digest: state.indexDigest }; });
   const deployment = await step('deployment', { tag, sha: main, digest: publication.digest }, async () => {
-    assertRefs(development, main); const state = await localRelease('deploy', tagged, tag); return deploymentReceipt(state, collection, tag, main);
+    assertRefs(development, main); const state = await localRelease('deploy', tagged, tag, localStateRoot); return deploymentReceipt(state, collection, tag, main);
   });
   const live = await step('live', deployment, () => verifyLiveCollection(collection, main));
   const backmerge = await step('backmerge', { development, main }, async () => {

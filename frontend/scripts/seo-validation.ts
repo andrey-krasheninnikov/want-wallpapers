@@ -1,7 +1,8 @@
 import sax from 'sax';
 import { decodeHTMLAttribute, decodeHTML } from 'entities';
 import { legalPage, type LegalKey } from '../src/data/legal';
-import { collections, getCollection, getWallpaper, locales, type Locale } from '../src/data/catalog';
+import publications from '../src/data/collection-publications.json';
+import { collections, getCollection, getCollectionWallpapers, getWallpaper, locales, type Locale } from '../src/data/catalog';
 import { collectionStories, editorialCopy, supportCopy } from '../src/data/editorial';
 
 function attributeValue(element: { getAttribute(name: string): string | null }, name: string): string | null {
@@ -202,6 +203,7 @@ export function validateLocalizedContent(page: Page): void {
     require(collection, `${page.path}: unknown collection`);
     required = [text.story, text.files, text.licenseText, collection.title[locale], ...(collectionStories[collection.slug]?.[locale] ?? ['']),
       wallpaper?.description[locale] ?? collection.description[locale]];
+    if (wallpaper && Object.hasOwn(publications, collection.id)) required.push(collection.description[locale], ...getCollectionWallpapers(collection.slug).flatMap(item => [item.title[locale], item.description[locale]]), ...supportCopy[locale].license.slice(1));
   } else {
     const key = path.slice(1, -1);
     require(['privacy', 'terms', 'cookies', 'license', 'contact', 'feedback'].includes(key), `${page.path}: unknown public content template`);

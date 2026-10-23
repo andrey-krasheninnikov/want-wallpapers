@@ -2297,11 +2297,25 @@ async fn catalog_rows(pool: &PgPool) -> Vec<Value> {
     .unwrap()
 }
 
+// These locale migrations cover only collections 0001 through 0006.
+fn catalog_before_locale_migrations() -> Value {
+    let mut source: Value =
+        serde_json::from_str(include_str!("../../frontend/src/data/catalog-live.json")).unwrap();
+    source["collections"]
+        .as_array_mut()
+        .unwrap()
+        .retain(|item| item["id"].as_str().unwrap() < "0007");
+    source["wallpapers"]
+        .as_array_mut()
+        .unwrap()
+        .retain(|item| item["collectionId"].as_str().unwrap() < "0007");
+    source
+}
+
 #[sqlx::test(migrations = false)]
 async fn japanese_upgrade_preserves_records_and_existing_translations(pool: PgPool) {
     before_japanese(&pool).await;
-    let source: Value =
-        serde_json::from_str(include_str!("../../frontend/src/data/catalog-live.json")).unwrap();
+    let source = catalog_before_locale_migrations();
     for collection in source["collections"]
         .as_array()
         .unwrap()
@@ -2566,8 +2580,7 @@ async fn arabic_backfill(pool: &PgPool) -> Result<(), sqlx::Error> {
 #[sqlx::test(migrations = false)]
 async fn arabic_upgrade_preserves_catalog_and_existing_translations(pool: PgPool) {
     before_arabic(&pool).await;
-    let source: Value =
-        serde_json::from_str(include_str!("../../frontend/src/data/catalog-live.json")).unwrap();
+    let source = catalog_before_locale_migrations();
     for kind in ["collections", "wallpapers"] {
         for original in source[kind].as_array().unwrap() {
             let mut item = original.clone();
