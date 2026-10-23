@@ -131,14 +131,18 @@ async function mergePullRequest(number: number, base: string, previous: string, 
     && merged.tree.sha === tree, 'publication-merge-result-changed');
   return value.merge_commit_sha as string;
 }
+export function workspaceVersion(input: { package: { version?: unknown }; cargo: string; lock: string }) {
+  const version = input.package?.version;
+  requirePackage(typeof version === 'string' && /^\d+\.\d+\.\d+$/.test(version)
+    && input.cargo.match(/^version = "([^"]+)"/m)?.[1] === version
+    && input.lock.match(/name = "want-wallpapers-server"\nversion = "([^"]+)"/)?.[1] === version, 'workspace-release-version-mismatch');
+  return version;
+}
 function minorVersion(main: string, version: string) {
-  const old = JSON.parse(git(source, 'show', `${main}:package.json`)).version;
-  requirePackage(/^\d+\.\d+\.\d+$/.test(old) && version === `${old.split('.')[0]}.${Number(old.split('.')[1]) + 1}.0`, 'next-minor-version-required');
+  const old = workspaceVersion({ package: JSON.parse(git(source, 'show', `${main}:package.json`)), cargo: git(source, 'show', `${main}:Cargo.toml`), lock: git(source, 'show', `${main}:Cargo.lock`) });
+  requirePackage(version === `${old.split('.')[0]}.${Number(old.split('.')[1]) + 1}.0`, 'next-minor-version-required');
   const latest = git(source, 'tag', '--merged', main, '--sort=-version:refname').split('\n').find(value => /^v\d+\.\d+\.\d+$/.test(value));
   requirePackage(latest === 'v' + old, 'main-release-version-mismatch');
-  const cargo = git(source, 'show', `${main}:Cargo.toml`).match(/^version = "([^"]+)"/m)?.[1];
-  const lock = git(source, 'show', `${main}:Cargo.lock`).match(/name = "want-wallpapers-server"\nversion = "([^"]+)"/)?.[1];
-  requirePackage(cargo === old && lock === old, 'main-release-version-mismatch');
 }
 async function localRelease(mode: 'check' | 'prepare' | 'deploy', path: string, tag: string, stateRoot = join(homedir(), '.local/state/want-wallpapers/releases')) {
   const environment = { ...process.env, PATH: join(homedir(), '.local/share/want-wallpapers/tools/bin') + ':' + process.env.PATH };
@@ -357,7 +361,8 @@ export async function publishCollection(input: string, configPath: string) {
       requirePackage(isDeepStrictEqual(merged.parents.map((item: any) => item.sha), [release.sha, pr.head.sha])
         && merged.tree.sha === gh(`git/commits/${pr.head.sha}`).tree.sha, 'release-correction-merge-mismatch');
       git(source, 'fetch', 'origin', releaseBranch);
-      git(source, 'diff', '--exit-code', initialRelease.sha, correction.sha, '--', 'package.json', 'Cargo.toml', 'Cargo.lock', 'CHANGELOG.md', 'frontend/src/data/catalog-live.json', 'frontend/src/data/collection-publications.json');
+      requirePackage(workspaceVersion({ package: JSON.parse(git(source, 'show', `${correction.sha}:package.json`)), cargo: git(source, 'show', `${correction.sha}:Cargo.toml`), lock: git(source, 'show', `${correction.sha}:Cargo.lock`) }) === config.version, 'release-correction-version-mismatch');
+      git(source, 'diff', '--exit-code', initialRelease.sha, correction.sha, '--', 'CHANGELOG.md', 'frontend/src/data/catalog-live.json', 'frontend/src/data/collection-publications.json');
       return { ...initialRelease, sha: correction.sha };
     });
   }

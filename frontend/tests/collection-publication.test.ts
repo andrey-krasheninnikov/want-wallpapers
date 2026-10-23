@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { PublicationJournal, applyListingApproval, releaseCorrections, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
+import { PublicationJournal, applyListingApproval, releaseCorrections, workspaceVersion, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
@@ -162,5 +162,14 @@ test('release corrections preserve a package-bound append-only revision chain', 
   expect(releaseCorrections({ ...input, corrections: [correction, second] }, hash, sha)).toHaveLength(2);
   for (const changed of [null, { ...input, packageHash: 'wrong' }, { ...input, originalSha: 'wrong' }, { ...input, extra: true }, { ...input, corrections: [] }, { ...input, corrections: [second] }, { ...input, corrections: [correction, correction] }, { ...input, corrections: [correction, { ...second, sha }] }, { ...input, corrections: [{ ...correction, pullRequest: 1.5 }] }, { ...input, corrections: [{ ...correction, sha: 'wrong' }] }]) {
     expect(() => releaseCorrections(changed, hash, sha)).toThrow('release-correction-mismatch');
+  }
+});
+
+test('release version stays synchronized while reviewed dependency versions may change', () => {
+  const input = { package: { version: '1.10.0' }, cargo: '[workspace.package]\nversion = "1.10.0"', lock: 'name = "want-wallpapers-server"\nversion = "1.10.0"\n\nname = "ctutils"\nversion = "0.4.2"' };
+  expect(workspaceVersion(input)).toBe('1.10.0');
+  expect(workspaceVersion({ ...input, lock: input.lock.replace('0.4.2', '0.4.4') })).toBe('1.10.0');
+  for (const changed of [{ ...input, package: { version: '1.11.0' } }, { ...input, cargo: input.cargo.replace('1.10.0', '1.11.0') }, { ...input, lock: input.lock.replace('1.10.0', '1.11.0') }, { ...input, package: { version: 'invalid' } }]) {
+    expect(() => workspaceVersion(changed)).toThrow('workspace-release-version-mismatch');
   }
 });
