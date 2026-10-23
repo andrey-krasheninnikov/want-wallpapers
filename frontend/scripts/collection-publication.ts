@@ -355,7 +355,7 @@ export async function publishCollection(input: string, configPath: string) {
       requirePackage(isDeepStrictEqual(merged.parents.map((item: any) => item.sha), [release.sha, pr.head.sha])
         && merged.tree.sha === gh(`git/commits/${pr.head.sha}`).tree.sha, 'release-correction-merge-mismatch');
       git(source, 'fetch', 'origin', releaseBranch);
-      git(source, 'diff', '--exit-code', initialRelease.sha, correction.sha, '--', 'package.json', 'Cargo.toml', 'Cargo.lock', 'CHANGELOG.md');
+      git(source, 'diff', '--exit-code', initialRelease.sha, correction.sha, '--', 'package.json', 'Cargo.toml', 'Cargo.lock', 'CHANGELOG.md', 'frontend/src/data/catalog-live.json', 'frontend/src/data/collection-publications.json');
       return { ...initialRelease, sha: correction.sha };
     });
   }
@@ -363,7 +363,9 @@ export async function publishCollection(input: string, configPath: string) {
     const remote = git(source, 'ls-remote', 'origin', `refs/heads/${releaseBranch}`);
     requirePackage(remote.split('\t')[0] === release.sha || !remote && journal.value.phases.cleanup?.state === 'confirmed', 'release-correction-branch-changed');
     requirePackage(!git(release.path, 'status', '--porcelain'), 'dirty-release-checkout');
+    requirePackage([initialRelease.sha, ...corrections.map(item => item.sha)].includes(git(release.path, 'rev-parse', 'HEAD')), 'unexpected-release-correction-checkout');
     git(release.path, 'merge', '--ff-only', release.sha);
+    requirePackage(git(release.path, 'rev-parse', 'HEAD') === release.sha, 'release-correction-checkout-mismatch');
   }
   const localStateRoot = corrections.length ? join(homedir(), '.local/state/want-wallpapers/collection-releases', packageHash, release.sha) : undefined;
   await step(corrections.length ? 'release-checks-' + release.sha : 'release-checks', { tree: git(release.path, 'rev-parse', 'HEAD^{tree}'), tag }, async () => { assertRefs(development, config.expectedMain); await localRelease('check', release.path, tag, localStateRoot); return { profile: 'full' }; });
