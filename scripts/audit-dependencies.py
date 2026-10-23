@@ -60,7 +60,7 @@ for path in paths:
         require(not unreviewed_jsx_rendering(path.read_text(), path), f'{path.name}: JSX/MDX usage requires new security review.')
 
 def unreviewed_zod_usage(source):
-    return bool(re.search(r"['\"][^'\"\n]*(?:\bzod\b|astro:(?:actions|content|schema|db))[^'\"\n]*['\"]", source))
+    return bool(re.search(r"['\"`][^'\"`\n]*(?:\bzod\b|astro:(?:actions|content|schema|db))[^'\"`\n]*['\"`]", source))
 
 def reviewed_zod_versions(locked):
     return ({name: version for name, version in locked.items() if version.startswith('zod@')} == {
@@ -77,6 +77,7 @@ assert not unreviewed_zod_usage("import { defineConfig } from 'astro/config';")
 for name in ('zod', 'zod/v3', 'zod/v4', 'astro/zod', 'astro:actions', 'astro:content', 'astro:schema', 'astro:db'):
     assert unreviewed_zod_usage(f"import schema from '{name}';")
 assert unreviewed_zod_usage('import("zod/v3")')
+assert unreviewed_zod_usage('import(`zod/v3`)')
 fixed_zod = {'zod': 'zod@4.6.7', 'astro/zod': 'zod@3.25.76', 'zod-to-ts/zod': 'zod@3.25.76',
              'astro': 'astro@5.18.2', 'zod-to-ts': 'zod-to-ts@1.2.0'}
 assert reviewed_zod_versions(fixed_zod)
@@ -90,7 +91,7 @@ require(reviewed_zod_consumers(lock), 'Zod consumers changed; review their input
 locked = dict(re.findall(r'^\s*"([^"]+)": \["([^"]+)"', lock, re.M))
 require(reviewed_zod_versions(locked), 'Zod versions or consumers require a new security review.')
 for path in [repository / 'package.json', *paths, *(repository / 'frontend/scripts').rglob('*'), *(repository / 'scripts').rglob('*')]:
-    if path.is_file() and path.suffix.lower() in ('.astro', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.mdx'):
+    if path.is_file() and path.suffix.lower() in ('.astro', '.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.mdx'):
         require(not unreviewed_zod_usage(path.read_text()), f'{path.name}: new Zod/Actions/Content usage requires security review.')
 
 result = execute(['bun', 'audit', '--json'])
