@@ -482,6 +482,8 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
 
 html[data-public-background] body { isolation: isolate; }
 .page-background {
+  --background-travel-x: 26vw;
+  --background-travel-y: 24vh;
   position: fixed;
   inset: 0;
   z-index: -1;
@@ -489,29 +491,57 @@ html[data-public-background] body { isolation: isolate; }
   contain: paint;
   pointer-events: none;
 }
-.page-background::before {
-  content: '';
+.page-background > div {
   position: absolute;
-  left: 78%;
-  top: 22%;
-  width: clamp(24rem, 72vmax, 70rem);
+  left: 50%;
+  top: 50%;
+  width: clamp(28rem, 120vw, 100rem);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--primary-hover), var(--primary) 42%, transparent 70%);
+  background: radial-gradient(ellipse at 45% 50%, var(--primary) 25%, transparent 70%);
   filter: blur(48px);
-  opacity: .18;
-  transform: translate3d(-50%, -50%, 0);
-  animation: want-gradient-sphere 36s ease-in-out infinite;
+  opacity: .28;
+  transform: translate3d(calc(-50% + var(--background-travel-x)), calc(-50% - var(--background-travel-y)), 0);
+  animation: want-gradient-sphere 28s ease-in-out infinite;
   animation-play-state: paused;
 }
-html[data-background-motion="running"] .page-background::before { animation-play-state: running; }
+.page-background > div::before, .page-background > div::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform-origin: center;
+  animation: want-gradient-flow 19s linear infinite;
+  animation-play-state: paused;
+}
+.page-background > div::before {
+  background: radial-gradient(ellipse at 32% 35%, color-mix(in srgb, var(--primary) 60%, white) 12%, transparent 60%);
+}
+.page-background > div::after {
+  background: radial-gradient(ellipse at 68% 65%, var(--primary-active) 15%, transparent 65%);
+  animation-duration: 23s;
+  animation-direction: reverse;
+}
+html[data-background-motion="running"] .page-background > div,
+html[data-background-motion="running"] .page-background > div::before,
+html[data-background-motion="running"] .page-background > div::after { animation-play-state: running; }
 .topic-links a:hover, .work-index a:hover { background: var(--accent); }
 @keyframes want-gradient-sphere {
-  0%, 100% { transform: translate3d(-50%, -50%, 0); }
-  50% { transform: translate3d(calc(-50% - 4vw), calc(-50% + 3vh), 0); }
+  0%, 100% { transform: translate3d(calc(-50% + var(--background-travel-x)), calc(-50% - var(--background-travel-y)), 0); }
+  25% { transform: translate3d(calc(-50% - var(--background-travel-x) * .65), calc(-50% - var(--background-travel-y) * .45), 0); }
+  50% { transform: translate3d(calc(-50% - var(--background-travel-x)), calc(-50% + var(--background-travel-y)), 0); }
+  75% { transform: translate3d(calc(-50% + var(--background-travel-x) * .6), calc(-50% + var(--background-travel-y) * .6), 0); }
+}
+@keyframes want-gradient-flow {
+  0% { transform: rotate(0deg) scale(1, .9); }
+  50% { transform: rotate(180deg) scale(.85, 1.1); }
+  100% { transform: rotate(360deg) scale(1, .9); }
+}
+@media (max-width: 767px) {
+  .page-background { --background-travel-x: 18vw; --background-travel-y: 18vh; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .page-background::before { animation: none; }
+  .page-background > div, .page-background > div::before, .page-background > div::after { animation: none; }
 }
 @media (forced-colors: active) {
   .page-background { display: none; }

@@ -58,7 +58,7 @@ const analyticsAvailable = isAnalyticsConfigured();
     {schema && <script type="application/ld+json" set:html={JSON.stringify({ ...schema, inLanguage: languageTag }).replaceAll('<', '\\u003c')} />}
   </head>
   <body data-locale={locale}>
-    <div class="page-background" aria-hidden="true"></div>
+    <div class="page-background" inert transition:persist="sphere"><div></div></div>
     <a class="skip-link" href="#main">{interfaceCopy[locale].skip}</a>
     <Header locale={locale} path={path} logo={logoUrl} client:load transition:persist="header" />
     <Fragment set:html={"<!--email_off-->"} /><main id="main" tabindex="-1"><slot /></main><Fragment set:html={"<!--/email_off-->"} />
@@ -68,6 +68,7 @@ const analyticsAvailable = isAnalyticsConfigured();
     <script>
       import { initCollectionCovers } from '../lib/collection-cover-player';
       import { initPageMotion } from '../lib/page-motion';
+      import type { TransitionBeforeSwapEvent } from 'astro:transitions/client';
       import { initGalleryEffects } from '../lib/gallery-effects';
       import { initAdvertisements } from '../lib/advertising';
       let cleanup = () => {};
@@ -82,7 +83,19 @@ const analyticsAvailable = isAnalyticsConfigured();
         const advertising = initAdvertisements();
         cleanup = () => { motion(); covers(); effects(); advertising(); };
       }
-      document.addEventListener('astro:before-swap', () => cleanup());
+      document.addEventListener('astro:before-swap', (event) => {
+        const background = document.querySelector('.page-background');
+        const times = background?.getAnimations({ subtree: true }).map((animation) => animation.currentTime) ?? [];
+        const transition = event as TransitionBeforeSwapEvent;
+        const swap = transition.swap;
+        transition.swap = () => {
+          swap();
+          background?.getAnimations({ subtree: true }).forEach((animation, index) => {
+            if (times[index] != null) animation.currentTime = times[index]!;
+          });
+        };
+        cleanup();
+      });
       document.addEventListener('astro:page-load', initializePage);
       initializePage();
       import { initFeedbackDialog } from '../lib/feedback-dialog';
