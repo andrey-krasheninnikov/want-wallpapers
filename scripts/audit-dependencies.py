@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fail on new findings or changed conditions for the bounded dependency review."""
 import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -85,8 +86,12 @@ for changed in ({**fixed_zod, 'zod': 'zod@4.6.5'}, {**fixed_zod, 'astro/zod': 'z
                 {**fixed_zod, '@astrojs/sitemap/zod': 'zod@4.6.5'}, {**fixed_zod, 'astro': 'astro@6.0.0'},
                 {key: value for key, value in fixed_zod.items() if key != 'zod-to-ts/zod'}):
     assert not reviewed_zod_versions(changed)
+reviewed_zod_configuration = {'frontend/astro.config.mjs': '5cbba7abeb770a1f1f5d9981c8e9330a2b8b314b887a324edc335d9f0cfaddb2', 'frontend/tsconfig.json': '839f190d7684a04275e4b1e548bbe3f025267cbac8e781a35ddf5888d9bb2023'}
+for relative, expected in reviewed_zod_configuration.items():
+    require(hashlib.sha256((repository / relative).read_bytes()).hexdigest() == expected,
+            relative + ": configuration changed; review the legacy Zod input boundary.")
 source = repository / 'frontend/src'
-require(not [*source.glob('content.config.*'), *(source / 'content').glob('config.*')],
+require(not [*source.glob('content.config.*'), *source.glob('live.config.*'), *(source / 'content').glob('config.*')],
         'Astro Content configuration requires a new security review.')
 require(not (source / 'actions').exists(), 'Astro Actions entrypoints require a new security review.')
 lock = (repository / 'bun.lock').read_text()
