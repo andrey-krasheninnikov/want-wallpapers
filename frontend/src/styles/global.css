@@ -495,7 +495,7 @@ html[data-public-background] body { isolation: isolate; }
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(14rem, 72vmin, 56rem);
+  width: clamp(28rem, 120vw, 100rem);
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(ellipse at 45% 50%, var(--primary) 25%, transparent 70%);

@@ -158,7 +158,8 @@ test.describe('gradient sphere background', () => {
           return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, diameter: rect.width };
         }, time);
         if (name === 'home') {
-          expect(position.diameter).toBeLessThanOrEqual(Math.min(width, 900) * .81);
+          expect(position.diameter).toBeGreaterThan(width);
+          expect(position.diameter).toBeLessThanOrEqual(width * 1.5);
           expect(position.x / width).toBeGreaterThan(width < 768 ? .3 : .2);
           expect(position.x / width).toBeLessThan(width < 768 ? .7 : .8);
           expect(position.y / 900).toBeGreaterThan(width < 768 ? .3 : .2);
