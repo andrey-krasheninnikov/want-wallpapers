@@ -199,6 +199,13 @@ export async function verifyLiveCollection(collection: PublicCollectionPackage, 
   return { pages: locales.length * 6, downloads: 10, revision: sha, verifiedAt: new Date().toISOString() };
 }
 
+export function applyListingApproval(snapshot: any, approval: any, packageHash: string, development: string) {
+  requirePackage(!Object.hasOwn(snapshot, 'listing') && approval?.schemaVersion === 1
+    && Object.keys(approval).sort().join(',') === 'expectedDevelopment,listing,packageHash,schemaVersion'
+    && approval.packageHash === packageHash && approval.expectedDevelopment === development, 'listing-approval-mismatch');
+  return { ...snapshot, listing: approval.listing };
+}
+
 export function catalogueBaseline(input: any, collection: PublicCollectionPackage, source: 'remote' | 'build-snapshot' = 'remote') {
   // Snapshots predating listing controls contain only visible records.
   const listing = source === 'build-snapshot' && !Object.hasOwn(input, 'listing')
@@ -265,7 +272,9 @@ export async function publishCollection(input: string, configPath: string) {
     assertRefs(config.expectedDevelopment, config.expectedMain);
     const response = await fetch(production + '/api/v1/catalog/snapshot', { redirect: 'error', signal: AbortSignal.timeout(15000) });
     requirePackage(response.ok, 'catalogue-snapshot-unavailable'); const snapshot = await response.json();
-    const expected = JSON.parse(git(source, 'show', `${config.expectedDevelopment}:frontend/src/data/catalog-live.json`));
+    let expected = JSON.parse(git(source, 'show', `${config.expectedDevelopment}:frontend/src/data/catalog-live.json`));
+    const listingApproval = packagePath(root, 'publication/listing-approval.json');
+    if (existsSync(listingApproval)) expected = applyListingApproval(expected, readPackageJson(listingApproval), packageHash, config.expectedDevelopment);
     const baseline = catalogueBaseline(snapshot, collection);
     requirePackage(baseline === catalogueBaseline(expected, collection, 'build-snapshot'), 'unrelated-catalogue-changes');
     const saved = await catalogRequest<{ collections: { item: Collection; archived: boolean }[]; wallpapers: { item: Wallpaper; archived: boolean }[] }>('');

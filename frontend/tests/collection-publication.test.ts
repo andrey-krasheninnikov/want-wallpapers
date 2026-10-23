@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { PublicationJournal, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
+import { PublicationJournal, applyListingApproval, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
@@ -135,4 +135,21 @@ test('baseline ignores zero-only timestamp fractions while retaining microsecond
   formatted.publicationDates.old = original.publicationDates.old;
   formatted.collectionPublicationDates.old = '2026-10-02T21:44:58.000001Z';
   expect(catalogueBaseline(formatted, collection)).not.toBe(baseline);
+});
+
+test('approved legacy listing is bound to the package and revision and remains part of the baseline', () => {
+  const snapshot = { collections: [{ id: 'old' }], wallpapers: [{ id: 'old-1', collectionId: 'old' }] };
+  const approval = { schemaVersion: 1, packageHash: hash, expectedDevelopment: sha, listing: { collections: { old: false }, wallpapers: { 'old-1': false } } };
+  const accepted = applyListingApproval(snapshot, approval, hash, sha);
+  const baseline = catalogueBaseline(accepted, collection, 'build-snapshot');
+  expect(catalogueBaseline({ ...snapshot, listing: approval.listing }, collection)).toBe(baseline);
+  expect(Object.hasOwn(snapshot, 'listing')).toBe(false);
+  const changed = structuredClone(accepted); changed.listing.wallpapers['old-1'] = true;
+  expect(catalogueBaseline(changed, collection)).not.toBe(baseline);
+  for (const invalid of [null, { ...approval, schemaVersion: 2 }, { ...approval, packageHash: 'c'.repeat(64) }, { ...approval, expectedDevelopment: 'd'.repeat(40) }, { ...approval, extra: true }]) {
+    expect(() => applyListingApproval(snapshot, invalid, hash, sha)).toThrow('listing-approval-mismatch');
+  }
+  expect(() => applyListingApproval(accepted, approval, hash, sha)).toThrow('listing-approval-mismatch');
+  const partial = applyListingApproval(snapshot, { ...approval, listing: { collections: {}, wallpapers: {} } }, hash, sha);
+  expect(() => catalogueBaseline(partial, collection, 'build-snapshot')).toThrow('invalid-catalogue-listing');
 });
