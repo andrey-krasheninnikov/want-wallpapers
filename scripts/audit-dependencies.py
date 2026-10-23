@@ -85,6 +85,10 @@ for changed in ({**fixed_zod, 'zod': 'zod@4.6.5'}, {**fixed_zod, 'astro/zod': 'z
                 {**fixed_zod, '@astrojs/sitemap/zod': 'zod@4.6.5'}, {**fixed_zod, 'astro': 'astro@6.0.0'},
                 {key: value for key, value in fixed_zod.items() if key != 'zod-to-ts/zod'}):
     assert not reviewed_zod_versions(changed)
+source = repository / 'frontend/src'
+require(not [*source.glob('content.config.*'), *(source / 'content').glob('config.*')],
+        'Astro Content configuration requires a new security review.')
+require(not (source / 'actions').exists(), 'Astro Actions entrypoints require a new security review.')
 lock = (repository / 'bun.lock').read_text()
 assert not reviewed_zod_consumers(lock + '\n"new-consumer": ["new-consumer@1.0.0", "", {"dependencies": {"zod": "^4"}}],')
 require(reviewed_zod_consumers(lock), 'Zod consumers changed; review their input boundary.')
