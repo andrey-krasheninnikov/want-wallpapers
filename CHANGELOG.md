@@ -1,5 +1,10 @@
 # История изменений
 
+## 1.10.0 (2026-10-21)
+
+- Add Organic Resonance: five designs with desktop and mobile PNGs, six-language stories and collection search.
+- Publish the approved collection through the MacBook release flow with verified CDN files and resumable receipts.
+
 ## Не выпущено
 
 ## [1.9.7] - 2026-10-21

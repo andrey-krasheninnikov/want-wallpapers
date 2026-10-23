@@ -37,12 +37,34 @@ assert unreviewed_astro_features('transition:persist="header"', base.with_name('
 for path in (repository / 'frontend/src').rglob('*.astro'):
     require(not unreviewed_astro_features(path.read_text(), path), f'{path.name}: newly used Astro feature needs security review.')
 
+def unreviewed_jsx_rendering(source, path):
+    return (path.suffix.lower() == '.mdx'
+            or bool(re.search(r'astro(?:/jsx(?:-dev)?-runtime|/runtime/server|:jsx)|@astrojs/mdx|@jsx(?:ImportSource|Runtime)?\b', source))
+            or path.suffix.lower() in ('.tsx', '.jsx') and bool(re.search(r'<\s*(?:script|style)\b', source, re.I)))
+
+compiler = json.loads((repository / 'frontend/tsconfig.json').read_text())['compilerOptions']
+require(compiler.get('jsx') == 'react-jsx' and compiler.get('jsxImportSource') == 'react', 'Astro JSX rendering requires new security review.')
+assert not unreviewed_jsx_rendering("import { jsx } from 'react/jsx-runtime'; <div>{value}</div>", Path('Card.tsx'))
+for source, name in (("import { jsx } from 'astro/jsx-runtime'", 'Card.tsx'),
+                     ("import { jsxDEV } from 'astro/jsx-dev-runtime'", 'Card.tsx'),
+                     ("import { renderJSX } from 'astro/runtime/server/index.js'", 'Card.ts'),
+                     ("import Component from 'astro:jsx'", 'Page.astro'),
+                     ("import mdx from '@astrojs/mdx'", 'astro.config.mjs'),
+                     ('/** @jsxImportSource astro */', 'Card.tsx'),
+                     ('<script>{value}</script>', 'Card.tsx'),
+                     ('<style>{value}</style>', 'Card.jsx'), ('', 'Page.mdx')):
+    assert unreviewed_jsx_rendering(source, Path(name))
+paths = [repository / 'frontend/astro.config.mjs', repository / 'frontend/package.json', *(repository / 'frontend/src').rglob('*')]
+for path in paths:
+    if path.is_file() and path.suffix.lower() in ('.astro', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.mdx'):
+        require(not unreviewed_jsx_rendering(path.read_text(), path), f'{path.name}: JSX/MDX usage requires new security review.')
+
 result = execute(['bun', 'audit', '--json'])
 require(result.returncode in (0, 1), 'Bun audit could not complete.')
 try: findings = json.loads(result.stdout)
 except json.JSONDecodeError: raise SystemExit('Bun audit did not return valid JSON.')
 reviewed = {
-    'astro': {'GHSA-xr5h-phrj-8vxv', 'GHSA-j687-52p2-xcff', 'GHSA-jrpj-wcv7-9fh9', 'GHSA-f48w-9m4c-m7f5', 'GHSA-7pw4-f3q4-r2p2', 'GHSA-4g3v-8h47-v7g6', 'GHSA-2pvr-wf23-7pc7', 'GHSA-8hv8-536x-4wqp', 'GHSA-26w7-cxv4-gfx2', 'GHSA-376h-93r7-7g6f'},
+    'astro': {'GHSA-xr5h-phrj-8vxv', 'GHSA-j687-52p2-xcff', 'GHSA-jrpj-wcv7-9fh9', 'GHSA-f48w-9m4c-m7f5', 'GHSA-7pw4-f3q4-r2p2', 'GHSA-4g3v-8h47-v7g6', 'GHSA-2pvr-wf23-7pc7', 'GHSA-8hv8-536x-4wqp', 'GHSA-26w7-cxv4-gfx2', 'GHSA-376h-93r7-7g6f', 'GHSA-98hj-9722-w3j8'},
     'esbuild': {'GHSA-g7r4-m6w7-qqqr', 'GHSA-gv7w-rqvm-qjhr'},
 }
 count = 0
