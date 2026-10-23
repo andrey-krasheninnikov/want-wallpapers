@@ -2,10 +2,11 @@ import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { PublicationJournal, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
+import { PublicationJournal, applyListingApproval, releaseCorrections, workspaceVersion, catalogueBaseline, catalogueExportHash, deploymentReceipt, reconcileCreation, requireRefs, verifyLiveCollection } from '../scripts/collection-publication';
 import { digest } from '../scripts/collection-package';
 import type { PublicCollectionPackage } from '../scripts/collection-storage';
 import { locales } from '../src/data/catalog';
+import buildSnapshot from '../src/data/catalog-live.json';
 const root = mkdtempSync(join(realpathSync(tmpdir()), 'wallpapers-publication-')); chmodSync(root, 0o700);
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 const sha = 'a'.repeat(40), hash = 'b'.repeat(64), image = 'sha256:' + 'c'.repeat(64), tag = 'v1.10.0';
@@ -103,5 +104,72 @@ test('catalogue baseline rejects unrelated changes between import and feature ex
   expect(catalogueExportHash(changedDate, collection, baseline)).not.toBe(exportedHash);
   for (const mutate of [(value: any) => value.collections[0].title = 'Unapproved change', (value: any) => value.listing.wallpapers['old-1'] = false, (value: any) => value.publicationDates['old-1'] = '2026-10-02T00:00:00Z']) {
     const changed = structuredClone(exported); mutate(changed); expect(catalogueBaseline(changed, collection)).not.toBe(baseline);
+  }
+});
+
+test('legacy build snapshots default to visible without relaxing remote listing validation', () => {
+  const { listing: _, ...legacy } = buildSnapshot as typeof buildSnapshot & { listing?: unknown };
+  const remote = { ...legacy, listing: { collections: Object.fromEntries(legacy.collections.map(item => [item.id, true])), wallpapers: Object.fromEntries(legacy.wallpapers.map(item => [item.id, true])) } };
+  const baseline = catalogueBaseline(legacy, collection, 'build-snapshot');
+  expect(catalogueBaseline(remote, collection)).toBe(baseline);
+  expect(catalogueBaseline(remote, collection, 'build-snapshot')).toBe(baseline);
+  const hidden = structuredClone(remote); hidden.listing.wallpapers[legacy.wallpapers[0]!.id] = false;
+  expect(catalogueBaseline(hidden, collection)).not.toBe(baseline);
+  expect(catalogueBaseline(hidden, collection, 'build-snapshot')).toBe(catalogueBaseline(hidden, collection));
+  for (const listing of [undefined, null, {}, { collections: remote.listing.collections }, { ...remote.listing, wallpapers: {} }, { ...remote.listing, collections: { ...remote.listing.collections, unexpected: true } }]) {
+    expect(() => catalogueBaseline({ ...legacy, listing }, collection)).toThrow('invalid-catalogue-listing');
+    expect(() => catalogueBaseline({ ...legacy, listing }, collection, 'build-snapshot')).toThrow('invalid-catalogue-listing');
+  }
+  expect(() => catalogueBaseline(legacy, collection)).toThrow('invalid-catalogue-listing');
+});
+
+test('baseline ignores zero-only timestamp fractions while retaining microsecond changes', () => {
+  const original = { collections: [], wallpapers: [], listing: { collections: {}, wallpapers: {} }, publicationDates: { old: '2026-10-02T21:44:58Z' }, collectionPublicationDates: { old: '2026-10-02T21:44:58Z' } };
+  const baseline = catalogueBaseline(original, collection);
+  const formatted = structuredClone(original);
+  formatted.publicationDates.old = '2026-10-02T21:44:58.000000Z';
+  formatted.collectionPublicationDates.old = '2026-10-02T21:44:58.000Z';
+  expect(catalogueBaseline(formatted, collection)).toBe(baseline);
+  formatted.publicationDates.old = '2026-10-02T21:44:58.000001Z';
+  expect(catalogueBaseline(formatted, collection)).not.toBe(baseline);
+  formatted.publicationDates.old = original.publicationDates.old;
+  formatted.collectionPublicationDates.old = '2026-10-02T21:44:58.000001Z';
+  expect(catalogueBaseline(formatted, collection)).not.toBe(baseline);
+});
+
+test('approved legacy listing is bound to the package and revision and remains part of the baseline', () => {
+  const snapshot = { collections: [{ id: 'old' }], wallpapers: [{ id: 'old-1', collectionId: 'old' }] };
+  const approval = { schemaVersion: 1, packageHash: hash, expectedDevelopment: sha, listing: { collections: { old: false }, wallpapers: { 'old-1': false } } };
+  const accepted = applyListingApproval(snapshot, approval, hash, sha);
+  const baseline = catalogueBaseline(accepted, collection, 'build-snapshot');
+  expect(catalogueBaseline({ ...snapshot, listing: approval.listing }, collection)).toBe(baseline);
+  expect(Object.hasOwn(snapshot, 'listing')).toBe(false);
+  const changed = structuredClone(accepted); changed.listing.wallpapers['old-1'] = true;
+  expect(catalogueBaseline(changed, collection)).not.toBe(baseline);
+  for (const invalid of [null, { ...approval, schemaVersion: 2 }, { ...approval, packageHash: 'c'.repeat(64) }, { ...approval, expectedDevelopment: 'd'.repeat(40) }, { ...approval, extra: true }]) {
+    expect(() => applyListingApproval(snapshot, invalid, hash, sha)).toThrow('listing-approval-mismatch');
+  }
+  expect(() => applyListingApproval(accepted, approval, hash, sha)).toThrow('listing-approval-mismatch');
+  const partial = applyListingApproval(snapshot, { ...approval, listing: { collections: {}, wallpapers: {} } }, hash, sha);
+  expect(() => catalogueBaseline(partial, collection, 'build-snapshot')).toThrow('invalid-catalogue-listing');
+});
+
+test('release corrections preserve a package-bound append-only revision chain', () => {
+  const correction = { pullRequest: 156, previousSha: sha, sha: 'd'.repeat(40) };
+  const input = { schemaVersion: 1, packageHash: hash, originalSha: sha, corrections: [correction] };
+  expect(releaseCorrections(input, hash, sha)).toEqual([correction]);
+  const second = { pullRequest: 157, previousSha: correction.sha, sha: 'e'.repeat(40) };
+  expect(releaseCorrections({ ...input, corrections: [correction, second] }, hash, sha)).toHaveLength(2);
+  for (const changed of [null, { ...input, packageHash: 'wrong' }, { ...input, originalSha: 'wrong' }, { ...input, extra: true }, { ...input, corrections: [] }, { ...input, corrections: [second] }, { ...input, corrections: [correction, correction] }, { ...input, corrections: [correction, { ...second, sha }] }, { ...input, corrections: [{ ...correction, pullRequest: 1.5 }] }, { ...input, corrections: [{ ...correction, sha: 'wrong' }] }]) {
+    expect(() => releaseCorrections(changed, hash, sha)).toThrow('release-correction-mismatch');
+  }
+});
+
+test('release version stays synchronized while reviewed dependency versions may change', () => {
+  const input = { package: { version: '1.10.0' }, cargo: '[workspace.package]\nversion = "1.10.0"', lock: 'name = "want-wallpapers-server"\nversion = "1.10.0"\n\nname = "ctutils"\nversion = "0.4.2"' };
+  expect(workspaceVersion(input)).toBe('1.10.0');
+  expect(workspaceVersion({ ...input, lock: input.lock.replace('0.4.2', '0.4.4') })).toBe('1.10.0');
+  for (const changed of [{ ...input, package: { version: '1.11.0' } }, { ...input, cargo: input.cargo.replace('1.10.0', '1.11.0') }, { ...input, lock: input.lock.replace('1.10.0', '1.11.0') }, { ...input, package: { version: 'invalid' } }]) {
+    expect(() => workspaceVersion(changed)).toThrow('workspace-release-version-mismatch');
   }
 });
