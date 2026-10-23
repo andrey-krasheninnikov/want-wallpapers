@@ -89,7 +89,8 @@ for (const locale of locales) test(`two-line descriptions keep their text and pa
 
 test('partial final page aligns the last card with the shell', async ({ page }) => {
   await page.setViewportSize({ width: 2560, height: 900 }); await ready(page);
-  await track(page).locator('> article').last().evaluate(element => element.remove());
+  if (collections.length % 3 === 0) await track(page).locator('> article').last().evaluate(element => element.remove());
+  expect(await track(page).locator('> article').count() % 3).not.toBe(0);
   await finalPage(page, Math.ceil(collections.length / 3));
   const right = await track(page).locator('> article').last().evaluate(element => element.getBoundingClientRect().right);
   expect(right).toBeCloseTo(1920, 0);
