@@ -347,7 +347,9 @@ export async function publishCollection(input: string, configPath: string) {
   for (const correction of corrections) {
     release = await step('release-correction-' + correction.sha, correction, async () => {
       assertRefs(development, config.expectedMain);
-      requirePackage(!journal.value.phases['release-pr'] && !git(source, 'ls-remote', 'origin', `refs/tags/${tag}`), 'release-correction-too-late');
+      requirePackage(!journal.value.phases['release-pr']
+        && gh(`pulls?state=all&head=andrey-krasheninnikov:${releaseBranch}&base=main&per_page=100`).length === 0
+        && !git(source, 'ls-remote', 'origin', `refs/tags/${tag}`), 'release-correction-too-late');
       const pr = gh(`pulls/${correction.pullRequest}`);
       requirePackage(pr.merged && pr.base.ref === releaseBranch && pr.head.repo.full_name === repository && pr.base.repo.full_name === repository
         && pr.merge_commit_sha === correction.sha, 'release-correction-pr-mismatch');
