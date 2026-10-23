@@ -59,6 +59,40 @@ for path in paths:
     if path.is_file() and path.suffix.lower() in ('.astro', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.mdx'):
         require(not unreviewed_jsx_rendering(path.read_text(), path), f'{path.name}: JSX/MDX usage requires new security review.')
 
+def unreviewed_zod_usage(source):
+    return bool(re.search(r"['\"][^'\"\n]*(?:\bzod\b|astro:(?:actions|content|schema|db))[^'\"\n]*['\"]", source))
+
+def reviewed_zod_versions(locked):
+    return ({name: version for name, version in locked.items() if version.startswith('zod@')} == {
+        'zod': 'zod@4.6.7', 'astro/zod': 'zod@3.25.76', 'zod-to-ts/zod': 'zod@3.25.76',
+    } and locked.get('astro') == 'astro@5.18.2' and locked.get('zod-to-ts') == 'zod-to-ts@1.2.0')
+
+def reviewed_zod_consumers(lock):
+    return dict(re.findall(r'^\s*"([^"]+)": \["([^"]+)", "[^"]*", \{[^\n]*"zod":', lock, re.M)) == {
+        '@astrojs/sitemap': '@astrojs/sitemap@3.7.4', 'astro': 'astro@5.18.2',
+        'zod-to-json-schema': 'zod-to-json-schema@3.25.2', 'zod-to-ts': 'zod-to-ts@1.2.0',
+    }
+
+assert not unreviewed_zod_usage("import { defineConfig } from 'astro/config';")
+for name in ('zod', 'zod/v3', 'zod/v4', 'astro/zod', 'astro:actions', 'astro:content', 'astro:schema', 'astro:db'):
+    assert unreviewed_zod_usage(f"import schema from '{name}';")
+assert unreviewed_zod_usage('import("zod/v3")')
+fixed_zod = {'zod': 'zod@4.6.7', 'astro/zod': 'zod@3.25.76', 'zod-to-ts/zod': 'zod@3.25.76',
+             'astro': 'astro@5.18.2', 'zod-to-ts': 'zod-to-ts@1.2.0'}
+assert reviewed_zod_versions(fixed_zod)
+for changed in ({**fixed_zod, 'zod': 'zod@4.6.5'}, {**fixed_zod, 'astro/zod': 'zod@3.25.75'},
+                {**fixed_zod, '@astrojs/sitemap/zod': 'zod@4.6.5'}, {**fixed_zod, 'astro': 'astro@6.0.0'},
+                {key: value for key, value in fixed_zod.items() if key != 'zod-to-ts/zod'}):
+    assert not reviewed_zod_versions(changed)
+lock = (repository / 'bun.lock').read_text()
+assert not reviewed_zod_consumers(lock + '\n"new-consumer": ["new-consumer@1.0.0", "", {"dependencies": {"zod": "^4"}}],')
+require(reviewed_zod_consumers(lock), 'Zod consumers changed; review their input boundary.')
+locked = dict(re.findall(r'^\s*"([^"]+)": \["([^"]+)"', lock, re.M))
+require(reviewed_zod_versions(locked), 'Zod versions or consumers require a new security review.')
+for path in [repository / 'package.json', *paths, *(repository / 'frontend/scripts').rglob('*'), *(repository / 'scripts').rglob('*')]:
+    if path.is_file() and path.suffix.lower() in ('.astro', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.mdx'):
+        require(not unreviewed_zod_usage(path.read_text()), f'{path.name}: new Zod/Actions/Content usage requires security review.')
+
 result = execute(['bun', 'audit', '--json'])
 require(result.returncode in (0, 1), 'Bun audit could not complete.')
 try: findings = json.loads(result.stdout)
@@ -66,6 +100,7 @@ except json.JSONDecodeError: raise SystemExit('Bun audit did not return valid JS
 reviewed = {
     'astro': {'GHSA-xr5h-phrj-8vxv', 'GHSA-j687-52p2-xcff', 'GHSA-jrpj-wcv7-9fh9', 'GHSA-f48w-9m4c-m7f5', 'GHSA-7pw4-f3q4-r2p2', 'GHSA-4g3v-8h47-v7g6', 'GHSA-2pvr-wf23-7pc7', 'GHSA-8hv8-536x-4wqp', 'GHSA-26w7-cxv4-gfx2', 'GHSA-376h-93r7-7g6f', 'GHSA-98hj-9722-w3j8'},
     'esbuild': {'GHSA-g7r4-m6w7-qqqr', 'GHSA-gv7w-rqvm-qjhr'},
+    'zod': {'GHSA-mrhx-c7xc-m3w5'},
 }
 count = 0
 for package_name, items in findings.items():
