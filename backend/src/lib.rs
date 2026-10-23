@@ -2,6 +2,7 @@ pub mod auth;
 pub mod catalog;
 pub mod config;
 pub mod discovery;
+pub mod distribution;
 pub mod error;
 pub mod models;
 pub mod moderation;
@@ -155,5 +156,7 @@ async fn ready(
     axum::extract::State(state): axum::extract::State<AppState>,
 ) -> error::Result<Json<serde_json::Value>> {
     sqlx::query("SELECT 1").execute(&state.pool).await?;
-    Ok(Json(json!({"status":"ok"})))
+    Ok(Json(
+        json!({"status":"ok", "revision": option_env!("WALLPAPERS_REVISION").unwrap_or("unknown")}),
+    ))
 }

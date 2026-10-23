@@ -66,3 +66,5 @@ API проверяет структуру и адреса, не скачивае
 Вход, изменения каталога и модерации записываются в audit_log без текстов сообщений, email, паролей, токенов и TOTP.
 
 Переводы `ja` и `ar` обязательны вместе с `en`, `ru`, `zh-cn`, `pt-br` в `title` и `description` при сохранении и импорте. Manifest с пятью языками возвращает 422 `invalid-input`; перед повтором добавьте арабский перевод. Формат ID, версии, timestamps и идемпотентность полного импорта сохраняются. Экспорт существующей БД требует предварительного применения миграций переводов.
+
+`GET /health/ready` returns `status` and the compiled public Git `revision` after a database probe. Local builds without `WALLPAPERS_REVISION` report `unknown`. Production builds bind the field to the image source commit. Existing private cache controls also cover this response.

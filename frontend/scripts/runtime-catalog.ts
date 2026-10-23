@@ -1,3 +1,4 @@
+import publications from '../src/data/collection-publications.json';
 import { writeFile } from 'node:fs/promises';
 import { createElement } from 'react';
 import { renderToString, renderToStaticMarkup } from 'react-dom/server';
@@ -32,3 +33,5 @@ const localized = Object.fromEntries(await Promise.all(locales.map(async locale 
     numbers: Array.from({ length: wallpapers.length + 1 }, (_, index) => index.toLocaleString(locale)) }];
 })));
 await writeFile(new URL('../runtime-catalog.json', import.meta.url), JSON.stringify({ schema: 1, collections, wallpapers, order: newestWallpapers(wallpapers, publicationDates).map(item => item.id), locales: localized }));
+
+await writeFile(new URL('../runtime-publications.json', import.meta.url), JSON.stringify({ schemaVersion: 1, catalogueIds: collections.map(item => item.id), collections: Object.values(publications) }));

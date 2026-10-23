@@ -116,7 +116,6 @@ for (const locale of locales) {
   test(`collection listings keep first-publication order: ${locale}`, async ({ page }) => {
     const prefix = locale === 'en' ? '' : `/${locale}`;
     const expected = collections.map(item => `${prefix}/collections/${item.slug}/`);
-    expect(collections[0]!.slug).toBe('neon-tide');
     for (const width of [375, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`${prefix}/`);

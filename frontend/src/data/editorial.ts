@@ -1,3 +1,4 @@
+import publications from './collection-publications.json';
 import type { Locale } from './catalog';
 
 // Editorial copy stays outside the catalog snapshot refreshed by catalog:pull.
@@ -29,7 +30,7 @@ export const editorialCopy = {
   },
 } satisfies Record<Locale, { title: string; story: string; works: string; sizes: string; files: string; license: string; licenseText: string; topics: string }>;
 
-export const collectionStories: Record<string, Record<Locale, string[]>> = {
+const legacyCollectionStories: Record<string, Record<Locale, string[]>> = {
   'neon-tide': {
     ja: [
       "舟が係留を解く前に、潮は一番低い黒い島へ届いている。桃色の水が段状の岸をのぼり、尖った岩板の下にたまる。沖の島々は、紫の空の同じ一角へ傾いている。一片の四角い光が舳先を流れ過ぎる。岩の割れ目から伸びた茎に引っかかり、その先では小さな黄色い花が開き始めている。",
@@ -264,6 +265,14 @@ export const collectionStories: Record<string, Record<Locale, string[]>> = {
       "في طريق العودة، كان الزقاق قد ابتلّ. وفي واجهة متجر معتمة، تراكب معطف الرجل مع انعكاس التنوب والخط الذهبي للواجهة النهرية. استقرت دائرة زرقاء فوق كتفه في الزجاج. تنحّى ليسمح لجدول رفيع بالمرور بين الحجارة. وعند النهر، تلامست قطعتان من الجليد، ثم دارتا مبتعدتين، وحملتا شظيتين منفصلتين من انعكاس القبة مع التيار."
     ],
   },
+};
+
+export const collectionStories: Record<string, Record<Locale, string[]>> = {
+  ...legacyCollectionStories,
+  ...Object.fromEntries(Object.values(publications).map((value) => {
+    const item = value as { manifest: { collection: { slug: string } }; stories: Record<Locale, string[]> };
+    return [item.manifest.collection.slug, item.stories];
+  })),
 };
 
 export const supportCopy = {

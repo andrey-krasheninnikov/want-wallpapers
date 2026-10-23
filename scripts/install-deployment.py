@@ -20,6 +20,7 @@ DESTINATION = Path('/usr/local/lib/wallpapers-deploy')
 FILES = ('scripts/deployment.py', 'scripts/ci-release.py', 'scripts/ssh-deploy.py', 'scripts/deploy-server.py',
          'deploy/backup-state.sql', 'deploy/runtime-grants.sql', 'deploy/verify-runtime-grants.sql', '.github/release-policy.json')
 FILES += ('deploy/migrate-override.yaml', 'scripts/local_evidence.py')
+FILES += ('scripts/distribution-export.py', 'scripts/distribution-run.py', 'deploy/distribution-grants.sql', 'deploy/verify-distribution-grants.sql')
 
 
 def directory(path, mode=0o755):

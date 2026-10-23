@@ -1,6 +1,6 @@
 # Безопасность и зависимости
 
-Проверка зависимостей: 4 октября 2026; transition directives пересмотрены 13 октября 2026. Следующая проверка обязательна не позднее 4 ноября 2026. Смена runtime, Astro features, версий override или появление новой advisory требует новой оценки. Эти исключения не означают чистый исходный audit.
+Проверка зависимостей: 4 октября 2026; transition directives пересмотрены 13 октября 2026; JSX/MDX rendering пересмотрен 23 октября 2026. Следующая проверка обязательна не позднее 4 ноября 2026. Смена runtime, Astro features, версий override или появление новой advisory требует новой оценки. Эти исключения не означают чистый исходный audit.
 
 ```bash
 cargo install cargo-audit --version 0.22.2 --locked
@@ -31,6 +31,7 @@ Astro 5 сохранён ради совместимости текущего fr
 | [GHSA-2pvr-wf23-7pc7](https://github.com/withastro/astro/security/advisories/GHSA-2pvr-wf23-7pc7), [GHSA-376h-93r7-7g6f](https://github.com/withastro/astro/security/advisories/GHSA-376h-93r7-7g6f) | Runtime SSR и middleware Astro отсутствуют; Rust сам проверяет авторизацию независимо от URL статических страниц. |
 | [GHSA-8hv8-536x-4wqp](https://github.com/withastro/astro/security/advisories/GHSA-8hv8-536x-4wqp) | Динамические slot names не используются. |
 | [GHSA-26w7-cxv4-gfx2](https://github.com/withastro/astro/security/advisories/GHSA-26w7-cxv4-gfx2) | Все Sharp instances закреплены на 0.35.5 с исправленным libheif. Обработчик принимает проверенные PNG; runtime image optimizer отсутствует. Astro metadata по-прежнему отмечает finding. |
+| [GHSA-98hj-9722-w3j8](https://github.com/withastro/astro/security/advisories/GHSA-98hj-9722-w3j8) | Уязвим Astro JSX/MDX renderer при динамических строках внутри script/style. Проект использует React JSX: audit требует jsx=react-jsx и jsxImportSource=react, запрещает MDX, Astro JSX/server runtime imports, JSX pragmas и script/style tags в JSX. Новое использование этих путей блокирует audit до отдельной оценки. Исправление upstream входит в Astro 7.3.2; текущая зависимость остаётся отмеченной audit. Срок оценки остаётся 4 ноября 2026. |
 
 esbuild закреплён на 0.25.12: исправлен development CORS finding; более новая 0.28.1 несовместима с целевыми браузерами текущего Astro/Vite. [GHSA-g7r4-m6w7-qqqr](https://github.com/evanw/esbuild/security/advisories/GHSA-g7r4-m6w7-qqqr) относится к Windows development server; проект собирается на Linux/macOS и не использует esbuild serve. [GHSA-gv7w-rqvm-qjhr](https://github.com/evanw/esbuild/security/advisories/GHSA-gv7w-rqvm-qjhr) относится к Deno binary downloader; Deno не используется, зависимости npm установлены Bun по lockfile без install scripts. При добавлении Windows/Deno сценария сначала пересмотрите версию и ограничения.
 
@@ -39,6 +40,8 @@ esbuild закреплён на 0.25.12: исправлен development CORS fin
 grpc-js 1.14.5 и http-cache-semantics 4.3.0 закреплены overrides для устранения найденных transitive advisory Firebase Analytics.
 
 ## Cargo advisory
+
+23 октября 2026 ctutils обновлён до 0.4.4 для устранения [RUSTSEC-2026-0385](https://rustsec.org/advisories/RUSTSEC-2026-0385.html), а Tokio до 1.53.3 для устранения [RUSTSEC-2026-0386](https://rustsec.org/advisories/RUSTSEC-2026-0386.html). Новые Rust advisory не исключаются из проверки.
 
 19 октября 2026 rustls обновлён с 0.23.45 до 0.23.46 для устранения [RUSTSEC-2026-0347](https://rustsec.org/advisories/RUSTSEC-2026-0347.html). Advisory относится к отправке буферизованных данных после отказа ECH. Исправленная версия используется без дополнительного исключения audit.
 

@@ -33,3 +33,21 @@ _Avoid_: publication when referring only to an external announcement.
 
 **Collection announcement**:
 A post on an external channel that introduces an already published collection and directs readers to the site.
+
+**Distribution publication event**:
+A durable, allowlisted record binding the actually running healthy image to a successful verified server deployment and its public collection packages.
+
+**Delivery intent**:
+One immutable collection/destination/item payload tracked independently through attempts, remote receipts and reconciliation.
+
+**Managed emoji set**:
+The single Telegram custom emoji set whose creation intent, owner ID, bot permission, complete membership and per-collection upload identities are retained in native distribution receipts.
+
+**Pinterest Pin progress**:
+A persisted numeric Pin ID bound to the exact publication request and preview hashes, used to resume readback without creating the same Pin again.
+
+**Tumblr photoset progress**:
+A persisted string post ID bound to its blog UUID, exact NPF request and five preview hashes, used to verify the existing post after restart without creating a replacement.
+
+**Flickr photo progress**:
+A saved photo ID bound to its account, preview and metadata hashes, with a private upload phase followed by a persisted publication phase after license verification.
