@@ -20,7 +20,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: 'Essential storage keeps the site secure. You can change analytics and advertising preferences independently without losing browsing, downloads or interactive features.', sections: [
       { heading: 'Security storage', paragraphs: ['reCAPTCHA can set the _GRECAPTCHA cookie when you use a protected action. This security check is independent of optional analytics. Google’s Privacy Policy and Terms of Service apply; links appear next to the protected forms.'] },
-      { heading: 'Essential storage', paragraphs: ['Local storage keeps your cookie choice and, after you change it, your background animation preference. The animation preference stays in your browser and is not sent to the server. Session storage keeps a known country code separately from feature availability. If you rate, comment or send feedback, an HttpOnly session cookie identifies your anonymous visitor session for up to one year. These features need this storage.'] },
+      { heading: 'Essential storage', paragraphs: ['Local storage keeps your cookie choice and, after you change it, your background animation preference. The animation preference stays in your browser and is not sent to the server. Session storage keeps a known country code separately from feature availability. If you rate, comment or send feedback, an HttpOnly session cookie identifies your anonymous visitor session for up to one year. These features need this storage. Your light or dark theme choice is also stored locally and is not sent to the server.'] },
       { heading: 'Optional analytics', paragraphs: ['Configured Firebase Analytics follows your analytics preference. For new visitors outside the EEA it defaults on; in the EEA or when the country is unknown it waits for your choice. Choose “Essential only” to refuse both optional purposes, or set them separately. Cookie settings in the footer let you withdraw permission and stop further collection.'] },
       { heading: 'Advertising', paragraphs: ['HilltopAds shows banners and popup windows when advertising is allowed. Its requests include your IP address, page URL and browser information. Change your choice in the footer; refusing advertising does not prevent downloads. This setting also controls advertising permissions in Analytics. An old analytics-only choice does not allow advertising. Close any advertising window that is already open separately.'] },
     ] },
@@ -48,7 +48,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: 'Необходимое хранение защищает сайт. Аналитикой и рекламой можно управлять независимо; просмотр, скачивания и интерактивные функции доступны при любом выборе.', sections: [
       { heading: 'Хранение для защиты', paragraphs: ['reCAPTCHA может установить cookie _GRECAPTCHA при выполнении защищённого действия. Проверка защиты не зависит от необязательной аналитики. Применяются Политика конфиденциальности и Условия использования Google; ссылки размещены рядом с защищёнными формами.'] },
-      { heading: 'Необходимое хранение', paragraphs: ['Локальное хранилище запоминает выбор cookie и настройку фоновой анимации после её изменения. Настройка анимации остаётся в браузере и не передаётся на сервер. Хранилище сеанса сохраняет известный код страны отдельно от доступности функций. Для оценок, комментариев и формы HttpOnly cookie сохраняет анонимный сеанс посетителя сроком до одного года. Без этого хранения функции не работают.'] },
+      { heading: 'Необходимое хранение', paragraphs: ['Локальное хранилище запоминает выбор cookie и настройку фоновой анимации после её изменения. Настройка анимации остаётся в браузере и не передаётся на сервер. Хранилище сеанса сохраняет известный код страны отдельно от доступности функций. Для оценок, комментариев и формы HttpOnly cookie сохраняет анонимный сеанс посетителя сроком до одного года. Без этого хранения функции не работают. Выбранная светлая или тёмная тема также сохраняется локально и не передаётся на сервер.'] },
       { heading: 'Необязательная аналитика', paragraphs: ['Настроенная Firebase Analytics следует вашему выбору аналитики. Для новых посетителей вне ЕЭЗ она включена по умолчанию; в ЕЭЗ и при неизвестной стране ждёт вашего выбора. «Только необходимые» отключает обе необязательные категории, а настройки позволяют выбрать каждую отдельно. Через «Настройки cookie» внизу страницы можно отозвать разрешение и остановить дальнейший сбор.'] },
       { heading: 'Реклама', paragraphs: ['HilltopAds показывает баннеры и всплывающие окна, когда реклама разрешена. Запросы передают IP-адрес, URL страницы и сведения о браузере. Изменить выбор можно внизу страницы; отказ от рекламы не мешает скачиванию. Настройка также управляет рекламными разрешениями Analytics. Прежний выбор только аналитики не разрешает рекламу. Уже открытое рекламное окно нужно закрыть отдельно.'] },
     ] },
@@ -76,7 +76,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: '必要存储用于保护网站。分析和广告可独立设置；无论选择如何，都能浏览、下载和使用互动功能。', sections: [
       { heading: '安全存储', paragraphs: ['执行受保护的操作时，reCAPTCHA 可能设置 _GRECAPTCHA Cookie。安全验证不依赖可选分析。适用 Google 的隐私政策和服务条款；受保护表单旁提供链接。'] },
-      { heading: '必要存储', paragraphs: ['本地存储保存 Cookie 选择，以及你更改后的背景动画偏好。动画偏好仅保留在浏览器中，不会发送到服务器；会话存储单独保存已知国家代码，不决定功能可用性。评分、评论或发送反馈时，HttpOnly Cookie 会保存匿名访客会话，期限最长为一年。相关功能需要这些存储。'] },
+      { heading: '必要存储', paragraphs: ['本地存储保存 Cookie 选择，以及你更改后的背景动画偏好。动画偏好仅保留在浏览器中，不会发送到服务器；会话存储单独保存已知国家代码，不决定功能可用性。评分、评论或发送反馈时，HttpOnly Cookie 会保存匿名访客会话，期限最长为一年。相关功能需要这些存储。 浅色或深色主题的选择也仅保存在本地，不会发送到服务器。'] },
       { heading: '可选分析', paragraphs: ['已配置的 Firebase Analytics 遵循你的分析设置。EEA 以外的新访客默认启用分析；在 EEA 或国家未知时等待明确选择。“仅必要项”拒绝两项可选用途，也可分别设置。你可随时通过页脚的 Cookie 设置撤回许可，停止后续收集。'] },
       { heading: '广告', paragraphs: ['允许广告时，HilltopAds 会展示横幅和弹出窗口。请求会传输 IP 地址、页面网址和浏览器信息。可在页脚修改选择；拒绝广告不会影响下载。此设置也控制 Analytics 中的广告权限。旧版仅允许分析的选择不会授予广告权限。已打开的广告窗口需单独关闭。'] },
     ] },
@@ -104,7 +104,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
     ] },
     cookies: { intro: 'O armazenamento essencial protege o site. Análise e publicidade podem ser configuradas separadamente; navegação, downloads e funções interativas permanecem disponíveis com qualquer escolha.', sections: [
       { heading: 'Armazenamento de segurança', paragraphs: ['O reCAPTCHA pode definir o cookie _GRECAPTCHA ao executar uma ação protegida. A verificação não depende da análise opcional. Aplicam-se a Política de Privacidade e os Termos de Serviço do Google; os links aparecem junto dos formulários protegidos.'] },
-      { heading: 'Armazenamento essencial', paragraphs: ['O armazenamento local guarda sua escolha de cookies e sua preferência de animação de fundo após uma alteração. Essa preferência fica no navegador e não é enviada ao servidor. O armazenamento de sessão guarda um código de país conhecido separadamente da disponibilidade das funções. Ao avaliar, comentar ou enviar contato, um cookie HttpOnly identifica a sessão de visitante anônimo por até um ano. Essas funções precisam desse armazenamento.'] },
+      { heading: 'Armazenamento essencial', paragraphs: ['O armazenamento local guarda sua escolha de cookies e sua preferência de animação de fundo após uma alteração. Essa preferência fica no navegador e não é enviada ao servidor. O armazenamento de sessão guarda um código de país conhecido separadamente da disponibilidade das funções. Ao avaliar, comentar ou enviar contato, um cookie HttpOnly identifica a sessão de visitante anônimo por até um ano. Essas funções precisam desse armazenamento. A escolha do tema claro ou escuro também fica no armazenamento local e não é enviada ao servidor.'] },
       { heading: 'Análise opcional', paragraphs: ['O Firebase Analytics configurado segue sua preferência de análise. Para novos visitantes fora do EEE, começa ativado; no EEE ou quando o país é desconhecido, aguarda sua escolha. “Só essenciais” recusa as duas finalidades opcionais, que também podem ser configuradas separadamente. As configurações de cookies no rodapé permitem retirar a autorização e interromper a coleta futura.'] },
       { heading: 'Publicidade', paragraphs: ['A HilltopAds exibe banners e janelas pop-up quando a publicidade é permitida. As requisições incluem seu IP, a URL da página e informações do navegador. Altere a escolha no rodapé; recusar publicidade não impede downloads. Esta opção também controla permissões publicitárias no Analytics. Uma escolha antiga que permite apenas análise não autoriza publicidade. Feche separadamente qualquer janela publicitária já aberta.'] },
     ] },
@@ -188,7 +188,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
         {
           "heading": "必須ストレージ",
           "paragraphs": [
-            "ローカルストレージには Cookie の選択と、変更した場合の背景アニメーション設定を保存します。アニメーション設定はブラウザー内に留まり、サーバーには送信されません。セッションストレージは判明した国コードを、機能の利用可否とは別に保存します。評価、コメント、お問い合わせの送信時には、HttpOnly セッション Cookie が匿名の訪問者セッションを最長一年間識別します。これらの機能にはこの保存が必要です。"
+            "ローカルストレージには Cookie の選択と、変更した場合の背景アニメーション設定を保存します。アニメーション設定はブラウザー内に留まり、サーバーには送信されません。セッションストレージは判明した国コードを、機能の利用可否とは別に保存します。評価、コメント、お問い合わせの送信時には、HttpOnly セッション Cookie が匿名の訪問者セッションを最長一年間識別します。これらの機能にはこの保存が必要です。 ライトテーマとダークテーマの選択もブラウザー内に保存し、サーバーには送信しません。"
           ]
         },
         {
@@ -316,7 +316,7 @@ const content: Record<Locale, Record<LegalKey, Omit<Page, 'title'>>> = {
         {
           "heading": "التخزين الضروري",
           "paragraphs": [
-            "يحفظ التخزين المحلي اختيار ملفات تعريف الارتباط وتفضيل حركة الخلفية بعد تغييره. يبقى تفضيل الحركة في متصفحك ولا يُرسل إلى الخادم. يحفظ تخزين الجلسة رمز البلد المعروف بشكل منفصل عن إتاحة الميزات. إذا قيّمت أو علّقت أو أرسلت رسالة، يعرّف ملف جلسة HttpOnly جلسة الزائر المجهولة لمدة تصل إلى سنة واحدة. تحتاج هذه الميزات إلى هذا التخزين."
+            "يحفظ التخزين المحلي اختيار ملفات تعريف الارتباط وتفضيل حركة الخلفية بعد تغييره. يبقى تفضيل الحركة في متصفحك ولا يُرسل إلى الخادم. يحفظ تخزين الجلسة رمز البلد المعروف بشكل منفصل عن إتاحة الميزات. إذا قيّمت أو علّقت أو أرسلت رسالة، يعرّف ملف جلسة HttpOnly جلسة الزائر المجهولة لمدة تصل إلى سنة واحدة. تحتاج هذه الميزات إلى هذا التخزين. يُحفظ اختيار المظهر الفاتح أو الداكن محليًا أيضًا ولا يُرسل إلى الخادم."
           ]
         },
         {

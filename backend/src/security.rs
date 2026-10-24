@@ -122,6 +122,7 @@ fn advertising_path(path: &str) -> bool {
         .unwrap_or(path);
     let parts: Vec<_> = path.trim_start_matches('/').split('/').collect();
     match parts.as_slice() {
+        [""] => true,
         [
             "collections" | "search" | "feedback" | "privacy" | "terms" | "cookies" | "license"
             | "contact",
@@ -232,6 +233,7 @@ mod tests {
     fn advertising_csp_is_limited_to_known_successful_public_documents() {
         for prefix in ["", "/ru", "/zh-cn", "/pt-br", "/ja", "/ar"] {
             for route in [
+                "/",
                 "/collections/",
                 "/collections/contours-of-silence/",
                 "/wallpapers/contours-of-silence-1/",
@@ -289,8 +291,6 @@ mod tests {
                 }
             }
             for route in [
-                "/",
-                "/index.html",
                 "/404/",
                 "/404.html",
                 "/ui-kit/",

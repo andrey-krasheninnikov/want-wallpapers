@@ -3,10 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
 import { locales } from '../../src/data/catalog';
-import { hilltopAdvertisement } from '../../src/lib/advertising-providers';
+import { hilltopAdvertisements } from '../../src/lib/advertising-providers';
 
 const preferenceKey = 'want-cookie-preferences-v2';
 const banner = 'iframe[data-test-banner]';
+const searchTags = [hilltopAdvertisements.top, hilltopAdvertisements.footer];
+const wallpaperTags = Object.values(hilltopAdvertisements);
 
 async function network(page: Page, country: string | null, mode = 'ready') {
   const calls: string[] = [];
@@ -16,16 +18,18 @@ async function network(page: Page, country: string | null, mode = 'ready') {
   await page.route('https://ipwho.is/**', route => country === null ? route.abort() : route.fulfill({ json: { success: true, country_code: country } }));
   await page.route('**/api/v1/**', route => route.fulfill({ json: route.request().url().endsWith('/social') ? { counts: { cringe: 0, minus: 0, plus: 0, imba: 0 }, ownRating: null, ownUid: null, comments: [] } : { enabled: false } }));
   await page.route('https://massivesalad.com/mock-banner', route => route.fulfill({ contentType: 'text/html', body: mode === 'empty-frame' ? '<!doctype html><title>Empty banner</title>' : '<!doctype html><title>Test banner</title><body style="margin:0;background:#252525;color:#e8e8e8">Test banner</body>' }));
-  await page.route(hilltopAdvertisement.src, async route => {
+  for (const [placement, src] of Object.entries(hilltopAdvertisements)) await page.route(src, async route => {
     calls.push(route.request().url());
     if (mode === 'error') { await route.abort(); return; }
     await route.fulfill({ contentType: 'text/javascript', body: mode === 'empty' ? '' : `
+      (() => {
       if (JSON.stringify(document.currentScript.settings) !== '{}' || !document.currentScript.async || document.currentScript.referrerPolicy !== 'no-referrer-when-downgrade') throw new Error('Invalid placement setup');
       const frame = document.createElement('iframe');
       frame.dataset.testBanner = ''; frame.title = 'Test banner'; frame.width = '300'; frame.height = '250';
       frame.style.cssText = 'border:0;display:block'; frame.src = 'https://massivesalad.com/mock-banner';
       document.currentScript.before(frame);
-      setTimeout(() => { window.testPopupAttempts = (window.testPopupAttempts || 0) + 1; window.open('https://massivesalad.com/mock-popup', '_blank'); }, 15000);
+      ${placement === 'footer' ? "setTimeout(() => { window.testPopupAttempts = (window.testPopupAttempts || 0) + 1; window.open('https://massivesalad.com/mock-popup', '_blank'); }, 15000);" : ''}
+      })();
     ` });
   });
   return calls;
@@ -40,7 +44,7 @@ async function allow(page: Page) {
   await page.getByRole('dialog').getByRole('button', { name: interfaceCopy.en.save, exact: true }).click();
 }
 
-for (const locale of locales) test(`one banner fits without covering content: ${locale}`, async ({ page }, testInfo) => {
+for (const locale of locales) test(`three banners fit without covering content: ${locale}`, async ({ page }, testInfo) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   const calls = await network(page, 'US');
   await page.setViewportSize({ width: 300, height: 900 });
@@ -48,29 +52,78 @@ for (const locale of locales) test(`one banner fits without covering content: ${
   expect(calls).toEqual([]);
   for (const width of [320, 375, 768, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
-    await expect(page.locator(banner)).toBeVisible();
-    await expect(page.getByRole('complementary', { name: interfaceCopy[locale].advertisement })).toHaveCount(1);
-    const box = await page.locator(banner).boundingBox();
-    expect(box!.width).toBe(300); expect(box!.height).toBe(250);
-    expect(box!.x).toBeGreaterThanOrEqual(10); expect(box!.x + box!.width).toBeLessThanOrEqual(width - 10);
-    expect(await page.evaluate(selector => { const frame = document.querySelector(selector)!.getBoundingClientRect(); const main = document.querySelector('main')!.getBoundingClientRect(); return frame.top >= main.bottom; }, banner)).toBe(true);
+    await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(3);
+    await expect(page.getByRole('complementary', { name: interfaceCopy[locale].advertisement })).toHaveCount(3);
+    for (const frame of await page.locator(banner).all()) {
+      await expect(frame.contentFrame().getByText('Test banner', { exact: true })).toBeVisible();
+      const box = await frame.boundingBox();
+      expect(box!.width).toBe(300); expect(box!.height).toBe(250);
+      expect(box!.x).toBeGreaterThanOrEqual(10); expect(box!.x + box!.width).toBeLessThanOrEqual(width - 10);
+    }
+    expect(await page.evaluate(() => {
+      const top = document.querySelector('[data-advertisement-placement="top"]')!.getBoundingClientRect();
+      const content = document.querySelector('[data-advertisement-placement="content"]')!.getBoundingClientRect();
+      const footer = document.querySelector('[data-advertisement-placement="footer"]')!.getBoundingClientRect();
+      const intro = document.querySelector('.page-intro')!;
+      const discussion = document.querySelector('.wallpaper-discussion')!;
+      const comments = document.querySelector('.wallpaper-comments')!.getBoundingClientRect();
+      const title = intro.querySelector('h1')!.getBoundingClientRect();
+      const footerContainer = document.querySelector('footer')!.getBoundingClientRect();
+      const rtl = document.documentElement.dir === 'rtl';
+      const beside = (a: DOMRect, b: DOMRect) => rtl ? a.right <= b.left : a.left >= b.right;
+      return intro.contains(document.querySelector('[data-advertisement-placement="top"]'))
+        && discussion.contains(document.querySelector('[data-advertisement-placement="content"]'))
+        && footer.top >= footerContainer.top && footer.bottom <= footerContainer.bottom
+        && (innerWidth >= 1024 ? beside(top, title) && beside(content, comments) : top.top >= title.bottom && content.top >= comments.bottom);
+    })).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     if (locale === 'en' && [320, 1440].includes(width)) await page.screenshot({ path: testInfo.outputPath(`hilltop-${width}.png`), fullPage: true });
   }
-  expect(calls).toEqual([hilltopAdvertisement.src]); expect(errors).toEqual([]);
+  await page.setViewportSize({ width: 300, height: 900 });
+  await expect(page.getByRole('complementary', { name: interfaceCopy[locale].advertisement })).toHaveCount(0);
+  expect(calls.toSorted()).toEqual(wallpaperTags.toSorted()); expect(errors).toEqual([]);
+});
+
+for (const theme of ['dark', 'light']) test(`advertising cards fit every public page template: ${theme}`, async ({ page }, testInfo) => {
+  await network(page, 'US');
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.addInitScript(value => localStorage.setItem('want-theme', value), theme);
+  const routes = ['/', '/collections/', '/collections/contours-of-silence/', '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/'];
+  for (const width of [320, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of routes) {
+      await page.goto(route); await ready(page);
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(route === '/' ? 3 : 2);
+      const cards = await page.locator('.inline-advertisement').evaluateAll(cards => cards.map(card => {
+        const style = getComputedStyle(card), box = card.getBoundingClientRect();
+        return { background: style.backgroundColor, radius: parseFloat(style.borderRadius), left: box.left, right: box.right };
+      }));
+      for (const card of cards) {
+        const context = `${route} ${theme} ${width}`;
+        expect(card.background, context).not.toBe('rgba(0, 0, 0, 0)');
+        expect(card.radius, context).toBeGreaterThanOrEqual(24);
+        expect(card.left, context).toBeGreaterThanOrEqual(10);
+        expect(card.right, context).toBeLessThanOrEqual(width - 10);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      if (width === 1440 && route === '/') await page.screenshot({ path: testInfo.outputPath(`advertising-home-${theme}.png`), fullPage: true });
+    }
+  }
+  expect(errors).toEqual([]);
 });
 
 for (const country of ['RU', 'KZ', 'BY', 'US']) test(`the same provider starts outside the EEA: ${country}`, async ({ page }) => {
   const calls = await network(page, country);
   await page.goto('/search/'); await ready(page);
-  await expect(page.locator(banner)).toBeVisible(); expect(calls).toEqual([hilltopAdvertisement.src]);
+  await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(2); expect(calls.toSorted()).toEqual(searchTags.toSorted());
 });
 
 for (const country of ['DE', null]) test(`explicit permission and withdrawal: ${country ?? 'unknown'}`, async ({ page }) => {
   await page.clock.install();
   const calls = await network(page, country);
   await page.goto('/search/'); await ready(page); expect(calls).toEqual([]);
-  await allow(page); await expect(page.locator(banner)).toBeVisible();
+  await allow(page); await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(2);
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), preferenceKey)).toEqual({ analytics: false, advertising: true });
   const popup = page.context().waitForEvent('page'); await page.clock.fastForward(15000);
   const opened = await popup; await opened.waitForLoadState('domcontentloaded');
@@ -81,27 +134,27 @@ for (const country of ['DE', null]) test(`explicit permission and withdrawal: ${
   await page.getByRole('dialog').getByRole('button', { name: copy.en.essentialOnly, exact: true }).click(); await reload; await ready(page);
   await page.clock.fastForward(60000);
   expect(await page.evaluate(() => Reflect.get(window, 'testPopupAttempts'))).toBeUndefined();
-  await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(1);
+  await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(2);
 });
 
 test('stored denial and cross-tab withdrawal prevent further ads', async ({ page, context }) => {
   const calls = await network(page, 'US');
   await page.addInitScript(key => { if (!localStorage.getItem(key)) localStorage.setItem(key, '{"analytics":true,"advertising":false}'); }, preferenceKey);
   await page.goto('/search/'); await ready(page); expect(calls).toEqual([]);
-  await allow(page); await expect(page.locator(banner)).toBeVisible();
+  await allow(page); await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(2);
   const second = await context.newPage(); await network(second, 'US'); await second.goto('/'); await ready(second);
   const reload = page.waitForEvent('domcontentloaded');
   await second.locator('[data-cookie-settings]').click();
   await second.getByRole('dialog').getByRole('button', { name: copy.en.essentialOnly, exact: true }).click(); await reload; await ready(page);
-  await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(1); await second.close();
+  await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(2); await second.close();
 });
 
 for (const mode of ['error', 'empty', 'empty-frame']) test(`failure and no-fill leave downloads and social actions working: ${mode}`, async ({ page }) => {
   const calls = await network(page, 'US', mode);
   await page.unroute('**/api/v1/**');
   await page.goto('/wallpapers/contours-of-silence-1/'); await ready(page);
-  await expect.poll(() => calls.length).toBe(1);
-  if (mode === 'empty-frame') await expect(page.locator(banner)).toBeVisible();
+  await expect.poll(() => calls.length).toBe(3);
+  if (mode === 'empty-frame') await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(3);
   else await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(0);
   for (const variant of ['mobile', 'desktop'] as const) {
     await page.getByRole('tab', { name: copy.en[variant], exact: true }).click();
@@ -120,34 +173,52 @@ for (const mode of ['error', 'empty', 'empty-frame']) test(`failure and no-fill 
 
 test('no-fill times out without retrying or leaving a placement', async ({ page }) => {
   await page.clock.install(); const calls = await network(page, 'US', 'empty');
-  await page.goto('/search/'); await ready(page); await expect.poll(() => calls.length).toBe(1);
+  await page.goto('/search/'); await ready(page); await expect.poll(() => calls.length).toBe(2);
   await page.clock.fastForward(10001);
   await expect(page.locator('.inline-advertisement > div')).toHaveCount(0);
   await page.evaluate(() => document.dispatchEvent(new Event('astro:page-load')));
   await page.setViewportSize({ width: 400, height: 900 });
-  expect(calls).toHaveLength(1);
+  expect(calls).toHaveLength(2);
+});
+
+test('a failed zone leaves other banners working and is not retried', async ({ page }) => {
+  const calls = await network(page, 'US');
+  await page.route(hilltopAdvertisements.top, route => { calls.push(route.request().url()); return route.abort(); });
+  await page.goto('/wallpapers/contours-of-silence-1/'); await ready(page);
+  await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(2);
+  await expect(page.locator('[data-advertisement-placement="top"]')).toBeHidden();
+  expect(await page.locator('.page-intro').evaluate(element => element.firstElementChild!.getBoundingClientRect().width === element.clientWidth)).toBe(true);
+  await page.evaluate(() => document.dispatchEvent(new Event('astro:page-load')));
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect(calls.toSorted()).toEqual(wallpaperTags.toSorted());
+  for (const variant of ['mobile', 'desktop'] as const) {
+    await page.getByRole('tab', { name: copy.en[variant], exact: true }).click();
+    await expect(page.locator('#download-link')).toHaveAttribute('href', `/downloads/contours-of-silence-1-${variant}.png`);
+    await expect(page.locator('#download-link')).toHaveAttribute('download', `contours-of-silence-1-${variant}.png`);
+  }
 });
 
 test('advertising documents reload and preserve the selected download variant', async ({ page }) => {
   const calls = await network(page, 'RU');
-  await page.goto('/wallpapers/contours-of-silence-1/?variant=mobile'); await ready(page); await expect(page.locator(banner)).toBeVisible();
+  await page.goto('/wallpapers/contours-of-silence-1/?variant=mobile'); await ready(page); await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(3);
   await page.evaluate(() => Object.assign(window, { documentMarker: true }));
   const download = page.waitForEvent('download'); await page.locator('#download-link').click();
   expect((await download).suggestedFilename()).toBe('contours-of-silence-1-mobile.png');
   await page.locator('[data-wallpaper-next]').click();
   await expect(page).toHaveURL(/\?variant=mobile#wallpaper-view$/); await ready(page);
   expect(await page.evaluate(() => Reflect.get(window, 'documentMarker'))).toBeUndefined();
-  await expect(page.locator(banner)).toBeVisible(); expect(calls).toHaveLength(2);
+  await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(3); expect(calls).toHaveLength(6);
   await page.getByRole('link', { name: 'Want Wallpapers', exact: true }).first().click();
-  await expect(page.locator('.public-advertisements')).toHaveCount(0); expect(calls).toHaveLength(2);
+  await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(3); expect(calls).toHaveLength(9);
+  await page.goto('/404/'); await expect(page.locator('.public-advertisements')).toHaveCount(0); expect(calls).toHaveLength(9);
 });
 
 test('cached documents refresh their privacy state before resuming advertising', async ({ page }) => {
   const calls = await network(page, 'US');
-  await page.goto('/search/'); await ready(page); await expect(page.locator(banner)).toBeVisible();
+  await page.goto('/search/'); await ready(page); await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(2);
   const reload = page.waitForEvent('domcontentloaded');
   await page.evaluate(key => { localStorage.setItem(key, '{"analytics":false,"advertising":false}'); window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); }, preferenceKey);
-  await reload; await ready(page); await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(1);
+  await reload; await ready(page); await expect(page.locator(banner)).toHaveCount(0); expect(calls).toHaveLength(2);
 });
 
 for (const action of ['initialize', 'withdraw']) test(`a pending tag survives initialization and cannot outlive withdrawal: ${action}`, async ({ page }) => {
@@ -155,7 +226,7 @@ for (const action of ['initialize', 'withdraw']) test(`a pending tag survives in
   let release!: () => void;
   const pending = new Promise<void>(resolve => { release = resolve; });
   const requests: string[] = [];
-  await page.route(hilltopAdvertisement.src, async route => {
+  await page.route(hilltopAdvertisements.footer, async route => {
     requests.push(route.request().url()); await pending;
     await route.fulfill({ contentType: 'text/javascript', body: 'window.testLateAdvertising = true;' }).catch(() => {});
   });
@@ -164,12 +235,12 @@ for (const action of ['initialize', 'withdraw']) test(`a pending tag survives in
     if (action === 'initialize') {
       await page.evaluate(() => document.dispatchEvent(new Event('astro:page-load'))); release();
       await expect.poll(() => page.evaluate(() => Reflect.get(window, 'testLateAdvertising'))).toBe(true);
-      await expect(page.locator(`script[src="${hilltopAdvertisement.src}"]`)).toHaveCount(1);
+      await expect(page.locator(`script[src="${hilltopAdvertisements.footer}"]`)).toHaveCount(1);
     } else {
       await page.locator('[data-cookie-settings]').click(); const reload = page.waitForEvent('domcontentloaded');
       await page.getByRole('dialog').getByRole('button', { name: copy.en.essentialOnly, exact: true }).click(); await reload; await ready(page); release();
       expect(await page.evaluate(() => Reflect.get(window, 'testLateAdvertising'))).toBeUndefined();
-      await expect(page.locator(`script[src="${hilltopAdvertisement.src}"]`)).toHaveCount(0);
+      await expect(page.locator(`script[src="${hilltopAdvertisements.footer}"]`)).toHaveCount(0);
     }
     expect(requests).toHaveLength(1);
   } finally { release(); }
@@ -177,7 +248,7 @@ for (const action of ['initialize', 'withdraw']) test(`a pending tag survives in
 
 test('CSP isolates the provider and verification file from excluded routes', async ({ page, request }) => {
   for (const locale of locales) {
-    for (const route of ['/wallpapers/contours-of-silence-1/', '/search/']) {
+    for (const route of ['/', '/wallpapers/contours-of-silence-1/', '/search/']) {
       const response = await request.get(localPath(locale, route)); expect(response.status()).toBe(200);
       const policy = response.headers()['content-security-policy'];
       expect(policy).toContain('https://massivesalad.com'); expect(policy).toContain('https://phoroglopsu.com');
@@ -185,7 +256,7 @@ test('CSP isolates the provider and verification file from excluded routes', asy
       expect(response.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
     }
     const calls = await network(page, 'US');
-    for (const route of ['/', '/404/', '/unknown/']) {
+    for (const route of ['/404/', '/unknown/']) {
       const response = await page.goto(localPath(locale, route));
       expect(response!.headers()['content-security-policy']).not.toMatch(/massivesalad|phoroglopsu|unsafe-eval|script-src-elem/);
       await expect(page.locator('.public-advertisements')).toHaveCount(0);
@@ -197,7 +268,7 @@ test('CSP isolates the provider and verification file from excluded routes', asy
     expect(response.headers()['content-security-policy']).not.toMatch(/massivesalad|phoroglopsu/);
     if (route.endsWith('.txt')) { expect(response.status()).toBe(200); expect(await response.text()).toBe('66236f1398a411bf35ec'); }
   }
-  await network(page, 'US'); await page.goto('/search/'); await ready(page); await expect(page.locator(banner)).toBeVisible();
+  await network(page, 'US'); await page.goto('/search/'); await ready(page); await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(2);
   await page.evaluate(() => {
     const violations: string[] = []; Object.assign(window, { advertisingCspViolations: violations });
     document.addEventListener('securitypolicyviolation', event => violations.push(event.blockedURI));

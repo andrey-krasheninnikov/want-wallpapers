@@ -1,5 +1,5 @@
 import { getCountry, initializePrivacy, readCookiePreferences } from './privacy';
-import { advertisingPath, advertisingRequested, hilltopAdvertisement, mountHilltop } from './advertising-providers';
+import { advertisingPath, advertisingRequested, hilltopAdvertisements, mountHilltop, type AdvertisementPlacement } from './advertising-providers';
 import { effectiveCookiePreferences, type CookiePreferences } from './privacy-policy';
 
 export type MountAdvertisement = (context: {
@@ -43,33 +43,41 @@ export function startAdvertisement(container: HTMLElement, mount: MountAdvertise
 
 export function initAdvertisements(): () => void {
   if (!advertisingPath(window.location.pathname)) return () => {};
-  const root = document.querySelector<HTMLElement>('.public-advertisements');
-  if (!root) return () => {};
-  const label = root.dataset.advertisementLabel ?? '';
-  const inline = document.createElement('aside');
-  inline.hidden = true; inline.className = 'inline-advertisement';
-  inline.setAttribute('aria-label', label);
-  const caption = document.createElement('p');
-  caption.className = 'mb-2 text-sm text-muted-foreground'; caption.textContent = label;
-  inline.append(caption); root.append(inline);
+  const placements = Array.from(document.querySelectorAll<HTMLElement>('.public-advertisements')).flatMap(root => {
+    const placement = root.dataset.advertisementPlacement as AdvertisementPlacement;
+    const src = hilltopAdvertisements[placement];
+    if (!src) return [];
+    const label = root.dataset.advertisementLabel ?? '';
+    const inline = document.createElement('aside');
+    inline.hidden = true; inline.className = 'inline-advertisement';
+    inline.setAttribute('aria-label', label);
+    const caption = document.createElement('p');
+    caption.className = 'advertisement-label'; caption.textContent = label;
+    inline.append(caption); root.append(inline);
+    return [{ inline, src, stop: undefined as (() => void) | undefined }];
+  });
+  if (!placements.length) return () => {};
   let ready = false, active = true;
-  let stop: (() => void) | undefined;
   function update() {
     if (!ready || !active) return;
     if (!advertisingAllowed(getCountry(), readCookiePreferences())) {
       if (advertisingRequested()) window.location.reload();
       return;
     }
-    if (!stop && root!.clientWidth >= hilltopAdvertisement.width) stop = startAdvertisement(inline, mountHilltop);
+    if (document.documentElement.clientWidth < 320) return;
+    for (const placement of placements) {
+      placement.stop ??= startAdvertisement(placement.inline, mountHilltop(placement.src));
+    }
   }
   const restore = (event: PageTransitionEvent) => { if (event.persisted && advertisingRequested()) window.location.reload(); };
   const observer = new ResizeObserver(update);
-  observer.observe(root);
+  observer.observe(document.documentElement);
   window.addEventListener('want:privacy', update);
   window.addEventListener('pageshow', restore);
   void initializePrivacy().then(() => { if (active) { ready = true; update(); } });
   return () => {
-    active = false; stop?.(); observer.disconnect(); inline.remove();
+    active = false; observer.disconnect();
+    for (const placement of placements) { placement.stop?.(); placement.inline.remove(); }
     window.removeEventListener('want:privacy', update);
     window.removeEventListener('pageshow', restore);
   };

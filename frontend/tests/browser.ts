@@ -1,12 +1,15 @@
 import { test as base } from '@playwright/test';
-import { hilltopAdvertisement } from '../src/lib/advertising-providers';
+import { hilltopAdvertisements } from '../src/lib/advertising-providers';
 
 export { expect } from '@playwright/test';
 export type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 export const test = base.extend({
+  colorScheme: 'dark',
   context: async ({ context }, use) => {
-    await context.route(hilltopAdvertisement.src, route => route.fulfill({ contentType: 'application/javascript', body: '' }));
+    for (const src of Object.values(hilltopAdvertisements)) {
+      await context.route(src, route => route.fulfill({ contentType: 'application/javascript', body: '' }));
+    }
     await context.route('https://firebase.googleapis.com/v1alpha/projects/-/apps/*/webConfig', route => route.fulfill({
       json: { appId: decodeURIComponent(new URL(route.request().url()).pathname.split('/').at(-2)!),
         measurementId: process.env.PUBLIC_FIREBASE_MEASUREMENT_ID || 'G-TEST' },

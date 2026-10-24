@@ -69,13 +69,12 @@ for (const width of [320, 1440]) test(`stable two-column gallery, client slides,
   expect(errors).toEqual([]);
 });
 
-test('manual 3D changes paired textures, automatic rotation and reset keep the wallpaper', async ({ page }, testInfo) => {
+test('manual 3D changes paired textures and reset keeps the wallpaper', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 }); await page.goto('/');
   const scene = page.locator('.device-stage'); const viewer = page.locator('model-viewer');
   await expect(scene).toHaveAttribute('data-scene-state', 'ready', { timeout: 45000 });
   const initial = await scene.getAttribute('data-scene-wallpaper');
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(true);
+  await expect.poll(() => viewer.evaluate(element => (element as ModelViewerElement).autoRotate)).toBe(false);
   await expect(scene).toHaveAttribute('data-scene-wallpaper', initial!);
   await page.getByRole('button', { name: designCopy.en.right, exact: true }).click();
   await expect(scene).not.toHaveAttribute('data-scene-wallpaper', initial!);

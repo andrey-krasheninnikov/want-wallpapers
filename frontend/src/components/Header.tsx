@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTr
 import { copy, languageLabels, languageFlags, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { localeDirection, type Locale } from '@/data/catalog';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header({ locale, path, logo }: { locale: Locale; path: string; logo: string }) {
   const ui = copy[locale];
@@ -22,7 +23,7 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
     <div className="shell header-bar flex min-h-16 items-center justify-between gap-3 lg:min-h-20">
       <a href={localPath(locale)} aria-label="Want Wallpapers" className="inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg">
         <img src={logo} alt="" width={32} height={32} className="size-8" />
-        <span dir="ltr" className="text-xl font-bold tracking-tight">Want<span className="ms-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
+        <span dir="ltr" className="hidden text-xl font-bold tracking-tight min-[400px]:inline">Want<span className="ms-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
       </a>
       <NavigationMenu className="hidden lg:flex" aria-label={ui.menu}>
         <NavigationMenuList className="gap-1 rounded-pill bg-secondary p-1">{links.map((link) => <NavigationMenuItem key={link.href}>
@@ -30,6 +31,7 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
         </NavigationMenuItem>)}</NavigationMenuList>
       </NavigationMenu>
       <div className="flex shrink-0 items-center gap-2">
+        <ThemeToggle locale={locale} />
         <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
           <SelectTrigger aria-label={text.language} className="language-trigger">
             <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'ar' ? 'العربية' : locale === 'ja' ? '日本語' : locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>

@@ -27,6 +27,8 @@ export async function collectionCoverData(collection: Collection): Promise<Previ
     if (!size?.width || !size.height) throw new Error(`Missing collection poster dimensions: ${key}`);
     return { src: `/previews/${key}.webp`, ...size };
   }
-  const first = getCollectionWallpapers(collection.slug)[0];
+  const preferred: Record<string, string> = { 'contours-of-silence': 'contours-of-silence-11', 'woven-spectrum': 'woven-spectrum-4', 'neon-tide': 'neon-tide-7' };
+  const items = getCollectionWallpapers(collection.slug);
+  const first = items.find(item => item.id === preferred[collection.slug]) ?? items[0];
   return first ? previewData(first, 'desktop') : undefined;
 }

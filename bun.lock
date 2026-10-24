@@ -13,7 +13,7 @@
         "@fontsource-variable/manrope": "^5.2.8",
         "@fontsource-variable/noto-sans-arabic": "5.3.0",
         "@fontsource-variable/noto-sans-jp": "5.3.1",
-        "@fontsource-variable/onest": "5.3.1",
+        "@fontsource/days-one": "5.3.0",
         "@google/model-viewer": "4.4.0",
         "@tailwindcss/vite": "^4",
         "astro": "^5.16.0",
@@ -295,7 +295,7 @@
 
     "@fontsource-variable/noto-sans-jp": ["@fontsource-variable/noto-sans-jp@5.3.1", "", {}, "sha512-/anGvJFc5y36f8DJ+3TSh2+KAvaRLA9PaLUMvneeY5s4j8m+8X4F3lE/sjTuG9YI5BX4sykvCk4TuJMG7ecMRQ=="],
 
-    "@fontsource-variable/onest": ["@fontsource-variable/onest@5.3.1", "", {}, "sha512-xaaw6G4HDB2/RczsWLD/2bnib4ykmQlTlBUN3GOEOiyErilZukQWVJG95h9zwAy0i8KY+QzDa+COPfqhI72Acw=="],
+    "@fontsource/days-one": ["@fontsource/days-one@5.3.0", "", {}, "sha512-rxw3xOvjQqEOAq8Yoqr5UJwjCK5ScJuAL1fgcHmdxoBrvIlS09GkeMEmSvPFtTEEV5xfVOgN5vOYDTUomCXQHQ=="],
 
     "@google/model-viewer": ["@google/model-viewer@4.4.0", "", { "dependencies": { "@monogrid/gainmap-js": "^3.1.0", "lit": "^3.2.1" }, "peerDependencies": { "three": "^0.183.0" } }, "sha512-8z1SB5sPlzKoak5mdx/D31brBakPYm3Qi31EfAucHAUrtrHHCbabypkKvSwReYhUpPaxyJ46oT47uWE/hrs1Zw=="],
 
