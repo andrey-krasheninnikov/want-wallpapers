@@ -116,7 +116,7 @@ test('a storage event withdraws collection in another open tab', async () => {
   const { privacy, target, local } = await browser({ success: true, country_code: 'GE' });
   await privacy.initializePrivacy(); await ready;
   local.set('want-cookie-preferences-v2', '{"analytics":false,"advertising":false}');
-  target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2' }));
+  target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2', newValue: local.get('want-cookie-preferences-v2') }));
   expect(enabled).toBe(false);
   expect(privacy.getCookiePreferences()).toEqual({ analytics: false, advertising: false });
 });
@@ -235,4 +235,21 @@ test('captured outcomes require original permission and remain invalid after wit
   expect(events).toEqual([]);
   privacy.captureProductEvents()('feedback_action', { stage: 'success' });
   expect(events).toEqual(['feedback_action']);
+});
+
+
+test('rapid cross-tab withdrawal invalidates captured outcomes before regrant notifications', async () => {
+  const { privacy, target, local } = await browser({ success: true, country_code: 'GE' });
+  await privacy.initializePrivacy(); await ready;
+  privacy.sendAnalyticsEvent('feedback_action', { stage: 'open' });
+  expect(events).toEqual(['feedback_action']);
+  const captured = privacy.captureProductEvents();
+  const denied = JSON.stringify({ analytics: false, advertising: false });
+  const granted = JSON.stringify({ analytics: true, advertising: false });
+  local.set('want-cookie-preferences-v2', denied);
+  local.set('want-cookie-preferences-v2', granted);
+  for (const newValue of [denied, granted]) target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2', newValue }));
+  captured('feedback_action', { stage: 'success' });
+  expect(events).toEqual(['feedback_action']);
+  expect(privacy.getCookiePreferences().analytics).toBe(true);
 });

@@ -196,3 +196,19 @@ test('a rating response retains the originating collection after Astro navigatio
   const result = (await events(page)).find(event => event.name === 'rating_action' && event.parameters.stage === 'success')!;
   expect(result.parameters).toMatchObject({ item_id: 'neon-tide-1', collection_id: 'neon-tide', page_location: 'http://127.0.0.1:4387/wallpapers/neon-tide-1/' });
 });
+
+
+test('manual scene debounce requires permission at the time of rotation', async ({ page, context }) => {
+  await prepare(page, false); await page.goto('/');
+  const second = await context.newPage(); await second.goto('/license/');
+  await expect(page.locator('.device-controls button')).toHaveCount(4, { timeout: 15000 });
+  const viewer = page.locator('model-viewer');
+  const rotate = () => viewer.evaluate(element => element.dispatchEvent(new CustomEvent('camera-change', { detail: { source: 'user-interaction' } })));
+  await rotate();
+  await second.evaluate(() => localStorage.setItem('want-cookie-preferences-v2', JSON.stringify({ analytics: true, advertising: false })));
+  await ready(page); await page.waitForTimeout(300); // Observe the complete 200 ms rotation debounce.
+  expect((await events(page)).filter(event => event.name === 'feature_action' && event.parameters.feature === 'scene')).toEqual([]);
+  await rotate();
+  await expect.poll(async () => (await events(page)).filter(event => event.name === 'feature_action' && event.parameters.feature === 'scene' && event.parameters.action === 'rotate').length).toBe(1);
+  await second.close();
+});

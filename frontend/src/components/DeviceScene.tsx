@@ -1,4 +1,4 @@
-import { trackProductEvent } from '@/lib/analytics';
+import { trackProductEvent, captureProductEvents } from '@/lib/analytics';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Pause, Play, RotateCcw, RotateCw } from 'lucide-react';
 import type { ModelViewerElement } from '@google/model-viewer';
@@ -122,7 +122,8 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
     let timer: ReturnType<typeof setTimeout>;
     const change = (event: Event) => {
       if ((event as CustomEvent<{ source: string }>).detail.source !== 'user-interaction') return;
-      clearTimeout(timer); timer = setTimeout(() => { trackProductEvent('feature_action', { feature: 'scene', action: 'rotate' }); void changeWallpaper(); }, 200);
+      const track = captureProductEvents();
+      clearTimeout(timer); timer = setTimeout(() => { track('feature_action', { feature: 'scene', action: 'rotate' }); void changeWallpaper(); }, 200);
     };
     viewer.addEventListener('camera-change', change);
     return () => { clearTimeout(timer); viewer.removeEventListener('camera-change', change); };

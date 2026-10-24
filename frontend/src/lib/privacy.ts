@@ -173,7 +173,7 @@ export function initializePrivacy(): Promise<void> {
   if (initialization) return initialization;
   window.addEventListener('storage', (event) => {
     if (event.key !== null && event.key !== cookieKey && event.key !== legacyKey) return;
-    preferences = undefined;
+    preferences = event.key === cookieKey && event.newValue !== null ? parseCookiePreferences(event.newValue, null) : undefined;
     updateAnalytics();
     notify();
   });
