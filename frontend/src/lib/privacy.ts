@@ -130,8 +130,12 @@ export function captureProductEvents() {
   };
 }
 
+function discardAnalyticsEvents() {
+  analyticsEpoch++; queuedEvents.length = 0; lastPageLocation = undefined; pageReferrer = undefined;
+}
+
 function updateAnalytics(): void {
-  if (!getCookiePreferences().analytics) { analyticsEpoch++; queuedEvents.length = 0; lastPageLocation = undefined; pageReferrer = undefined; }
+  if (!getCookiePreferences().analytics) discardAnalyticsEvents();
   if (isAnalyticsConfigured()) Reflect.set(window, `ga-disable-${import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID}`, !getCookiePreferences().analytics);
   // Firebase retains this object until asynchronous initialization emits consent defaults.
   if (pendingConsent) Object.assign(pendingConsent, consent());
@@ -173,7 +177,10 @@ export function initializePrivacy(): Promise<void> {
   if (initialization) return initialization;
   window.addEventListener('storage', (event) => {
     if (event.key !== null && event.key !== cookieKey && event.key !== legacyKey) return;
-    preferences = event.key === cookieKey && event.newValue !== null ? parseCookiePreferences(event.newValue, null) : undefined;
+    const previousChoice = event.key === cookieKey ? parseCookiePreferences(event.newValue, null)
+      : event.key === legacyKey ? parseCookiePreferences(null, event.newValue) : null;
+    if (previousChoice?.analytics === false) discardAnalyticsEvents();
+    preferences = undefined;
     updateAnalytics();
     notify();
   });

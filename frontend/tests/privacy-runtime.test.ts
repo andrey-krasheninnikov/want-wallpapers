@@ -253,3 +253,20 @@ test('rapid cross-tab withdrawal invalidates captured outcomes before regrant no
   expect(events).toEqual(['feedback_action']);
   expect(privacy.getCookiePreferences().analytics).toBe(true);
 });
+
+
+test('historical remote grant never overrides a newer local refusal', async () => {
+  const { privacy, target, local } = await browser({ success: true, country_code: 'GE' });
+  await privacy.initializePrivacy(); await ready;
+  privacy.sendAnalyticsEvent('feedback_action', { stage: 'open' });
+  expect(events).toEqual(['feedback_action']);
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  const granted = JSON.stringify({ analytics: true, advertising: true });
+  local.set('want-cookie-preferences-v2', granted);
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2', newValue: granted }));
+  expect(privacy.getCookiePreferences()).toEqual({ analytics: false, advertising: false });
+  expect(enabled).toBe(false);
+  privacy.sendAnalyticsEvent('feedback_action', { stage: 'success' });
+  expect(events).toEqual(['feedback_action']);
+});
