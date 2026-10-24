@@ -195,14 +195,8 @@ test.describe('gradient sphere background', () => {
     await page.screenshot({ path: testInfo.outputPath(`forced-colors-${width}.png`) });
   });
 
-  test('the development kit shares the living sphere and pause control', async ({ page }) => {
-    expect((await page.goto('/ui-kit/'))?.status()).toBe(200);
-    await expect(page.locator('.page-background > div')).toHaveCount(1);
-    const timing = await page.locator('.page-background > div').evaluate(element => ({ duration: parseFloat(getComputedStyle(element).animationDuration), height: element.parentElement!.clientHeight }));
-    expect(timing.duration).toBeCloseTo(Math.max(28, timing.height / 30));
-    await expectMotion(page, 'running');
-    await page.locator('[data-background-toggle]').click();
-    await expectMotion(page, 'paused');
+  test('the production build excludes the development kit', async ({ page }) => {
+    expect((await page.goto('/ui-kit/'))?.status()).toBe(404);
   });
 
   test('administration has no decorative background', async ({ page }) => {
@@ -250,13 +244,13 @@ test.describe('gradient sphere background', () => {
   });
 
   test('navigation and footer fit with 200% text', async ({ page }) => {
-    for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as const) {
-      for (const width of [375, 1440]) {
+    for (const locale of ['en', 'ru', 'zh-cn', 'pt-br', 'ja', 'ar'] as const) {
+      for (const width of [320, 375, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         expect((await page.goto(localPath(locale, '/feedback/')))?.status()).toBe(200);
         await expect(page.locator('html')).toHaveAttribute('data-background-motion', 'running');
-        await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
-        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; return document.fonts.ready; });
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), { message: `${locale}: ${width}px at 200% text` }).toBe(true);
         await expect(page.locator('footer a[href="mailto:wallpapers@want.foundation"]')).toHaveText('wallpapers@want.foundation');
       }
     }
