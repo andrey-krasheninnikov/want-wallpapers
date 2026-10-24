@@ -9,7 +9,7 @@ export default defineConfig({
   testIgnore: ['**/listing.spec.ts', '**/advertising-integration.spec.ts'],
   outputDir: join(output, 'results'),
   reporter: [['list'], ['html', { outputFolder: join(output, 'report'), open: 'never' }]],
-  workers: 2,
+  workers: 1,
   fullyParallel: true,
   timeout: 90000,
   expect: { timeout: 15000 },

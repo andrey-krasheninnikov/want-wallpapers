@@ -4,13 +4,14 @@ import { designCopy } from '../../src/data/design-copy';
 import { copy, localPath } from '../../src/data/copy';
 import type { ModelViewerElement } from '@google/model-viewer';
 import type { Locale } from '../../src/data/catalog';
+import { deviceModelSrc } from '../../src/lib/device-wallpaper';
 
 async function expectTransparentScene(scene: Locator) {
   for (const layer of [scene, ...await scene.locator('.device-canvas, .device-poster, .device-model, model-viewer, .device-caption').all()]) {
     await expect(layer).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(layer).toHaveCSS('background-image', 'none');
   }
-  for (const button of await scene.getByRole('button').all()) {
+  for (const button of await scene.locator('.device-controls').getByRole('button').all()) {
     await expect(button).toHaveCSS('background-color', /^rgb\((?:37, 37, 37|28, 28, 28)\)$/);
     const bounds = (await button.boundingBox())!;
     expect(bounds.width).toBeGreaterThanOrEqual(44);
@@ -37,7 +38,9 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     const viewer = page.locator('model-viewer');
     await expect(viewer).toBeVisible();
     await expectTransparentScene(scene);
-    expect(models).toHaveLength(1);
+    // Routing disables caching, so preload and loader can each request this model.
+    expect([...new Set(models)]).toEqual([new URL(deviceModelSrc, page.url()).href]);
+    expect(models.length).toBeLessThanOrEqual(2);
     const screenTextures = await viewer.evaluate((element) => (element as ModelViewerElement).model?.materials
       .filter((material) => /wallpaper/i.test(material.name))
       .map((material) => material.pbrMetallicRoughness.baseColorTexture.texture !== null));

@@ -221,12 +221,12 @@
   *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
 }
 
-@utility ui-label { @apply group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50; }
+@utility ui-label { @apply group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-75 peer-disabled:cursor-not-allowed peer-disabled:opacity-75; }
 @utility ui-textarea { @apply placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-secondary; }
 @utility ui-input { @apply selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-secondary; }
 @utility ui-separator { @apply data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px; }
 @utility ui-field-group { @apply data-[slot=checkbox-group]:gap-3 [&>[data-slot=field-group]]:gap-4; }
-@utility ui-field-label { @apply group-data-[disabled=true]/field:opacity-50 has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md [&>*]:data-[slot=field]:p-4 has-data-[state=checked]:bg-primary/5 dark:has-data-[state=checked]:bg-primary/10; }
+@utility ui-field-label { @apply group-data-[disabled=true]/field:opacity-75 has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md [&>*]:data-[slot=field]:p-4 has-data-[state=checked]:bg-primary/5 dark:has-data-[state=checked]:bg-primary/10; }
 @utility ui-tabs-trigger { @apply group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-foreground disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[state=active]:bg-secondary data-[state=active]:text-foreground; }
 @utility ui-tabs-list { @apply group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none; }
 @utility ui-tabs-base { @apply data-[orientation=horizontal]:flex-col; }
