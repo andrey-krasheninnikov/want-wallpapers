@@ -1,4 +1,4 @@
-import { trackProductEvent, analyticsFailure } from '@/lib/analytics';
+import { captureProductEvents, analyticsFailure } from '@/lib/analytics';
 import { useEffect, useState, type SubmitEvent } from 'react';
 import { Check, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,43 +41,46 @@ export function useWallpaperSocial(id: string, locale: Locale) {
   }, [id, ui.serviceError]);
   async function rate(value: string) {
     if (busy || !ratingValues.includes(value as Rating)) return;
-    trackProductEvent('rating_action', { item_id: id, stage: 'attempt', rating: value as Rating });
+    const track = captureProductEvents();
+    track('rating_action', { item_id: id, stage: 'attempt', rating: value as Rating });
     setNoticeTarget('ratings');
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client'); await service.saveRating(id, value as Rating);
-      trackProductEvent('rating_action', { item_id: id, stage: 'success', rating: value as Rating });
+      track('rating_action', { item_id: id, stage: 'success', rating: value as Rating });
       setStatus(text.ratingSaved); await refresh();
-    } catch (error) { trackProductEvent('rating_action', { item_id: id, stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
+    } catch (error) { track('rating_action', { item_id: id, stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    const track = captureProductEvents();
     setNoticeTarget('comments');
-    trackProductEvent('comment_action', { item_id: id, action: 'submit', stage: 'attempt' });
-    if (comment.trim().length < 2) { trackProductEvent('comment_action', { item_id: id, action: 'submit', stage: 'error', error_code: 'validation' }); setError(ui.required); return; }
+    track('comment_action', { item_id: id, action: 'submit', stage: 'attempt' });
+    if (comment.trim().length < 2) { track('comment_action', { item_id: id, action: 'submit', stage: 'error', error_code: 'validation' }); setError(ui.required); return; }
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client'); await service.postComment(id, comment);
-      trackProductEvent('comment_action', { item_id: id, action: 'submit', stage: 'success' });
+      track('comment_action', { item_id: id, action: 'submit', stage: 'success' });
       setComment(''); setStatus(text.commentSent); await refresh();
-    } catch (error) { trackProductEvent('comment_action', { item_id: id, action: 'submit', stage: 'error', error_code: analyticsFailure(error) }); setError(error instanceof Error && error.message === 'comment-cooldown' ? ui.commentWait : mutationError(locale, error)); }
+    } catch (error) { track('comment_action', { item_id: id, action: 'submit', stage: 'error', error_code: analyticsFailure(error) }); setError(error instanceof Error && error.message === 'comment-cooldown' ? ui.commentWait : mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   async function action(item: Comment) {
     if (busy) return;
+    const track = captureProductEvents();
     const operation = item.uid === data?.ownUid ? 'delete' : 'report';
-    trackProductEvent('comment_action', { item_id: id, action: operation, stage: 'attempt' });
+    track('comment_action', { item_id: id, action: operation, stage: 'attempt' });
     setNoticeTarget('comments');
     setBusy(true); setError(''); setStatus('');
     try {
       const service = await import('@/lib/wallpaper-client');
       const result = await service.actOnComment(id, item);
-      trackProductEvent('comment_action', { item_id: id, action: result === 'reported' ? 'report' : 'delete', stage: 'success' });
+      track('comment_action', { item_id: id, action: result === 'reported' ? 'report' : 'delete', stage: 'success' });
       if (result === 'reported') { setReported((value) => [...value, item.id]); setStatus(ui.reportThanks); }
       else await refresh();
-    } catch (error) { trackProductEvent('comment_action', { item_id: id, action: operation, stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
+    } catch (error) { track('comment_action', { item_id: id, action: operation, stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   return { data, loading, error, status, busy, comment, reported, noticeTarget, setComment, refresh, rate, submit, action };

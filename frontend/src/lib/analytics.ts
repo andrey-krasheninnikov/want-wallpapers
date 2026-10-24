@@ -1,6 +1,8 @@
 import { analyticsId, analyticsMetadata, analyticsPage, type AnalyticsEvents, type AnalyticsEventName, type Placement } from './analytics-events';
 import { currentAnalyticsContext, getCookiePreferences, initializePrivacy, isAnalyticsConfigured, sendAnalyticsEvent } from './privacy';
 
+export { captureProductEvents } from './privacy';
+
 export function trackProductEvent<Name extends AnalyticsEventName>(name: Name, parameters: AnalyticsEvents[Name]): void {
   sendAnalyticsEvent(name, parameters);
 }
@@ -45,7 +47,8 @@ export function initProductAnalytics(): () => void {
   const observed = new Set<Element>();
   const seen = new WeakMap<Element, { signature: string; ids: Set<string> }>();
   const sections = new Set<string>();
-  const selector = '[data-wallpaper-card], [data-collection-card], main h2';
+  const sectionSelector = 'main h2:not([data-wallpaper-card] *, [data-collection-card] *)';
+  const selector = `[data-wallpaper-card], [data-collection-card], ${sectionSelector}`;
   function cancel() { for (const timer of pending.values()) clearTimeout(timer); pending.clear(); }
   function impression(element: HTMLElement) {
     if (!enabled() || document.hidden || !element.isConnected) return;
@@ -58,9 +61,9 @@ export function initProductAnalytics(): () => void {
       if (state?.signature !== signature) { state = { signature, ids: new Set() }; seen.set(list, state); }
       const key = card.content_type + ':' + card.item_id;
       if (!state!.ids.has(key)) { state!.ids.add(key); trackProductEvent('card_view', card); }
-    } else if (element.matches('main h2')) {
+    } else if (element.matches(sectionSelector)) {
       const name = element.closest<HTMLElement>('[data-analytics-section]')?.dataset.analyticsSection
-        ?? (analyticsId(element.id) ? element.id : `section-${[...document.querySelectorAll('main h2')].indexOf(element) + 1}`);
+        ?? (analyticsId(element.id) ? element.id : `section-${[...document.querySelectorAll(sectionSelector)].indexOf(element) + 1}`);
       if (!sections.has(name)) { sections.add(name); trackProductEvent('section_view', { section: name }); }
     }
   }

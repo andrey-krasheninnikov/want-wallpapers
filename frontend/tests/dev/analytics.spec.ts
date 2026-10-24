@@ -42,6 +42,7 @@ test('card visibility requires one active second and does not duplicate unchange
   const id = await card.getAttribute('data-wallpaper-card');
   await card.scrollIntoViewIfNeeded(); await page.waitForTimeout(1200);
   expect((await events(page)).filter(event => event.name === 'card_view' && event.parameters.item_id === id)).toHaveLength(1);
+  expect((await events(page)).filter(event => event.name === 'section_view')).toEqual([]);
   await card.locator('a').click();
   await expect.poll(async () => (await events(page)).filter(event => event.name === 'wallpaper_view').length).toBe(1);
 });
@@ -140,4 +141,58 @@ test('no JavaScript keeps PNG downloads and produces no analytics requests', asy
   expect(download.suggestedFilename()).toBe('neon-tide-7-desktop.png');
   expect(requests.some(url => /firebase|google-analytics|googletagmanager/.test(url))).toBe(false);
   await isolated.close();
+});
+
+
+test('search debounce never replays input across permission changes', async ({ page, context }) => {
+  await prepare(page, false); await page.goto('/search/');
+  const second = await context.newPage(); await second.goto('/license/');
+  const preference = async (analytics: boolean) => second.evaluate(value => localStorage.setItem('want-cookie-preferences-v2', JSON.stringify({ analytics: value, advertising: false })), analytics);
+  await page.locator('#search-query').fill('blue');
+  await preference(true); await ready(page);
+  await page.waitForTimeout(650); // Observe the complete 500 ms debounce window.
+  expect((await events(page)).filter(event => event.name === 'catalog_search')).toEqual([]);
+  await page.locator('#search-query').fill('night');
+  await preference(false);
+  await expect.poll(() => page.evaluate(() => Reflect.get(window, 'ga-disable-G-TEST'))).toBe(true);
+  await preference(true);
+  await page.waitForTimeout(650);
+  expect((await events(page)).filter(event => event.name === 'catalog_search')).toEqual([]);
+  await page.locator('#search-query').fill('blue night');
+  await expect.poll(async () => (await events(page)).filter(event => event.name === 'catalog_search').length).toBe(1);
+  await second.close();
+});
+
+test('carousel resize updates pagination without a navigation action', async ({ page }) => {
+  await prepare(page); await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/'); await ready(page);
+  const track = page.locator('[data-collection-carousel] .collection-track');
+  await track.scrollIntoViewIfNeeded();
+  await track.evaluate(element => element.scrollTo({ left: element.scrollWidth, behavior: 'instant' }));
+  const next = page.locator('[data-collection-carousel] nav button').last();
+  await expect(next).toBeDisabled();
+  await expect.poll(async () => (await events(page)).filter(event => event.name === 'feature_action' && event.parameters.feature === 'carousel').length).toBeGreaterThan(0);
+  const before = (await events(page)).filter(event => event.name === 'feature_action' && event.parameters.feature === 'carousel').length;
+  const pagination = page.locator('[data-collection-carousel] output');
+  const previous = await pagination.textContent();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(pagination).not.toHaveText(previous!);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  expect((await events(page)).filter(event => event.name === 'feature_action' && event.parameters.feature === 'carousel')).toHaveLength(before);
+});
+
+test('a rating response retains the originating collection after Astro navigation', async ({ page }) => {
+  await prepare(page); await page.goto('/wallpapers/neon-tide-1/'); await ready(page);
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  const request = page.waitForRequest('**/api/v1/wallpapers/neon-tide-1/rating');
+  await page.route('**/api/v1/wallpapers/neon-tide-1/rating', async route => { await pending; await route.fulfill({ json: {} }); });
+  await expect(page.locator('#rating-plus')).toBeEnabled(); await page.locator('#rating-plus').click({ force: true }); await request;
+  try {
+    await page.locator('#wallpaper-view').focus(); await page.keyboard.press('ArrowRight');
+    await expect(page).toHaveURL(/a-night-beneath-the-ice-5/);
+    await expect.poll(async () => (await events(page)).filter(event => event.name === 'page_view').length).toBe(2);
+  } finally { release(); }
+  await expect.poll(async () => (await events(page)).filter(event => event.name === 'rating_action' && event.parameters.stage === 'success').length).toBe(1);
+  const result = (await events(page)).find(event => event.name === 'rating_action' && event.parameters.stage === 'success')!;
+  expect(result.parameters).toMatchObject({ item_id: 'neon-tide-1', collection_id: 'neon-tide', page_location: 'http://127.0.0.1:4387/wallpapers/neon-tide-1/' });
 });

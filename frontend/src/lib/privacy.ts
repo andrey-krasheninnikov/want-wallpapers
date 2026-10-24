@@ -1,4 +1,4 @@
-import { analyticsId, analyticsMetadata, analyticsContext, sanitizeAnalyticsEvent, type AnalyticsEventName, type AnalyticsParameters } from './analytics-events';
+import { analyticsId, analyticsMetadata, analyticsContext, sanitizeAnalyticsEvent, type AnalyticsEventName, type AnalyticsEvents, type AnalyticsParameters } from './analytics-events';
 import type { Analytics } from 'firebase/analytics';
 import { effectiveCookiePreferences, getCountryGroup, normalizeCountry, parseCookiePreferences, type CookiePreferences } from './privacy-policy';
 export type { CookiePreferences } from './privacy-policy';
@@ -12,6 +12,7 @@ let initialization: Promise<void> | undefined;
 let analyticsLoading: Promise<void> | undefined;
 let analytics: Analytics | undefined;
 let analyticsReady = false;
+let analyticsEpoch = 0;
 let lastPageLocation: string | undefined;
 let pageReferrer: string | undefined;
 let analyticsSdk: typeof import('firebase/analytics') | undefined;
@@ -121,8 +122,16 @@ export function sendAnalyticsEvent(name: AnalyticsEventName, parameters: unknown
   flushAnalytics();
 }
 
+export function captureProductEvents() {
+  const epoch = analyticsEpoch;
+  const context = typeof window !== 'undefined' && getCookiePreferences().analytics ? currentAnalyticsContext() : null;
+  return <Name extends AnalyticsEventName>(name: Name, parameters: AnalyticsEvents[Name]): void => {
+    if (context && epoch === analyticsEpoch) sendAnalyticsEvent(name, parameters, context);
+  };
+}
+
 function updateAnalytics(): void {
-  if (!getCookiePreferences().analytics) { queuedEvents.length = 0; lastPageLocation = undefined; pageReferrer = undefined; }
+  if (!getCookiePreferences().analytics) { analyticsEpoch++; queuedEvents.length = 0; lastPageLocation = undefined; pageReferrer = undefined; }
   if (isAnalyticsConfigured()) Reflect.set(window, `ga-disable-${import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID}`, !getCookiePreferences().analytics);
   // Firebase retains this object until asynchronous initialization emits consent defaults.
   if (pendingConsent) Object.assign(pendingConsent, consent());

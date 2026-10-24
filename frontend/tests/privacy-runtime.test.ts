@@ -219,3 +219,20 @@ test('expired startup events are dropped and route referrers contain only canoni
   privacy.sendAnalyticsEvent('wallpaper_download', { wallpaper: 'neon-tide-7', variant: 'desktop' });
   expect(payloads.at(-1)?.download_starts).toBe(1);
 });
+
+
+test('captured outcomes require original permission and remain invalid after withdrawal', async () => {
+  const { privacy } = await browser({ success: true, country_code: 'DE' });
+  await privacy.initializePrivacy();
+  const beforePermission = privacy.captureProductEvents();
+  privacy.saveCookiePreferences({ analytics: true, advertising: false }); await ready;
+  beforePermission('feedback_action', { stage: 'success' });
+  expect(events).toEqual([]);
+  const pending = privacy.captureProductEvents();
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  privacy.saveCookiePreferences({ analytics: true, advertising: false });
+  pending('feedback_action', { stage: 'success' });
+  expect(events).toEqual([]);
+  privacy.captureProductEvents()('feedback_action', { stage: 'success' });
+  expect(events).toEqual(['feedback_action']);
+});

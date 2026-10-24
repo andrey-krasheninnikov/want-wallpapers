@@ -1,4 +1,4 @@
-import { trackProductEvent, analyticsFailure } from '@/lib/analytics';
+import { trackProductEvent, captureProductEvents, analyticsFailure } from '@/lib/analytics';
 import React, { useEffect, useState, type SubmitEvent } from 'react';
 import { Check, LockKeyhole, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,18 +28,19 @@ export function useFeedbackForm(locale: Locale) {
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    trackProductEvent('feedback_action', { stage: 'attempt' });
+    const track = captureProductEvents();
+    track('feedback_action', { stage: 'attempt' });
     if (!topic.trim() || message.trim().length < 5) {
-      trackProductEvent('feedback_action', { stage: 'error', error_code: 'validation' });
+      track('feedback_action', { stage: 'error', error_code: 'validation' });
       const field = !topic.trim() ? 'topic' : 'message';
       setInvalid(field); (field === 'topic' ? topicInput : messageInput).current?.focus(); return;
     }
     setInvalid(null); setBusy(true); setError(''); setSent(false);
     try {
       const { sendFeedback } = await import('@/lib/feedback-client'); await sendFeedback({ topic, message, email });
-      trackProductEvent('feedback_action', { stage: 'success' }); started.current = false;
+      track('feedback_action', { stage: 'success' }); started.current = false;
       setTopic(''); setMessage(''); setEmail(''); setSent(true);
-    } catch (error) { trackProductEvent('feedback_action', { stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
+    } catch (error) { track('feedback_action', { stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
   return { start, topic, setTopic, message, setMessage, email, setEmail, invalid, setInvalid, topicInput, messageInput, disabled, busy, error, sent, submit };

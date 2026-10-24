@@ -1,6 +1,7 @@
+import { getCookiePreferences } from '@/lib/privacy';
 import { recognizedSearchTerms } from '@/lib/analytics-events';
-import { trackProductEvent } from '@/lib/analytics';
-import { useEffect, useMemo, useState } from 'react';
+import { trackProductEvent, captureProductEvents } from '@/lib/analytics';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,12 +29,14 @@ export default function CatalogSearch({ locale, items, categories, collections, 
   const [category, setCategory] = useState('');
   const [collection, setCollection] = useState('');
   const [ready, setReady] = useState(false);
+  const searchEvent = useRef<ReturnType<typeof captureProductEvents> | null>(null);
   const index = useMemo(() => {
     try { return createSearchIndex(locale, items.map((item) => ({ id: item.id, text: item.searchText }))); }
     catch { return undefined; }
   }, [items, locale]);
   useEffect(() => {
     const read = () => {
+      searchEvent.current = captureProductEvents();
       const params = new URLSearchParams(window.location.search);
       setQuery(params.get('q') ?? '');
       setCategory(categories.some((item) => item.value === params.get('category')) ? params.get('category')! : '');
@@ -54,19 +57,22 @@ export default function CatalogSearch({ locale, items, categories, collections, 
   const results = filterWallpapers(items, locale, { q, category, collection }, index);
   const active = Boolean(q || category || collection);
   useEffect(() => {
-    if (!ready || !active) return;
+    const track = searchEvent.current;
+    if (!ready || !active || !track || !getCookiePreferences().analytics) return;
     const timer = setTimeout(() => {
       const recognized = recognizedSearchTerms(q, [...terms, ...categories, ...collections, ...items.map(item => ({ value: item.id, title: item.title }))], locale);
-      trackProductEvent('catalog_search', { category: category || undefined, collection_id: collection || undefined, result_count: results.length, query_length: Math.min(q.length, 500), ...(recognized ? { search_terms: recognized } : {}) });
+      track('catalog_search', { category: category || undefined, collection_id: collection || undefined, result_count: results.length, query_length: Math.min(q.length, 500), ...(recognized ? { search_terms: recognized } : {}) });
     }, 500);
-    return () => clearTimeout(timer);
+    const privacyChanged = () => { if (!getCookiePreferences().analytics) clearTimeout(timer); };
+    window.addEventListener('want:privacy', privacyChanged);
+    return () => { clearTimeout(timer); window.removeEventListener('want:privacy', privacyChanged); };
   }, [q, category, collection, ready, items, categories, collections, terms, locale, results.length]);
   function reset() { trackProductEvent('search_reset', {}); setQuery(''); setCategory(''); setCollection(''); }
   return <div data-analytics-list="search">
     <Card className="gap-0 py-0 shadow-none"><CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
-      <Field className="min-w-0 sm:col-span-2 lg:col-span-1"><FieldLabel htmlFor="search-query">{ui.search}</FieldLabel><div className="relative"><Search className="pointer-events-none absolute top-4 start-3 size-4 text-muted-foreground" aria-hidden="true" /><Input id="search-query" type="search" placeholder={ui.searchPlaceholder} value={q} onChange={(event) => setQuery(event.target.value)} autoComplete="off" dir="auto" className="ps-10" /></div></Field>
-      <Field className="min-w-0"><FieldLabel htmlFor="search-category">{ui.category}</FieldLabel><Select dir={locale === 'ar' ? 'rtl' : 'ltr'} value={category || 'all'} onValueChange={(value) => { trackProductEvent('filter_change', { filter_type: 'category', filter_id: value === 'all' ? undefined : value }); setCategory(value === 'all' ? '' : value); }}><SelectTrigger id="search-category" className="min-h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{ui.all}</SelectItem>{categories.map((item) => <SelectItem key={item.value} value={item.value}>{item.title}</SelectItem>)}</SelectContent></Select></Field>
-      <Field className="min-w-0"><FieldLabel htmlFor="search-collection">{ui.collection}</FieldLabel><Select dir={locale === 'ar' ? 'rtl' : 'ltr'} value={collection || 'all'} onValueChange={(value) => { trackProductEvent('filter_change', { filter_type: 'collection', filter_id: value === 'all' ? undefined : value }); setCollection(value === 'all' ? '' : value); }}><SelectTrigger id="search-collection" className="min-h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{ui.all}</SelectItem>{collections.map((item) => <SelectItem key={item.value} value={item.value}>{item.title}</SelectItem>)}</SelectContent></Select></Field>
+      <Field className="min-w-0 sm:col-span-2 lg:col-span-1"><FieldLabel htmlFor="search-query">{ui.search}</FieldLabel><div className="relative"><Search className="pointer-events-none absolute top-4 start-3 size-4 text-muted-foreground" aria-hidden="true" /><Input id="search-query" type="search" placeholder={ui.searchPlaceholder} value={q} onChange={(event) => { searchEvent.current = captureProductEvents(); setQuery(event.target.value); }} autoComplete="off" dir="auto" className="ps-10" /></div></Field>
+      <Field className="min-w-0"><FieldLabel htmlFor="search-category">{ui.category}</FieldLabel><Select dir={locale === 'ar' ? 'rtl' : 'ltr'} value={category || 'all'} onValueChange={(value) => { searchEvent.current = captureProductEvents(); trackProductEvent('filter_change', { filter_type: 'category', filter_id: value === 'all' ? undefined : value }); setCategory(value === 'all' ? '' : value); }}><SelectTrigger id="search-category" className="min-h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{ui.all}</SelectItem>{categories.map((item) => <SelectItem key={item.value} value={item.value}>{item.title}</SelectItem>)}</SelectContent></Select></Field>
+      <Field className="min-w-0"><FieldLabel htmlFor="search-collection">{ui.collection}</FieldLabel><Select dir={locale === 'ar' ? 'rtl' : 'ltr'} value={collection || 'all'} onValueChange={(value) => { searchEvent.current = captureProductEvents(); trackProductEvent('filter_change', { filter_type: 'collection', filter_id: value === 'all' ? undefined : value }); setCollection(value === 'all' ? '' : value); }}><SelectTrigger id="search-collection" className="min-h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{ui.all}</SelectItem>{collections.map((item) => <SelectItem key={item.value} value={item.value}>{item.title}</SelectItem>)}</SelectContent></Select></Field>
     </CardContent></Card>
     <div className="my-6 flex flex-wrap items-center justify-between gap-3"><p role="status" aria-live="polite" data-discovery-count="results" className="text-sm text-muted-foreground">{`${results.length} ${ui.results}`}</p>{active && <Button variant="ghost" onClick={reset}><RotateCcw aria-hidden="true" />{text.reset}</Button>}</div>
     {active && <div className="mb-6 flex flex-wrap gap-2">{q.trim() && <Badge variant="secondary" className="max-w-full py-2 whitespace-normal wrap-anywhere">{q.trim()}</Badge>}{category && <Badge variant="secondary" className="py-2">{categories.find((item) => item.value === category)?.title}</Badge>}{collection && <Badge variant="secondary" className="py-2">{collections.find((item) => item.value === collection)?.title}</Badge>}</div>}
