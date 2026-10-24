@@ -3,7 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { copy, localPath } from '../../src/data/copy';
 import { interfaceCopy } from '../../src/data/interface-copy';
 import { locales } from '../../src/data/catalog';
-import { hilltopAdvertisements } from '../../src/lib/advertising-providers';
+import { hilltopAdvertisements, hilltopVideoAdvertisement } from '../../src/lib/advertising-providers';
+import { downloadCopy } from '../../src/data/download-copy';
 
 const preferenceKey = 'want-cookie-preferences-v2';
 const banner = 'iframe[data-test-banner]';
@@ -211,6 +212,34 @@ test('advertising documents reload and preserve the selected download variant', 
   await page.getByRole('link', { name: 'Want Wallpapers', exact: true }).first().click();
   await expect(page.locator('.inline-advertisement:not([hidden])')).toHaveCount(3); expect(calls).toHaveLength(9);
   await page.goto('/404/'); await expect(page.locator('.public-advertisements')).toHaveCount(0); expect(calls).toHaveLength(9);
+});
+
+test('public downloads request video by default and dismissal keeps both PNG variants', async ({ page }) => {
+  await network(page, 'US');
+  let requests = 0;
+  const releases: (() => void)[] = [];
+  await page.route(hilltopVideoAdvertisement.src, async route => {
+    requests++;
+    await new Promise<void>(resolve => releases.push(resolve));
+    await route.fulfill({ contentType: 'application/xml', body: '<VAST version="3.0" />' }).catch(() => {});
+  });
+  const downloads: string[] = []; page.on('download', download => downloads.push(download.suggestedFilename()));
+  try {
+    await page.goto('/wallpapers/contours-of-silence-1/'); await ready(page);
+    for (const [index, variant] of (['mobile', 'desktop'] as const).entries()) {
+      await page.getByRole('tab', { name: copy.en[variant], exact: true }).click();
+      await page.locator('#download-link').click();
+      const dialog = page.getByRole('dialog', { name: downloadCopy.en.title, exact: true });
+      await expect(dialog).toBeVisible();
+      await expect.poll(() => requests).toBe(index + 1);
+      await expect(dialog.getByRole('link')).toHaveAttribute('href', `/downloads/contours-of-silence-1-${variant}.png`);
+      const download = page.waitForEvent('download');
+      await dialog.getByRole('button', { name: downloadCopy.en.close, exact: true }).click();
+      expect((await download).suggestedFilename()).toBe(`contours-of-silence-1-${variant}.png`);
+      await expect(dialog).toHaveCount(0);
+    }
+    expect(downloads).toEqual(['contours-of-silence-1-mobile.png', 'contours-of-silence-1-desktop.png']);
+  } finally { for (const release of releases) release(); }
 });
 
 test('cached documents refresh their privacy state before resuming advertising', async ({ page }) => {

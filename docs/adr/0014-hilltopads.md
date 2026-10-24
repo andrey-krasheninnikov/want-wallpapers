@@ -4,7 +4,7 @@ Status: accepted for #136. Replaces the regional provider-selection and advertis
 
 ## Decision
 
-HilltopAds is the only advertising provider. The owner approved the supplied desktop/mobile MultiTag with one 300×250 banner and its standard popup behavior, then supplied two separate zone codes for additional banners. All public pages, including localized homes, compose advertising as labelled filled cards. Introductory copy, feedback contact, home benefits/FAQ, wallpaper comments and the footer provide the placement contexts. Responsive grids stack cards when the native creative would not fit alongside content. No video, download interstitial or replacement network is enabled.
+HilltopAds is the only advertising provider. The owner approved the supplied desktop/mobile MultiTag with one 300×250 banner and its standard popup behavior, then supplied two separate zone codes for additional banners. All public pages, including localized homes, compose advertising as labelled filled cards. Introductory copy, feedback contact, home benefits/FAQ, wallpaper comments and the footer provide the placement contexts. Responsive grids stack cards when the native creative would not fit alongside content. Video before PNG downloads follows [ADR 0018](0018-download-video.md). No replacement network is enabled.
 
 Advertising remains independent of analytics. EEA and unknown-country visitors require an explicit choice; saved refusals take precedence. Administration, errors and development pages never start the tag. Downloads remain native links and do not wait for advertising.
 

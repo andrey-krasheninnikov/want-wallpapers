@@ -3,6 +3,7 @@ import CollectionStories from './CollectionStories.astro';
 import publications from '../data/collection-publications.json';
 import { editorialCopy, collectionStories, supportCopy } from '../data/editorial';
 import { copy, localPath } from '../data/copy';
+import { downloadCopy } from '../data/download-copy';
 import { collections, tagLabels, getCollection, getCollectionWallpapers, type Locale, type Collection, type Wallpaper } from '../data/catalog';
 import { previewData, type WallpaperVariant } from '../data/previews';
 type Props = { embedded?: boolean; locale: Locale; collection?: Collection; wallpaper?: Wallpaper; variants?: Record<'desktop' | 'mobile', WallpaperVariant> };
@@ -29,6 +30,7 @@ const topics = [...new Set(designs.flatMap((item) => item.tags))];
       {(collection || contextCollection) && <section class="reading-section reading-section-wide"><h3>{text.works}</h3>{contextCollection && <p>{contextCollection.description[locale]}</p>}<ul class="work-index">{indexedDesigns.map((item) => <li data-listing-wallpaper={item.id}><a href={localPath(locale, `/wallpapers/${item.slug}/`)}><span class="work-number">{item.number.toLocaleString(locale)}</span><span>{item.title[locale]}<small>{item.description[locale]}</small></span></a></li>)}</ul></section>}
       {dimensions.length > 0 && <section class="reading-section reading-section-wide"><h3>{text.sizes}</h3><p>{text.files}</p><dl class="format-index mt-4">{dimensions.map(({ item, sizes }) => <div data-listing-wallpaper={collection ? item.id : undefined}><dt>{item.title[locale]}</dt><dd>{copy[locale].desktop} {sizes.desktop.originalWidth} × {sizes.desktop.originalHeight}</dd><dd>{copy[locale].mobile} {sizes.mobile.originalWidth} × {sizes.mobile.originalHeight} · PNG</dd></div>)}</dl></section>}
       <section class="reading-section reading-note"><h3>{text.license}</h3><p>{text.licenseText} <a href={localPath(locale, '/license/')}>{copy[locale].license}</a></p>{contextCollection && <div class="long-copy mt-4">{supportCopy[locale].license.slice(1).map((paragraph) => <p>{paragraph}</p>)}</div>}</section>
+      <section class="reading-section"><h3>{downloadCopy[locale].download}</h3><p>{downloadCopy[locale].help}</p></section>
       {topics.length > 0 && <nav class="reading-section" aria-label={text.topics}><h3>{text.topics}</h3><div class="topic-links">{topics.map((tag) => <a data-listing-tag={collection ? tag : undefined} href={localPath(locale, `/search/?q=${encodeURIComponent(tagLabels[tag][locale])}`)}>{tagLabels[tag][locale]}</a>)}</div></nav>}
     </div>
   </div>

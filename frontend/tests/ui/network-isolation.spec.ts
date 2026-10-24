@@ -1,5 +1,5 @@
 import { test, expect } from '../browser';
-import { hilltopAdvertisements } from '../../src/lib/advertising-providers';
+import { hilltopAdvertisements, hilltopVideoAdvertisement } from '../../src/lib/advertising-providers';
 
 test('advertising is mocked before the first navigation in every page', async ({ page, context }) => {
   const second = await context.newPage();
@@ -9,6 +9,9 @@ test('advertising is mocked before the first navigation in every page', async ({
       expect(response?.status()).toBe(200);
       expect(await response?.text()).toBe('');
     }
+    const video = await tab.goto(hilltopVideoAdvertisement.src);
+    expect(video?.status()).toBe(200);
+    expect(await video?.text()).toBe('<VAST version="3.0" />');
   }
   await second.close();
 });
