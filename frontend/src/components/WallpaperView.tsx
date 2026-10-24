@@ -1,7 +1,7 @@
 import { WallpaperNavigation } from './WallpaperNavigation';
 import React, { useEffect, useState } from 'react';
-import { Download, Monitor, Smartphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Monitor, Smartphone } from 'lucide-react';
+import { WallpaperDownload } from './WallpaperDownload';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWallpaperSocial, WallpaperRatings, WallpaperComments } from '@/components/SocialPanel';
@@ -88,7 +88,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
             <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone aria-hidden="true" />{ui.mobile}</TabsTrigger>
           </TabsList>
           <div className="grid gap-3">
-            <Button asChild size="lg" className="w-full"><a id="download-link" href={image.download} download={image.download.split('/').at(-1)} onClick={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Download data-icon="inline-start" aria-hidden="true" />{ui.download} · {ui[variant]}</a></Button>
+            <WallpaperDownload locale={locale} wallpaper={id} variant={variant} href={image.download} />
           </div>
         </div>
         <WallpaperRatings locale={locale} social={social} />

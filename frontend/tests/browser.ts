@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { hilltopAdvertisements } from '../src/lib/advertising-providers';
+import { hilltopAdvertisements, hilltopVideoAdvertisement } from '../src/lib/advertising-providers';
 
 export { expect } from '@playwright/test';
 export type { APIRequestContext, Locator, Page } from '@playwright/test';
@@ -7,6 +7,7 @@ export type { APIRequestContext, Locator, Page } from '@playwright/test';
 export const test = base.extend({
   colorScheme: 'dark',
   context: async ({ context }, use) => {
+    await context.route(hilltopVideoAdvertisement.src, route => route.fulfill({ contentType: 'application/xml', body: '<VAST version="3.0" />' }));
     for (const src of Object.values(hilltopAdvertisements)) {
       await context.route(src, route => route.fulfill({ contentType: 'application/javascript', body: '' }));
     }

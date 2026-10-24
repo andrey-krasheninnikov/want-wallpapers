@@ -7,6 +7,13 @@ export const hilltopAdvertisements = {
 } as const;
 export type AdvertisementPlacement = keyof typeof hilltopAdvertisements;
 
+export const hilltopVideoAdvertisement = {
+  zone: 'wf-wallpapers-vast-on-download',
+  src: 'https://loyal-product.com/domLFjzZd.GUNWvUZRGKUT/Xe/m-9cuPZsUilIkNPMTKcg1ANYD/U/5sNojpUWtPNxzNUG0VNvTqku2bOXQe',
+  // Keep disabled until the provider approves standalone PNG downloads and immediate dismissal.
+  enabled: import.meta.env.PUBLIC_HILLTOP_VAST_ENABLED === 'true',
+} as const;
+
 export function advertisingPath(path: string): boolean {
   const route = path.replace(/\/index\.html$/, '/').replace(/^\/(ru|zh-cn|pt-br|ja|ar)(?=\/|$)/, '').replace(/\/$/, '');
   return route === '' || /^\/(collections(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?|wallpapers\/[a-z0-9]+(?:-[a-z0-9]+)*|search|feedback|privacy|terms|cookies|license|contact)$/.test(route);
