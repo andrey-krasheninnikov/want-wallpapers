@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import React, { useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ function loadPreview(src: string, signal: AbortSignal): Promise<boolean> {
 }
 
 export function MosaicCard({ tile, locale }: { tile: MosaicTile; locale: Locale }) {
-  return <article data-wallpaper-card={tile.id} data-mosaic-variant={tile.variant}>
+  return <article data-wallpaper-card={tile.id} data-ga={tile.collection && tile.category ? `${tile.collection}/${tile.category}` : undefined} data-mosaic-variant={tile.variant}>
           <Card className="group gallery-card">
             <a href={tile.href + (tile.variant === 'mobile' ? '?variant=mobile' : '')} aria-label={`${tile.title} (${copy[locale][tile.variant]})`}>
               <img src={tile[tile.variant].src} width={tile[tile.variant].width} height={tile[tile.variant].height} alt={tile.description} loading="lazy" data-mosaic-image className="gallery-image" />
@@ -150,7 +151,7 @@ export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { i
   }, [items, paused, catalogReady, dataFailed]);
 
   if (!frame.tiles.length) return null;
-  return <section ref={host} className="shell section-space home-mosaic-section" aria-label={copy[locale].latest}>
+  return <section ref={host} className="shell section-space home-mosaic-section" data-home-mosaic aria-label={copy[locale].latest}>
     <div className="home-mosaic-stage">
       <div className="home-mosaic" data-layout={frame.layout} data-count={frame.tiles.length}>
         {frame.tiles.map(tile => <MosaicCard key={tile.id} tile={tile} locale={locale} />)}
@@ -158,7 +159,7 @@ export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { i
       {outgoing && <div className="home-mosaic home-mosaic-outgoing" data-layout={outgoing.layout} data-count={outgoing.tiles.length} aria-hidden="true" onAnimationEnd={() => setOutgoing(null)}>
         {outgoing.tiles.map(tile => <div key={tile.id} className="gallery-card"><img src={tile[tile.variant].src} width={tile[tile.variant].width} height={tile[tile.variant].height} alt="" className="gallery-image" /></div>)}
       </div>}
-      <Button className="mosaic-toggle" variant="secondary" size="icon" hidden={!ready || reduced || items.length < 2} aria-label={paused ? text.playMosaic : text.pauseMosaic} aria-pressed={paused} onClick={() => setPaused(value => !value)}>
+      <Button className="mosaic-toggle" variant="secondary" size="icon" hidden={!ready || reduced || items.length < 2} aria-label={paused ? text.playMosaic : text.pauseMosaic} aria-pressed={paused} onClick={() => { trackProductEvent('feature_action', { feature: 'mosaic', action: paused ? 'play' : 'pause' }); setPaused(value => !value); }}>
         {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
       </Button>
     </div>

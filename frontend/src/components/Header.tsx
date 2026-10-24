@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { useState } from 'react';
 import { Direction } from 'radix-ui';
 import { Menu } from 'lucide-react';
@@ -32,13 +33,13 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       </NavigationMenu>
       <div className="flex shrink-0 items-center gap-2">
         <ThemeToggle locale={locale} />
-        <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
+        <Select value={locale} onValueChange={(value) => { trackProductEvent('feature_action', { feature: 'language', action: 'select', item_id: value }); window.location.href = localPath(value as Locale, path); }}>
           <SelectTrigger aria-label={text.language} className="language-trigger">
             <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'ar' ? 'العربية' : locale === 'ja' ? '日本語' : locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
           </SelectTrigger>
           <SelectContent><SelectGroup>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11"><span aria-hidden="true">{languageFlags[value as Locale]}</span>{title}</SelectItem>)}</SelectGroup></SelectContent>
         </Select>
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={value => { trackProductEvent('feature_action', { feature: 'menu', action: value ? 'open' : 'close' }); setOpen(value); }}>
           <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" data-menu-trigger aria-label={ui.menu}><Menu /></Button></SheetTrigger>
           <SheetContent side={locale === 'ar' ? 'left' : 'right'} closeLabel={text.close} className="w-full max-w-sm bg-card">
             <SheetHeader className="px-6 pt-8"><SheetTitle>{ui.menu}</SheetTitle><SheetDescription>Want Wallpapers</SheetDescription></SheetHeader>

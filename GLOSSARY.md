@@ -51,3 +51,9 @@ A persisted string post ID bound to its blog UUID, exact NPF request and five pr
 
 **Flickr photo progress**:
 A saved photo ID bound to its account, preview and metadata hashes, with a private upload phase followed by a persisted publication phase after license verification.
+
+## Product measurement
+
+- **Download conversion**: starting the native PNG download; it does not prove a file was saved.
+- **Card impression**: at least half of a card visible continuously for one active second, counted once within an unchanged result set.
+- **Telegram conversion**: selecting an owned Telegram destination; it does not prove a subscription or emoji-pack installation.

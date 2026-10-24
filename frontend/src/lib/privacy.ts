@@ -1,3 +1,4 @@
+import { analyticsId, analyticsMetadata, analyticsContext, sanitizeAnalyticsEvent, type AnalyticsEventName, type AnalyticsParameters } from './analytics-events';
 import type { Analytics } from 'firebase/analytics';
 import { effectiveCookiePreferences, getCountryGroup, normalizeCountry, parseCookiePreferences, type CookiePreferences } from './privacy-policy';
 export type { CookiePreferences } from './privacy-policy';
@@ -10,7 +11,11 @@ let country: string | null = null;
 let initialization: Promise<void> | undefined;
 let analyticsLoading: Promise<void> | undefined;
 let analytics: Analytics | undefined;
+let analyticsReady = false;
+let lastPageLocation: string | undefined;
+let pageReferrer: string | undefined;
 let analyticsSdk: typeof import('firebase/analytics') | undefined;
+const queuedEvents: Array<{ name: AnalyticsEventName; parameters: AnalyticsParameters; expires: number }> = [];
 let pendingConsent: ReturnType<typeof consent> | undefined;
 
 export function isAnalyticsConfigured(): boolean {
@@ -65,7 +70,59 @@ function consent() {
   };
 }
 
+export function currentAnalyticsContext(): AnalyticsParameters {
+  const data = document.body?.dataset;
+  const canonical = document.querySelector?.<HTMLLinkElement>('link[rel="canonical"]')?.href;
+  let path = '/404/';
+  try { if (canonical) path = new URL(canonical).pathname; } catch { /* Invalid metadata stays anonymous. */ }
+  const context = analyticsContext(path, data?.locale ?? 'en', window.location.origin ?? '', document.referrer ?? '');
+  const detail = document.querySelector?.<HTMLElement>('[data-wallpaper-detail]');
+  if (analyticsId(detail?.dataset.wallpaperDetail)) context.item_id = detail.dataset.wallpaperDetail;
+  if (detail) {
+    // Reuse semantic page metadata instead of repeating it in hydrated props and HTML.
+    try {
+      const schema = JSON.parse(document.querySelector<HTMLScriptElement>('script[type="application/ld+json"]')?.textContent ?? 'null');
+      const collection = new URL(schema.isPartOf.url).pathname.split('/').filter(Boolean).at(-1);
+      const category = new URL(detail.querySelector<HTMLAnchorElement>('.wallpaper-tag-link')!.href).searchParams.get('category');
+      Object.assign(context, analyticsMetadata(`${collection}/${category}`));
+    } catch { /* Incomplete page metadata never blocks an action. */ }
+  }
+  if (pageReferrer !== undefined) context.page_referrer = pageReferrer;
+  try { if (localStorage.getItem('want-analytics-debug') === 'true') context.debug_mode = 1; } catch { /* Diagnostics are optional. */ }
+  return context;
+}
+
+function flushAnalytics() {
+  if (!analytics || !analyticsSdk || !analyticsReady) return;
+  while (queuedEvents.length) {
+    const event = queuedEvents.shift()!;
+    if (!getCookiePreferences().analytics) { queuedEvents.length = 0; return; }
+    if (event.expires > Date.now()) {
+      try { const name: string = event.name; analyticsSdk.logEvent(analytics, name, event.parameters); } catch { /* Analytics never interrupts an action. */ }
+    }
+  }
+}
+
+export function sendAnalyticsEvent(name: AnalyticsEventName, parameters: unknown, context?: AnalyticsParameters): void {
+  if (typeof window === 'undefined' || /^\/(?:admin|ui-kit)(?:\/|$)/.test(window.location.pathname)
+    || !isAnalyticsConfigured() || !getCookiePreferences().analytics) return;
+  const safe = sanitizeAnalyticsEvent(name, parameters);
+  if (!safe) return;
+  if (queuedEvents.length === 50) queuedEvents.shift();
+  const resolved = { ...(context ?? currentAnalyticsContext()) };
+  if (name === 'page_view') {
+    pageReferrer = lastPageLocation ?? String(resolved.page_referrer ?? '');
+    lastPageLocation = String(resolved.page_location);
+    resolved.page_referrer = pageReferrer;
+  }
+  const counter = ({ card_view: 'card_impressions', content_select: 'card_selections', wallpaper_view: 'wallpaper_views', wallpaper_download: 'download_starts', telegram_click: 'telegram_transitions' } as Partial<Record<AnalyticsEventName, string>>)[name];
+  queuedEvents.push({ name, parameters: { ...resolved, ...safe, ...(counter ? { [counter]: 1 } : {}) }, expires: Date.now() + 30000 });
+  updateAnalytics();
+  flushAnalytics();
+}
+
 function updateAnalytics(): void {
+  if (!getCookiePreferences().analytics) { queuedEvents.length = 0; lastPageLocation = undefined; pageReferrer = undefined; }
   if (isAnalyticsConfigured()) Reflect.set(window, `ga-disable-${import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID}`, !getCookiePreferences().analytics);
   // Firebase retains this object until asynchronous initialization emits consent defaults.
   if (pendingConsent) Object.assign(pendingConsent, consent());
@@ -82,9 +139,12 @@ function updateAnalytics(): void {
     if (!getCookiePreferences().analytics) return;
     pendingConsent = consent();
     sdk.setConsent(pendingConsent);
-    analytics = sdk.getAnalytics(app);
+    analytics = sdk.initializeAnalytics(app, { config: { ...currentAnalyticsContext(), send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false } });
     analyticsSdk = sdk;
     sdk.setAnalyticsCollectionEnabled(analytics, getCookiePreferences().analytics);
+    await sdk.getGoogleAnalyticsClientId(analytics);
+    analyticsReady = true;
+    flushAnalytics();
   })().catch(() => { /* Optional analytics never block site features. */ }).finally(() => { analyticsLoading = undefined; });
 }
 
@@ -100,7 +160,7 @@ export function saveCookiePreferences(value: CookiePreferences) {
 }
 
 export function initializePrivacy(): Promise<void> {
-  if (typeof window === 'undefined' || /^\/admin(?:\/|$)/.test(window.location.pathname)) return Promise.resolve();
+  if (typeof window === 'undefined' || /^\/(?:admin|ui-kit)(?:\/|$)/.test(window.location.pathname)) return Promise.resolve();
   if (initialization) return initialization;
   window.addEventListener('storage', (event) => {
     if (event.key !== null && event.key !== cookieKey && event.key !== legacyKey) return;
@@ -109,7 +169,7 @@ export function initializePrivacy(): Promise<void> {
     notify();
   });
   window.addEventListener('want:download', ((event: CustomEvent<{ wallpaper: string; variant: string }>) => {
-    if (analytics && analyticsSdk && getCookiePreferences().analytics) analyticsSdk.logEvent(analytics, 'wallpaper_download', event.detail);
+    sendAnalyticsEvent('wallpaper_download', event.detail);
   }) as EventListener);
   updateAnalytics();
   return initialization = lookupCountry().then((result) => {

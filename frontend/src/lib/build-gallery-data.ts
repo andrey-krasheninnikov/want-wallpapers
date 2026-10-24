@@ -13,7 +13,7 @@ export function buildGalleryData(locale: Locale) {
   if (!payload) {
     payload = (async () => {
       const items = await Promise.all(wallpapers.map(async item => ({
-        id: item.id, title: item.title[locale], description: item.description[locale],
+        id: item.id, collection: item.collection, category: item.category, title: item.title[locale], description: item.description[locale],
         href: localPath(locale, '/wallpapers/' + item.slug + '/'),
         desktop: lean(await previewData(item, 'desktop')), mobile: lean(await previewData(item, 'mobile')),
       })));

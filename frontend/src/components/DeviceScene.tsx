@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Pause, Play, RotateCcw, RotateCw } from 'lucide-react';
 import type { ModelViewerElement } from '@google/model-viewer';
@@ -45,7 +46,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
       const loaded = () => {
         void changeWallpaper(current.current).then((loaded) => { if (active) { setReady(loaded); setFailed(!loaded); } });
       };
-      const failed = () => { if (active) { setReady(false); setFailed(true); } };
+      const failed = () => { if (active) { trackProductEvent('media_error', { media: 'model' }); setReady(false); setFailed(true); } };
       viewer.addEventListener('load', loaded, { once: true });
       viewer.addEventListener('error', failed);
       removeListeners = () => { viewer.removeEventListener('load', loaded); viewer.removeEventListener('error', failed); };
@@ -111,7 +112,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
       screenTextures.current = textures;
       current.current = next; setIndex(next); setTextureError('');
       return true;
-    } catch { if (model.current === viewer) setTextureError(text.textureFailed); return false; }
+    } catch { if (model.current === viewer) { trackProductEvent('media_error', { media: 'image' }); setTextureError(text.textureFailed); } return false; }
     finally { if (model.current === viewer) changing.current = false; }
   }
 
@@ -121,7 +122,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
     let timer: ReturnType<typeof setTimeout>;
     const change = (event: Event) => {
       if ((event as CustomEvent<{ source: string }>).detail.source !== 'user-interaction') return;
-      clearTimeout(timer); timer = setTimeout(() => void changeWallpaper(), 200);
+      clearTimeout(timer); timer = setTimeout(() => { trackProductEvent('feature_action', { feature: 'scene', action: 'rotate' }); void changeWallpaper(); }, 200);
     };
     viewer.addEventListener('camera-change', change);
     return () => { clearTimeout(timer); viewer.removeEventListener('camera-change', change); };
@@ -130,6 +131,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
   function rotate(direction: number) {
     const viewer = model.current;
     if (!viewer || !ready) return;
+    trackProductEvent('feature_action', { feature: 'scene', action: 'rotate' });
     setPaused(true);
     const orbit = viewer.getCameraOrbit();
     const theta = Math.max(-35 * Math.PI / 180, Math.min(35 * Math.PI / 180, orbit.theta + direction * Math.PI / 12));
@@ -155,10 +157,10 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
     </div>
     <figcaption className="device-caption"><a href={href}>{title}</a><div className="device-controls">
       {ready && <Button variant="secondary" size="icon" aria-label={text.left} onClick={() => rotate(-1)}><RotateCcw aria-hidden="true" /></Button>}
-      <Button variant="secondary" size="sm" aria-label={ready ? text.reset : failed ? text.retry : text.loading} disabled={Boolean(activation && !ready && !failed)} onClick={() => ready && model.current ? (model.current.cameraOrbit = initialOrbit, model.current.resetTurntableRotation()) : activate((value) => value + 1)}>
+      <Button variant="secondary" size="sm" aria-label={ready ? text.reset : failed ? text.retry : text.loading} disabled={Boolean(activation && !ready && !failed)} onClick={() => { trackProductEvent('feature_action', { feature: 'scene', action: ready ? 'reset' : 'retry' }); if (ready && model.current) { model.current.cameraOrbit = initialOrbit; model.current.resetTurntableRotation(); } else activate(value => value + 1); }}>
         <Box data-icon="inline-start" aria-hidden="true" /><span className={ready ? "hidden sm:inline" : undefined}>{ready ? text.reset : failed ? text.retry : activation ? text.loading : text.view}</span>
       </Button>
-      {ready && <Button variant="secondary" size="icon" aria-label={paused ? text.playScene : text.pauseScene} aria-pressed={paused} onClick={() => setPaused((value) => !value)}>{paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}</Button>}
+      {ready && <Button variant="secondary" size="icon" aria-label={paused ? text.playScene : text.pauseScene} aria-pressed={paused} onClick={() => { trackProductEvent('feature_action', { feature: 'scene', action: paused ? 'play' : 'pause' }); setPaused(value => !value); }}>{paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}</Button>}
       {ready && <Button variant="secondary" size="icon" aria-label={text.right} onClick={() => rotate(1)}><RotateCw aria-hidden="true" /></Button>}
     </div></figcaption>
     <p className="device-message" role="status" aria-live="polite" hidden={!failed && !textureError}>{failed ? text.failed : textureError}</p>

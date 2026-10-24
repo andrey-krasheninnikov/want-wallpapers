@@ -1,3 +1,4 @@
+import { trackProductEvent, analyticsFailure } from '@/lib/analytics';
 import React, { useEffect, useState, type SubmitEvent } from 'react';
 import { Check, LockKeyhole, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,8 @@ import { interfaceCopy } from '@/data/interface-copy';
 import type { Locale } from '@/data/catalog';
 
 export function useFeedbackForm(locale: Locale) {
+  const started = React.useRef(false);
+  const start = () => { if (!started.current) { started.current = true; trackProductEvent('feedback_action', { stage: 'start' }); } };
   const [topic, setTopic] = useState('');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -25,26 +28,29 @@ export function useFeedbackForm(locale: Locale) {
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    trackProductEvent('feedback_action', { stage: 'attempt' });
     if (!topic.trim() || message.trim().length < 5) {
+      trackProductEvent('feedback_action', { stage: 'error', error_code: 'validation' });
       const field = !topic.trim() ? 'topic' : 'message';
       setInvalid(field); (field === 'topic' ? topicInput : messageInput).current?.focus(); return;
     }
     setInvalid(null); setBusy(true); setError(''); setSent(false);
     try {
       const { sendFeedback } = await import('@/lib/feedback-client'); await sendFeedback({ topic, message, email });
+      trackProductEvent('feedback_action', { stage: 'success' }); started.current = false;
       setTopic(''); setMessage(''); setEmail(''); setSent(true);
-    } catch (error) { setError(mutationError(locale, error)); }
+    } catch (error) { trackProductEvent('feedback_action', { stage: 'error', error_code: analyticsFailure(error) }); setError(mutationError(locale, error)); }
     finally { setBusy(false); }
   }
-  return { topic, setTopic, message, setMessage, email, setEmail, invalid, setInvalid, topicInput, messageInput, disabled, busy, error, sent, submit };
+  return { start, topic, setTopic, message, setMessage, email, setEmail, invalid, setInvalid, topicInput, messageInput, disabled, busy, error, sent, submit };
 }
 
 export function FeedbackFields({ locale, state }: { locale: Locale; state: ReturnType<typeof useFeedbackForm> }) {
   const ui = copy[locale], text = interfaceCopy[locale];
   const prefix = React.useId();
-  const { topic, setTopic, message, setMessage, email, setEmail, invalid, setInvalid, topicInput, messageInput, disabled, busy, error, sent, submit } = state;
+  const { start, topic, setTopic, message, setMessage, email, setEmail, invalid, setInvalid, topicInput, messageInput, disabled, busy, error, sent, submit } = state;
   return <div className="feedback-form">
-    <form onSubmit={(event) => void submit(event)} aria-busy={disabled}>
+    <form onInput={start} onSubmit={(event) => void submit(event)} aria-busy={disabled}>
       <header className="feedback-form-head"><h2>{text.feedbackFormTitle}</h2></header>
       <FieldGroup className="feedback-fields">
         <Field data-disabled={disabled} data-invalid={invalid === 'topic'} className="gap-2"><FieldLabel htmlFor={`${prefix}-topic`}>{ui.topic}</FieldLabel><Input ref={topicInput} id={`${prefix}-topic`} name="topic" dir="auto" value={topic} onChange={(event) => { setTopic(event.target.value); if (invalid === 'topic') setInvalid(null); }} maxLength={100} required disabled={disabled} autoComplete="off" aria-invalid={invalid === 'topic'} aria-describedby={invalid === 'topic' ? `${prefix}-topic-error` : `${prefix}-topic-hint`} /><FieldDescription id={`${prefix}-topic-hint`}>{text.feedbackTopicHint}</FieldDescription>{invalid === 'topic' && <FieldError id={`${prefix}-topic-error`}>{ui.required}</FieldError>}</Field>

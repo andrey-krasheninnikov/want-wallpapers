@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { carouselScroll, scrollCarousel } from '@/lib/carousel-scroll';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -18,6 +19,11 @@ export function Carousel({ count: itemCount, label, previousLabel, nextLabel, ch
   const track = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ page: 1, pages: 1 });
   const step = useRef(0);
+  const previousPage = useRef(1);
+  useEffect(() => {
+    if (previousPage.current !== position.page) trackProductEvent('feature_action', { feature: 'carousel', action: position.page > previousPage.current ? 'next' : 'previous' });
+    previousPage.current = position.page;
+  }, [position.page]);
   useEffect(() => {
     const element = track.current!;
     const update = () => {
