@@ -63,7 +63,7 @@ export function WallpaperDownload({ locale, wallpaper, variant, href, enabled = 
       <DialogContent className="w-[calc(100%_-_2rem)]" dir={localeDirection(locale)} closeLabel={text.close} onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }}>
         <DialogHeader><DialogTitle>{text.title}</DialogTitle><DialogDescription>{text.description}</DialogDescription></DialogHeader>
         <div className="relative aspect-video overflow-hidden rounded-panel bg-media-ground" aria-busy={!playing}>
-          {!playing && <Skeleton className="absolute inset-0 size-full motion-reduce:animate-none" role="status" aria-label={text.loading} />}
+          {!playing && <Skeleton className="absolute inset-0 size-full animate-none" role="status" aria-label={text.loading} />}
           <video ref={setVideo} muted playsInline controls preload="none" className="size-full object-contain" aria-label={text.title} />
         </div>
         {pending && <Button asChild><a href={pending.download.href} download={pending.download.filename} onClick={() => finish(pending, true)}>{text.download}</a></Button>}
