@@ -5,6 +5,7 @@ import { publicationDates } from '../data/catalog';
 import Editorial from './Editorial.astro';
 import { WallpaperGrid, Crumbs, ActionLink } from './Gallery';
 import WallpaperView from './WallpaperView';
+import PublicAdvertisements from './PublicAdvertisements.astro';
 import { getCollection, getCollectionWallpapers, wallpapers, categoryLabels, tagLabels, type Locale, type Wallpaper } from '../data/catalog';
 import { previewData } from '../data/previews';
 import { copy, localPath } from '../data/copy';
@@ -30,7 +31,7 @@ const schema = { '@context': 'https://schema.org', '@type': 'ImageObject', name:
   creditText: 'Want Wallpapers', isPartOf: { '@type': 'CollectionPage', name: collection.title[locale], url: new URL(localPath(locale, `/collections/${collection.slug}/`), Astro.site).href } };
 ---
 <Base locale={locale} title={wallpaper.title[locale]} description={wallpaper.description[locale]} path={path} image={variants.desktop.src} schema={schema}>
-  <div class="shell page-heading"><Crumbs label={ui.collections} items={[{ href: localPath(locale, '/collections/'), title: ui.collections }, { href: localPath(locale, `/collections/${collection.slug}/`), title: collection.title[locale] }, { title: wallpaper.title[locale] }]} /><h1 class="display-title mt-6">{wallpaper.title[locale]}</h1></div>
-  <section class="shell" aria-label={wallpaper.title[locale]}><WallpaperView locale={locale} id={wallpaper.id} description={wallpaper.description[locale]} variants={variants} tags={tags} navigation={navigation} client:load><Editorial locale={locale} wallpaper={wallpaper} variants={variants} embedded /></WallpaperView><noscript><div class="grid gap-4"><Button asChild variant="outline"><a href={variants.mobile.download} download>{ui.mobile} · {ui.download}</a></Button><p class="text-sm leading-relaxed text-muted-foreground">{interfaceCopy[locale].javascriptRequired}</p></div></noscript></section>
+  <div class="shell page-heading page-intro"><div><Crumbs label={ui.collections} items={[{ href: localPath(locale, '/collections/'), title: ui.collections }, { href: localPath(locale, `/collections/${collection.slug}/`), title: collection.title[locale] }, { title: wallpaper.title[locale] }]} /><h1 class="display-title mt-6">{wallpaper.title[locale]}</h1></div><PublicAdvertisements locale={locale} placement="top" /></div>
+  <section class="shell" aria-label={wallpaper.title[locale]}><WallpaperView locale={locale} id={wallpaper.id} description={wallpaper.description[locale]} variants={variants} tags={tags} navigation={navigation} client:load><PublicAdvertisements slot="advertisement" locale={locale} placement="content" /><Editorial locale={locale} wallpaper={wallpaper} variants={variants} embedded /></WallpaperView><noscript><div class="grid gap-4"><Button asChild variant="outline"><a href={variants.mobile.download} download>{ui.mobile} · {ui.download}</a></Button><p class="text-sm leading-relaxed text-muted-foreground">{interfaceCopy[locale].javascriptRequired}</p></div></noscript></section>
   <section class="shell section-space"><div class="mb-8 flex flex-wrap items-end justify-between gap-6"><h2 class="section-title">{ui.inCollection}</h2><ActionLink href={localPath(locale, `/collections/${collection.slug}/`)} label={ui.viewCollection} variant="ghost" /></div><WallpaperGrid items={related} /></section>
 </Base>

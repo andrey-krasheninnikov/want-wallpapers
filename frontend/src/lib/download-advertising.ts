@@ -37,11 +37,11 @@ export function startDownload(download: WallpaperDownload) {
   link.hidden = true; document.body.append(link); link.click(); link.remove(); notifyDownload(download);
 }
 
-// Additional delivery origins require provider confirmation and matching CSP before activation.
+// Keep the inspected feed and creative origins aligned with the wallpaper-only CSP.
 export function videoUrl(value: unknown): string {
   if (typeof value !== 'string') throw new Error('Invalid video URL');
   const url = new URL(value, window.location.origin);
   if (url.username || url.password || (url.origin !== window.location.origin
-    && (url.protocol !== 'https:' || url.origin !== new URL(hilltopVideoAdvertisement.src).origin))) throw new Error('Unapproved video URL');
+    && (url.protocol !== 'https:' || ![new URL(hilltopVideoAdvertisement.src).origin, hilltopVideoAdvertisement.mediaOrigin].includes(url.origin)))) throw new Error('Unapproved video URL');
   return url.href;
 }

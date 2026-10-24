@@ -106,14 +106,14 @@ test('a provider that detaches its own node cannot leave the label visible on cl
 });
 
 
-test('public advertising routes exclude every home, private and error route', async () => {
+test('public advertising routes include homes and exclude private and error routes', async () => {
   const { advertisingPath } = await import('../src/lib/advertising-providers');
   for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja', '/ar']) {
-    for (const route of ['/collections/', '/collections/contours-of-silence/', '/wallpapers/contours-of-silence-1/', '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/']) {
+    for (const route of ['/', '/collections/', '/collections/contours-of-silence/', '/wallpapers/contours-of-silence-1/', '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/']) {
       expect(advertisingPath(`${prefix}${route}`)).toBe(true);
       expect(advertisingPath(`${prefix}${route}index.html`)).toBe(true);
       expect(advertisingPath(`${prefix}${route.slice(0, -1)}`)).toBe(true);
     }
-    for (const route of ['/', '/index.html', '/404/', '/404.html', '/ui-kit/', '/admin', '/admin/', '/admin/login/', '/api/v1/catalog', '/health/ready', '/_astro/app.js', '/wallpapers/not/a/page/', '/unknown/']) expect(advertisingPath(`${prefix}${route}`)).toBe(false);
+    for (const route of ['/404/', '/404.html', '/ui-kit/', '/admin', '/admin/', '/admin/login/', '/api/v1/catalog', '/health/ready', '/_astro/app.js', '/wallpapers/not/a/page/', '/unknown/']) expect(advertisingPath(`${prefix}${route}`)).toBe(false);
   }
 });

@@ -25,8 +25,10 @@ test('consent reload resumes an action once and rejects expired or malformed sto
 test('video URLs reject unreviewed destinations, credentials and executable schemes', () => {
   Object.assign(globalThis, { window: { location: { origin: 'https://wallpapers.want.foundation' } } });
   expect(videoUrl(hilltopVideoAdvertisement.src)).toBe(hilltopVideoAdvertisement.src);
+  expect(videoUrl(`${hilltopVideoAdvertisement.mediaOrigin}/creative.mp4`)).toBe(`${hilltopVideoAdvertisement.mediaOrigin}/creative.mp4`);
   expect(videoUrl('/fixture.mp4')).toBe('https://wallpapers.want.foundation/fixture.mp4');
   for (const url of ['javascript:alert(1)', 'data:video/mp4,test', 'http://loyal-product.com/vast', 'https://loyal-product.com.evil/vast',
-    'https://user:password@loyal-product.com/vast', 'https://127.0.0.1/vast', 'https://example.com/video.mp4']) expect(() => videoUrl(url)).toThrow();
+    'https://user:password@loyal-product.com/vast', 'http://www.silent-basis.pro/video.mp4', 'https://www.silent-basis.pro.evil/video.mp4',
+    'https://127.0.0.1/vast', 'https://example.com/video.mp4']) expect(() => videoUrl(url)).toThrow();
   Reflect.deleteProperty(globalThis, 'window');
 });

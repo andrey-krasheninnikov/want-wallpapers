@@ -1,17 +1,19 @@
 ---
 import '@fontsource-variable/manrope';
-import '@fontsource-variable/onest';
+import '@fontsource/days-one';
 import '../styles/global.css';
 import logo from '../../assets/logo.svg?url';
 import UiKit from './UiKit';
+import ThemeScript from '../components/ThemeScript.astro';
+import ThemeToggle from '../components/ThemeToggle';
 import { wallpapers } from '../data/catalog';
 import { wallpaperCard } from '../lib/view-models';
 const item = await wallpaperCard(wallpapers[0]!, 'en');
 ---
 <!doctype html>
 <html lang="en" class="dark" data-public-background>
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#141414" /><meta name="robots" content="noindex, nofollow" /><title>UI kit | Want Wallpapers</title><link rel="icon" href={logo} type="image/svg+xml" /></head>
-  <body><div class="page-background" inert><div></div></div><a class="skip-link" href="#main">Skip to content</a><header class="shell py-6"><a href="/" class="inline-flex min-h-11 items-center gap-3 font-semibold"><img src={logo} width="32" height="32" alt="" />Want Wallpapers</a></header>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#141414" /><ThemeScript /><meta name="robots" content="noindex, nofollow" /><title>UI kit | Want Wallpapers</title><link rel="icon" href={logo} type="image/svg+xml" /></head>
+  <body><div class="page-background" inert><div></div></div><a class="skip-link" href="#main">Skip to content</a><header class="shell flex items-center justify-between gap-3 py-6"><a href="/" class="inline-flex min-h-11 items-center gap-3 font-semibold"><img src={logo} width="32" height="32" alt="" />Want Wallpapers</a><ThemeToggle locale="en" client:load /></header>
     <main id="main" class="shell pb-12" tabindex="-1"><div class="page-heading"><h1 class="display-title">UI kit</h1><p class="mt-4 max-w-2xl text-muted-foreground">Shared tokens, source-owned components and working examples. This page is available only in development.</p></div><section class="kit-section mb-6"><h2>Gradient sphere background</h2><p class="mb-4 max-w-2xl text-muted-foreground">One faint violet sphere drifts across the document with occasional soft waves of light. Reduced motion keeps every layer still.</p><button type="button" class="ui-button-base ui-button-secondary ui-button-size-default" data-background-toggle data-pause-label="Pause background glow" data-play-label="Resume background glow" hidden>Pause background glow</button></section><UiKit item={item} client:load /></main>
     <script>import { initPageMotion } from '../lib/page-motion'; initPageMotion(); import { initGalleryEffects } from '../lib/gallery-effects'; initGalleryEffects();</script>
   </body>

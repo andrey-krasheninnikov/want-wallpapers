@@ -2,6 +2,7 @@ import type { Locale } from './catalog';
 
 export const interfaceCopy = {
   en: {
+    lightTheme: 'Light theme', darkTheme: 'Dark theme',
     githubProject: 'GitHub Project',
     advertisement: 'Advertisement',
     pauseCover: 'Pause animation', playCover: 'Play animation',
@@ -40,6 +41,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Nothing here yet.', notFoundText: 'This page is not in the collection.', back: 'Back to the wallpapers',
   },
   ru: {
+    lightTheme: 'Светлая тема', darkTheme: 'Тёмная тема',
     githubProject: 'GitHub Project',
     advertisement: 'Реклама',
     pauseCover: 'Остановить анимацию', playCover: 'Включить анимацию',
@@ -78,6 +80,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Пока пусто.', notFoundText: 'Этой страницы нет в коллекции.', back: 'Вернуться к обоям',
   },
   'zh-cn': {
+    lightTheme: '浅色主题', darkTheme: '深色主题',
     githubProject: 'GitHub Project',
     advertisement: '广告',
     pauseCover: '暂停动画', playCover: '播放动画',
@@ -116,6 +119,7 @@ export const interfaceCopy = {
     notFoundTitle: '这里暂时没有内容。', notFoundText: '这个页面不在系列中。', back: '返回壁纸',
   },
   'pt-br': {
+    lightTheme: 'Tema claro', darkTheme: 'Tema escuro',
     githubProject: 'GitHub Project',
     advertisement: 'Publicidade',
     pauseCover: 'Pausar animação', playCover: 'Reproduzir animação',
@@ -154,6 +158,7 @@ export const interfaceCopy = {
     notFoundTitle: 'Nada por aqui ainda.', notFoundText: 'Esta página não faz parte da coleção.', back: 'Voltar aos papéis de parede',
   },
   ja: {
+    lightTheme: 'ライトテーマ', darkTheme: 'ダークテーマ',
     githubProject: 'GitHub Project',
     "advertisement": "広告",
     "pauseCover": "アニメーションを一時停止",
@@ -239,6 +244,7 @@ export const interfaceCopy = {
   },
 
   ar: {
+    lightTheme: 'المظهر الفاتح', darkTheme: 'المظهر الداكن',
     githubProject: 'مشروع GitHub',
     "advertisement": "إعلان",
     "pauseCover": "إيقاف الحركة",

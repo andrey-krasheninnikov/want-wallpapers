@@ -1,5 +1,6 @@
 ---
 import { supportCopy, supportTopics } from '../data/editorial';
+import { downloadCopy } from '../data/download-copy';
 import type { Locale } from '../data/catalog';
 type Props = { locale: Locale; page: keyof typeof supportCopy.en };
 const { locale, page } = Astro.props;
@@ -7,4 +8,4 @@ const [title, ...paragraphs] = supportCopy[locale][page];
 const topics = page === 'cookies' ? [] : supportTopics[locale][page];
 if (topics.length && topics.length !== paragraphs.length) throw new Error(`Missing support topic: ${locale}/${page}`);
 ---
-<section class="support-surface" data-support-text><h2>{title}</h2><div class="support-topics" data-long-copy>{paragraphs.map((paragraph, index) => topics[index] ? <section class="support-topic"><h3>{topics[index]}</h3><p>{paragraph}</p></section> : <p>{paragraph}</p>)}</div></section>
+<section class="support-surface" data-support-text><h2>{title}</h2><div class="support-topics" data-long-copy>{paragraphs.map((paragraph, index) => topics[index] ? <section class="support-topic"><h3>{topics[index]}</h3><p>{paragraph}</p></section> : <p>{paragraph}</p>)}<section class="support-topic"><h3>{downloadCopy[locale].download}</h3><p>{downloadCopy[locale].help}</p></section></div></section>

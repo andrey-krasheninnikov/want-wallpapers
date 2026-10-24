@@ -47,7 +47,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
           expect(size).toBeLessThanOrEqual(hero ? 50 : 40);
           if (width === 320) expect(size).toBeCloseTo(hero ? 32 : 28);
           if (width === 1440) expect(size).toBeCloseTo(hero ? 50 : 40);
-          expect(await title.evaluate((heading) => getComputedStyle(heading).fontFamily)).toContain('Onest');
+          expect(await title.evaluate((heading) => getComputedStyle(heading).fontFamily)).toContain('Days One');
           const overflow = await title.evaluate((heading) => ({
             fitsWidth: heading.scrollWidth <= heading.clientWidth + 1,
             unclipped: getComputedStyle(heading).overflowY === 'visible' || heading.scrollHeight <= heading.clientHeight + 1,
@@ -65,9 +65,9 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
         if (path === '/search/') await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow');
         if (path === '/') {
           await expect(page.locator('main .eyebrow')).toHaveCount(0);
-          await expect(page.locator('main figure a').first()).toHaveAttribute('href', localPath(locale, '/wallpapers/contours-of-silence-11/'));
-          await expect(page.locator('main figure img').first()).toHaveAttribute('src', '/previews/contours-of-silence-11-desktop.webp');
-          await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://wallpapers.want.foundation/previews/contours-of-silence-11-desktop.webp');
+          await expect(page.locator('main figure a').first()).toHaveAttribute('href', localPath(locale, '/wallpapers/neon-tide-5/'));
+          await expect(page.locator('main figure img').first()).toHaveAttribute('src', '/previews/neon-tide-5-desktop.webp');
+          await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://wallpapers.want.foundation/previews/neon-tide-5-desktop.webp');
           await expect(page.locator('footer')).toContainText('© 2026 Want Foundation');
           await expect(page.locator('footer a[href="https://t.me/want_wallpapers"]')).toBeVisible();
           const buttons = await page.locator('footer nav a').evaluateAll((links) => links.map((link) => {

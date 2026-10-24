@@ -13,8 +13,8 @@ import { localeDirection, type Locale } from '@/data/catalog';
 
 type Neighbor = { href: string; title: string } | null;
 
-export default function WallpaperView({ locale, id, description, variants, tags, navigation, children }: {
-  locale: Locale; id: string; description: string; children?: React.ReactNode;
+export default function WallpaperView({ locale, id, description, variants, tags, navigation, children, advertisement }: {
+  locale: Locale; id: string; description: string; children?: React.ReactNode; advertisement?: React.ReactNode;
   variants: Record<'desktop' | 'mobile', WallpaperVariant>; tags: { title: string; href: string }[];
   navigation: { previous: Neighbor; next: Neighbor; position: number | null; total: number };
 }) {
@@ -99,7 +99,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
         <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
       </div>
     </aside>
-    <WallpaperComments locale={locale} social={social} />
+    <div className="wallpaper-discussion"><WallpaperComments locale={locale} social={social} />{advertisement}</div>
     {children}
   </div></Tabs>;
 }

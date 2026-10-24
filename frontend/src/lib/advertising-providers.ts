@@ -1,32 +1,34 @@
 import type { MountAdvertisement } from './advertising';
 
-export const hilltopAdvertisement = {
-  src: 'https://massivesalad.com/bwX/Vgswd.G/lR0/YnWWcM/te/mU9AuYZ/UxlMkxPWTpcJ1oMDz/cVyyNYDbk/tPNczxU/z_NMzHIZ1DM/wL',
-  width: 300, height: 250,
+export const hilltopAdvertisements = {
+  top: 'https://massivesalad.com/b.XbVws/dAGOlE0mYNW/cl/feZmU9muPZLUql/k/PGTvcx1-NpDCYNwXNLjDUut/NLz_UN0cNxjlAU2CO/Qt',
+  content: 'https://massivesalad.com/bhXeVas.dcGYlt0/YBWRcP/zeJmg9fuxZ/U-lJkuPwThcn1pNxDdYVwCOODaExtCN/zhUd0DNnj/AD4wN/QJ',
+  footer: 'https://massivesalad.com/bwX/Vgswd.G/lR0/YnWWcM/te/mU9AuYZ/UxlMkxPWTpcJ1oMDz/cVyyNYDbk/tPNczxU/z_NMzHIZ1DM/wL',
 } as const;
+export type AdvertisementPlacement = keyof typeof hilltopAdvertisements;
 
 export const hilltopVideoAdvertisement = {
   zone: 'wf-wallpapers-vast-on-download',
   src: 'https://loyal-product.com/domLFjzZd.GUNWvUZRGKUT/Xe/m-9cuPZsUilIkNPMTKcg1ANYD/U/5sNojpUWtPNxzNUG0VNvTqku2bOXQe',
-  // Keep disabled until the provider approves standalone PNG downloads and immediate dismissal.
-  enabled: import.meta.env.PUBLIC_HILLTOP_VAST_ENABLED === 'true',
+  mediaOrigin: 'https://www.silent-basis.pro',
+  enabled: (import.meta.env.PUBLIC_HILLTOP_VAST_ENABLED ?? 'true') === 'true',
 } as const;
 
 export function advertisingPath(path: string): boolean {
   const route = path.replace(/\/index\.html$/, '/').replace(/^\/(ru|zh-cn|pt-br|ja|ar)(?=\/|$)/, '').replace(/\/$/, '');
-  return /^\/(collections(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?|wallpapers\/[a-z0-9]+(?:-[a-z0-9]+)*|search|feedback|privacy|terms|cookies|license|contact)$/.test(route);
+  return route === '' || /^\/(collections(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?|wallpapers\/[a-z0-9]+(?:-[a-z0-9]+)*|search|feedback|privacy|terms|cookies|license|contact)$/.test(route);
 }
 
-let requested = false;
-export const advertisingRequested = () => requested;
+const requested = new Set<string>();
+export const advertisingRequested = () => requested.size > 0;
 
-export const mountHilltop: MountAdvertisement = async ({ container, signal }) => {
+export const mountHilltop = (src: string): MountAdvertisement => async ({ container, signal }) => {
   signal.throwIfAborted();
-  if (requested) return null;
+  if (requested.has(src)) return null;
   const pending = AbortSignal.any([signal, AbortSignal.timeout(10000)]);
   const script = document.createElement('script') as HTMLScriptElement & { settings: Record<string, never> };
   script.settings = {};
-  script.src = hilltopAdvertisement.src; script.async = true;
+  script.src = src; script.async = true;
   script.referrerPolicy = 'no-referrer-when-downgrade';
   await new Promise<void>((resolve, reject) => {
     const finish = (error?: unknown) => {
@@ -41,8 +43,8 @@ export const mountHilltop: MountAdvertisement = async ({ container, signal }) =>
     script.onload = ready;
     script.onerror = () => finish(new Error('Advertising script unavailable'));
     pending.addEventListener('abort', abort, { once: true });
-    // The SDK owns document state, so the tag starts at most once per document.
-    requested = true;
+    // The SDK owns document state, so each zone starts at most once per document.
+    requested.add(src);
     container.append(script);
   });
   signal.throwIfAborted();
