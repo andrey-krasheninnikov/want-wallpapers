@@ -14,9 +14,10 @@ async function fixture(page: import('@playwright/test').Page, mode = 'ready', co
     if (mode === 'blocked') { await route.abort(); return; }
     if (mode === 'pending') { await new Promise(resolve => setTimeout(resolve, 12000)); await route.fulfill({ body: '' }).catch(() => {}); return; }
     const origin = new URL(page.url()).origin;
+    const duration = mode === 'tiny-duration' ? '00:00:00.0000000001' : mode === 'bad-duration' ? 'invalid' : '00:00:03';
     const body = mode === 'invalid' ? '<VAST><' : mode === 'empty' ? '<VAST version="3.0" />' : mode === 'wrapper'
       ? `<VAST version="3.0"><Ad><Wrapper><AdSystem>Fixture</AdSystem><VASTAdTagURI>${hilltopVideoAdvertisement.src}</VASTAdTagURI><Impression>${origin}/test-tracking/impression</Impression><Creatives /></Wrapper></Ad></VAST>`
-      : `<VAST version="3.0"><Ad id="fixture"><InLine><AdSystem version="1">Fixture</AdSystem><AdTitle>Video fixture</AdTitle><Impression>${origin}/test-tracking/impression</Impression><Creatives><Creative><Linear><Duration>00:00:03</Duration><TrackingEvents>${['start','complete','closeLinear'].map(event => `<Tracking event="${event}">${origin}/test-tracking/${event}</Tracking>`).join('')}</TrackingEvents><MediaFiles><MediaFile delivery="progressive" type="${mode === 'unsupported' ? 'application/javascript' : 'video/mp4'}" width="160" height="90">${origin}/test-advertisement.mp4</MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>`;
+      : `<VAST version="3.0"><Ad id="fixture"><InLine><AdSystem version="1">Fixture</AdSystem><AdTitle>Video fixture</AdTitle><Impression>${origin}/test-tracking/impression</Impression><Creatives><Creative><Linear><Duration>${duration}</Duration><TrackingEvents>${['start','complete','closeLinear'].map(event => `<Tracking event="${event}">${origin}/test-tracking/${event}</Tracking>`).join('')}</TrackingEvents><MediaFiles><MediaFile delivery="progressive" type="${mode === 'unsupported' ? 'application/javascript' : 'video/mp4'}" width="160" height="90">${origin}/test-advertisement.mp4</MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>`;
     await route.fulfill({ contentType: 'application/xml', headers: { 'Access-Control-Allow-Origin': '*' }, body });
   });
   await page.route('**/test-advertisement.mp4', route => mode === 'media-error' ? route.abort() : route.fulfill({ contentType: 'video/mp4', path: clip }));
@@ -64,19 +65,20 @@ for (const locale of locales) test(`dismiss keeps the selected PNG, keyboard foc
   await expect(page.locator('#download-link')).toBeFocused(); expect(calls).toHaveLength(1); expect(tracking).not.toContain('complete');
 });
 
-for (const mode of ['blocked','empty','invalid','unsupported','media-error','wrapper']) test(`${mode} falls back to exactly one PNG download`, async ({ page }) => {
+for (const mode of ['blocked','empty','invalid','unsupported','media-error','wrapper','bad-duration']) test(`${mode} falls back to exactly one PNG download`, async ({ page }) => {
   const { calls } = await fixture(page, mode); await ready(page);
   const downloads: string[] = []; page.on('download', item => downloads.push(item.suggestedFilename()));
   await page.locator('#download-link').click(); await expect.poll(() => downloads).toEqual(['fixture-desktop.png']);
   await expect(page.getByRole('dialog')).toHaveCount(0); expect(calls.length).toBeGreaterThan(0); expect(calls.length).toBeLessThanOrEqual(6);
 });
 
-test('completion records an actual view and downloads once', async ({ page }) => {
-  const { calls, tracking } = await fixture(page); await ready(page);
+for (const mode of ['ready', 'tiny-duration']) test(`completion records an actual view and downloads once: ${mode}`, async ({ page }) => {
+  const { calls, tracking } = await fixture(page, mode); await ready(page);
   const download = page.waitForEvent('download'); await page.locator('#download-link').click();
   await expect.poll(() => tracking.includes('impression')).toBe(true);
   expect((await download).suggestedFilename()).toBe('fixture-desktop.png'); await expect(page.getByRole('dialog')).toHaveCount(0);
-  expect(calls).toHaveLength(1); expect(tracking.filter(item => item === 'complete')).toHaveLength(1);
+  expect(calls).toHaveLength(1);
+  for (const event of ['impression', 'start', 'complete']) expect(tracking.filter(item => item === event)).toHaveLength(1);
 });
 
 test('pending video can be dismissed immediately without duplicate dialogs or late playback', async ({ page }) => {

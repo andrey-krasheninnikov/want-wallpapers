@@ -42,7 +42,8 @@ export async function playVideoAdvertisement(video: HTMLVideoElement, signal: Ab
   });
   check();
   for (const ad of response.ads) for (const creative of ad.creatives) {
-    if (creative.type !== 'linear' || creative.apiFramework || creative.interactiveCreativeFile) continue;
+    if (creative.type !== 'linear' || creative.apiFramework || creative.interactiveCreativeFile
+      || !Number.isFinite(creative.duration) || creative.duration <= 0) continue;
     const media = creative.mediaFiles.find((file: { apiFramework?: string; mimeType: string; fileURL: string; deliveryType: string }) => {
       try { videoUrl(file.fileURL); return !file.apiFramework && file.deliveryType === 'progressive'
         && ['video/mp4', 'video/webm'].includes(file.mimeType) && !!video.canPlayType(file.mimeType); } catch { return false; }
@@ -64,8 +65,8 @@ export async function playVideoAdvertisement(video: HTMLVideoElement, signal: Ab
       let waiting = setTimeout(() => finish(new Error('Video timed out')), 10000);
       const events = {
         playing: () => { clearTimeout(waiting); if (!active()) { abort(); return; }
-          if (!started) { started = true; tracker.trackImpression(); tracker.track('start'); } },
-        timeupdate: () => { if (active() && started && !video.seeking) tracker.setProgress(video.currentTime); },
+          if (!started) { started = true; tracker.trackImpression(); tracker.track('start', { once: true }); } },
+        timeupdate: () => { if (active() && started && !video.seeking) tracker.setProgress(Math.min(video.currentTime, creative.duration)); },
         ended: () => { if (active() && started) tracker.complete(); finish(); },
         seeking: () => { if (started && active()) tracker.close(); finish(new Error('Video interrupted')); },
         waiting: () => { clearTimeout(waiting); waiting = setTimeout(() => finish(new Error('Video stalled')), 10000); },
