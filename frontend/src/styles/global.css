@@ -480,11 +480,11 @@ html[data-wallpaper-direction="next"] { --slide-distance: 12px; }
 
 @utility wallpaper-tag-link { &:hover { @apply bg-accent; } }
 
-html[data-public-background] body { isolation: isolate; }
+html[data-public-background] body { position: relative; min-height: 100svh; isolation: isolate; }
 .page-background {
   --background-travel-x: 26vw;
   --background-travel-y: 24vh;
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: -1;
   overflow: hidden;
@@ -494,15 +494,15 @@ html[data-public-background] body { isolation: isolate; }
 .page-background > div {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: var(--background-center-y, 50vh);
   width: clamp(28rem, 120vw, 100rem);
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(ellipse at 45% 50%, var(--primary) 25%, transparent 70%);
   filter: blur(48px);
-  opacity: .28;
+  opacity: .12;
   transform: translate3d(calc(-50% + var(--background-travel-x)), calc(-50% - var(--background-travel-y)), 0);
-  animation: want-gradient-sphere 28s ease-in-out infinite;
+  animation: want-gradient-sphere var(--background-duration, 28s) ease-in-out infinite;
   animation-play-state: paused;
 }
 .page-background > div::before, .page-background > div::after {
@@ -518,10 +518,15 @@ html[data-public-background] body { isolation: isolate; }
   background: radial-gradient(ellipse at 32% 35%, color-mix(in srgb, var(--primary) 60%, white) 12%, transparent 60%);
 }
 .page-background > div::after {
-  background: radial-gradient(ellipse at 68% 65%, var(--primary-active) 15%, transparent 65%);
-  animation-duration: 23s;
-  animation-direction: reverse;
+  background: conic-gradient(from 0deg, transparent 10%, var(--primary-hover) 30%, color-mix(in srgb, var(--primary) 60%, white) 45%, transparent 65%);
+  mask-image: radial-gradient(ellipse, black 20%, transparent 70%);
+  opacity: 0;
+  animation-name: var(--background-shimmer, none);
+  animation-duration: 4s;
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
 }
+.page-background[data-background-shimmer] { --background-shimmer: want-gradient-shimmer; }
 html[data-background-motion="running"] .page-background > div,
 html[data-background-motion="running"] .page-background > div::before,
 html[data-background-motion="running"] .page-background > div::after { animation-play-state: running; }
@@ -537,11 +542,17 @@ html[data-background-motion="running"] .page-background > div::after { animation
   50% { transform: rotate(180deg) scale(.85, 1.1); }
   100% { transform: rotate(360deg) scale(1, .9); }
 }
+@keyframes want-gradient-shimmer {
+  0% { transform: rotate(0deg) scale(.9); opacity: 0; }
+  50% { transform: rotate(180deg) scale(1.1); opacity: 1; }
+  100% { transform: rotate(360deg) scale(.9); opacity: 0; }
+}
 @media (max-width: 767px) {
   .page-background { --background-travel-x: 18vw; --background-travel-y: 18vh; }
 }
 @media (prefers-reduced-motion: reduce) {
   .page-background > div, .page-background > div::before, .page-background > div::after { animation: none; }
+  .page-background > div { top: 50vh; transform: translate3d(calc(-50% + var(--background-travel-x)), calc(-50% - 24vh), 0); }
 }
 @media (forced-colors: active) {
   .page-background { display: none; }
@@ -599,7 +610,8 @@ html[data-background-motion="running"] .page-background > div::after { animation
   .story-dialog-cover { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--panel-radius); }
   .story-dialog [data-slot="dialog-close"] { background: var(--secondary); }
   .collection-carousel { --collection-gutter: max(1rem, calc((100% - 1280px) / 2)); display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-  .collection-track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: 1.5rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--collection-gutter); scrollbar-width: thin; padding: .5rem var(--collection-gutter); }
+  .collection-track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: 1.5rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--collection-gutter); scrollbar-width: none; padding: .5rem var(--collection-gutter); }
+  .collection-track::-webkit-scrollbar { display: none; }
   .collection-track .collection-card-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
   .collection-track article { scroll-snap-align: start; }
   .collection-track .gallery-card { border-radius: var(--panel-radius); }

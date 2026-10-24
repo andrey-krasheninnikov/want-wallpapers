@@ -28,16 +28,16 @@ async function start(page: Page) {
   await page.locator(section).dispatchEvent('mouseleave');
 }
 async function next(page: Page, previous: string) {
-  await page.clock.fastForward(15000);
+  await page.clock.fastForward(3000);
   await expect.poll(() => snapshot(page)).not.toBe(previous);
   await page.locator('.home-mosaic-outgoing').evaluateAll(elements => elements.forEach(element => element.getAnimations().forEach(animation => animation.finish())));
   await expect(page.locator('.home-mosaic-outgoing')).toHaveCount(0);
 }
 
-test('changes distinct works and composition only after 15 active seconds', async ({ page }) => {
+test('changes distinct works and composition only after 3 active seconds', async ({ page }) => {
   await start(page);
   const first = await snapshot(page);
-  await page.clock.fastForward(14999); expect(await snapshot(page)).toBe(first);
+  await page.clock.fastForward(2999); expect(await snapshot(page)).toBe(first);
   await page.clock.fastForward(1);
   await expect.poll(() => snapshot(page)).not.toBe(first);
   const ids = await page.locator(`${grid} > article`).evaluateAll(elements => elements.map(element => element.getAttribute('data-wallpaper-card')));
@@ -60,7 +60,7 @@ test('hover, focus, hidden tab, offscreen and explicit pause reset the interval'
   await page.locator(section).dispatchEvent('mouseenter');
   await page.clock.fastForward(30000); expect(await snapshot(page)).toBe(before);
   await page.locator(section).dispatchEvent('mouseleave');
-  await page.clock.fastForward(14999); expect(await snapshot(page)).toBe(before);
+  await page.clock.fastForward(2999); expect(await snapshot(page)).toBe(before);
   await page.clock.fastForward(1); await expect.poll(() => snapshot(page)).not.toBe(before);
   before = await snapshot(page);
   await page.locator(`${grid} a`).first().focus();
@@ -101,7 +101,7 @@ test('preloads replacements, cancels a pending switch on focus and survives imag
     pending++; await gate; await route.abort();
   });
   try {
-    await page.clock.fastForward(15000);
+    await page.clock.fastForward(3000);
     await expect.poll(() => pending).toBeGreaterThan(0);
     expect(await snapshot(page)).toBe(before);
     await page.locator(`${grid} a`).first().focus();

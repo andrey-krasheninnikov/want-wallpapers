@@ -11,6 +11,8 @@ async function ready(page: Page, path = '/') {
   await expect(carousel(page).locator('..')).not.toHaveAttribute('ssr');
   await page.evaluate(() => document.fonts.ready);
   await track(page).scrollIntoViewIfNeeded();
+  await expect(track(page)).toHaveCSS('scrollbar-width', 'none');
+  expect(await track(page).evaluate(element => getComputedStyle(element, '::-webkit-scrollbar').display)).toBe('none');
 }
 
 async function noOverflow(page: Page) {
