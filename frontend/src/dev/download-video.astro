@@ -1,0 +1,12 @@
+---
+export const prerender = false;
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/onest';
+import '@fontsource-variable/noto-sans-arabic';
+import '../styles/global.css';
+import DownloadVideoPreview from './DownloadVideoPreview';
+import { locales, localeDirection } from '../data/catalog';
+const locale = locales.find(value => value === Astro.url.searchParams.get('locale')) ?? 'en';
+---
+<!doctype html><html lang={locale} dir={localeDirection(locale)} class="dark"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex, nofollow" /><title>Download video preview</title></head>
+<body><main class="shell py-8"><DownloadVideoPreview locale={locale} enabled={Astro.url.searchParams.get('enabled') === 'true'} client:load /></main></body></html>

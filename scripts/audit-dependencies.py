@@ -26,12 +26,14 @@ require(package.get('trustedDependencies') == [], 'Dependency scripts require se
 require("output: 'static'" in (repository / 'frontend/astro.config.mjs').read_text(), 'Astro server mode requires new dependency review.')
 def unreviewed_astro_features(source, path):
     if path == repository / 'frontend/src/layouts/Base.astro':
-        for name in ('header', 'cookies', 'feedback-root'):
+        for name in ('header', 'cookies', 'feedback-root', 'sphere'):
             source = source.replace(f'transition:persist="{name}"', '')
     return bool(re.search(r'define:vars|transition:|server:defer|slot=\{|\{\.\.\.', source))
 
 base = repository / 'frontend/src/layouts/Base.astro'
 assert not unreviewed_astro_features('transition:persist="header"', base)
+assert not unreviewed_astro_features('transition:persist="sphere"', base)
+assert unreviewed_astro_features('transition:persist="sphere"', base.with_name('Other.astro'))
 for source in ('transition:persist={input}', 'transition:persist="unknown"', 'transition:animate={input}', 'define:vars={input}'):
     assert unreviewed_astro_features(source, base)
 assert unreviewed_astro_features('transition:persist="header"', base.with_name('Other.astro'))
@@ -86,7 +88,7 @@ for changed in ({**fixed_zod, 'zod': 'zod@4.6.5'}, {**fixed_zod, 'astro/zod': 'z
                 {**fixed_zod, '@astrojs/sitemap/zod': 'zod@4.6.5'}, {**fixed_zod, 'astro': 'astro@6.0.0'},
                 {key: value for key, value in fixed_zod.items() if key != 'zod-to-ts/zod'}):
     assert not reviewed_zod_versions(changed)
-reviewed_zod_configuration = {'frontend/astro.config.mjs': '5cbba7abeb770a1f1f5d9981c8e9330a2b8b314b887a324edc335d9f0cfaddb2', 'frontend/tsconfig.json': '839f190d7684a04275e4b1e548bbe3f025267cbac8e781a35ddf5888d9bb2023'}
+reviewed_zod_configuration = {'frontend/astro.config.mjs': '80635adffbce7e99173d30206c121a4e2e8ec18d8d1d600a9be64a56d235f9f2', 'frontend/tsconfig.json': '839f190d7684a04275e4b1e548bbe3f025267cbac8e781a35ddf5888d9bb2023'}
 for relative, expected in reviewed_zod_configuration.items():
     require(hashlib.sha256((repository / relative).read_bytes()).hexdigest() == expected,
             relative + ": configuration changed; review the legacy Zod input boundary.")
