@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import { Button } from './ui/button';
@@ -42,14 +43,15 @@ export function WallpaperDownload({ locale, wallpaper, variant, href, enabled = 
     if (!pending || !video) return;
     const element = video;
     const timer = setTimeout(() => finish(pending), 10000);
-    const ready = () => { clearTimeout(timer); setPlaying(true); };
+    const ready = () => { clearTimeout(timer); setPlaying(true); trackProductEvent('advertising_stage', { placement: 'video', stage: 'play' }); };
     element.addEventListener('playing', ready);
     void import('@/lib/vast-video').then(({ playVideoAdvertisement }) => playVideoAdvertisement(element, pending.controller.signal,
-      () => getCookiePreferences().advertising)).then(() => finish(pending), () => finish(pending));
+      () => getCookiePreferences().advertising)).then(() => { trackProductEvent('advertising_stage', { placement: 'video', stage: 'complete' }); finish(pending); }, () => { if (!pending.controller.signal.aborted) trackProductEvent('advertising_stage', { placement: 'video', stage: 'error' }); finish(pending); });
     return () => { clearTimeout(timer); element.removeEventListener('playing', ready); pending.controller.abort(); };
   }, [pending, video, finish]);
   return <>
     <Button asChild size="lg" className="w-full"><a ref={trigger} id="download-link" href={href} download={href.split('/').at(-1)} onClick={event => {
+      trackProductEvent('download_click', { item_id: wallpaper, variant });
       const download: DownloadRequest = { href, filename: href.split('/').at(-1)!, wallpaper, variant };
       if (active.current) { event.preventDefault(); return; }
       if (!enabled || !getCookiePreferences().advertising || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
@@ -57,9 +59,10 @@ export function WallpaperDownload({ locale, wallpaper, variant, href, enabled = 
       }
       event.preventDefault();
       const request = { download, controller: new AbortController() };
+      trackProductEvent('advertising_stage', { placement: 'video', stage: 'request' });
       active.current = request; setPlaying(false); setPending(request);
     }}><Download data-icon="inline-start" aria-hidden="true" />{copy[locale].download} · {copy[locale][variant]}</a></Button>
-    <Dialog open={pending !== null} onOpenChange={open => { if (!open && active.current) finish(active.current); }}>
+    <Dialog open={pending !== null} onOpenChange={open => { if (!open && active.current) { trackProductEvent('advertising_stage', { placement: 'video', stage: 'dismiss' }); finish(active.current); } }}>
       <DialogContent className="w-[calc(100%_-_2rem)]" dir={localeDirection(locale)} closeLabel={text.close} onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }}>
         <DialogHeader><DialogTitle>{text.title}</DialogTitle><DialogDescription>{text.description}</DialogDescription></DialogHeader>
         <div className="relative aspect-video overflow-hidden rounded-panel bg-media-ground" aria-busy={!playing}>

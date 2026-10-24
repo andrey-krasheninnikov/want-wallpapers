@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import React, { useRef, useState } from 'react';
 import { Carousel } from './CollectionCarousel';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -22,12 +23,13 @@ export default function StoryCarousel({ locale, dataUrl, count, children }: {
     const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[data-story]') : null;
     if (!anchor || anchor.target || anchor.download) return;
     event.preventDefault();
+    trackProductEvent('feature_action', { feature: 'story', action: 'open', item_id: anchor.dataset.story });
     trigger.current = anchor;
     setSelected({ slug: anchor.dataset.story!, title: anchor.querySelector('h3')!.textContent!, href: anchor.href });
   }
   return <div data-story-carousel onClick={open}>
     <Carousel count={count} label={text.title} previousLabel={text.previous} nextLabel={text.next}>{children}</Carousel>
-    <Dialog open={!!selected} onOpenChange={open => { if (!open) setSelected(null); }}>
+    <Dialog open={!!selected} onOpenChange={open => { if (!open) { trackProductEvent('feature_action', { feature: 'story', action: 'close', item_id: selected?.slug }); setSelected(null); } }}>
       {selected && <DialogContent className="story-dialog" closeLabel={interfaceCopy[locale].close} aria-describedby={undefined}
         onOpenAutoFocus={event => { event.preventDefault(); title.current?.focus({ preventScroll: true }); }}
         onCloseAutoFocus={event => { event.preventDefault(); if (trigger.current?.isConnected) trigger.current.focus({ preventScroll: true }); }}>

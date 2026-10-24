@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { carouselScroll, scrollCarousel } from '@/lib/carousel-scroll';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -20,7 +21,8 @@ export function Carousel({ count: itemCount, label, previousLabel, nextLabel, ch
   const step = useRef(0);
   useEffect(() => {
     const element = track.current!;
-    const update = () => {
+    let previousPage = 1, geometry = '';
+    const update = (fromScroll = false) => {
       const card = element.querySelector('article')?.getBoundingClientRect();
       if (!card) return;
       const style = getComputedStyle(element);
@@ -31,11 +33,17 @@ export function Carousel({ count: itemCount, label, previousLabel, nextLabel, ch
       const pages = Math.max(1, Math.ceil(itemCount / count));
       const { offset, max } = carouselScroll(element);
       const atEnd = offset >= max - 2;
-      setPosition({ page: atEnd ? pages : Math.min(pages, Math.round(offset / step.current) + 1), pages });
+      const page = atEnd ? pages : Math.min(pages, Math.round(offset / step.current) + 1);
+      const nextGeometry = `${width}/${card.width}/${gap}`;
+      // Resizing can also emit scroll; changed geometry only updates pagination.
+      if (fromScroll && geometry === nextGeometry && previousPage !== page) trackProductEvent('feature_action', { feature: 'carousel', action: page > previousPage ? 'next' : 'previous' });
+      previousPage = page; geometry = nextGeometry;
+      setPosition({ page, pages });
     };
-    const observer = new ResizeObserver(update);
-    observer.observe(element); element.addEventListener('scroll', update, { passive: true }); update();
-    return () => { observer.disconnect(); element.removeEventListener('scroll', update); };
+    const observer = new ResizeObserver(() => update());
+    const scroll = () => update(true);
+    observer.observe(element); element.addEventListener('scroll', scroll, { passive: true }); update();
+    return () => { observer.disconnect(); element.removeEventListener('scroll', scroll); };
   }, [itemCount]);
   function move(direction: number) {
     const element = track.current!;

@@ -7,6 +7,7 @@ const descriptors = globals.map((key) => Object.getOwnPropertyDescriptor(globalT
 let initialized = 0;
 let enabled = false;
 let events: string[] = [];
+let payloads: Record<string, unknown>[] = [];
 let permissions: Record<string, string> = {};
 let supported: () => Promise<boolean> = async () => true;
 let pendingCollection: Array<() => void> | null = null;
@@ -17,17 +18,18 @@ let serial = 0;
 mock.module('firebase/app', () => ({ getApps: () => [], initializeApp: () => ({}) }));
 mock.module('firebase/analytics', () => ({
   isSupported: () => supported(),
-  getAnalytics: () => { initialized++; markReady(); return {}; },
+  initializeAnalytics: () => { initialized++; return {}; },
+  getGoogleAnalyticsClientId: async () => { setTimeout(markReady, 0); return 'test-client-id'; },
   setConsent: (value: Record<string, string>) => { permissions = value; },
   setAnalyticsCollectionEnabled: (_analytics: unknown, value: boolean) => {
     if (pendingCollection) pendingCollection.push(() => { enabled = value; });
     else enabled = value;
   },
-  logEvent: (_analytics: unknown, name: string) => { if (enabled) events.push(name); },
+  logEvent: (_analytics: unknown, name: string, parameters: Record<string, unknown>) => { if (enabled) { events.push(name); payloads.push(parameters); } },
 }));
 
 async function browser(response: unknown, stored?: string, pathname = '/') {
-  initialized = 0; enabled = false; events = []; permissions = {}; pendingCollection = null;
+  initialized = 0; enabled = false; events = []; payloads = []; permissions = {}; pendingCollection = null;
   supported = async () => true;
   ready = new Promise((resolve) => { markReady = resolve; });
   for (const key of keys) process.env[key] = 'test-public-setting';
@@ -38,7 +40,7 @@ async function browser(response: unknown, stored?: string, pathname = '/') {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => { values.set(key, value); },
   });
-  const target = Object.assign(new EventTarget(), { location: { pathname } });
+  const target = Object.assign(new EventTarget(), { location: { pathname, origin: 'https://wallpapers.want.foundation' } });
   let lookups = 0;
   const values = {
     window: target, document: { documentElement: { dataset: {} } },
@@ -114,7 +116,7 @@ test('a storage event withdraws collection in another open tab', async () => {
   const { privacy, target, local } = await browser({ success: true, country_code: 'GE' });
   await privacy.initializePrivacy(); await ready;
   local.set('want-cookie-preferences-v2', '{"analytics":false,"advertising":false}');
-  target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2' }));
+  target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2', newValue: local.get('want-cookie-preferences-v2') }));
   expect(enabled).toBe(false);
   expect(privacy.getCookiePreferences()).toEqual({ analytics: false, advertising: false });
 });
@@ -167,4 +169,104 @@ test('failed lookup is unknown and never persisted as a permanent availability r
   expect(privacy.getCountry()).toBeNull();
   expect(session.size).toBe(0);
   expect(privacy.getCookiePreferences()).toEqual({ analytics: false, advertising: false });
+});
+
+test('only events after consent enter the bounded SDK startup queue', async () => {
+  const { privacy } = await browser({ success: true, country_code: 'DE' });
+  await privacy.initializePrivacy();
+  privacy.sendAnalyticsEvent('wallpaper_download', { wallpaper: 'before-consent', variant: 'desktop' });
+  let resolveSupport!: (value: boolean) => void;
+  supported = () => new Promise(resolve => { resolveSupport = resolve; });
+  privacy.saveCookiePreferences({ analytics: true, advertising: false });
+  await Bun.sleep(0);
+  for (let index = 0; index < 60; index++) privacy.sendAnalyticsEvent('download_click', { item_id: `work-${index}`, variant: 'desktop', position: index });
+  resolveSupport(true); await ready;
+  expect(events.length).toBe(50);
+  expect(payloads[0].position).toBe(10);
+  expect(payloads.at(-1)?.position).toBe(59);
+  expect(events.includes('wallpaper_download')).toBe(false);
+});
+
+test('withdrawal clears queued events even when consent is granted again later', async () => {
+  const { privacy } = await browser({ success: true, country_code: 'DE' });
+  await privacy.initializePrivacy();
+  let resolveSupport!: (value: boolean) => void;
+  supported = () => new Promise(resolve => { resolveSupport = resolve; });
+  privacy.saveCookiePreferences({ analytics: true, advertising: false }); await Bun.sleep(0);
+  privacy.sendAnalyticsEvent('wallpaper_download', { wallpaper: 'neon-tide-7', variant: 'desktop' });
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  resolveSupport(true); await Bun.sleep(0);
+  supported = async () => true;
+  privacy.saveCookiePreferences({ analytics: true, advertising: false }); await ready;
+  expect(events).toEqual([]);
+});
+
+test('expired startup events are dropped and route referrers contain only canonical paths', async () => {
+  const { privacy } = await browser({ success: true, country_code: 'DE' });
+  await privacy.initializePrivacy();
+  let resolveSupport!: (value: boolean) => void;
+  supported = () => new Promise(resolve => { resolveSupport = resolve; });
+  privacy.saveCookiePreferences({ analytics: true, advertising: false }); await Bun.sleep(0);
+  privacy.sendAnalyticsEvent('wallpaper_download', { wallpaper: 'neon-tide-7', variant: 'desktop' });
+  const realNow = Date.now;
+  Date.now = () => realNow() + 31000;
+  try { resolveSupport(true); await ready; expect(events).toEqual([]); }
+  finally { Date.now = realNow; }
+  const first = { page_location: 'https://wallpapers.want.foundation/search/', page_referrer: 'https://example.com/', locale: 'en', page_type: 'search' };
+  privacy.sendAnalyticsEvent('page_view', {}, first);
+  privacy.sendAnalyticsEvent('page_view', {}, { ...first, page_location: 'https://wallpapers.want.foundation/wallpapers/neon-tide-7/' });
+  expect(payloads.at(-1)?.page_referrer).toBe(first.page_location);
+  privacy.sendAnalyticsEvent('wallpaper_download', { wallpaper: 'neon-tide-7', variant: 'desktop' });
+  expect(payloads.at(-1)?.download_starts).toBe(1);
+});
+
+
+test('captured outcomes require original permission and remain invalid after withdrawal', async () => {
+  const { privacy } = await browser({ success: true, country_code: 'DE' });
+  await privacy.initializePrivacy();
+  const beforePermission = privacy.captureProductEvents();
+  privacy.saveCookiePreferences({ analytics: true, advertising: false }); await ready;
+  beforePermission('feedback_action', { stage: 'success' });
+  expect(events).toEqual([]);
+  const pending = privacy.captureProductEvents();
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  privacy.saveCookiePreferences({ analytics: true, advertising: false });
+  pending('feedback_action', { stage: 'success' });
+  expect(events).toEqual([]);
+  privacy.captureProductEvents()('feedback_action', { stage: 'success' });
+  expect(events).toEqual(['feedback_action']);
+});
+
+
+test('rapid cross-tab withdrawal invalidates captured outcomes before regrant notifications', async () => {
+  const { privacy, target, local } = await browser({ success: true, country_code: 'GE' });
+  await privacy.initializePrivacy(); await ready;
+  privacy.sendAnalyticsEvent('feedback_action', { stage: 'open' });
+  expect(events).toEqual(['feedback_action']);
+  const captured = privacy.captureProductEvents();
+  const denied = JSON.stringify({ analytics: false, advertising: false });
+  const granted = JSON.stringify({ analytics: true, advertising: false });
+  local.set('want-cookie-preferences-v2', denied);
+  local.set('want-cookie-preferences-v2', granted);
+  for (const newValue of [denied, granted]) target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2', newValue }));
+  captured('feedback_action', { stage: 'success' });
+  expect(events).toEqual(['feedback_action']);
+  expect(privacy.getCookiePreferences().analytics).toBe(true);
+});
+
+
+test('historical remote grant never overrides a newer local refusal', async () => {
+  const { privacy, target, local } = await browser({ success: true, country_code: 'GE' });
+  await privacy.initializePrivacy(); await ready;
+  privacy.sendAnalyticsEvent('feedback_action', { stage: 'open' });
+  expect(events).toEqual(['feedback_action']);
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  const granted = JSON.stringify({ analytics: true, advertising: true });
+  local.set('want-cookie-preferences-v2', granted);
+  privacy.saveCookiePreferences({ analytics: false, advertising: false });
+  target.dispatchEvent(Object.assign(new Event('storage'), { key: 'want-cookie-preferences-v2', newValue: granted }));
+  expect(privacy.getCookiePreferences()).toEqual({ analytics: false, advertising: false });
+  expect(enabled).toBe(false);
+  privacy.sendAnalyticsEvent('feedback_action', { stage: 'success' });
+  expect(events).toEqual(['feedback_action']);
 });

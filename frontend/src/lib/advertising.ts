@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { getCountry, initializePrivacy, readCookiePreferences } from './privacy';
 import { advertisingPath, advertisingRequested, hilltopAdvertisements, mountHilltop, type AdvertisementPlacement } from './advertising-providers';
 import { effectiveCookiePreferences, type CookiePreferences } from './privacy-policy';
@@ -54,7 +55,7 @@ export function initAdvertisements(): () => void {
     const caption = document.createElement('p');
     caption.className = 'advertisement-label'; caption.textContent = label;
     inline.append(caption); root.append(inline);
-    return [{ inline, src, stop: undefined as (() => void) | undefined }];
+    return [{ inline, src, placement, stop: undefined as (() => void) | undefined }];
   });
   if (!placements.length) return () => {};
   let ready = false, active = true;
@@ -66,7 +67,18 @@ export function initAdvertisements(): () => void {
     }
     if (document.documentElement.clientWidth < 320) return;
     for (const placement of placements) {
-      placement.stop ??= startAdvertisement(placement.inline, mountHilltop(placement.src));
+      if (placement.stop) continue;
+      trackProductEvent('advertising_stage', { placement: placement.placement, stage: 'request' });
+      placement.stop = startAdvertisement(placement.inline, async context => {
+        try {
+          const dispose = await mountHilltop(placement.src)(context);
+          if (dispose && !context.signal.aborted) trackProductEvent('advertising_stage', { placement: placement.placement, stage: 'container_ready' });
+          return dispose;
+        } catch (error) {
+          if (!context.signal.aborted) trackProductEvent('advertising_stage', { placement: placement.placement, stage: 'error' });
+          throw error;
+        }
+      });
     }
   }
   const restore = (event: PageTransitionEvent) => { if (event.persisted && advertisingRequested()) window.location.reload(); };

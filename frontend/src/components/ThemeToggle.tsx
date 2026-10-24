@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -19,6 +20,7 @@ export default function ThemeToggle({ locale }: { locale: Locale }) {
     <Switch className="theme-toggle" checked={dark} aria-label={text.darkTheme}
       title={dark ? text.lightTheme : text.darkTheme} onCheckedChange={(checked) => {
         const theme = checked ? 'dark' : 'light';
+        trackProductEvent('feature_action', { feature: 'theme', action: theme });
         saveTheme(theme);
       }} />
     <Sun className="theme-symbol theme-sun" aria-hidden="true" />
