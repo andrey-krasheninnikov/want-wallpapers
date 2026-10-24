@@ -18,6 +18,8 @@ async function ready(page: Page, path = '/') {
   await page.goto(path);
   await carousel(page).scrollIntoViewIfNeeded();
   await expect.poll(() => carousel(page).evaluate(element => element.closest('astro-island')?.hasAttribute('ssr'))).toBe(false);
+  await expect(carousel(page).getByRole('region')).toHaveCSS('scrollbar-width', 'none');
+  expect(await carousel(page).getByRole('region').evaluate(element => getComputedStyle(element, '::-webkit-scrollbar').display)).toBe('none');
 }
 async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

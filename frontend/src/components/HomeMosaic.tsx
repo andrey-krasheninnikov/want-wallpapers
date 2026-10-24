@@ -67,7 +67,7 @@ export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { i
     const stop = () => { clearTimeout(timer); timer = undefined; ++version; };
     function schedule() {
       stop();
-      if (!repairing && allowed() && available().length > 1) timer = setTimeout(() => { void change(); }, 15000);
+      if (!repairing && allowed() && available().length > 1) timer = setTimeout(() => { void change(); }, 3000);
     }
     async function prepare(tile: MosaicTile): Promise<MosaicTile | undefined> {
       for (const variant of [tile.variant, tile.variant === 'mobile' ? 'desktop' : 'mobile'] as const) {
