@@ -65,7 +65,7 @@ Browsing, search and downloads stay available; analytics and ads have separate c
 
 ## 💸 Monetization
 
-HilltopAds provides banners and popup windows according to advertising preferences; home pages and administration are excluded. Ads never control downloads. See [provider details and production checks](docs/advertising-providers.md); integration alone does not confirm revenue.
+HilltopAds provides banners and popup windows according to advertising preferences; administration is excluded. Ads never control downloads. See [provider details and production checks](docs/advertising-providers.md); integration alone does not confirm revenue.
 
 There is no paid tier, shop or donation link. The ideas below are possible future income sources; published wallpapers remain free for personal use.
 
@@ -94,7 +94,7 @@ Translations, accessibility, docs and code are welcome. Discuss large changes fi
 
 ## 📝 Changelog and latest update
 
-[Full changelog](CHANGELOG.md) · [Latest release: v1.9.3](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.9.3), October 20, 2026: Arabic and RTL, full-width feedback submission and improved side-ad spacing.
+[Full changelog](CHANGELOG.md) · [Latest release: v1.11.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.11.0), October 24, 2026: light and dark themes, refreshed previews and consent-aware product analytics.
 
 ## 💡 Development ideas
 
