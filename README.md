@@ -94,7 +94,7 @@ Translations, accessibility, docs and code are welcome. Discuss large changes fi
 
 ## 📝 Changelog and latest update
 
-[Full changelog](CHANGELOG.md) · [Latest release: v1.12.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.12.0), October 28, 2026: Trick or Pixel?, Tiny Impossibilities and Midnight Bloom add 26 desktop and mobile wallpaper pairs in six languages.
+[Full changelog](CHANGELOG.md) · [Latest release: v1.13.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.13.0), October 28, 2026: Open Circuit, Weightless Feathers and Observatory of Tides add 15 desktop and mobile wallpaper pairs in six languages. Shared interface components now come from Want Desyst.
 
 ## 💡 Development ideas
 
