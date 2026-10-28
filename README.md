@@ -94,7 +94,7 @@ Translations, accessibility, docs and code are welcome. Discuss large changes fi
 
 ## 📝 Changelog and latest update
 
-[Full changelog](CHANGELOG.md) · [Latest release: v1.11.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.11.0), October 24, 2026: light and dark themes, refreshed previews and consent-aware product analytics.
+[Full changelog](CHANGELOG.md) · [Latest release: v1.11.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.11.0), October 28, 2026: light and dark themes, refreshed previews and consent-aware product analytics.
 
 ## 💡 Development ideas
 

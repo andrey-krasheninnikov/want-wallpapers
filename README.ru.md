@@ -94,7 +94,7 @@ make install
 
 ## 📝 Changelog и последнее обновление
 
-[Полная история](CHANGELOG.md) · [Последний релиз: v1.11.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.11.0), 24 октября 2026 года: светлая и тёмная темы, обновлённые превью и продуктовая аналитика с учётом согласия.
+[Полная история](CHANGELOG.md) · [Последний релиз: v1.11.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.11.0), 28 октября 2026 года: светлая и тёмная темы, обновлённые превью и продуктовая аналитика с учётом согласия.
 
 ## 💡 План развития
 
