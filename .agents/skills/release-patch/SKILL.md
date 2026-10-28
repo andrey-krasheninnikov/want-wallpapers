@@ -14,3 +14,5 @@ description: Создавать patch-релиз Want Wallpapers из origin/dev
 - Профиль: `fast`. Пропускается только Full UI/E2E; остальные проверки, protected tag, backup/restore и deployment gates обязательны.
 
 Пройдите весь порядок до подтверждённого deployment, обратного merge и GitHub Release. Разрешения берите из запроса конкретного выпуска; запрос подготовить план или изменить skill не разрешает выполнять релиз.
+
+Удалите remote release-ветку сразу после подтверждённого merge в `main` по разделу 2 общей процедуры. Не откладывайте cleanup до deployment или GitHub Release; сохраняйте теги и ветки с непринятыми коммитами или открытыми зависимыми PR.

@@ -3,6 +3,10 @@ dist/
 .astro/
 frontend/public/previews/
 frontend/public/downloads/
+/public/downloads/
+/public/previews/
+/.firebase/
+/firestore-debug.log
 target/
 .env
 .env.*
