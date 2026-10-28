@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Archive, RotateCcw, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@want-foundation/desyst-react';
+import { Input } from '@want-foundation/desyst-react';
+import { Badge } from '@want-foundation/desyst-react';
+import { Alert, AlertDescription } from '@want-foundation/desyst-react';
+import { Skeleton } from '@want-foundation/desyst-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@want-foundation/desyst-react';
 import type { Collection, Wallpaper } from '@/data/catalog';
 import { adminApi, errorText, type AdminSession, type RecordItem } from './client';
 import CatalogEditor, { type Editor } from './CatalogEditor';

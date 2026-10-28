@@ -202,7 +202,22 @@ $release-minor Выпусти origin/development и задеплой minor-ре�
 
 See [DESIGN.md](../DESIGN.md) for visual tokens, typography, component composition and responsive rules. The design philosophy and direction board live in [docs/design](../docs/design/).
 
-Run `bun run dev` and open `http://127.0.0.1:4321/ui-kit/` to browse the installed components and their states. The UI-kit route is development-only. Rebuild the local device scene with `bun frontend/scripts/device-scene.ts` after syncing previews.
+The public frontend and administration install @want-foundation/desyst-foundation and @want-foundation/desyst-react at the same exact version, currently 0.1.1. [Want Desyst](https://github.com/andrey-krasheninnikov/want-desyst) owns primitives, themes, local fonts, brand resources, liquid glass and common effects. Its [showcase](https://github.com/andrey-krasheninnikov/want-desyst/tree/v0.1.1/apps/showcase) provides the common component reference.
+
+Layouts import @want-foundation/desyst-foundation/styles.css and @want-foundation/desyst-foundation/fonts.css. Product CSS imports @want-foundation/desyst-foundation/tailwind.css after Tailwind. React code imports public named exports from @want-foundation/desyst-react. Do not recreate local components/ui sources or alias another checkout.
+
+Upgrade both packages together after reading the upstream changelog:
+
+```sh
+DESYST_VERSION=0.1.1
+bun add --cwd frontend --exact "@want-foundation/desyst-foundation@$DESYST_VERSION" "@want-foundation/desyst-react@$DESYST_VERSION"
+```
+
+Review the lockfile, run frontend checks, a cached-media build and the affected browser scenarios. A dependency update does not deploy the site.
+
+Wallpaper catalogue data, routes, API services, analytics, advertising, consent, saved theme preferences, feedback drafts and social mutations remain here. Product wrappers supply localized labels, UTC comment dates, contact destinations and event handlers. Astro navigation owns effect disposal and preserved animation phases. The private collection-review tool retains build-only Fontsource dependencies; public pages load fonts from foundation.
+
+Run `bun run dev` and open `http://127.0.0.1:4321/ui-kit/` for installed-package smoke tests and product integration examples. The route remains development-only. Rebuild the local device scene with `bun frontend/scripts/device-scene.ts` after syncing previews.
 
 Патч `patches/lunr-languages@1.22.0.patch` сохраняет состояние арабского stemmer в локальном объекте: браузерные ESM-модули выполняются в strict mode. Bun применяет патч при установке; Docker копирует его до установки зависимостей.
 

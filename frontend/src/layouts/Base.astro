@@ -1,11 +1,9 @@
 ---
 import { ClientRouter } from 'astro:transitions';
-import '@fontsource-variable/manrope';
-import '@fontsource/days-one';
+import '@want-foundation/desyst-foundation/styles.css';
+import '@want-foundation/desyst-foundation/fonts.css';
 import '../styles/global.css';
-import arabicFont from '@fontsource-variable/noto-sans-arabic/wght.css?url';
-import japaneseFont from '@fontsource-variable/noto-sans-jp/wght.css?url';
-import logoUrl from '../../assets/logo.svg?url';
+import logoUrl from '@want-foundation/desyst-foundation/assets/wallpapers.svg?url';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CookieConsent from '../components/CookieConsent';
@@ -29,8 +27,6 @@ const analyticsAvailable = isAnalyticsConfigured();
 <html lang={languageTag} dir={localeDirection(locale)} class="dark" data-public-background>
   <head>
     <meta charset="UTF-8" />
-    {locale === 'ja' && <link rel="stylesheet" href={japaneseFont} />}
-    {locale === 'ar' && <link rel="stylesheet" href={arabicFont} />}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#141414" />
     <ThemeScript />
@@ -89,11 +85,13 @@ const analyticsAvailable = isAnalyticsConfigured();
       }
       document.addEventListener('astro:before-swap', (event) => {
         const background = document.querySelector('.page-background');
+        const shimmer = background?.hasAttribute('data-background-shimmer');
         const times = background?.getAnimations({ subtree: true }).map((animation) => animation.currentTime) ?? [];
         const transition = event as TransitionBeforeSwapEvent;
         const swap = transition.swap;
         transition.swap = () => {
           swap();
+          if (shimmer) background?.setAttribute('data-background-shimmer', '');
           background?.getAnimations({ subtree: true }).forEach((animation, index) => {
             if (times[index] != null) animation.currentTime = times[index]!;
           });

@@ -1,4 +1,5 @@
-import { ArrowUpRight, CodeXml, Mail, Send, Users } from 'lucide-react';
+import { ContactCard } from '@want-foundation/desyst-react';
+import { CodeXml, Mail, Send, Users } from 'lucide-react';
 import { copy } from '@/data/copy';
 import type { Locale } from '@/data/catalog';
 
@@ -12,11 +13,5 @@ export default function OwnerContact({ locale }: { locale: Locale }) {
     { title: 'GitHub Project', detail: 'want-wallpapers', href: 'https://github.com/andrey-krasheninnikov/want-wallpapers', icon: CodeXml, label: 'GitHub Want Wallpapers' },
     { title: emailTitle, detail: 'wallpapers@want.foundation', href: 'mailto:wallpapers@want.foundation', icon: Mail, label: `${emailTitle} wallpapers@want.foundation` },
   ];
-  return <div className="contact-card" data-owner-contact>
-    <div className="contact-identity"><span className="contact-avatar" aria-hidden="true">{name.split(' ').map((part) => part[0]).join('').slice(0, 2)}</span><div><strong>{name}</strong><small>Want Foundation</small></div></div>
-    <div className="contact-actions">{contacts.map(({ title, detail, href, icon: Icon, label }) => {
-      const isEmail = href.startsWith('mailto:');
-      return <a key={href} className="contact-link" href={href} target={isEmail ? undefined : '_blank'} rel={isEmail ? undefined : 'noopener noreferrer'} aria-label={label}><Icon aria-hidden="true" /><span>{title}<small title={detail} dir="ltr">{detail}</small></span><ArrowUpRight className="contact-arrow" aria-hidden="true" /></a>;
-    })}</div>
-  </div>;
+  return <ContactCard name={name} subtitle="Want Foundation" actions={contacts} data-owner-contact />;
 }

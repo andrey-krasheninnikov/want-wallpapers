@@ -1,11 +1,11 @@
 import { trackProductEvent } from '@/lib/analytics';
 import { useState } from 'react';
-import { Direction } from 'radix-ui';
+import { BrandLogo, DirectionProvider } from '@want-foundation/desyst-react';
 import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@/components/ui/navigation-menu';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@want-foundation/desyst-react';
+import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@want-foundation/desyst-react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@want-foundation/desyst-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@want-foundation/desyst-react';
 import { copy, languageLabels, languageFlags, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { localeDirection, type Locale } from '@/data/catalog';
@@ -20,10 +20,10 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
     { href: '/search/', title: ui.search, active: path === '/search/' },
     { href: '/feedback/', title: ui.feedback, active: path === '/feedback/' },
   ];
-  return <Direction.Provider dir={localeDirection(locale)}><header className="site-header sticky top-0 z-30">
-    <div className="shell header-bar flex min-h-16 items-center justify-between gap-3 lg:min-h-20">
+  return <DirectionProvider dir={localeDirection(locale)}><header className="site-header sticky top-0 z-30">
+    <div className="shell header-bar glass-surface flex min-h-16 items-center justify-between gap-3 lg:min-h-20">
       <a href={localPath(locale)} aria-label="Want Wallpapers" className="inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg">
-        <img src={logo} alt="" width={32} height={32} className="size-8" />
+        <BrandLogo src={logo} alt="" width={32} height={32} className="size-8" />
         <span dir="ltr" className="hidden text-xl font-bold tracking-tight min-[400px]:inline">Want<span className="ms-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
       </a>
       <NavigationMenu className="hidden lg:flex" aria-label={ui.menu}>
@@ -49,5 +49,5 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
       </div>
     </div>
     <noscript><nav aria-label={ui.menu} className="shell flex flex-wrap gap-x-6 pb-4 lg:hidden">{links.map((link) => <a key={link.href} className="py-2 text-sm text-link" href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined}>{link.title}</a>)}</nav><div className="shell flex flex-wrap gap-4 pb-4">{Object.entries(languageLabels).map(([value, title]) => <a key={value} href={localPath(value as Locale, path)} lang={value}><span aria-hidden="true">{languageFlags[value as Locale]}</span> {title}</a>)}</div></noscript>
-  </header></Direction.Provider>;
+  </header></DirectionProvider>;
 }

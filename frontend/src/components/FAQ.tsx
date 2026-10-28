@@ -1,4 +1,4 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@want-foundation/desyst-react';
 
 export default function FAQ({ items }: { items: string[][] }) {
   return <Accordion type="single" collapsible className="w-full [&_[data-slot=accordion-content][data-state=closed]]:hidden">{items.map(([question, answer], index) => <AccordionItem key={question} value={String(index)}>

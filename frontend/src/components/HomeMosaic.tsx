@@ -1,8 +1,8 @@
 import { trackProductEvent } from '@/lib/analytics';
 import React, { useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@want-foundation/desyst-react';
+import { Card } from '@want-foundation/desyst-react';
 import { copy } from '@/data/copy';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';

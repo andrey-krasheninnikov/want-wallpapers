@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field';
+import { Button } from '@want-foundation/desyst-react';
+import { Card, CardContent } from '@want-foundation/desyst-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@want-foundation/desyst-react';
+import { Switch } from '@want-foundation/desyst-react';
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldSet } from '@want-foundation/desyst-react';
 import { copy, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { getCookiePreferences, initializePrivacy, readCookiePreferences, saveCookiePreferences, type CookiePreferences } from '@/lib/privacy';

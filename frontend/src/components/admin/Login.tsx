@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { LockKeyhole } from 'lucide-react';
 import { api } from '@/lib/api-client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
+import { Button } from '@want-foundation/desyst-react';
+import { Input } from '@want-foundation/desyst-react';
+import { Field, FieldLabel, FieldDescription, FieldError } from '@want-foundation/desyst-react';
 import RecaptchaNotice from '@/components/RecaptchaNotice';
 import { errorText } from './client';
 export default function Login() {

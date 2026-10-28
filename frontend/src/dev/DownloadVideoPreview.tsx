@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { WallpaperDownload } from '../components/WallpaperDownload';
-import { Button } from '../components/ui/button';
+import { Button } from '@want-foundation/desyst-react';
 import { initializePrivacy, saveCookiePreferences } from '../lib/privacy';
 import type { Locale } from '../data/catalog';
 

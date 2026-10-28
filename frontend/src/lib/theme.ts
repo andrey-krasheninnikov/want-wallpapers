@@ -1,4 +1,5 @@
-export type Theme = 'light' | 'dark';
+import { tokens, type Theme } from '@want-foundation/desyst-foundation';
+export type { Theme } from '@want-foundation/desyst-foundation';
 let explicitTheme: Theme | undefined;
 
 export function preferredTheme(): Theme {
@@ -23,6 +24,6 @@ export function currentTheme(): Theme {
 export function applyTheme(theme: Theme, target: Document = document) {
   target.documentElement.classList.toggle('dark', theme === 'dark');
   target.documentElement.dataset.theme = theme;
-  target.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#141414' : '#F6F5F3');
+  target.querySelector('meta[name="theme-color"]')?.setAttribute('content', tokens.themes.wallpapers[theme].background);
   if (target === document) document.dispatchEvent(new Event('want:theme-change'));
 }

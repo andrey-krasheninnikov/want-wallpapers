@@ -1,8 +1,8 @@
 import { trackProductEvent } from '@/lib/analytics';
 import React, { useRef, useState } from 'react';
 import { Carousel } from './CollectionCarousel';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@want-foundation/desyst-react';
+import { Button } from '@want-foundation/desyst-react';
 import { copy } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { storyCopy } from '@/data/story-copy';
