@@ -52,6 +52,7 @@ for (const prefix of ['', '/ru', '/zh-cn', '/pt-br', '/ja']) test('fresh discove
   await expect(page.locator('[data-discovery-count="results"]')).toContainText(String(discoveryDesigns.length));
   await page.goto(prefix + '/collections/contours-of-silence/');
   await expect(page.locator('[data-wallpaper-card]')).toHaveCount(collectionDesigns.length - 1);
+  await expect(page.locator('.gallery-grid > *')).toHaveCount(collectionDesigns.length - 1);
   expect((await request.get(prefix + '/collections/contours-of-silence/')).status()).toBe(200);
   await page.goto(prefix + '/wallpapers/contours-of-silence-2/');
   await expect(page.locator('#wallpaper-view')).toBeVisible();

@@ -18,9 +18,10 @@ export type CollectionCardData = {
 };
 
 export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardData; headingLevel?: 2 | 3 }) {
-  return <MediaCard href={item.href} title={item.title} caption={item.collectionTitle} index={item.number}
-    headingLevel={headingLevel} image={{ src: item.image.src, width: item.image.width, height: item.image.height, alt: item.description }}
-    className="wallpaper-card-link" data-wallpaper-card={item.id} data-ga={`${item.collection}/${item.category}`} />;
+  return <div data-wallpaper-card={item.id} data-ga={`${item.collection}/${item.category}`}>
+    <MediaCard href={item.href} title={item.title} caption={item.collectionTitle} index={item.number}
+      headingLevel={headingLevel} image={{ src: item.image.src, width: item.image.width, height: item.image.height, alt: item.description }} />
+  </div>;
 }
 
 export function CollectionCard({ item, headingLevel = 3 }: { item: CollectionCardData; headingLevel?: 2 | 3 }) {

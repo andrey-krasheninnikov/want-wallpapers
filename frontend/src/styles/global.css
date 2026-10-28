@@ -374,9 +374,10 @@ html[data-public-background] body { position: relative; min-height: 100svh; isol
 }
 @media (forced-colors: active) { .gallery-card::after, .wallpaper-backdrop { display: none; } }
 
-.wallpaper-card-link .media-frame { background: var(--background); }
-.wallpaper-card-link .media-card-caption { align-items: flex-start; gap: 1rem; padding: 1.5rem 1rem 1rem; }
-.wallpaper-card-link .media-card-title { font-size: 1rem; line-height: 1.375; font-weight: 600; }
-.wallpaper-card-link .media-card-description { margin-top: .5rem; font-size: .875rem; line-height: 1.625; }
-.wallpaper-card-link .media-card-index { padding-top: .125rem; font-size: .875rem; font-variant-numeric: tabular-nums; }
-@media (min-width: 640px) { .wallpaper-card-link .media-card-caption { padding-inline: 1.25rem; padding-bottom: 1.25rem; } }
+.gallery-grid > [data-wallpaper-card] { display: grid; min-width: 0; }
+[data-wallpaper-card] .media-frame { background: var(--background); }
+[data-wallpaper-card] .media-card-caption { align-items: flex-start; gap: 1rem; padding: 1.5rem 1rem 1rem; }
+[data-wallpaper-card] .media-card-title { font-size: 1rem; line-height: 1.375; font-weight: 600; }
+[data-wallpaper-card] .media-card-description { margin-top: .5rem; font-size: .875rem; line-height: 1.625; }
+[data-wallpaper-card] .media-card-index { padding-top: .125rem; font-size: .875rem; font-variant-numeric: tabular-nums; }
+@media (min-width: 640px) { [data-wallpaper-card] .media-card-caption { padding-inline: 1.25rem; padding-bottom: 1.25rem; } }
