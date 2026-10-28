@@ -1,7 +1,7 @@
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Input } from '@want-foundation/desyst-react';
+import { Textarea } from '@want-foundation/desyst-react';
+import { Field, FieldLabel } from '@want-foundation/desyst-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@want-foundation/desyst-react';
 import { locales, localeDirection, type Locale, type Localized } from '@/data/catalog';
 const labels = { en: 'English', ru: 'Русский', 'zh-cn': '中文', 'pt-br': 'Português', ja: '日本語', ar: 'العربية' };
 export function emptyTranslations(): Localized { return { en: '', ru: '', 'zh-cn': '', 'pt-br': '', ja: '', ar: '' }; }

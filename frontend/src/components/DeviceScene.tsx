@@ -2,7 +2,7 @@ import { trackProductEvent, captureProductEvents } from '@/lib/analytics';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Pause, Play, RotateCcw, RotateCw } from 'lucide-react';
 import type { ModelViewerElement } from '@google/model-viewer';
-import { Button } from '@/components/ui/button';
+import { Button } from '@want-foundation/desyst-react';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';
 import { useGalleryData } from '@/lib/use-gallery-data';

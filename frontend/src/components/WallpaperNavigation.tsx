@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '@want-foundation/desyst-react';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';
 

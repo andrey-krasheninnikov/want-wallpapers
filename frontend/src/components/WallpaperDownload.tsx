@@ -1,9 +1,9 @@
 import { trackProductEvent } from '@/lib/analytics';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
-import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Skeleton } from './ui/skeleton';
+import { Button } from '@want-foundation/desyst-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@want-foundation/desyst-react';
+import { Skeleton } from '@want-foundation/desyst-react';
 import { copy } from '@/data/copy';
 import { downloadCopy } from '@/data/download-copy';
 import { localeDirection, type Locale } from '@/data/catalog';

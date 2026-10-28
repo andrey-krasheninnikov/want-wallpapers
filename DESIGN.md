@@ -27,7 +27,7 @@ The five gallery references remain useful: Unsplash for image priority, Pexels f
 | destructive | #FF738D | Error text and destructive actions |
 | border, input | #383838 / #858585 | Compatibility aliases and filled switch/radio indicators |
 
-The single source is frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add permanent decorative borders, divider rules, inset hairlines or button gradients. Gallery hover uses a thin logo-color glow without moving the card. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The gradient sphere stays behind the page. The device stage and model renderer are transparent, so the public page background continues around the devices and behind the caption. Scene buttons retain filled surfaces. The physical bezel and shadows in the device poster depict the objects and remain visible.
+The shared token source is @want-foundation/desyst-foundation/tokens.json. Product composition stays in frontend/src/styles/global.css. Border aliases do not prescribe outlines. Use solid fills, whitespace and type to group content. Do not add permanent decorative borders, divider rules, inset hairlines or button gradients. Gallery hover uses a thin logo-color glow without moving the card. Reading surfaces stay opaque. Controls, cards and the device stage have no broad colored halos. The gradient sphere stays behind the page. The device stage and model renderer are transparent, so the public page background continues around the devices and behind the caption. Scene buttons retain filled surfaces. The physical bezel and shadows in the device poster depict the objects and remain visible.
 
 The system color preference selects the theme until an explicit choice is saved. Follow system changes while no explicit choice exists. Light uses #F6F5F3 for the page, #FFFFFF for cards and popovers, #ECEBE8 for secondary surfaces, #242321 for text and #5F5B58 for supporting text. Both themes use the same primary action colors and white button labels. The sun/moon switch sits beside the language selector, has a 44 px target and moves its thumb over 180 ms. Reduced motion removes that movement. Only an explicit selection saves `want-theme` in local storage. Apply the saved or system choice before paint and preserve the active theme through client navigation, including when storage is unavailable. Theme preference stays in the browser.
 
@@ -45,7 +45,7 @@ Days One carries headings with its single Regular face; Manrope Variable carries
 
 ## Components and composition
 
-Use the existing Radix-based shadcn sources and semantic Tailwind v4 tokens. The outline variant remains import-compatible and uses a filled secondary surface. Separator exports remain compatible but display no rule. Do not create a second component library.
+Import the shared Radix-based primitives from @want-foundation/desyst-react and semantic Tailwind v4 tokens from @want-foundation/desyst-foundation/tailwind.css. Common implementation changes belong in Want Desyst. The outline variant remains import-compatible and uses a filled secondary surface. Separator exports remain compatible but display no rule. Do not create a second component library.
 
 Keyboard focus retains control fills and uses a 2 px logo-color outline, offset by 3 px, with a dark backing. Inputs and textareas remain dark, including invalid states. Forced colors use the system focus outline. Labels, selection marks and error messages retain meaning without color.
 
@@ -55,7 +55,7 @@ Owner contact has an initial avatar, identity and five linked action rows. Each 
 
 Privacy and terms keep the email in the owner contact card without repeating it as a standalone paragraph beneath the card. Other legal wording and the contact page keep their email addresses.
 
-Comments use a compact feed: avatar, guest/self label, date, text and action. On wallpaper pages the composer uses its full column width, with a small avatar in the label row. A single social controller supplies comments and ratings; request failures preserve drafts and show beside the relevant action. The composer sits above the feed. Only existing publication, deletion and reporting actions are available. Sample comments in the development kit are explicitly demonstrations.
+Product adapters prepare UTC comment date labels for stable SSR output. Comments use a compact feed: avatar, guest/self label, date, text and action. On wallpaper pages the composer uses its full column width, with a small avatar in the label row. A single social controller supplies comments and ratings; request failures preserve drafts and show beside the relevant action. The composer sits above the feed. Only existing publication, deletion and reporting actions are available. Sample comments in the development kit are explicitly demonstrations.
 
 Cookie actions appear in both DOM and visual order: settings, necessary only, allow all. The footer channel label is exactly Telegram Channel in every locale. Preserve independent privacy choices and dialog focus behavior.
 

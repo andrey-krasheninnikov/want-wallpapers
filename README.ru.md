@@ -71,7 +71,7 @@ HilltopAds показывает баннеры и всплывающие окн�
 
 ## 🔧 Форк и локальный запуск
 
-Frontend: Astro, React и shadcn/ui. Backend: Rust (Axum, Tokio, SQLx) и PostgreSQL 18. Firebase нужен только для необязательной Analytics.
+Frontend: Astro, React и общий [UI-kit Want Desyst](https://github.com/andrey-krasheninnikov/want-desyst). Backend: Rust (Axum, Tokio, SQLx) и PostgreSQL 18. Firebase нужен только для необязательной Analytics.
 
 Создайте форк на GitHub, замените `YOUR-USERNAME` своим именем и выполните:
 
@@ -94,7 +94,7 @@ make install
 
 ## 📝 Changelog и последнее обновление
 
-[Полная история](CHANGELOG.md) · [Последний релиз: v1.12.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.12.0), 28 октября 2026 года: «Сладость или пиксель?», «Маленькие невозможности» и «Полночное цветение», 26 новых пар обоев на шести языках.
+[История изменений](CHANGELOG.md) · [Последний выпуск: v1.13.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.13.0), 28 октября 2026 года: «Незамкнутый контур», «Перья невесомости» и «Обсерватория приливов» добавляют 15 пар обоев для компьютера и телефона на шести языках. Общие компоненты интерфейса поставляет Want Desyst.
 
 ## 💡 План развития
 

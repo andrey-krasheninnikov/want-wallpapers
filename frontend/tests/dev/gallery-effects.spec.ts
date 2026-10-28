@@ -63,7 +63,7 @@ test('only active links and buttons, including nested icons and labels, emit spa
   await button.scrollIntoViewIfNeeded();
   await button.focus();
   await expect(button).toBeFocused();
-  await expect(button).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+  await expect(button).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
   await button.press('Enter');
   await expect(page.locator('#wand-controls')).toHaveAttribute('data-clicks', '1');
   await button.click();
@@ -151,7 +151,7 @@ for (const width of [320, 1440]) test(`restrained appearance and native download
   for (const route of ['/collections/contours-of-silence/', '/wallpapers/contours-of-silence-1/']) {
     await page.goto(route);
     await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
-    const target = page.locator(route.startsWith('/collections/') ? '.wallpaper-card-title' : '#download-link').first();
+    const target = page.locator(route.startsWith('/collections/') ? '.media-card-title' : '#download-link').first();
     await target.hover();
     await expect(page.locator('.wand-spark').first()).toBeVisible();
     await page.locator('.wand-spark').evaluateAll(elements => elements.forEach(element => element.getAnimations().forEach(animation => { animation.pause(); animation.currentTime = 80; })));

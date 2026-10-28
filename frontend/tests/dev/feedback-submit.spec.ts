@@ -63,7 +63,7 @@ for (const locale of ['en', 'ar'] as const) for (const width of [320, 768, 1024,
       await page.keyboard.press('Tab');
       const button = form.locator('button[type="submit"]');
       await expect(button).toBeFocused();
-      await expect(button).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+      await expect(button).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
       await expect(button).toHaveCSS('outline-style', 'solid');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       if (width === 320 || width === 1440) await page.screenshot({ path: info.outputPath(`${presentation}-${locale}-${width}.png`), fullPage: true });

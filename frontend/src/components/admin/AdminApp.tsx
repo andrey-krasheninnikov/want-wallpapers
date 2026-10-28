@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Images, MessageSquare, Flag, Inbox, LogOut, ExternalLink } from 'lucide-react';
 import { api } from '@/lib/api-client';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@want-foundation/desyst-react';
+import { Skeleton } from '@want-foundation/desyst-react';
+import { Alert, AlertDescription } from '@want-foundation/desyst-react';
 import { adminApi, errorText, type AdminSession } from './client';
 import Catalog from './Catalog';
 import Moderation from './Moderation';

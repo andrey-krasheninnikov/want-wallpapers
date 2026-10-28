@@ -2,7 +2,7 @@ import { trackProductEvent } from '@/lib/analytics';
 import { carouselScroll, scrollCarousel } from '@/lib/carousel-scroll';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@want-foundation/desyst-react';
 import { CollectionCard, type CollectionCardData } from './Gallery';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';

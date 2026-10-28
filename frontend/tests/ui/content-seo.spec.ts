@@ -19,7 +19,7 @@ for (const locale of locales) {
         const card = page.locator('[data-wallpaper-card] [data-slot="card-content"]').first();
         await expect(card).toHaveCSS('padding-left', width < 640 ? '16px' : '20px');
         await expect(card).toHaveCSS('display', 'flex');
-        await expect(page.locator('.wallpaper-card-title').first()).toHaveCSS('font-size', '16px');
+        await expect(page.locator('.media-card-title').first()).toHaveCSS('font-size', '16px');
         if (path!.startsWith('/wallpapers/')) {
           await expect(page.locator('[data-wallpaper-detail]')).toHaveCSS('display', 'grid');
           await expect(page.locator('.wallpaper-detail-frame')).toHaveCSS('padding-left', '0px');

@@ -38,13 +38,13 @@ for (const width of [320, 1440]) {
       await toggle.click();
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       await expect(toggle).toBeChecked({ checked: theme === 'dark' });
-      expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim())).toBe('#5962F0');
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toUpperCase())).toBe('#5962F0');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       const bounds = await toggle.boundingBox();
       expect(bounds!.width).toBeGreaterThanOrEqual(44);
       expect(bounds!.height).toBeGreaterThanOrEqual(44);
       const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
-      expect(accessibility.violations.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) }))).toEqual([]);
+      expect(accessibility.violations.map(item => ({ id: item.id, targets: item.nodes.map(node => ({ target: node.target, summary: node.failureSummary })) }))).toEqual([]);
       await page.screenshot({ path: testInfo.outputPath(`${theme}-${width}.png`) });
       await page.reload();
       await expect(page.locator('astro-island[ssr]:has(header)')).toHaveCount(0);
@@ -101,7 +101,7 @@ test('theme works without storage and reduced motion disables toggle animation',
   await expect(page.locator('astro-island[ssr]:has(header)')).toHaveCount(0);
   await page.getByRole('switch', { name: 'Dark theme', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  const duration = await page.locator('.theme-toggle [data-slot="switch-thumb"]').evaluate(thumb => getComputedStyle(thumb).transitionDuration);
+  const duration = await page.locator('.theme-switch [data-slot="switch-thumb"]').evaluate(thumb => getComputedStyle(thumb).transitionDuration);
   expect(Number.parseFloat(duration)).toBeLessThanOrEqual(.00001);
   await page.goto('/wallpapers/contours-of-silence-1/');
   await expect(page.locator('astro-island[ssr]:has(header)')).toHaveCount(0);

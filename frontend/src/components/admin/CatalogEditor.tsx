@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@want-foundation/desyst-react';
+import { Input } from '@want-foundation/desyst-react';
+import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@want-foundation/desyst-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@want-foundation/desyst-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@want-foundation/desyst-react';
 import { locales, categoryLabels, tagLabels, type Collection, type Wallpaper, type Locale } from '@/data/catalog';
 import { adminApi, errorText, type AdminSession, type RecordItem } from './client';
 import { parseVideoCover } from '@/lib/collection-cover';

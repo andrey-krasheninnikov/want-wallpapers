@@ -1,10 +1,10 @@
 import { trackProductEvent, captureProductEvents, analyticsFailure } from '@/lib/analytics';
 import React, { useEffect, useState, type SubmitEvent } from 'react';
 import { Check, LockKeyhole, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@want-foundation/desyst-react';
+import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@want-foundation/desyst-react';
+import { Input } from '@want-foundation/desyst-react';
+import { Textarea } from '@want-foundation/desyst-react';
 import RecaptchaNotice from '@/components/RecaptchaNotice';
 import { copy, mutationError } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';

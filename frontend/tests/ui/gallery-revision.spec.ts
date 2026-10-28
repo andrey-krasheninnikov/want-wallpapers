@@ -58,7 +58,7 @@ for (const width of [320, 1440]) test(`stable two-column gallery, client slides,
   await page.keyboard.press('Escape');
   const url = page.url(); const download = page.waitForEvent('download'); await page.locator('#download-link').click();
   expect((await download).suggestedFilename()).toMatch(/-mobile.png$/); expect(page.url()).toBe(url);
-  await expect(page.locator('[data-comment]')).toHaveCount(10);
+  await expect(page.locator('[data-comment-carousel] article')).toHaveCount(10);
   const comments = (await page.locator('[data-social-panel]').boundingBox())!;
   expect((await page.locator('[data-editorial]').boundingBox())!.y).toBeGreaterThanOrEqual(comments.y + comments.height);
   await page.locator('.comment-feed').focus(); await page.keyboard.press('ArrowRight'); expect(page.url()).toBe(url);

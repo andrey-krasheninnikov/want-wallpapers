@@ -48,8 +48,8 @@ test('administrator edits translations, creates CDN records, archives and modera
     await page.screenshot({ path: testInfo.outputPath(`admin-catalog-${width}.png`), fullPage: true });
   }
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
-  await page.getByLabel('Номер папки CDN').fill('0009'); await page.getByLabel('Slug', { exact: true }).fill('ui-check');
-  await page.getByLabel('Видеообложка, URL MP4').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.mp4');
+  await page.getByLabel('Номер папки CDN').fill('9999'); await page.getByLabel('Slug', { exact: true }).fill('ui-check');
+  await page.getByLabel('Видеообложка, URL MP4').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/9999-ui-check/cover.mp4');
   await page.getByLabel('Постер, URL PNG').fill('https://example.com/cover.png');
   for (const language of ['English', 'Русский', '中文', 'Português', '日本語']) {
     await page.getByRole('tab', { name: language, exact: true }).click();
@@ -61,12 +61,12 @@ test('administrator edits translations, creates CDN records, archives and modera
   await page.getByLabel('Название · العربية').fill('مجموعة اختبار'); await page.getByLabel('Описание · العربية').fill('وصف المجموعة للاختبار');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Укажите MP4 и PNG-постер');
-  await page.getByLabel('Постер, URL PNG').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.png');
+  await page.getByLabel('Постер, URL PNG').fill('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/9999-ui-check/cover.png');
   await expect(page.getByRole('dialog')).toContainText('export каталога, build и release');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click(); await expect(page.getByRole('heading', { name: 'UI check Русский', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Изменить UI check Русский' }).click();
-  await expect(page.getByLabel('Видеообложка, URL MP4')).toHaveValue('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.mp4');
-  await expect(page.getByLabel('Постер, URL PNG')).toHaveValue('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/0009-ui-check/cover.png');
+  await expect(page.getByLabel('Видеообложка, URL MP4')).toHaveValue('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/9999-ui-check/cover.mp4');
+  await expect(page.getByLabel('Постер, URL PNG')).toHaveValue('https://want-foundation.s3.twcstorage.ru/wallpapers/assets/collections/9999-ui-check/cover.png');
   await page.getByLabel('Название · Русский').fill('Коллекция для проверки');
   await page.route('**/api/v1/admin/catalog/collections', (route) => route.abort());
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();

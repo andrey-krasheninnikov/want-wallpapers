@@ -1,8 +1,8 @@
 import { ArrowUpRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { MediaCard, Card, CardContent } from '@want-foundation/desyst-react';
+import { Badge } from '@want-foundation/desyst-react';
+import { Button } from '@want-foundation/desyst-react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@want-foundation/desyst-react';
 import { Fragment } from 'react';
 import { CoverMedia, CoverControl } from './CollectionCover';
 import type { Locale } from '@/data/catalog';
@@ -18,18 +18,10 @@ export type CollectionCardData = {
 };
 
 export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardData; headingLevel?: 2 | 3 }) {
-  const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  return <article className="min-w-0" data-wallpaper-card={item.id} data-ga={`${item.collection}/${item.category}`}>
-    <Card className="group gallery-card">
-      <a href={item.href} className="flex h-full flex-col rounded-xl">
-        <div className="media-frame bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>
-        <CardContent className="wallpaper-card-content p-4 sm:p-5">
-          <div className="min-w-0"><Heading className="wallpaper-card-title">{item.title}</Heading><p className="wallpaper-card-collection">{item.collectionTitle}</p></div>
-          <span className="wallpaper-card-number" aria-hidden="true">{String(item.number).padStart(2, '0')}</span>
-        </CardContent>
-      </a>
-    </Card>
-  </article>;
+  return <div data-wallpaper-card={item.id} data-ga={`${item.collection}/${item.category}`}>
+    <MediaCard href={item.href} title={item.title} caption={item.collectionTitle} index={item.number}
+      headingLevel={headingLevel} image={{ src: item.image.src, width: item.image.width, height: item.image.height, alt: item.description }} />
+  </div>;
 }
 
 export function CollectionCard({ item, headingLevel = 3 }: { item: CollectionCardData; headingLevel?: 2 | 3 }) {
