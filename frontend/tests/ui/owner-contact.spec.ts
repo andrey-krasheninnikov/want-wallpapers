@@ -67,7 +67,7 @@ for (const locale of locales) for (const width of [320, 1440]) {
       await page.keyboard.press('Tab');
       await expect(email).toBeFocused();
       await expect(email).toHaveCSS('outline-width', '2px');
-      await expect(email).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+      await expect(email).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
       await email.evaluate(link => link.addEventListener('click', event => {
         link.setAttribute('data-activation', `${event.isTrusted}:${event.defaultPrevented}:${link.getAttribute('href')}`);
         // Avoid opening the local mail application during the test.

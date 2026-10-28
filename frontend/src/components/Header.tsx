@@ -1,3 +1,4 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { useState } from 'react';
 import { Direction } from 'radix-ui';
 import { Menu } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTr
 import { copy, languageLabels, languageFlags, localPath } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { localeDirection, type Locale } from '@/data/catalog';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header({ locale, path, logo }: { locale: Locale; path: string; logo: string }) {
   const ui = copy[locale];
@@ -22,21 +24,22 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
     <div className="shell header-bar flex min-h-16 items-center justify-between gap-3 lg:min-h-20">
       <a href={localPath(locale)} aria-label="Want Wallpapers" className="inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg">
         <img src={logo} alt="" width={32} height={32} className="size-8" />
-        <span dir="ltr" className="text-xl font-bold tracking-tight">Want<span className="ms-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
+        <span dir="ltr" className="hidden text-xl font-bold tracking-tight min-[400px]:inline">Want<span className="ms-1.5 hidden font-medium text-muted-foreground sm:inline">Wallpapers</span></span>
       </a>
       <NavigationMenu className="hidden lg:flex" aria-label={ui.menu}>
         <NavigationMenuList className="gap-1 rounded-pill bg-secondary p-1">{links.map((link) => <NavigationMenuItem key={link.href}>
           <NavigationMenuLink asChild active={link.active} className="min-h-11 justify-center px-4 text-sm"><a href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined} aria-current={link.active ? 'page' : undefined}>{link.title}</a></NavigationMenuLink>
         </NavigationMenuItem>)}</NavigationMenuList>
       </NavigationMenu>
-      <div className="flex shrink-0 items-center gap-2">
-        <Select value={locale} onValueChange={(value) => { window.location.href = localPath(value as Locale, path); }}>
+      <div className="flex flex-wrap items-center gap-2">
+        <ThemeToggle locale={locale} />
+        <Select value={locale} onValueChange={(value) => { trackProductEvent('feature_action', { feature: 'language', action: 'select', item_id: value }); window.location.href = localPath(value as Locale, path); }}>
           <SelectTrigger aria-label={text.language} className="language-trigger">
             <span aria-hidden="true">{languageFlags[locale]}</span><SelectValue>{locale === 'ar' ? 'العربية' : locale === 'ja' ? '日本語' : locale === 'zh-cn' ? '中文' : locale === 'pt-br' ? 'PT' : locale.toUpperCase()}</SelectValue>
           </SelectTrigger>
           <SelectContent><SelectGroup>{Object.entries(languageLabels).map(([value, title]) => <SelectItem key={value} value={value} className="min-h-11"><span aria-hidden="true">{languageFlags[value as Locale]}</span>{title}</SelectItem>)}</SelectGroup></SelectContent>
         </Select>
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={value => { trackProductEvent('feature_action', { feature: 'menu', action: value ? 'open' : 'close' }); setOpen(value); }}>
           <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden" data-menu-trigger aria-label={ui.menu}><Menu /></Button></SheetTrigger>
           <SheetContent side={locale === 'ar' ? 'left' : 'right'} closeLabel={text.close} className="w-full max-w-sm bg-card">
             <SheetHeader className="px-6 pt-8"><SheetTitle>{ui.menu}</SheetTitle><SheetDescription>Want Wallpapers</SheetDescription></SheetHeader>

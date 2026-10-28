@@ -27,18 +27,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const palette = [
-  ['Background', '--background', '#141414'], ['Card', '--card', '#1C1C1C'], ['Secondary', '--secondary', '#252525'],
-  ['Foreground', '--foreground', '#E8E8E8'], ['Muted text', '--muted-foreground', '#ADADAD'],
-  ['Accent', '--accent', '#303030'], ['Input', '--input', '#858585'], ['Destructive', '--destructive', '#FF738D'],
-  ['Primary hover', '--primary-hover', '#6357FF'], ['Primary active', '--primary-active', '#5549EB'], ['Primary', '--primary', '#5B4FFF'], ['Text link', '--link', '#E8E8E8'], ['Field focus', '--ring', '#5B4FFF'],
+  ['Background', '--background'], ['Card', '--card'], ['Secondary', '--secondary'],
+  ['Foreground', '--foreground'], ['Muted text', '--muted-foreground'],
+  ['Accent', '--accent'], ['Input', '--input'], ['Destructive', '--destructive'],
+  ['Primary hover', '--primary-hover'], ['Primary active', '--primary-active'], ['Primary', '--primary'], ['Text link', '--link'], ['Field focus', '--ring'],
 ] as const;
 
 export default function UiKit({ item }: { item: WallpaperCardData }) {
   const [saved, setSaved] = useState(false);
   const [reported, setReported] = useState<string[]>([]);
   return <div className="kit-grid">
-    <Section title="Palette"><div className="grid grid-cols-2 gap-4">{palette.map(([label, token, hex]) => <div key={label}><div className="kit-swatch" style={{ backgroundColor: `var(${token})` }} /><p className="mt-2 text-sm">{label}<span className="block text-muted-foreground">{hex}</span></p></div>)}</div></Section>
-    <Section title="Typography"><h3 className="hero-title">A screen worth keeping.</h3><p className="mt-6 text-base leading-relaxed text-muted-foreground">Onest carries compact headings. Manrope keeps labels and body text clear. System monospace gives indices and metadata a technical accent. Body text stays at 16 px, and controls keep at least 44 px of touch space.</p><p className="mt-4 text-sm text-muted-foreground">Panel 24 px · Prominent surface 32 px · Media 24 px · Input 12 px</p></Section>
+    <Section title="Palette"><div className="grid grid-cols-2 gap-4">{palette.map(([label, token]) => <div key={label}><div className="kit-swatch" style={{ backgroundColor: `var(${token})` }} /><p className="mt-2 text-sm">{label}<span className="block text-muted-foreground">{token}</span></p></div>)}</div></Section>
+    <Section title="Typography"><h3 className="hero-title">A screen worth keeping.</h3><p className="mt-6 text-base leading-relaxed text-muted-foreground">Days One carries headings. Manrope keeps labels and body text clear. System monospace gives indices and metadata a technical accent. Body text stays at 16 px, and controls keep at least 44 px of touch space.</p><p className="mt-4 text-sm text-muted-foreground">Panel 24 px · Prominent surface 32 px · Media 24 px · Input 12 px</p></Section>
     <Section title="Liquid glass"><Card className="glass-surface"><CardHeader><CardTitle>Compact action surface</CardTitle><CardDescription>Neutral glass keeps the logo accent for the primary action.</CardDescription></CardHeader><CardContent><p>Reading surfaces stay opaque. Reduced transparency uses an opaque fill.</p></CardContent><CardFooter><Button asChild><a href={item.href}>View wallpaper</a></Button></CardFooter></Card></Section>
     <Section title="Buttons"><div className="flex flex-wrap gap-3">{(['default', 'secondary', 'outline', 'ghost', 'link', 'destructive'] as const).map((variant) => <Button key={variant} variant={variant}>{variant}</Button>)}<Button disabled>Disabled</Button><Button disabled aria-busy="true">Saving…</Button><Button><Download data-icon="inline-start" />Download PNG</Button><Button size="icon" aria-label="Download example"><Download /></Button></div><p className="mt-4 text-sm text-muted-foreground">Tab through controls to inspect focus. Press to inspect tactile feedback.</p></Section>
     <Section title="Fields, input and textarea"><form onSubmit={(event) => { event.preventDefault(); setSaved(true); }}><FieldGroup>

@@ -78,7 +78,7 @@ function group(name: string, children: number[], translation: number[], yaw: num
 
 const images = [];
 for (const variant of ['desktop', 'mobile']) {
-  const uri = `../previews/contours-of-silence-11-${variant}.webp`;
+  const uri = `../previews/neon-tide-5-${variant}.webp`;
   await access(new URL(uri.replace('../previews/', '../public/previews/'), import.meta.url));
   images.push({ uri });
 }

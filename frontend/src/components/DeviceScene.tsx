@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { trackProductEvent, captureProductEvents } from '@/lib/analytics';
+import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Pause, Play, RotateCcw, RotateCw } from 'lucide-react';
 import type { ModelViewerElement } from '@google/model-viewer';
 import { Button } from '@/components/ui/button';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';
 import { useGalleryData } from '@/lib/use-gallery-data';
-import { randomWallpaperIndex } from '@/lib/device-wallpaper';
+import { deviceModelSrc, randomWallpaperIndex } from '@/lib/device-wallpaper';
 import type { Preview } from '@/data/previews';
 
 const initialOrbit = '12deg 83deg auto';
@@ -24,6 +25,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
   const [index, setIndex] = useState(Math.max(0, items.findIndex((item) => item.id === initialId)));
   const current = useRef(index);
   const changing = useRef(false);
+  const screenTextures = useRef<ReturnType<ModelViewerElement['createCanvasTexture']>[]>([]);
   const [textureError, setTextureError] = useState('');
   const { desktop, mobile, title, description, href } = items[index];
   const [paused, setPaused] = useState(false);
@@ -34,35 +36,24 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
   useEffect(() => {
     if (!activation) return;
     let active = true;
+    let removeListeners = () => {};
     setReady(false); setFailed(false);
-    void import('@google/model-viewer').then(() => {
+    void import('../lib/device-scene-startup').then(({ failedDeviceScenes }) => {
       if (!active || !host.current) return;
-      const viewer = document.createElement('model-viewer') as ModelViewerElement;
-      viewer.loading = 'eager';
-      viewer.setAttribute('rotation-per-second', '5deg');
-      viewer.autoRotateDelay = 3000;
-      // Failed model loads are cached by URL; retries need a fresh cache key.
-      viewer.src = activation > 1 ? `/models/devices.glb?attempt=${activation}` : '/models/devices.glb';
-      viewer.alt = text.scene;
-      viewer.cameraControls = true;
-      viewer.cameraOrbit = initialOrbit;
-      viewer.shadowIntensity = 1;
-      viewer.exposure = 1;
-      viewer.setAttribute('touch-action', 'pan-y');
-      viewer.setAttribute('disable-pan', '');
-      const panTarget = document.createElement('span');
-      panTarget.slot = 'pan-target'; panTarget.hidden = true;
-      viewer.append(panTarget);
-      viewer.setAttribute('disable-zoom', '');
-      viewer.setAttribute('interaction-prompt', 'none');
-      viewer.setAttribute('min-camera-orbit', '-35deg 55deg auto');
-      viewer.setAttribute('max-camera-orbit', '35deg 100deg auto');
-      viewer.addEventListener('load', () => { if (active) setReady(true); }, { once: true });
-      viewer.addEventListener('error', () => { if (active) { setReady(false); setFailed(true); } });
-      host.current.replaceChildren(viewer);
+      const viewer = host.current.querySelector<ModelViewerElement>('model-viewer');
+      if (!viewer) { setFailed(true); return; }
       model.current = viewer;
+      const loaded = () => {
+        void changeWallpaper(current.current).then((loaded) => { if (active) { setReady(loaded); setFailed(!loaded); } });
+      };
+      const failed = () => { if (active) { trackProductEvent('media_error', { media: 'model' }); setReady(false); setFailed(true); } };
+      viewer.addEventListener('load', loaded, { once: true });
+      viewer.addEventListener('error', failed);
+      removeListeners = () => { viewer.removeEventListener('load', loaded); viewer.removeEventListener('error', failed); };
+      if (failedDeviceScenes.has(viewer)) failed();
+      else if (viewer.loaded) { viewer.removeEventListener('load', loaded); loaded(); }
     }).catch(() => { if (active) setFailed(true); });
-    return () => { active = false; model.current?.remove(); model.current = null; };
+    return () => { active = false; removeListeners(); model.current = null; screenTextures.current = []; changing.current = false; };
   }, [activation, text.scene]);
 
   useEffect(() => {
@@ -70,29 +61,59 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
     const viewer = model.current;
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     let visible = false;
-    const update = () => { viewer.autoRotate = visible && !document.hidden && !motion.matches && !paused; };
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const update = () => {
+      viewer.autoRotate = visible && !document.hidden && !motion.matches && !paused;
+      if (viewer.autoRotate && timer === undefined) timer = setInterval(() => void changeWallpaper(undefined, true), 1000);
+      if (!viewer.autoRotate) { clearInterval(timer); timer = undefined; }
+    };
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; update(); });
     observer.observe(stage.current);
     document.addEventListener('visibilitychange', update); motion.addEventListener('change', update); update();
-    return () => { viewer.autoRotate = false; observer.disconnect(); document.removeEventListener('visibilitychange', update); motion.removeEventListener('change', update); };
-  }, [ready, paused]);
+    return () => { clearInterval(timer); viewer.autoRotate = false; observer.disconnect(); document.removeEventListener('visibilitychange', update); motion.removeEventListener('change', update); };
+  }, [ready, paused, items, text.textureFailed]);
 
-  async function changeWallpaper() {
+  async function changeWallpaper(selected?: number, automatic = false) {
     const viewer = model.current;
-    if (!viewer?.model || items.length < 2 || changing.current) return;
+    if (!viewer?.model || (selected === undefined && items.length < 2) || changing.current) return false;
     changing.current = true;
-    const next = randomWallpaperIndex(items.length, current.current);
+    const next = selected ?? randomWallpaperIndex(items.length, current.current);
     try {
-      const [desktopTexture, mobileTexture] = await Promise.all([viewer.createTexture(items[next].desktop.src), viewer.createTexture(items[next].mobile.src)]);
-      if (model.current !== viewer) return;
+      const urls = [items[next].desktop.src, items[next].mobile.src];
+      const images = await Promise.all(urls.map(async (src) => {
+        const image = new Image(); image.src = src; await image.decode(); return image;
+      }));
+      if (model.current !== viewer || (automatic && !viewer.autoRotate)) return false;
       const desktopMaterial = viewer.model.materials.find((material) => material.name === 'Desktop wallpaper');
       const mobileMaterial = viewer.model.materials.find((material) => material.name === 'Mobile wallpaper');
-      if (!desktopTexture || !mobileTexture || !desktopMaterial || !mobileMaterial) throw new Error('Missing screen texture');
-      desktopMaterial.pbrMetallicRoughness.baseColorTexture.setTexture(desktopTexture);
-      mobileMaterial.pbrMetallicRoughness.baseColorTexture.setTexture(mobileTexture);
+      if (!desktopMaterial || !mobileMaterial) throw new Error('Missing screen material');
+      // Reuse two fixed-size textures instead of allocating GPU textures every second.
+      const textures = screenTextures.current.length ? screenTextures.current : images.map((image) => {
+        const texture = viewer.createCanvasTexture();
+        const canvas = texture.source.element as HTMLCanvasElement;
+        canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+        return texture;
+      });
+      const surfaces = textures.map((texture) => {
+        const canvas = texture.source.element as HTMLCanvasElement;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Missing screen canvas');
+        return { canvas, context };
+      });
+      textures.forEach((texture, index) => {
+        const { canvas, context } = surfaces[index];
+        // Canvas textures flip Y; counter that for the glTF screen UVs.
+        context.setTransform(1, 0, 0, -1, 0, canvas.height);
+        context.drawImage(images[index], 0, 0, canvas.width, canvas.height);
+        texture.name = urls[index]; texture.source.update();
+      });
+      desktopMaterial.pbrMetallicRoughness.baseColorTexture.setTexture(textures[0]);
+      mobileMaterial.pbrMetallicRoughness.baseColorTexture.setTexture(textures[1]);
+      screenTextures.current = textures;
       current.current = next; setIndex(next); setTextureError('');
-    } catch { if (model.current === viewer) setTextureError(text.textureFailed); }
-    finally { changing.current = false; }
+      return true;
+    } catch { if (model.current === viewer) { trackProductEvent('media_error', { media: 'image' }); setTextureError(text.textureFailed); } return false; }
+    finally { if (model.current === viewer) changing.current = false; }
   }
 
   useEffect(() => {
@@ -101,7 +122,8 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
     let timer: ReturnType<typeof setTimeout>;
     const change = (event: Event) => {
       if ((event as CustomEvent<{ source: string }>).detail.source !== 'user-interaction') return;
-      clearTimeout(timer); timer = setTimeout(() => void changeWallpaper(), 200);
+      const track = captureProductEvents();
+      clearTimeout(timer); timer = setTimeout(() => { track('feature_action', { feature: 'scene', action: 'rotate' }); void changeWallpaper(); }, 200);
     };
     viewer.addEventListener('camera-change', change);
     return () => { clearTimeout(timer); viewer.removeEventListener('camera-change', change); };
@@ -110,6 +132,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
   function rotate(direction: number) {
     const viewer = model.current;
     if (!viewer || !ready) return;
+    trackProductEvent('feature_action', { feature: 'scene', action: 'rotate' });
     setPaused(true);
     const orbit = viewer.getCameraOrbit();
     const theta = Math.max(-35 * Math.PI / 180, Math.min(35 * Math.PI / 180, orbit.theta + direction * Math.PI / 12));
@@ -119,18 +142,26 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
 
   return <figure ref={stage} className="device-stage" data-scene-wallpaper={items[index].id} data-scene-state={failed ? 'failed' : ready ? 'ready' : activation ? 'loading' : 'poster'}>
     <div className="device-canvas">
-      <a href={href} aria-label={title} className="device-poster" hidden={ready}>
+      <a href={href} aria-label={title} className="device-poster">
         <span className="device-monitor"><img src={desktop.src} width={desktop.width} height={desktop.height} alt={description} fetchPriority="high" /></span>
         <span className="device-phone"><img src={mobile.src} width={mobile.width} height={mobile.height} alt="" /></span>
       </a>
-      <div ref={host} className="device-model" data-ready={ready} aria-hidden={!ready} />
+      <div ref={host} className="device-model" data-visible={!failed && (ready || initialId === 'neon-tide-5')} aria-hidden={failed || (!ready && initialId !== 'neon-tide-5')}>
+        {createElement('model-viewer', {
+          key: activation, src: activation > 1 ? `${deviceModelSrc}&attempt=${activation}` : deviceModelSrc,
+          loading: 'eager', alt: text.scene, 'ar-status': 'not-presenting', 'camera-controls': '', 'camera-orbit': initialOrbit,
+          'rotation-per-second': '5deg', 'auto-rotate-delay': '0', 'shadow-intensity': '1', exposure: '1',
+          'touch-action': 'pan-y', 'disable-pan': '', 'disable-zoom': '', 'interaction-prompt': 'none',
+          'min-camera-orbit': '-35deg 55deg auto', 'max-camera-orbit': '35deg 100deg auto',
+        }, <span slot="pan-target" hidden />)}
+      </div>
     </div>
     <figcaption className="device-caption"><a href={href}>{title}</a><div className="device-controls">
       {ready && <Button variant="secondary" size="icon" aria-label={text.left} onClick={() => rotate(-1)}><RotateCcw aria-hidden="true" /></Button>}
-      <Button variant="secondary" size="sm" aria-label={ready ? text.reset : failed ? text.retry : text.loading} disabled={Boolean(activation && !ready && !failed)} onClick={() => ready && model.current ? (model.current.cameraOrbit = initialOrbit, model.current.resetTurntableRotation()) : activate((value) => value + 1)}>
+      <Button variant="secondary" size="sm" aria-label={ready ? text.reset : failed ? text.retry : text.loading} disabled={Boolean(activation && !ready && !failed)} onClick={() => { trackProductEvent('feature_action', { feature: 'scene', action: ready ? 'reset' : 'retry' }); if (ready && model.current) { model.current.cameraOrbit = initialOrbit; model.current.resetTurntableRotation(); } else activate(value => value + 1); }}>
         <Box data-icon="inline-start" aria-hidden="true" /><span className={ready ? "hidden sm:inline" : undefined}>{ready ? text.reset : failed ? text.retry : activation ? text.loading : text.view}</span>
       </Button>
-      {ready && <Button variant="secondary" size="icon" aria-label={paused ? text.playScene : text.pauseScene} aria-pressed={paused} onClick={() => setPaused((value) => !value)}>{paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}</Button>}
+      {ready && <Button variant="secondary" size="icon" aria-label={paused ? text.playScene : text.pauseScene} aria-pressed={paused} onClick={() => { trackProductEvent('feature_action', { feature: 'scene', action: paused ? 'play' : 'pause' }); setPaused(value => !value); }}>{paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}</Button>}
       {ready && <Button variant="secondary" size="icon" aria-label={text.right} onClick={() => rotate(1)}><RotateCw aria-hidden="true" /></Button>}
     </div></figcaption>
     <p className="device-message" role="status" aria-live="polite" hidden={!failed && !textureError}>{failed ? text.failed : textureError}</p>

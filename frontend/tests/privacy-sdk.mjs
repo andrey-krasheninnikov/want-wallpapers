@@ -24,7 +24,7 @@ globalThis.fetch = async () => {
 const current = { analytics_storage: 'granted', ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted' };
 const app = initializeApp({ apiKey: 'test-setting', projectId: 'test-project', appId: '1:111:web:test', measurementId: 'G-TEST' });
 sdk.setConsent(current);
-const analytics = sdk.getAnalytics(app);
+const analytics = sdk.initializeAnalytics(app, { config: { send_page_view: false, page_location: 'https://wallpapers.want.foundation/', page_referrer: '' } });
 sdk.setAnalyticsCollectionEnabled(analytics, true);
 window['ga-disable-G-TEST'] = true;
 Object.assign(current, Object.fromEntries(Object.keys(current).map((key) => [key, 'denied'])));
@@ -40,6 +40,9 @@ const defaults = window.dataLayer.map((item) => Array.from(item)).find((item) =>
 assert.deepEqual(defaults[2], current);
 assert(Object.values(defaults[2]).every((value) => value === 'denied'));
 assert.equal(window['ga-disable-G-TEST'], true);
+const settings = window.dataLayer.map(item => Array.from(item)).find(item => item[0] === 'config' && item[1] === 'G-TEST');
+assert.equal(settings[2].send_page_view, false);
+assert.equal(settings[2].page_location, 'https://wallpapers.want.foundation/');
 console.log('Delayed Firebase initialization consent: passed');
 // The SDK keeps a config-retry timer alive after this isolated check has completed.
 process.exit(0);

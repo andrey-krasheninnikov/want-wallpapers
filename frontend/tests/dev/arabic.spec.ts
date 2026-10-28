@@ -138,11 +138,12 @@ test('RTL collections have finite boundaries and native keyboard and touch scrol
   const carousel = page.locator('[data-collection-carousel]'), track = carousel.getByRole('region');
   await track.scrollIntoViewIfNeeded();
   await expect.poll(() => track.evaluate(node => node.closest('astro-island')?.hasAttribute('ssr'))).toBe(false);
+  await expect(track).toHaveCSS('scrollbar-width', 'none');
   const previous = carousel.getByRole('button', { name: 'المجموعات السابقة', exact: true });
   const next = carousel.getByRole('button', { name: 'المجموعات التالية', exact: true });
   await expect(previous).toBeDisabled();
   for (let index = 1; index < collections.length; index++) await next.click();
-  await expect(next).toBeDisabled(); await expect(carousel.locator('output')).toHaveText('6 / 6');
+  await expect(next).toBeDisabled(); await expect(carousel.locator('output')).toHaveText(`${collections.length} / ${collections.length}`);
   for (let index = 1; index < collections.length; index++) await previous.click();
   await expect(previous).toBeDisabled(); await track.focus(); await page.keyboard.press('ArrowLeft');
   await expect.poll(() => track.evaluate(element => element.scrollLeft)).toBeLessThan(0);
@@ -153,9 +154,10 @@ test('RTL collections have finite boundaries and native keyboard and touch scrol
   await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await session.detach();
   await expect.poll(() => track.evaluate(element => element.scrollLeft)).toBeLessThan(0);
   const stories = page.locator('[data-story-carousel]'); await stories.scrollIntoViewIfNeeded();
+  await expect(stories.getByRole('region')).toHaveCSS('scrollbar-width', 'none');
   for (let index = 1; index < collections.length; index++) await stories.getByRole('button', { name: 'الحكايات التالية', exact: true }).click();
   await expect(stories.getByRole('button', { name: 'الحكايات التالية', exact: true })).toBeDisabled();
-  await expect(stories.locator('output')).toHaveText('6 / 6');
+  await expect(stories.locator('output')).toHaveText(`${collections.length} / ${collections.length}`);
 });
 for (const locale of ['ar', 'en'] as const) test('directional wallpaper navigation and comment boundaries: ' + locale, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

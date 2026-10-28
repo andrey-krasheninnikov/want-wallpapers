@@ -36,6 +36,8 @@ test-ui: test-db
 	bun run test:ui
 	bun run test:listing-ui
 	bun run test:advertising-ui
+	bun run test:download-video-ui
+	bun run test:analytics-ui
 fmt:
 	cargo fmt --all
 catalog-pull:

@@ -122,6 +122,7 @@ fn advertising_path(path: &str) -> bool {
         .unwrap_or(path);
     let parts: Vec<_> = path.trim_start_matches('/').split('/').collect();
     match parts.as_slice() {
+        [""] => true,
         [
             "collections" | "search" | "feedback" | "privacy" | "terms" | "cookies" | "license"
             | "contact",
@@ -196,8 +197,19 @@ fn content_security_policy(
     } else {
         ""
     };
+    let video = advertising && path.contains("/wallpapers/");
+    let video_tracking = if video {
+        " https://loyal-product.com"
+    } else {
+        ""
+    };
+    let video_media = if video {
+        " 'self' https://www.silent-basis.pro"
+    } else {
+        ""
+    };
     format!(
-        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}{provider_scripts}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}; media-src https://want-foundation.s3.twcstorage.ru; font-src 'self'; connect-src {connect}{captcha_connect}; frame-src {frames}{ad_frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        "default-src 'self'; script-src {scripts}{analytics}{captcha_scripts}{provider_scripts}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://want-foundation.s3.twcstorage.ru{analytics}{video_tracking}; media-src https://want-foundation.s3.twcstorage.ru{video_media}; font-src 'self'; connect-src {connect}{captcha_connect}{video_tracking}; frame-src {frames}{ad_frames}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     )
 }
 
@@ -232,6 +244,7 @@ mod tests {
     fn advertising_csp_is_limited_to_known_successful_public_documents() {
         for prefix in ["", "/ru", "/zh-cn", "/pt-br", "/ja", "/ar"] {
             for route in [
+                "/",
                 "/collections/",
                 "/collections/contours-of-silence/",
                 "/wallpapers/contours-of-silence-1/",
@@ -265,6 +278,9 @@ mod tests {
                             csp.contains("https://massivesalad.com")
                                 && csp.contains("https://phoroglopsu.com")
                         );
+                        let video = path.contains("/wallpapers/");
+                        assert_eq!(csp.contains("https://loyal-product.com"), video);
+                        assert_eq!(csp.contains("https://www.silent-basis.pro"), video);
                         assert!(
                             csp.contains("frame-ancestors 'none'")
                                 && csp.contains("object-src 'none'")
@@ -289,8 +305,6 @@ mod tests {
                 }
             }
             for route in [
-                "/",
-                "/index.html",
                 "/404/",
                 "/404.html",
                 "/ui-kit/",
@@ -309,6 +323,8 @@ mod tests {
                 assert!(
                     !csp.contains("massivesalad")
                         && !csp.contains("phoroglopsu")
+                        && !csp.contains("loyal-product")
+                        && !csp.contains("silent-basis")
                         && !csp.contains("unsafe-eval")
                         && !csp.contains("script-src-elem"),
                     "{path}"

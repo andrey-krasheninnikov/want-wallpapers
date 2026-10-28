@@ -1,0 +1,23 @@
+<script is:inline>
+  (() => {
+    if (document.documentElement.dataset.theme) return;
+    let light = !matchMedia('(prefers-color-scheme: dark)').matches;
+    try {
+      const saved = localStorage.getItem('want-theme');
+      if (saved === 'light' || saved === 'dark') light = saved === 'light';
+    } catch {}
+    document.documentElement.classList.toggle('dark', !light);
+    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', light ? '#F6F5F3' : '#141414');
+  })();
+</script>
+<script>
+  import { applyTheme, currentTheme, preferredTheme } from '../lib/theme';
+  import type { TransitionBeforeSwapEvent } from 'astro:transitions/client';
+
+  applyTheme(preferredTheme());
+  document.addEventListener('astro:before-swap', (event) => {
+    applyTheme(currentTheme(), (event as TransitionBeforeSwapEvent).newDocument);
+  });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme(preferredTheme()));
+</script>

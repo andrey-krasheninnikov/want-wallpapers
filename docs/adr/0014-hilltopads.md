@@ -4,11 +4,11 @@ Status: accepted for #136. Replaces the regional provider-selection and advertis
 
 ## Decision
 
-HilltopAds is the only advertising provider. The owner approved the supplied desktop/mobile MultiTag with one 300×250 banner and its standard popup behavior. The banner sits after the page content before the footer, with a localized advertising label. No video, download interstitial or replacement network is enabled.
+HilltopAds is the only advertising provider. The owner approved the supplied desktop/mobile MultiTag with one 300×250 banner and its standard popup behavior, then supplied two separate zone codes for additional banners. All public pages, including localized homes, compose advertising as labelled filled cards. Introductory copy, feedback contact, home benefits/FAQ, wallpaper comments and the footer provide the placement contexts. Responsive grids stack cards when the native creative would not fit alongside content. Video before PNG downloads follows [ADR 0018](0018-download-video.md). No replacement network is enabled.
 
-Advertising remains independent of analytics. EEA and unknown-country visitors require an explicit choice; saved refusals take precedence. Localized homes, administration, errors and development pages never start the tag. Downloads remain native links and do not wait for advertising.
+Advertising remains independent of analytics. EEA and unknown-country visitors require an explicit choice; saved refusals take precedence. Administration, errors and development pages never start the tag. Downloads remain native links and do not wait for advertising.
 
-The SDK owns document state and exposes no confirmed disposal contract. Once its first request starts, navigation loads a fresh document. Consent withdrawal and restoration from the back-forward cache also reload the document. The tag starts at most once per document, including after errors or resizing. Below the minimum width it does not start; a loaded banner is hidden when the viewport becomes too narrow.
+The SDK owns document state and exposes no confirmed disposal contract. Once its first request starts, navigation loads a fresh document. Consent withdrawal and restoration from the back-forward cache also reload the document. Each distinct zone starts at most once per document, including after errors or resizing. Below the minimum width no zones start; loaded banners are hidden when the viewport becomes too narrow. A failed zone does not block the others.
 
 ## Trade-offs
 

@@ -23,6 +23,7 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
     await expect(page.getByRole('button', { name: ui.acceptAll, exact: true })).toBeVisible();
     const actions = page.getByRole('region', { name: ui.cookieSettings, exact: true }).getByRole('button');
     await expect(actions).toHaveText([ui.cookieSettings, ui.essentialOnly, ui.acceptAll]);
+    let previousAdvertising = false;
     for (const [width, analytics, advertising] of [[320, false, true], [768, true, false], [1024, true, true], [1440, false, false]] as const) {
       await page.setViewportSize({ width, height: 900 });
       const banner = page.getByRole('region', { name: ui.cookieSettings, exact: true });
@@ -42,8 +43,11 @@ for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);
       if (locale === 'ru' && [320, 1440].includes(width)) await page.screenshot({ path: testInfo.outputPath(`cookie-dialog-${width}.png`) });
+      const reloaded = previousAdvertising && !advertising ? page.waitForEvent('load') : undefined;
       await dialog.getByRole('button', { name: text.save, exact: true }).click();
-      await expect(page.locator('[data-cookie-settings]')).toBeFocused();
+      if (reloaded) await reloaded;
+      else await expect(page.locator('[data-cookie-settings]')).toBeFocused();
+      previousAdvertising = advertising;
       await page.reload();
       await openSettings(page);
       await expect(page.getByRole('switch', { name: ui.analyticsLabel, exact: true })).toHaveAttribute('aria-checked', String(analytics));

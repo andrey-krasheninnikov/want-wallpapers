@@ -1,7 +1,8 @@
+import { trackProductEvent } from '@/lib/analytics';
 import { WallpaperNavigation } from './WallpaperNavigation';
 import React, { useEffect, useState } from 'react';
-import { Download, Monitor, Smartphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Monitor, Smartphone } from 'lucide-react';
+import { WallpaperDownload } from './WallpaperDownload';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWallpaperSocial, WallpaperRatings, WallpaperComments } from '@/components/SocialPanel';
@@ -13,8 +14,8 @@ import { localeDirection, type Locale } from '@/data/catalog';
 
 type Neighbor = { href: string; title: string } | null;
 
-export default function WallpaperView({ locale, id, description, variants, tags, navigation, children }: {
-  locale: Locale; id: string; description: string; children?: React.ReactNode;
+export default function WallpaperView({ locale, id, description, variants, tags, navigation, children, advertisement }: {
+  locale: Locale; id: string; description: string; children?: React.ReactNode; advertisement?: React.ReactNode;
   variants: Record<'desktop' | 'mobile', WallpaperVariant>; tags: { title: string; href: string }[];
   navigation: { previous: Neighbor; next: Neighbor; position: number | null; total: number };
 }) {
@@ -36,15 +37,17 @@ export default function WallpaperView({ locale, id, description, variants, tags,
   }, []);
   function changeVariant(value: string) {
     if (value !== 'desktop' && value !== 'mobile') return;
+    trackProductEvent('variant_change', { item_id: id, variant: value });
     setVariant(value);
     document.documentElement.dataset.wallpaperVariant = value;
     const url = new URL(window.location.href);
     url.searchParams.set('variant', value);
     window.history.replaceState(window.history.state, '', url);
   }
-  function navigate(value: 'previous' | 'next') {
+  function navigate(value: 'previous' | 'next', method: 'button' | 'keyboard' | 'swipe' = 'button') {
     const item = navigation[value];
     if (!item) return;
+    trackProductEvent('wallpaper_navigate', { direction: value, method });
     const href = wallpaperSlideHref(item.href, variant);
     void import('astro:transitions/client').then(({ navigate }) => navigate(href.split('#')[0], { info: { wallpaperSlide: true } }));
   }
@@ -55,7 +58,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       if (document.querySelector('[role="dialog"][data-state="open"]') || window.getSelection()?.toString()) return;
       if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="tab"], [role="radio"], [role="slider"], [role="combobox"], [role="listbox"], [role="menu"], [data-comment-carousel]')) return;
-      event.preventDefault(); navigate((event.key === 'ArrowLeft') === (locale === 'ar') ? 'next' : 'previous');
+      event.preventDefault(); navigate((event.key === 'ArrowLeft') === (locale === 'ar') ? 'next' : 'previous', 'keyboard');
     }
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
@@ -74,7 +77,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
           if (!start || start.id !== event.pointerId) return;
           const x = event.clientX - start.x, y = event.clientY - start.y;
           if (Math.abs(x) < 48 || Math.abs(x) < Math.abs(y) * 1.5) return;
-          navigate((x < 0) === (locale !== 'ar') ? 'next' : 'previous');
+          navigate((x < 0) === (locale !== 'ar') ? 'next' : 'previous', 'swipe');
         }}>
         {(['desktop', 'mobile'] as const).map((value) => <TabsContent key={value} value={value} forceMount data-variant={value} className="wallpaper-detail-variant"><img className="wallpaper-backdrop" src={variants[value].src} alt="" aria-hidden="true" draggable={false} /><img className="wallpaper-image" id={variant === value ? 'detail-image' : undefined} data-wallpaper-image={value} src={variants[value].src} width={variants[value].width} height={variants[value].height} alt={description} fetchPriority="high" draggable={false} /></TabsContent>)}
       </div>
@@ -88,7 +91,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
             <TabsTrigger value="mobile" className="wallpaper-variant-trigger"><Smartphone aria-hidden="true" />{ui.mobile}</TabsTrigger>
           </TabsList>
           <div className="grid gap-3">
-            <Button asChild size="lg" className="w-full"><a id="download-link" href={image.download} download={image.download.split('/').at(-1)} onClick={() => window.dispatchEvent(new CustomEvent('want:download', { detail: { wallpaper: id, variant } }))}><Download data-icon="inline-start" aria-hidden="true" />{ui.download} · {ui[variant]}</a></Button>
+            <WallpaperDownload locale={locale} wallpaper={id} variant={variant} href={image.download} />
           </div>
         </div>
         <WallpaperRatings locale={locale} social={social} />
@@ -99,7 +102,7 @@ export default function WallpaperView({ locale, id, description, variants, tags,
         <div className="flex flex-wrap gap-2">{tags.map((tag) => <Badge key={tag.href} asChild variant="outline" className="wallpaper-tag-link"><a href={tag.href}>{tag.title}</a></Badge>)}</div>
       </div>
     </aside>
-    <WallpaperComments locale={locale} social={social} />
+    <div className="wallpaper-discussion"><WallpaperComments locale={locale} social={social} />{advertisement}</div>
     {children}
   </div></Tabs>;
 }

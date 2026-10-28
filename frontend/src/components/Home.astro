@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Editorial from './Editorial.astro';
+import PublicAdvertisements from './PublicAdvertisements.astro';
 import { ActionLink } from './Gallery';
 import HomeMosaic from './HomeMosaic';
 import CollectionCarousel from './CollectionCarousel';
@@ -12,11 +13,12 @@ import { buildGalleryData } from '../lib/build-gallery-data';
 import { copy, localPath } from '../data/copy';
 import { interfaceCopy } from '../data/interface-copy';
 import { collectionCard } from '../lib/view-models';
+import { deviceModelSrc } from '../lib/device-wallpaper';
 type Props = { locale: Locale };
 const { locale } = Astro.props;
 const ui = copy[locale];
 const text = interfaceCopy[locale];
-const hero = wallpapers.find((item) => item.slug === 'contours-of-silence-11')!;
+const hero = wallpapers.find((item) => item.slug === 'neon-tide-5')!;
 const image = await previewData(hero, 'desktop');
 const { data: gallery, url: dataUrl } = await buildGalleryData(locale);
 const sceneItems = gallery.wallpapers;
@@ -25,17 +27,21 @@ const schema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Wa
   potentialAction: { '@type': 'SearchAction', target: new URL(localPath(locale, '/search/') + '?q={search_term_string}', Astro.site).href, 'query-input': 'required name=search_term_string' } };
 ---
 <Base locale={locale} title={ui.heroTitle} description={ui.heroText} path="/" image={image.src} schema={schema}>
-  <section class="shell hero">
+  <Fragment slot="head">
+    <link rel="preload" href={deviceModelSrc} as="fetch" crossorigin="anonymous" fetchpriority="high" />
+    <script>import '../lib/device-scene-startup';</script>
+  </Fragment>
+  <section class="shell hero" data-analytics-section="hero">
     <div class="hero-copy"><h1 class="display-title hero-title">{ui.heroTitle}</h1><p class="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">{ui.heroText}</p>
       <div class="hero-action"><ActionLink href="#collections" label={ui.explore} /></div>
       <div class="hero-meta"><span data-discovery-count="collections">{`${collections.length} ${ui.collections.toLocaleLowerCase(locale)}`}</span><span data-discovery-count="wallpapers">{`${wallpapers.length} ${ui.wallpapers}`}</span><span>{`${ui.desktop} + ${ui.mobile}`}</span></div>
     </div>
     <DeviceScene locale={locale} items={sceneItems.filter(item => item.id === hero.id)} initialId={hero.id} dataUrl={dataUrl} client:load />
   </section>
-  <section class="section-space" id="collections"><div class="shell section-heading"><div><h2 class="section-title">{ui.allCollections}</h2><p class="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">{ui.allCollectionsText}</p></div><ActionLink href={localPath(locale, '/collections/')} label={ui.explore} variant="ghost" /></div><CollectionCarousel items={collectionCards} locale={locale} client:load /></section>
+  <section class="section-space" id="collections" data-analytics-section="collections"><div class="shell section-heading"><div><h2 class="section-title">{ui.allCollections}</h2><p class="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">{ui.allCollectionsText}</p></div><ActionLink href={localPath(locale, '/collections/')} label={ui.explore} variant="ghost" /></div><CollectionCarousel items={collectionCards} locale={locale} client:load /></section>
   <HomeMosaic items={sceneItems.slice(0, 6)} dataUrl={dataUrl} locale={locale} client:visible />
-  <section class="shell section-space"><div class="grid gap-8 py-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16 lg:py-12"><h2 class="section-title max-w-lg">{text.benefitsTitle}</h2><ul class="benefit-list">{text.benefits.map(([title, description]) => <li><div><h3 class="text-lg font-semibold">{title}</h3><p class="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p></div></li>)}</ul></div></section>
-  <section class="shell section-space"><div class="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-16"><h2 class="section-title max-w-lg">{text.faqTitle}</h2><FAQ items={text.faq} client:load /></div></section>
+  <section class="shell section-space"><div class="grid gap-8 py-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16 lg:py-12"><div class="section-ad-heading"><h2 class="section-title max-w-lg">{text.benefitsTitle}</h2><PublicAdvertisements locale={locale} placement="top" /></div><ul class="benefit-list">{text.benefits.map(([title, description]) => <li><div><h3 class="text-lg font-semibold">{title}</h3><p class="mt-2 text-base leading-relaxed text-muted-foreground">{description}</p></div></li>)}</ul></div></section>
+  <section class="shell section-space"><div class="grid gap-8 lg:grid-cols-[1fr_1.5fr] lg:gap-16"><div class="section-ad-heading"><h2 class="section-title max-w-lg">{text.faqTitle}</h2><PublicAdvertisements locale={locale} placement="content" /></div><FAQ items={text.faq} client:load /></div></section>
   <section class="shell section-space"><div class="info-panel grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center"><div><h2 class="section-title max-w-2xl">{text.finalTitle}</h2><p class="mt-4 text-base leading-relaxed text-muted-foreground">{text.finalText}</p></div><div><ActionLink href={localPath(locale, '/search/')} label={ui.viewAll} /></div></div></section>
   <Editorial locale={locale} />
 </Base>

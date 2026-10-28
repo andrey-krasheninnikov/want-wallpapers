@@ -1,7 +1,7 @@
 import type { Preview } from '@/data/previews';
 import { randomWallpaperIndex } from './device-wallpaper';
 
-export type MosaicWallpaper = { id: string; desktop: Preview; mobile: Preview; title: string; description: string; href: string };
+export type MosaicWallpaper = { id: string; collection?: string; category?: string; desktop: Preview; mobile: Preview; title: string; description: string; href: string };
 export type MosaicTile = MosaicWallpaper & { variant: 'desktop' | 'mobile' };
 export type MosaicFrame = { tiles: MosaicTile[]; layout: number };
 

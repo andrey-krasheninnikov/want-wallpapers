@@ -4,13 +4,14 @@ import { designCopy } from '../../src/data/design-copy';
 import { copy, localPath } from '../../src/data/copy';
 import type { ModelViewerElement } from '@google/model-viewer';
 import type { Locale } from '../../src/data/catalog';
+import { deviceModelSrc } from '../../src/lib/device-wallpaper';
 
 async function expectTransparentScene(scene: Locator) {
   for (const layer of [scene, ...await scene.locator('.device-canvas, .device-poster, .device-model, model-viewer, .device-caption').all()]) {
     await expect(layer).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(layer).toHaveCSS('background-image', 'none');
   }
-  for (const button of await scene.getByRole('button').all()) {
+  for (const button of await scene.locator('.device-controls').getByRole('button').all()) {
     await expect(button).toHaveCSS('background-color', /^rgb\((?:37, 37, 37|28, 28, 28)\)$/);
     const bounds = (await button.boundingBox())!;
     expect(bounds.width).toBeGreaterThanOrEqual(44);
@@ -29,7 +30,7 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
-    page.on('request', (request) => { if (request.url().endsWith('.glb')) models.push(request.url()); });
+    page.on('request', (request) => { if (new URL(request.url()).pathname.endsWith('.glb')) models.push(request.url()); });
     await page.goto(localPath(locale));
     await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
     const scene = page.locator('.device-stage');
@@ -37,7 +38,9 @@ for (const locale of ['en', 'ru', 'zh-cn', 'pt-br'] as Locale[]) {
     const viewer = page.locator('model-viewer');
     await expect(viewer).toBeVisible();
     await expectTransparentScene(scene);
-    expect(models).toHaveLength(1);
+    // Routing disables caching, so preload and loader can each request this model.
+    expect([...new Set(models)]).toEqual([new URL(deviceModelSrc, page.url()).href]);
+    expect(models.length).toBeLessThanOrEqual(2);
     const screenTextures = await viewer.evaluate((element) => (element as ModelViewerElement).model?.materials
       .filter((material) => /wallpaper/i.test(material.name))
       .map((material) => material.pbrMetallicRoughness.baseColorTexture.texture !== null));
@@ -86,18 +89,19 @@ test('desktop scene respects pause, viewport and motion preferences', async ({ p
 });
 
 for (const width of [375, 1440]) {
-  test(`loading and failed 3D keep a transparent poster and support retry: ${width}`, async ({ page }, testInfo) => {
+  test(`loading 3D keeps its model surface and failures support poster retry: ${width}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
     let releaseModel!: () => void;
     const pendingModel = new Promise<void>((resolve) => { releaseModel = resolve; });
-    await page.route('**/models/devices.glb', async (route) => { await pendingModel; await route.abort(); });
+    await page.route('**/models/devices.glb?cover=*', async (route) => { await pendingModel; await route.abort(); });
     const scene = page.locator('.device-stage');
     try {
       await page.goto('/', { waitUntil: 'domcontentloaded' });
       await page.getByRole('button', { name: copy.en.essentialOnly, exact: true }).click();
       await expect(page.locator('model-viewer')).toHaveCount(1);
       await expect(scene).toHaveAttribute('data-scene-state', 'loading');
-      await expect(page.locator('.device-poster')).toBeVisible();
+      await expect(page.locator('.device-poster')).toBeHidden();
+      await expect(page.locator('model-viewer')).toBeVisible();
       await expect(page.getByRole('button', { name: designCopy.en.loading, exact: true })).toBeDisabled();
       await expectTransparentScene(scene);
       await scene.screenshot({ path: testInfo.outputPath(`scene-loading-${width}.png`) });
@@ -108,7 +112,7 @@ for (const width of [375, 1440]) {
     await expect(page.getByRole('link', { name: copy.en.explore, exact: true }).first()).toBeVisible();
     await expectTransparentScene(scene);
     await scene.screenshot({ path: testInfo.outputPath(`scene-failed-${width}.png`) });
-    await page.unroute('**/models/devices.glb');
+    await page.unroute('**/models/devices.glb?cover=*');
     await page.getByRole('button', { name: designCopy.en.retry, exact: true }).click();
     await expect(scene).toHaveAttribute('data-scene-state', 'ready', { timeout: 45000 });
     await expectTransparentScene(scene);
@@ -140,7 +144,7 @@ test('without JavaScript the home scene stays a useful poster without an endless
     await page.setViewportSize({ width: 320, height: 812 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator('.device-controls')).toBeHidden();
-    await expect(page.locator('model-viewer')).toHaveCount(0);
-    await expect(page.locator('.device-caption a')).toHaveAttribute('href', '/wallpapers/contours-of-silence-11/');
+    await expect(page.locator('model-viewer')).toBeHidden();
+    await expect(page.locator('.device-caption a')).toHaveAttribute('href', '/wallpapers/neon-tide-5/');
   } finally { await context.close(); }
 });

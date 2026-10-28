@@ -19,7 +19,7 @@ export type CollectionCardData = {
 
 export function WallpaperCard({ item, headingLevel = 3 }: { item: WallpaperCardData; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  return <article className="min-w-0" data-wallpaper-card={item.id}>
+  return <article className="min-w-0" data-wallpaper-card={item.id} data-ga={`${item.collection}/${item.category}`}>
     <Card className="group gallery-card">
       <a href={item.href} className="flex h-full flex-col rounded-xl">
         <div className="media-frame bg-background"><img src={item.image.src} width={item.image.width} height={item.image.height} alt={item.description} loading="lazy" className="gallery-image" /></div>

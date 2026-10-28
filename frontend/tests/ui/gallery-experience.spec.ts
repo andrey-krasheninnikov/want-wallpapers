@@ -51,7 +51,7 @@ test('collection pages paginate, stories disclose and project links remain disti
   await page.setViewportSize({ width: 1440, height: 900 }); await page.goto('/');
   const carousel = page.locator('[data-collection-carousel]');
   await carousel.getByRole('region', { name: designCopy.en.collections }).focus();
-  await expect(carousel.getByRole('region', { name: designCopy.en.collections })).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+  await expect(carousel.getByRole('region', { name: designCopy.en.collections })).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
   const pages = Math.ceil(collections.length / 3);
   await expect(carousel.locator('output')).toHaveText(`1 / ${pages}`);
   for (let number = 2; number <= pages; number++) {

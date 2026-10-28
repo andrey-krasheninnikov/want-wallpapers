@@ -16,6 +16,8 @@ export function validateGalleryData(value: unknown, locale: Locale): asserts val
   const prefix = locale === 'en' ? '/' : '/' + locale + '/';
   if (!object(value) || value.locale !== locale || !Array.isArray(value.wallpapers) || !object(value.stories) ||
     !value.wallpapers.every(item => object(item) && text(item.id) && text(item.title) && text(item.description) &&
+      (item.collection === undefined || (typeof item.collection === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.collection))) &&
+      (item.category === undefined || (typeof item.category === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.category))) &&
       text(item.href) && item.href.startsWith(prefix + 'wallpapers/') && preview(item.desktop) && preview(item.mobile)) ||
     new Set(value.wallpapers.map(item => item.id)).size !== value.wallpapers.length ||
     !Object.entries(value.stories).every(([slug, item]) => object(item) && text(item.title) &&

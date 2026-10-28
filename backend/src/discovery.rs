@@ -99,9 +99,18 @@ impl BuildCatalog {
             .count()
     }
     fn cover<'a>(&'a self, flags: &ListingFlags, collection: &Collection) -> Option<&'a Wallpaper> {
-        self.wallpapers.iter().find(|item| {
-            item.collection_id == collection.id && flags.wallpapers.get(&item.id) == Some(&true)
-        })
+        let preferred = match collection.slug.as_str() {
+            "contours-of-silence" => "contours-of-silence-11",
+            "woven-spectrum" => "woven-spectrum-4",
+            "neon-tide" => "neon-tide-7",
+            _ => "",
+        };
+        self.wallpapers
+            .iter()
+            .filter(|item| {
+                item.collection_id == collection.id && flags.wallpapers.get(&item.id) == Some(&true)
+            })
+            .min_by_key(|item| item.id != preferred)
     }
     fn gallery(&self, localized: &LocalizedBuild, flags: &ListingFlags) -> Value {
         let mut data = localized.gallery.clone();
@@ -176,7 +185,7 @@ impl BuildCatalog {
             .ok_or_else(ApiError::invalid)?;
         let selected = items
             .iter()
-            .find(|item| item["id"] == "contours-of-silence-11")
+            .find(|item| item["id"] == "neon-tide-5")
             .or_else(|| items.first());
         let version = hex::encode(Sha256::digest(
             serde_json::to_vec(flags).map_err(|_| ApiError::invalid())?,
@@ -624,6 +633,28 @@ mod tests {
                 .iter()
                 .map(|item| (item.id.clone(), true))
                 .collect(),
+        }
+    }
+    #[test]
+    fn preferred_collection_covers_fall_back_when_hidden() {
+        for (slug, preferred) in [
+            ("contours-of-silence", "contours-of-silence-11"),
+            ("woven-spectrum", "woven-spectrum-4"),
+            ("neon-tide", "neon-tide-7"),
+        ] {
+            let mut build = fixture();
+            build.collections[0].slug = slug.into();
+            let mut selected = build.wallpapers[0].clone();
+            selected.id = preferred.into();
+            build.wallpapers.push(selected);
+            let collection = &build.collections[0];
+            let mut flags = all(&build);
+            assert_eq!(build.cover(&flags, collection).unwrap().id, preferred);
+            flags.wallpapers.insert(preferred.into(), false);
+            assert_eq!(
+                build.cover(&flags, collection).unwrap().id,
+                build.wallpapers[0].id
+            );
         }
     }
     #[test]
