@@ -23,6 +23,8 @@ description: Выпускать Want Wallpapers с MacBook без GitHub Actions
 make release-local-check TAG=v<version> PROFILE=<full-or-fast>
 ```
 
+Remote release-ветку удалите сразу после подтверждённого merge в `main` по разделу 2 общей процедуры, до публикации тега и deployment. Продолжайте по сохранённому main SHA и тегу; при повторе не восстанавливайте удалённую ветку.
+
 После обычного merge в main и публикации immutable annotated tag подготовьте чистый checkout этого tag и выполните:
 
 ```sh
