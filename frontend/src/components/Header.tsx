@@ -31,7 +31,7 @@ export default function Header({ locale, path, logo }: { locale: Locale; path: s
           <NavigationMenuLink asChild active={link.active} className="min-h-11 justify-center px-4 text-sm"><a href={localPath(locale, link.href)} data-astro-reload={link.href === '/feedback/' ? '' : undefined} aria-current={link.active ? 'page' : undefined}>{link.title}</a></NavigationMenuLink>
         </NavigationMenuItem>)}</NavigationMenuList>
       </NavigationMenu>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <ThemeToggle locale={locale} />
         <Select value={locale} onValueChange={(value) => { trackProductEvent('feature_action', { feature: 'language', action: 'select', item_id: value }); window.location.href = localPath(value as Locale, path); }}>
           <SelectTrigger aria-label={text.language} className="language-trigger">

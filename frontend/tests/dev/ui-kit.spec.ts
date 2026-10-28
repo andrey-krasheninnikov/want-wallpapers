@@ -39,8 +39,8 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   const button = page.getByRole('button', { name: 'Save example', exact: true });
   await page.keyboard.press('Tab');
   await button.focus();
-  await expect(button).toHaveCSS('background-color', 'rgb(91, 79, 255)');
-  await expect(button).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+  await expect(button).toHaveCSS('background-color', 'rgb(89, 98, 240)');
+  await expect(button).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
   await expect(button).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(button).toHaveCSS('border-width', '0px');
   for (const label of ['Wallpaper title', 'Description', 'Invalid example']) {
@@ -56,4 +56,19 @@ for (const width of [320, 1440]) test(`UI-kit variants and interactions: ${width
   await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({ path: testInfo.outputPath(`ui-kit-${width}.png`), fullPage: true });
   expect(errors).toEqual([]);
+});
+
+test('the development kit shares the living sphere and pause control', async ({ page }) => {
+  expect((await page.goto('/ui-kit/'))?.status()).toBe(200);
+  const sphere = page.locator('.page-background > div');
+  await expect(sphere).toHaveCount(1);
+  const timing = await sphere.evaluate(element => ({ duration: parseFloat(getComputedStyle(element).animationDuration), height: element.parentElement!.clientHeight }));
+  expect(timing.duration).toBeCloseTo(Math.max(28, timing.height / 30));
+  for (const state of ['running', 'paused']) {
+    if (state === 'paused') await page.locator('[data-background-toggle]').click();
+    await expect.poll(() => sphere.evaluate((element, expected) => {
+      const states = element.getAnimations({ subtree: true }).map(animation => animation.playState);
+      return states.length >= 2 && states.every(value => value === expected);
+    }, state)).toBe(true);
+  }
 });

@@ -129,6 +129,7 @@ test('administration confirms listing writes and preserves state on version erro
   }
 });
 test('automatic collection covers use a listed wallpaper', async ({ page, request }) => {
+  await setListing(request, 'wallpapers', 'contours-of-silence-11', false);
   await setListing(request, 'wallpapers', 'contours-of-silence-1', false);
   await page.goto('/collections/contours-of-silence/');
   await expect(page.locator('[data-direct-collection-cover] img')).toHaveAttribute('src', /contours-of-silence-2-desktop/);

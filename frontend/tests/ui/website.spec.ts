@@ -295,7 +295,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await page.getByRole('button', { name: copy.ru.report, exact: true }).click();
   await expect(page.getByText(copy.ru.reportThanks)).toBeVisible();
   await page.goto('/ru/feedback/');
-  await page.getByLabel(copy.ru.topic).fill('Цветовые коллекции');
+  await page.getByLabel(copy.ru.topic, { exact: true }).fill('Цветовые коллекции');
   await page.getByLabel(copy.ru.message).fill('Хочется больше тёплых оттенков.');
   await page.getByLabel(copy.ru.emailOptional).fill('visitor@example.test');
   await page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true }).click();
@@ -306,7 +306,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
 test('a failed feedback request preserves the message and permits retry', async ({ page }) => {
   await page.goto('/ru/feedback/');
   await dismissCookies(page, 'ru');
-  await page.getByLabel(copy.ru.topic).fill('Деталь');
+  await page.getByLabel(copy.ru.topic, { exact: true }).fill('Деталь');
   await page.getByLabel(copy.ru.message).fill('Сохраните это сообщение при ошибке.');
   await page.route('**/api/v1/feedback', (route) => route.abort());
   await page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true }).click();
@@ -447,12 +447,12 @@ test('feedback waits for hydration before accepting input', async ({ page }) => 
   await page.route('**/_astro/*.js', async (route) => { await hydration; await route.continue(); });
   try {
     await page.goto('/ru/feedback/', { waitUntil: 'commit' });
-    await expect(page.getByLabel(copy.ru.topic)).toBeDisabled();
+    await expect(page.getByLabel(copy.ru.topic, { exact: true })).toBeDisabled();
     await expect(page.getByLabel(copy.ru.message)).toBeDisabled();
     await expect(page.getByLabel(copy.ru.emailOptional)).toBeDisabled();
     await expect(page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true })).toBeDisabled();
   } finally { resume(); }
-  await page.getByLabel(copy.ru.topic).fill('Готовность формы');
+  await page.getByLabel(copy.ru.topic, { exact: true }).fill('Готовность формы');
   await page.getByLabel(copy.ru.message).fill('Сообщение после подключения обработчиков.');
   await page.getByRole('button', { name: copy.ru.feedbackSubmit, exact: true }).click();
   await expect(page.getByText(copy.ru.feedbackThanks)).toBeVisible();
