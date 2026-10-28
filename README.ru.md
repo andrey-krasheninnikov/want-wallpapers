@@ -71,7 +71,7 @@ HilltopAds показывает баннеры и всплывающие окн�
 
 ## 🔧 Форк и локальный запуск
 
-Frontend: Astro, React и shadcn/ui. Backend: Rust (Axum, Tokio, SQLx) и PostgreSQL 18. Firebase нужен только для необязательной Analytics.
+Frontend: Astro, React и общий [UI-kit Want Desyst](https://github.com/andrey-krasheninnikov/want-desyst). Backend: Rust (Axum, Tokio, SQLx) и PostgreSQL 18. Firebase нужен только для необязательной Analytics.
 
 Создайте форк на GitHub, замените `YOUR-USERNAME` своим именем и выполните:
 

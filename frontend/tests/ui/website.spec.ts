@@ -262,9 +262,9 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await page.getByRole('textbox', { name: interfaceCopy.ru.commentTitle, exact: true }).fill('Мне нравится этот горизонт.');
   await page.getByRole('button', { name: copy.ru.commentSubmit }).click();
   await expect(page.getByText('Мне нравится этот горизонт.', { exact: true })).toBeVisible();
-  await expect(page.locator('[data-comment] .comment-text')).toHaveCSS('font-size', '16px');
+  await expect(page.locator('[data-comment-carousel] article .comment-text')).toHaveCSS('font-size', '16px');
   await page.setViewportSize({ width: 320, height: 900 });
-  const commentFits = await page.locator('[data-comment]').evaluate((card) => {
+  const commentFits = await page.locator('[data-comment-carousel] article').evaluate((card) => {
     const bounds = card.getBoundingClientRect();
     return [...card.querySelectorAll('button, [data-slot="badge"]')].every((child) => {
       const box = child.getBoundingClientRect();
@@ -272,7 +272,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
     });
   });
   expect(commentFits).toBe(true);
-  await page.locator('[data-comment]').screenshot({ path: testInfo.outputPath('own-comment-mobile.png') });
+  await page.locator('[data-comment-carousel] article').screenshot({ path: testInfo.outputPath('own-comment-mobile.png') });
   await page.locator('[data-social-panel]').screenshot({ path: testInfo.outputPath('comments-populated-mobile.png') });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -289,7 +289,7 @@ test('ratings, comments, deletion, reporting and feedback use the Rust server', 
   await database`INSERT INTO comments(id,wallpaper_id,visitor_id,text) VALUES(${otherComment},${wallpaper},${visitor},${`Другая работа с цветом.\n${'Оченьдлинноесловобезпробелов'.repeat(20)}`})`;
   await page.reload();
   await page.setViewportSize({ width: 320, height: 900 });
-  await expect(page.locator(`[data-comment="${otherComment}"]`)).toBeVisible();
+  await expect(page.locator('[data-comment-carousel] article').filter({ hasText: 'Другая работа с цветом.' })).toBeVisible();
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze()).violations).toEqual([]);

@@ -1,5 +1,5 @@
 import { Pause, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@want-foundation/desyst-react';
 import type { Preview } from '@/data/previews';
 import type { Locale } from '@/data/catalog';
 import { interfaceCopy } from '@/data/interface-copy';

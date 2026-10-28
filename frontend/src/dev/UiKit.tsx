@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { Download, Info } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@/components/ui/navigation-menu';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@want-foundation/desyst-react';
+import { Alert, AlertDescription, AlertTitle } from '@want-foundation/desyst-react';
+import { Badge } from '@want-foundation/desyst-react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@want-foundation/desyst-react';
+import { Button } from '@want-foundation/desyst-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@want-foundation/desyst-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@want-foundation/desyst-react';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@want-foundation/desyst-react';
+import { Input } from '@want-foundation/desyst-react';
+import { Label } from '@want-foundation/desyst-react';
+import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@want-foundation/desyst-react';
+import { RadioGroup, RadioGroupItem } from '@want-foundation/desyst-react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@want-foundation/desyst-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@want-foundation/desyst-react';
+import { Skeleton } from '@want-foundation/desyst-react';
+import { Switch } from '@want-foundation/desyst-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@want-foundation/desyst-react';
+import { Textarea } from '@want-foundation/desyst-react';
 import { WallpaperCard, type WallpaperCardData } from '@/components/Gallery';
 import OwnerContact from '@/components/OwnerContact';
 import CommentFeed from '@/components/CommentFeed';
@@ -66,9 +66,9 @@ export default function UiKit({ item }: { item: WallpaperCardData }) {
     <Section title="Contact card"><OwnerContact locale="en" /></Section>
     <Section title="Comment carousel"><CommentFeed locale="en" ownUid="kit-own" busy={false} reported={reported} onAction={(item) => setReported((current) => [...current, item.id])} comments={[{ id: 'kit-comment', uid: 'kit-guest', text: 'A demonstration comment for the component catalog.', createdAt: Date.UTC(2026, 9, 13, 12) }]} /></Section>
     <Section title="Liquid glass tokens"><div className="glass-surface rounded-panel p-6"><p className="text-base">Neutral glass for navigation, panels and dialogs.</p><p className="mt-3 text-sm text-muted-foreground">68% surface tint · 20 px blur · 120% saturation. Reading surfaces stay opaque.</p></div></Section>
-    <Section title="Usage"><pre className="whitespace-pre-wrap break-words rounded-md bg-secondary p-4 text-sm leading-relaxed">{`import { Button } from '@/components/ui/button';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+    <Section title="Usage"><pre className="whitespace-pre-wrap break-words rounded-md bg-secondary p-4 text-sm leading-relaxed">{`import { Button } from '@want-foundation/desyst-react';
+import { Field, FieldLabel } from '@want-foundation/desyst-react';
+import { Input } from '@want-foundation/desyst-react';
 
 <Button variant="secondary">View wallpaper</Button>
 <Field>

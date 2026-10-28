@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@want-foundation/desyst-react';
 import { FeedbackFields, useFeedbackForm } from './FeedbackForm';
 import { copy } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';

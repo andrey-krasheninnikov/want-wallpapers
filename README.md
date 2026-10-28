@@ -71,7 +71,7 @@ There is no paid tier, shop or donation link. The ideas below are possible futur
 
 ## 🔧 Fork and run locally
 
-Astro, React and shadcn/ui on the frontend; Rust (Axum, Tokio, SQLx) and PostgreSQL 18 on the backend. Firebase serves optional Analytics only.
+Astro, React and the shared [Want Desyst UI kit](https://github.com/andrey-krasheninnikov/want-desyst) on the frontend; Rust (Axum, Tokio, SQLx) and PostgreSQL 18 on the backend. Firebase serves optional Analytics only.
 
 Fork on GitHub, replace `YOUR-USERNAME`, then:
 
