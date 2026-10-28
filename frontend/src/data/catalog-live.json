@@ -1,6 +1,69 @@
 {
   "collections": [
     {
+      "id": "0010-midnight-bloom",
+      "slug": "midnight-bloom",
+      "count": 10,
+      "title": {
+        "ar": "إزهار منتصف الليل",
+        "en": "Midnight Bloom",
+        "ja": "真夜中の開花",
+        "pt-br": "Florescer à meia-noite",
+        "ru": "Полночное цветение",
+        "zh-cn": "午夜绽放"
+      },
+      "description": {
+        "ar": "عشرة مشاهد بكسلية بسيطة لبتلات وأزهار وقطرات على خلفية سوداء. تتخذ الأشكال البنفسجية والزرقاء والسماوية تكوينات أفقية وعمودية مستقلة.",
+        "en": "Ten minimal pixel scenes of petals, flowers and droplets on black. Violet, blue and cyan shapes have separate landscape and portrait compositions.",
+        "ja": "黒い背景に花びら、花、水滴を描く十の小さなピクセル画。紫、青、水色の形を、それぞれ横長と縦長に組み直しています。",
+        "pt-br": "Dez cenas minimalistas em pixels com pétalas, flores e gotas sobre preto. Formas violetas, azuis e ciano compõem versões horizontais e verticais distintas.",
+        "ru": "Десять минималистичных пиксельных сцен с лепестками, цветами и каплями на чёрном фоне. Фиолетовые, синие и бирюзовые формы имеют отдельные горизонтальные и вертикальные композиции.",
+        "zh-cn": "十幅以黑色为背景的简约像素小景，描绘花瓣、花朵和水滴。紫色、蓝色与青色的形态分别组成横向和纵向画面。"
+      }
+    },
+    {
+      "id": "0009-tiny-impossibilities",
+      "slug": "tiny-impossibilities",
+      "count": 6,
+      "title": {
+        "ar": "مستحيلات صغيرة",
+        "en": "Tiny Impossibilities",
+        "ja": "小さなありえないこと",
+        "pt-br": "Pequenas impossibilidades",
+        "ru": "Маленькие невозможности",
+        "zh-cn": "小小的不可能"
+      },
+      "description": {
+        "ar": "ستة مشاهد بكسلية سريالية صغيرة بالأخضر الليموني والنيلي والأسود: شمس في علبة وظل تنين وقهوة تصعد إلى الأعلى، بتكوينين مستقلين للكمبيوتر والهاتف.",
+        "en": "Six small surreal pixel scenes in lime, indigo and black: a pocket sun, a dragon shadow and coffee flowing upward. Separate desktop and phone compositions.",
+        "ja": "ライム色、藍色、黒で描く六つの小さな超現実的なピクセル画。箱の中の太陽、竜の影、上へ流れるコーヒーに、横長と縦長の構図を用意しました。",
+        "pt-br": "Seis pequenas cenas surreais em pixels, em verde-lima, índigo e preto: um sol de bolso, uma sombra de dragão e café que sobe. Composições próprias para computador e celular.",
+        "ru": "Шесть небольших сюрреалистичных пиксельных сцен в салатовом, индиго и чёрном: карманное солнце, тень дракона и кофе, текущий вверх. Отдельные композиции для компьютера и телефона.",
+        "zh-cn": "六幅以青柠色、靛蓝与黑色构成的超现实像素小景：口袋里的太阳、龙的影子和向上流动的咖啡，分别提供电脑与手机构图。"
+      }
+    },
+    {
+      "id": "0008-trick-or-pixel",
+      "slug": "trick-or-pixel",
+      "count": 10,
+      "title": {
+        "ar": "حلوى أم بكسل؟",
+        "en": "Trick or Pixel?",
+        "ja": "お菓子かピクセルか？",
+        "pt-br": "Doces ou pixels?",
+        "ru": "Сладость или пиксель?",
+        "zh-cn": "不给像素就捣蛋？"
+      },
+      "description": {
+        "ar": "عشرة مشاهد لليلة الهالوين مع أشباح وساحرات وأضواء كهرمانية: خمسة مشاهد مفصلة وخمسة مشاهد بكسلية بسيطة، لكل منها نسخة للكمبيوتر والهاتف.",
+        "en": "Ten Halloween scenes with ghosts, witches and amber lights: five detailed compositions and five minimal pixel scenes, each for desktop and phone.",
+        "ja": "幽霊、魔女、琥珀色の灯りを描くハロウィーンの十景。細やかな五つの風景と簡素な五つのピクセル画に、それぞれ横長と縦長の構図があります。",
+        "pt-br": "Dez cenas de Halloween com fantasmas, bruxas e luzes âmbar: cinco composições detalhadas e cinco cenas minimalistas em pixels, para computador e celular.",
+        "ru": "Десять хэллоуинских сцен с призраками, ведьмами и янтарными огнями: пять подробных композиций и пять лаконичных пиксельных сцен для компьютера и телефона.",
+        "zh-cn": "十幅以幽灵、女巫和琥珀色灯光为主题的万圣夜画面：五幅细致场景与五幅简约像素画，各有电脑和手机构图。"
+      }
+    },
+    {
       "id": "0007-organic-resonance",
       "slug": "organic-resonance",
       "count": 5,
@@ -1722,6 +1785,811 @@
         "ru": "Фиолетовые и лаймовые листья перекрываются как рваные печатные листы с металлическими прожилками.",
         "zh-cn": "紫色与酸橙色叶片像撕裂的印刷纸张一样重叠，带有金属叶脉与磨损边缘。"
       }
+    },
+    {
+      "id": "trick-or-pixel-1",
+      "slug": "trick-or-pixel-1",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night",
+        "portal",
+        "light"
+      ],
+      "title": {
+        "ar": "شبح في البوابة",
+        "en": "Ghost in the Portal",
+        "ja": "門から現れる幽霊",
+        "pt-br": "Fantasma no portal",
+        "ru": "Призрак в портале",
+        "zh-cn": "传送门中的幽灵"
+      },
+      "description": {
+        "ar": "يخرج شبح أبيض من قوس مضيء في مقبرة بنفسجية، وينثر بكسلات زرقاء فوق ممر متوهج.",
+        "en": "A white ghost emerges from a glowing arch in a violet graveyard, shedding blue pixels above a luminous path.",
+        "ja": "紫色の墓地に光るアーチから白い幽霊が現れ、輝く小道の上に青いピクセルを散らします。",
+        "pt-br": "Um fantasma branco sai de um arco luminoso num cemitério violeta, soltando pixels azuis sobre o caminho iluminado.",
+        "ru": "Белый призрак выходит из сияющей арки на фиолетовом кладбище, рассыпая голубые пиксели над светящейся дорожкой.",
+        "zh-cn": "白色幽灵从紫色墓园的发光拱门中飘出，蓝色像素散落在明亮的小径上方。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-2",
+      "slug": "trick-or-pixel-2",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 2,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night",
+        "city",
+        "motion"
+      ],
+      "title": {
+        "ar": "أثر الساحرة",
+        "en": "Witch Trail",
+        "ja": "魔女の軌跡",
+        "pt-br": "Rastro de bruxa",
+        "ru": "Ведьмин след",
+        "zh-cn": "女巫的轨迹"
+      },
+      "description": {
+        "ar": "تطير ساحرة فوق أسطح مائلة أمام قمر كهرماني، وتترك شررًا مربعًا وخفافيش بين سحب بنفسجية.",
+        "en": "A witch flies over crooked roofs against an amber moon, trailing square sparks and bats through purple clouds.",
+        "ja": "琥珀色の月を背に魔女が曲がった屋根の上を飛び、紫の雲に四角い火花とコウモリを残します。",
+        "pt-br": "Uma bruxa voa sobre telhados tortos diante da lua âmbar, deixando faíscas quadradas e morcegos nas nuvens roxas.",
+        "ru": "Ведьма летит над кривыми крышами на фоне янтарной луны, оставляя квадратные искры и летучих мышей среди фиолетовых облаков.",
+        "zh-cn": "女巫掠过歪斜的屋顶，身后是琥珀色月亮，方形火花与蝙蝠穿过紫色云层。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-3",
+      "slug": "trick-or-pixel-3",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 3,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night",
+        "city",
+        "journey"
+      ],
+      "title": {
+        "ar": "القطار الليلي",
+        "en": "Night Express",
+        "ja": "夜の急行",
+        "pt-br": "Expresso noturno",
+        "ru": "Ночной экспресс",
+        "zh-cn": "夜间快车"
+      },
+      "description": {
+        "ar": "يعبر ترام قديم جسرًا فوق بلدة ضبابية، وتتبع نوافذه الكهرمانية سكة تتشكل من بكسلات مضيئة.",
+        "en": "An old tram crosses a viaduct above a misty town, its amber windows following rails assembled from glowing pixels.",
+        "ja": "霧の街の上で古い路面電車が高架橋を渡り、琥珀色の窓が光るピクセルの線路をたどります。",
+        "pt-br": "Um bonde antigo cruza um viaduto sobre a cidade enevoada, com janelas âmbar seguindo trilhos de pixels luminosos.",
+        "ru": "Старинный трамвай пересекает виадук над туманным городом. Янтарные окна движутся вдоль пути из светящихся пикселей.",
+        "zh-cn": "老式电车驶过雾城上方的高架桥，琥珀色车窗沿着发光像素组成的轨道前行。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-4",
+      "slug": "trick-or-pixel-4",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 4,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night",
+        "light"
+      ],
+      "title": {
+        "ar": "أرشيف التعويذات المنسية",
+        "en": "Archive of Forgotten Spells",
+        "ja": "忘れられた呪文の書庫",
+        "pt-br": "Arquivo de feitiços esquecidos",
+        "ru": "Архив забытых заклинаний",
+        "zh-cn": "遗忘咒语档案馆"
+      },
+      "description": {
+        "ar": "يضيء كتاب مفتوح مكتبة قوطية عالية، وتتصاعد من صفحاته مربعات كهرمانية تتحول إلى خفافيش.",
+        "en": "An open book lights a tall Gothic library, releasing square amber fragments that become bats above the pages.",
+        "ja": "開いた本が高いゴシック図書館を照らし、ページから浮かぶ琥珀色の四角がコウモリに変わります。",
+        "pt-br": "Um livro aberto ilumina uma biblioteca gótica alta e solta fragmentos quadrados âmbar que viram morcegos sobre as páginas.",
+        "ru": "Раскрытая книга освещает высокую готическую библиотеку. Янтарные квадраты поднимаются со страниц и превращаются в летучих мышей.",
+        "zh-cn": "一本展开的书照亮高大的哥特式图书馆，琥珀色方块从书页升起，化为蝙蝠。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-5",
+      "slug": "trick-or-pixel-5",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 5,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night",
+        "water",
+        "light"
+      ],
+      "title": {
+        "ar": "ملاح الأضواء الصغيرة",
+        "en": "Ferryman of Little Lights",
+        "ja": "小さな灯りの渡し守",
+        "pt-br": "Barqueiro das pequenas luzes",
+        "ru": "Перевозчик огоньков",
+        "zh-cn": "微光摆渡人"
+      },
+      "description": {
+        "ar": "يقود ملاح مقنع قاربًا بثلاثة فوانيس كهرمانية عبر قناة مظلمة، حيث تتفتت الانعكاسات الزرقاء والبرتقالية إلى بكسلات.",
+        "en": "A hooded ferryman guides a boat with three amber lanterns through a dark canal, where blue and orange reflections break into pixels.",
+        "ja": "フードの渡し守が琥珀色の灯りを三つ下げた舟を暗い運河へ進め、青と橙の反射がピクセルに砕けます。",
+        "pt-br": "Um barqueiro encapuzado conduz um barco com três lanternas âmbar por um canal escuro, onde reflexos azuis e laranja se quebram em pixels.",
+        "ru": "Перевозчик в капюшоне ведёт лодку с тремя янтарными фонарями по тёмному каналу. Голубые и оранжевые отражения распадаются на пиксели.",
+        "zh-cn": "戴兜帽的摆渡人驾着挂有三盏琥珀色灯笼的小船穿过暗渠，蓝色与橙色倒影碎成像素。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-6",
+      "slug": "trick-or-pixel-6",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 6,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night",
+        "journey"
+      ],
+      "title": {
+        "ar": "القطار الليلي: نسخة بكسلية",
+        "en": "Night Express: Pixel Edition",
+        "ja": "夜の急行：ピクセル版",
+        "pt-br": "Expresso noturno: versão em pixels",
+        "ru": "Ночной экспресс: пиксельная версия",
+        "zh-cn": "夜间快车：像素版"
+      },
+      "description": {
+        "ar": "يحمل ترام بكسلي بنفسجي صغير شبحين، وتظهر نوافذه الكهرمانية وسكته المنقطة القصيرة على خلفية سوداء.",
+        "en": "A small violet pixel tram carries two ghosts, with amber windows and a short dotted track on black.",
+        "ja": "黒い背景に、小さな紫の電車と二人の幽霊。琥珀色の窓と点状の短い線路が浮かびます。",
+        "pt-br": "Um pequeno bonde violeta em pixels leva dois fantasmas, com janelas âmbar e um curto trilho pontilhado sobre preto.",
+        "ru": "Небольшой фиолетовый пиксельный трамвай везёт двух призраков. Янтарные окна и короткий пунктир пути выделяются на чёрном фоне.",
+        "zh-cn": "一辆紫色像素小电车载着两个幽灵，琥珀色车窗和短短的点状轨道映在黑色背景上。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-7",
+      "slug": "trick-or-pixel-7",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 7,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "light"
+      ],
+      "title": {
+        "ar": "أرشيف التعويذات المنسية: نسخة بكسلية",
+        "en": "Archive of Forgotten Spells: Pixel Edition",
+        "ja": "忘れられた呪文の書庫：ピクセル版",
+        "pt-br": "Arquivo de feitiços esquecidos: versão em pixels",
+        "ru": "Архив забытых заклинаний: пиксельная версия",
+        "zh-cn": "遗忘咒语档案馆：像素版"
+      },
+      "description": {
+        "ar": "يطفو كتاب بنفسجي بصفحات فاتحة أسفل خفاش بكسلي، وتربط بينهما ثلاثة مربعات كهرمانية في فضاء أسود.",
+        "en": "A violet book with pale pages floats beneath a pixel bat, linked by three amber squares in black space.",
+        "ja": "淡いページの紫の本とピクセルのコウモリが、黒い空間で三つの琥珀色の四角につながれています。",
+        "pt-br": "Um livro violeta de páginas claras flutua sob um morcego em pixels, ligado por três quadrados âmbar no espaço preto.",
+        "ru": "Фиолетовая книга со светлыми страницами парит под пиксельной летучей мышью. Три янтарных квадрата связывают их в чёрном пространстве.",
+        "zh-cn": "紫色封皮、浅色书页的书悬在像素蝙蝠下方，三块琥珀色方块在黑色空间中连接二者。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-8",
+      "slug": "trick-or-pixel-8",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 8,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "water",
+        "light"
+      ],
+      "title": {
+        "ar": "ملاح الأضواء الصغيرة: نسخة بكسلية",
+        "en": "Ferryman of Little Lights: Pixel Edition",
+        "ja": "小さな灯りの渡し守：ピクセル版",
+        "pt-br": "Barqueiro das pequenas luzes: versão em pixels",
+        "ru": "Перевозчик огоньков: пиксельная версия",
+        "zh-cn": "微光摆渡人：像素版"
+      },
+      "description": {
+        "ar": "يحمل قارب بكسلي بنفسجي وملاحه المقنع ثلاثة فوانيس كهرمانية فوق خطوط ماء قصيرة زرقاء وبرتقالية.",
+        "en": "A violet pixel boat and hooded ferryman carry three amber lanterns above short blue and orange water marks.",
+        "ja": "紫のピクセルの舟と渡し守が三つの琥珀色の灯りを運び、下には青と橙の短い水面の線が並びます。",
+        "pt-br": "Um barco violeta em pixels e seu barqueiro encapuzado levam três lanternas âmbar sobre pequenos traços de água azuis e laranja.",
+        "ru": "Фиолетовая пиксельная лодка с перевозчиком несёт три янтарных фонаря над короткими голубыми и оранжевыми штрихами воды.",
+        "zh-cn": "紫色像素小船和戴兜帽的摆渡人带着三盏琥珀色灯笼，下方是蓝色与橙色的短短水纹。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-9",
+      "slug": "trick-or-pixel-9",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 9,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "motion",
+        "night"
+      ],
+      "title": {
+        "ar": "أثر الساحرة: نسخة بكسلية",
+        "en": "Witch Trail: Pixel Edition",
+        "ja": "魔女の軌跡：ピクセル版",
+        "pt-br": "Rastro de bruxa: versão em pixels",
+        "ru": "Ведьмин след: пиксельная версия",
+        "zh-cn": "女巫的轨迹：像素版"
+      },
+      "description": {
+        "ar": "تطير ساحرة بنفسجية ذات حواف متدرجة على مكنسة في فضاء أسود، وخلفها شرر كهرماني وخفاش صغير.",
+        "en": "A stepped violet witch rides a broom across black space, followed by amber sparks and a tiny bat.",
+        "ja": "階段状の紫の魔女が黒い空間をほうきで飛び、琥珀色の火花と小さなコウモリが続きます。",
+        "pt-br": "Uma bruxa violeta de contorno escalonado voa de vassoura no espaço preto, seguida por faíscas âmbar e um pequeno morcego.",
+        "ru": "Ступенчатый фиолетовый силуэт ведьмы летит на метле в чёрном пространстве, оставляя янтарные искры и маленькую летучую мышь.",
+        "zh-cn": "阶梯状紫色女巫骑着扫帚飞过黑色空间，身后跟着琥珀色火花与一只小蝙蝠。"
+      }
+    },
+    {
+      "id": "trick-or-pixel-10",
+      "slug": "trick-or-pixel-10",
+      "collection": "trick-or-pixel",
+      "collectionId": "0008-trick-or-pixel",
+      "s3Folder": "0008-trick-or-pixel",
+      "fileStem": "trick-or-pixel",
+      "number": 10,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "night"
+      ],
+      "title": {
+        "ar": "مصفوفة العنكبوت: نسخة بكسلية",
+        "en": "Spider Matrix: Pixel Edition",
+        "ja": "クモのマトリックス：ピクセル版",
+        "pt-br": "Matriz de aranha: versão em pixels",
+        "ru": "Паучья матрица: пиксельная версия",
+        "zh-cn": "蜘蛛矩阵：像素版"
+      },
+      "description": {
+        "ar": "يتدلى عنكبوت بكسلي بجسم يقطينة برتقالية مبتسمة من خيط بنفسجي بعقدتين كهرمانيتين على خلفية سوداء.",
+        "en": "A pixel spider with a smiling orange pumpkin body hangs from a violet thread with two amber knots on black.",
+        "ja": "笑う橙のカボチャを胴体にしたピクセルのクモが、黒い背景で琥珀色の節が二つある紫の糸から下がります。",
+        "pt-br": "Uma aranha em pixels com corpo de abóbora laranja sorridente pende de um fio violeta com dois nós âmbar sobre preto.",
+        "ru": "Пиксельный паук с улыбающимся оранжевым брюшком-тыквой висит на фиолетовой нити с двумя янтарными узлами на чёрном фоне.",
+        "zh-cn": "像素蜘蛛长着微笑的橙色南瓜身体，悬在带有两个琥珀色结点的紫线上，背景为黑色。"
+      }
+    },
+    {
+      "id": "tiny-impossibilities-1",
+      "slug": "tiny-impossibilities-1",
+      "collection": "tiny-impossibilities",
+      "collectionId": "0009-tiny-impossibilities",
+      "s3Folder": "0009-tiny-impossibilities",
+      "fileStem": "tiny-impossibilities",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "sun",
+        "light"
+      ],
+      "title": {
+        "ar": "شروق في الجيب",
+        "en": "Pocket Sunrise",
+        "ja": "ポケットの夜明け",
+        "pt-br": "Amanhecer de bolso",
+        "ru": "Карманный рассвет",
+        "zh-cn": "口袋日出"
+      },
+      "description": {
+        "ar": "تطل شمس خضراء ليمونية من درج علبة ثقاب نيلية، مرسومة ببكسلات كبيرة على الأسود.",
+        "en": "A lime sun peeks from an indigo matchbox drawer, drawn in large pixels against black.",
+        "ja": "黒い背景に大きなピクセルで描かれた藍色のマッチ箱から、ライム色の太陽がのぞきます。",
+        "pt-br": "Um sol verde-lima aparece na gaveta de uma caixa de fósforos índigo, feita de pixels grandes sobre preto.",
+        "ru": "Салатовое солнце выглядывает из лотка индигового спичечного коробка, собранного из крупных пикселей на чёрном фоне.",
+        "zh-cn": "青柠色太阳从靛蓝火柴盒的抽屉中露出，粗大的像素映在黑色背景上。"
+      }
+    },
+    {
+      "id": "tiny-impossibilities-2",
+      "slug": "tiny-impossibilities-2",
+      "collection": "tiny-impossibilities",
+      "collectionId": "0009-tiny-impossibilities",
+      "s3Folder": "0009-tiny-impossibilities",
+      "fileStem": "tiny-impossibilities",
+      "number": 2,
+      "category": "fantasy",
+      "tags": [
+        "colour",
+        "blue"
+      ],
+      "title": {
+        "ar": "ألوان على الحبل",
+        "en": "Color on the Line",
+        "ja": "色を干す",
+        "pt-br": "Cor no varal",
+        "ru": "Цвет на просушке",
+        "zh-cn": "晾晒色彩"
+      },
+      "description": {
+        "ar": "تعلق سحابة خضراء ليمونية بمشابك نيلية على حبل، وتتدلى منها شرائط ملونة طويلة في فضاء أسود.",
+        "en": "A lime cloud hangs from a line with indigo clothespins, dripping long colored strips into black space.",
+        "ja": "藍色の洗濯ばさみでつるされたライム色の雲から、長い色の帯が黒い空間へ下がっています。",
+        "pt-br": "Uma nuvem verde-lima está presa por pregadores índigo a um varal, com longas tiras coloridas caindo no espaço preto.",
+        "ru": "Салатовое облако висит на верёвке с индиговыми прищепками. Длинные цветные полосы спускаются в чёрное пространство.",
+        "zh-cn": "青柠色云朵用靛蓝夹子挂在绳上，长长的彩色条带垂入黑色空间。"
+      }
+    },
+    {
+      "id": "tiny-impossibilities-3",
+      "slug": "tiny-impossibilities-3",
+      "collection": "tiny-impossibilities",
+      "collectionId": "0009-tiny-impossibilities",
+      "s3Folder": "0009-tiny-impossibilities",
+      "fileStem": "tiny-impossibilities",
+      "number": 3,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "colour"
+      ],
+      "title": {
+        "ar": "ظل يكبر معي",
+        "en": "A Shadow to Grow Into",
+        "ja": "いつか追いつく影",
+        "pt-br": "Uma sombra para crescer",
+        "ru": "Тень на вырост",
+        "zh-cn": "长大后的影子"
+      },
+      "description": {
+        "ar": "يلقي فأر أسود صغير ظل تنين نيلي هائلًا على خلفية خضراء ليمونية ساطعة.",
+        "en": "A tiny black mouse casts a vast indigo dragon shadow across a bright lime background.",
+        "ja": "鮮やかなライム色の背景で、小さな黒いネズミが巨大な藍色の竜の影を落としています。",
+        "pt-br": "Um ratinho preto projeta uma enorme sombra de dragão índigo sobre um fundo verde-lima vivo.",
+        "ru": "Крошечная чёрная мышь отбрасывает огромную индиговую тень дракона на ярком салатовом фоне.",
+        "zh-cn": "一只小小的黑老鼠在明亮的青柠色背景上投出巨大的靛蓝龙影。"
+      }
+    },
+    {
+      "id": "tiny-impossibilities-4",
+      "slug": "tiny-impossibilities-4",
+      "collection": "tiny-impossibilities",
+      "collectionId": "0009-tiny-impossibilities",
+      "s3Folder": "0009-tiny-impossibilities",
+      "fileStem": "tiny-impossibilities",
+      "number": 4,
+      "category": "abstract",
+      "tags": [
+        "blue",
+        "colour",
+        "motion"
+      ],
+      "title": {
+        "ar": "خارج الأقواس",
+        "en": "Beyond the Brackets",
+        "ja": "括弧の外へ",
+        "pt-br": "Além dos colchetes",
+        "ru": "Выйти за скобки",
+        "zh-cn": "逃出括号"
+      },
+      "description": {
+        "ar": "يهرب مربع أخضر ليموني من أقواس نيلية، ويتفتت القوس الأيمن إلى أثر بكسلي قصير على الأسود.",
+        "en": "A lime square escapes from indigo brackets as the right bracket breaks into a short pixel trail on black.",
+        "ja": "ライム色の四角が藍色の括弧から抜け出し、右の括弧が黒い背景に短いピクセルの跡を残します。",
+        "pt-br": "Um quadrado verde-lima escapa de colchetes índigo enquanto o colchete direito se desfaz num curto rastro de pixels sobre preto.",
+        "ru": "Салатовый квадрат выбирается из индиговых скобок. Правая скобка распадается на короткий пиксельный след на чёрном фоне.",
+        "zh-cn": "青柠色方块逃出靛蓝括号，右侧括号碎成黑色背景上的短短像素轨迹。"
+      }
+    },
+    {
+      "id": "tiny-impossibilities-5",
+      "slug": "tiny-impossibilities-5",
+      "collection": "tiny-impossibilities",
+      "collectionId": "0009-tiny-impossibilities",
+      "s3Folder": "0009-tiny-impossibilities",
+      "fileStem": "tiny-impossibilities",
+      "number": 5,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "water"
+      ],
+      "title": {
+        "ar": "حوت في قطرة",
+        "en": "A Whale in a Droplet",
+        "ja": "しずくの中のクジラ",
+        "pt-br": "Uma baleia na gota",
+        "ru": "Кит в капле",
+        "zh-cn": "水滴里的鲸"
+      },
+      "description": {
+        "ar": "يسبح حوت أخضر ليموني ينفث نافورة مربعة داخل قطرة نيلية فوق خط ماء بكسلي قصير.",
+        "en": "A lime whale with a square spout swims inside an indigo droplet above a short pixel waterline.",
+        "ja": "四角い潮を吹くライム色のクジラが藍色のしずくの中を泳ぎ、下には短い水面の線があります。",
+        "pt-br": "Uma baleia verde-lima com esguicho quadrado nada dentro de uma gota índigo sobre uma curta linha de água em pixels.",
+        "ru": "Салатовый кит с квадратным фонтанчиком плавает внутри индиговой капли над короткой пиксельной линией воды.",
+        "zh-cn": "喷出方形水柱的青柠色鲸鱼游在靛蓝水滴里，下方是一条短短的像素水线。"
+      }
+    },
+    {
+      "id": "tiny-impossibilities-6",
+      "slug": "tiny-impossibilities-6",
+      "collection": "tiny-impossibilities",
+      "collectionId": "0009-tiny-impossibilities",
+      "s3Folder": "0009-tiny-impossibilities",
+      "fileStem": "tiny-impossibilities",
+      "number": 6,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "motion",
+        "colour"
+      ],
+      "title": {
+        "ar": "قهوة ضد الجاذبية",
+        "en": "Coffee Against Gravity",
+        "ja": "重力に逆らうコーヒー",
+        "pt-br": "Café contra a gravidade",
+        "ru": "Кофе против гравитации",
+        "zh-cn": "反重力咖啡"
+      },
+      "description": {
+        "ar": "يصعد تيار أخضر ليموني من فنجان نيلي ويتفرق إلى قطرات مربعة على خلفية سوداء.",
+        "en": "A lime stream rises from an indigo cup and separates into square droplets against a black background.",
+        "ja": "黒い背景に置かれた藍色のカップから、ライム色の流れが上へ伸び、四角いしずくに分かれます。",
+        "pt-br": "Um fio verde-lima sobe de uma xícara índigo e se separa em gotas quadradas sobre um fundo preto.",
+        "ru": "Салатовая струя поднимается из индиговой чашки и распадается на квадратные капли на чёрном фоне.",
+        "zh-cn": "青柠色液流从靛蓝杯中向上升起，在黑色背景上分成方形液滴。"
+      }
+    },
+    {
+      "id": "midnight-bloom-1",
+      "slug": "midnight-bloom-1",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 1,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "water"
+      ],
+      "title": {
+        "ar": "مد داخل بتلة",
+        "en": "Tide Inside a Petal",
+        "ja": "花びらの中の潮",
+        "pt-br": "Maré numa pétala",
+        "ru": "Прилив в лепестке",
+        "zh-cn": "花瓣里的潮汐"
+      },
+      "description": {
+        "ar": "تلتف بتلة بكسلية خزامية حول شريط أزرق وسماوي متعرج، منفردة على الأسود.",
+        "en": "A lavender pixel petal curls around a winding blue and cyan stripe, isolated on black.",
+        "ja": "黒い背景で、ラベンダー色のピクセルの花びらが青と水色の曲がった帯を包みます。",
+        "pt-br": "Uma pétala lilás em pixels se curva em torno de uma faixa sinuosa azul e ciano, isolada sobre preto.",
+        "ru": "Лиловый пиксельный лепесток изгибается вокруг извилистой сине-бирюзовой полосы на чёрном фоне.",
+        "zh-cn": "淡紫色像素花瓣卷绕着蜿蜒的蓝色与青色条带，独立于黑色背景中。"
+      }
+    },
+    {
+      "id": "midnight-bloom-2",
+      "slug": "midnight-bloom-2",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 2,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "blue",
+        "light"
+      ],
+      "title": {
+        "ar": "حديقة الجاذبية المعكوسة",
+        "en": "Garden of Reversed Gravity",
+        "ja": "逆さ重力の庭",
+        "pt-br": "Jardim da gravidade invertida",
+        "ru": "Сад обратной гравитации",
+        "zh-cn": "反重力花园"
+      },
+      "description": {
+        "ar": "تتدلى ثلاث أزهار خزامية تحت شكل بيضاوي أزرق بنفسجي، وتشكل حديقة صغيرة عائمة على الأسود.",
+        "en": "Three lavender flowers hang beneath a blue-violet oval, forming a small floating garden on black.",
+        "ja": "青紫の楕円の下に三輪のラベンダー色の花が下がり、黒い背景に小さな空中庭園を作ります。",
+        "pt-br": "Três flores lilás pendem sob uma forma oval azul-violeta, formando um pequeno jardim suspenso sobre preto.",
+        "ru": "Три лиловых цветка свисают под сине-фиолетовым овалом, образуя небольшой парящий сад на чёрном фоне.",
+        "zh-cn": "三朵淡紫色花垂在蓝紫色椭圆下方，在黑色背景上组成小小的悬浮花园。"
+      }
+    },
+    {
+      "id": "midnight-bloom-3",
+      "slug": "midnight-bloom-3",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 3,
+      "category": "abstract",
+      "tags": [
+        "violet",
+        "blue",
+        "motion"
+      ],
+      "title": {
+        "ar": "مدار حبوب اللقاح",
+        "en": "Pollen Orbit",
+        "ja": "花粉の軌道",
+        "pt-br": "Órbita de pólen",
+        "ru": "Орбита пыльцы",
+        "zh-cn": "花粉轨道"
+      },
+      "description": {
+        "ar": "تتبع جسيمات بكسلية فاتحة مدارًا أزرق بنفسجي مائلًا غير مكتمل حول مركز أسود فارغ.",
+        "en": "Pale pixel particles follow an incomplete tilted blue-violet orbit around an empty black center.",
+        "ja": "淡いピクセルの粒が傾いた青紫の開いた軌道に沿い、中心には黒い空白が残ります。",
+        "pt-br": "Partículas claras em pixels seguem uma órbita azul-violeta inclinada e incompleta em torno de um centro preto vazio.",
+        "ru": "Светлые пиксельные частицы движутся вдоль наклонённой незамкнутой сине-фиолетовой орбиты с пустым чёрным центром.",
+        "zh-cn": "浅色像素颗粒沿着倾斜、未闭合的蓝紫色轨道排列，中间留着黑色空隙。"
+      }
+    },
+    {
+      "id": "midnight-bloom-4",
+      "slug": "midnight-bloom-4",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 4,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "glass"
+      ],
+      "title": {
+        "ar": "معشبة الضوء",
+        "en": "Herbarium of Light",
+        "ja": "光の標本帖",
+        "pt-br": "Herbário de luz",
+        "ru": "Гербарий света",
+        "zh-cn": "光之标本集"
+      },
+      "description": {
+        "ar": "تحيط ثلاثة إطارات مربعة متزاحة بالأزرق والسماوي والبنفسجي بزهرة بكسلية خزامية ذات قلب فاتح.",
+        "en": "Three offset blue, cyan and violet square frames surround a lavender pixel flower with a pale center.",
+        "ja": "青、水色、紫のずれた三つの四角い枠が、明るい花芯を持つラベンダー色の花を囲みます。",
+        "pt-br": "Três molduras quadradas deslocadas, azuis, ciano e violetas, cercam uma flor lilás em pixels de centro claro.",
+        "ru": "Три смещённые квадратные рамки синего, бирюзового и фиолетового цвета обрамляют лиловый пиксельный цветок со светлой серединой.",
+        "zh-cn": "三层错开的蓝色、青色与紫色方框围住一朵淡紫色像素花，花心明亮。"
+      }
+    },
+    {
+      "id": "midnight-bloom-5",
+      "slug": "midnight-bloom-5",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 5,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "water"
+      ],
+      "title": {
+        "ar": "ذاكرة الماء",
+        "en": "Water Memory",
+        "ja": "水の記憶",
+        "pt-br": "Memória da água",
+        "ru": "Память воды",
+        "zh-cn": "水的记忆"
+      },
+      "description": {
+        "ar": "تعلق قطرة فوق حلقات تموج زرقاء، وتنعكس داخلها علامات خزامية تشبه البتلات على خلفية سوداء.",
+        "en": "A droplet hangs above blue ripple rings, with lavender petal-like marks reflected inside them on black.",
+        "ja": "青い波紋の輪の上にしずくが浮かび、黒い背景の水面にラベンダー色の花びらのような印が映ります。",
+        "pt-br": "Uma gota paira sobre anéis azuis de ondulação, com marcas lilás semelhantes a pétalas refletidas dentro deles sobre preto.",
+        "ru": "Капля зависла над синими кольцами ряби. Лиловые отметки, похожие на лепестки, отражаются внутри на чёрном фоне.",
+        "zh-cn": "水滴悬在蓝色涟漪环上方，环内映着淡紫色花瓣般的痕迹，周围是黑色背景。"
+      }
+    },
+    {
+      "id": "midnight-bloom-6",
+      "slug": "midnight-bloom-6",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 6,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "stone"
+      ],
+      "title": {
+        "ar": "شق مزهر",
+        "en": "Blooming Fissure",
+        "ja": "花開く割れ目",
+        "pt-br": "Fenda em flor",
+        "ru": "Разлом цветения",
+        "zh-cn": "绽放的裂隙"
+      },
+      "description": {
+        "ar": "يعبر شق سماوي حجرًا بكسليًا أزرق داكنًا، وتتفتح زهرة خزامية صغيرة في وسطه.",
+        "en": "A cyan fissure crosses a dark blue pixel stone, with a small lavender flower opening at its center.",
+        "ja": "暗い青のピクセルの石を水色の割れ目が横切り、その中央に小さなラベンダー色の花が開きます。",
+        "pt-br": "Uma fenda ciano atravessa uma pedra azul-escura em pixels, com uma pequena flor lilás se abrindo no centro.",
+        "ru": "Бирюзовая трещина пересекает тёмно-синий пиксельный камень. В её середине раскрывается небольшой лиловый цветок.",
+        "zh-cn": "青色裂隙穿过深蓝色像素石块，一朵小小的淡紫色花在中央开放。"
+      }
+    },
+    {
+      "id": "midnight-bloom-7",
+      "slug": "midnight-bloom-7",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 7,
+      "category": "fantasy",
+      "tags": [
+        "violet",
+        "blue",
+        "ribbon"
+      ],
+      "title": {
+        "ar": "تحول حريري",
+        "en": "Silk Mutation",
+        "ja": "絹の変異",
+        "pt-br": "Mutação de seda",
+        "ru": "Шёлковая мутация",
+        "zh-cn": "丝绸变形"
+      },
+      "description": {
+        "ar": "يتفرع شريط أزرق بنفسجي بثنية وردية إلى ثلاث سيقان رفيعة تنتهي بأزهار صغيرة على الأسود.",
+        "en": "A blue-violet ribbon with a pink fold branches into three fine stems ending in small flowers on black.",
+        "ja": "黒い背景で、桃色の折り目がある青紫のリボンが、先端に小花をつけた三本の細い茎に分かれます。",
+        "pt-br": "Uma fita azul-violeta com dobra rosa se divide em três hastes finas terminadas em pequenas flores sobre preto.",
+        "ru": "Сине-фиолетовая лента с розовой складкой разветвляется на три тонких стебля с маленькими цветами на чёрном фоне.",
+        "zh-cn": "带着粉色折痕的蓝紫色丝带分出三根细茎，末端开着小花，背景为黑色。"
+      }
+    },
+    {
+      "id": "midnight-bloom-8",
+      "slug": "midnight-bloom-8",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 8,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "water",
+        "planet"
+      ],
+      "title": {
+        "ar": "كسوف في قطرة ندى",
+        "en": "Eclipse in a Dewdrop",
+        "ja": "露の中の食",
+        "pt-br": "Eclipse numa gota de orvalho",
+        "ru": "Затмение в росинке",
+        "zh-cn": "露珠里的日食"
+      },
+      "description": {
+        "ar": "تحمل ورقة عشب خضراء منحنية قطرة ندى مستديرة، بداخلها قرص أسود تحيط به بكسلات زرقاء وسماوية ووردية.",
+        "en": "A curved green grass blade holds a round dewdrop containing a black disk rimmed with blue, cyan and pink pixels.",
+        "ja": "曲がった緑の草が丸い露を支え、内側の黒い円を青、水色、桃色のピクセルが囲んでいます。",
+        "pt-br": "Uma folha de grama verde curva sustenta uma gota redonda com um disco preto cercado por pixels azuis, ciano e rosa.",
+        "ru": "Изогнутая зелёная травинка держит круглую росинку. Чёрный диск внутри окружён кольцом синих, бирюзовых и розовых пикселей.",
+        "zh-cn": "弯曲的绿草托着圆圆的露珠，内部黑色圆盘被蓝色、青色与粉色像素环围住。"
+      }
+    },
+    {
+      "id": "midnight-bloom-9",
+      "slug": "midnight-bloom-9",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 9,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "colour"
+      ],
+      "title": {
+        "ar": "برعم مفكك",
+        "en": "Disassembled Bud",
+        "ja": "ほどけたつぼみ",
+        "pt-br": "Botão desmontado",
+        "ru": "Разобранный бутон",
+        "zh-cn": "拆开的花蕾"
+      },
+      "description": {
+        "ar": "تحيط خمس بتلات بكسلية منفصلة زرقاء خزامية بقلب داكن ذي أسدية فاتحة وحواف وردية.",
+        "en": "Five separated blue-lavender pixel petals surround a dark core with pale stamens and pink edges.",
+        "ja": "分かれた五枚の青とラベンダー色の花びらが、明るいおしべのある暗い花芯を囲み、縁には桃色が残ります。",
+        "pt-br": "Cinco pétalas separadas azul-lilás em pixels cercam um centro escuro com estames claros e bordas rosas.",
+        "ru": "Пять отдельных сине-лиловых пиксельных лепестков окружают тёмную сердцевину со светлыми тычинками и розовыми краями.",
+        "zh-cn": "五片分离的蓝紫色像素花瓣围着深色花心，浅色花蕊和粉色边缘清晰可见。"
+      }
+    },
+    {
+      "id": "midnight-bloom-10",
+      "slug": "midnight-bloom-10",
+      "collection": "midnight-bloom",
+      "collectionId": "0010-midnight-bloom",
+      "s3Folder": "0010-midnight-bloom",
+      "fileStem": "midnight-bloom",
+      "number": 10,
+      "category": "nature",
+      "tags": [
+        "violet",
+        "blue",
+        "forest"
+      ],
+      "title": {
+        "ar": "ظل يسبق الربيع",
+        "en": "A Shadow Ahead of Spring",
+        "ja": "春に先回りする影",
+        "pt-br": "Uma sombra antes da primavera",
+        "ru": "Тень опережает весну",
+        "zh-cn": "影子先于春天"
+      },
+      "description": {
+        "ar": "يقف غصن صغير عار فاتح بجوار ظل بنفسجي أكبر يحمل ثلاث أزهار خزامية على الأسود.",
+        "en": "A small bare pale twig stands beside a larger violet shadow bearing three lavender flowers on black.",
+        "ja": "黒い背景で、小さな淡い裸枝のそばに大きな紫の影が伸び、影だけに三輪の花が咲いています。",
+        "pt-br": "Um pequeno galho claro sem folhas aparece ao lado de uma sombra violeta maior com três flores lilás sobre preto.",
+        "ru": "Небольшая голая светлая ветка соседствует с увеличенной фиолетовой тенью, на которой распустились три лиловых цветка на чёрном фоне.",
+        "zh-cn": "小小的浅色裸枝旁是放大的紫色影子，影枝上开着三朵淡紫色花，背景为黑色。"
+      }
     }
   ],
   "publicationDates": {
@@ -1745,6 +2613,16 @@
     "contours-of-silence-7": "2026-10-02T21:44:58.000000Z",
     "contours-of-silence-8": "2026-10-02T21:44:58.000000Z",
     "contours-of-silence-9": "2026-10-02T21:44:58.000000Z",
+    "midnight-bloom-1": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-10": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-2": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-3": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-4": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-5": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-6": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-7": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-8": "2026-10-28T16:05:20.192181Z",
+    "midnight-bloom-9": "2026-10-28T16:05:20.192181Z",
     "neon-tide-1": "2026-10-19T20:13:10.668531Z",
     "neon-tide-10": "2026-10-19T20:13:10.668531Z",
     "neon-tide-2": "2026-10-19T20:13:10.668531Z",
@@ -1765,6 +2643,22 @@
     "path-to-the-light-3": "2026-10-02T21:44:58.000000Z",
     "path-to-the-light-4": "2026-10-02T21:44:58.000000Z",
     "path-to-the-light-5": "2026-10-02T21:44:58.000000Z",
+    "tiny-impossibilities-1": "2026-10-28T16:05:19.540150Z",
+    "tiny-impossibilities-2": "2026-10-28T16:05:19.540150Z",
+    "tiny-impossibilities-3": "2026-10-28T16:05:19.540150Z",
+    "tiny-impossibilities-4": "2026-10-28T16:05:19.540150Z",
+    "tiny-impossibilities-5": "2026-10-28T16:05:19.540150Z",
+    "tiny-impossibilities-6": "2026-10-28T16:05:19.540150Z",
+    "trick-or-pixel-1": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-10": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-2": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-3": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-4": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-5": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-6": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-7": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-8": "2026-10-28T16:05:18.896881Z",
+    "trick-or-pixel-9": "2026-10-28T16:05:18.896881Z",
     "where-stars-graze-1": "2026-10-05T00:42:54.000000Z",
     "where-stars-graze-2": "2026-10-05T00:42:54.000000Z",
     "where-stars-graze-3": "2026-10-05T00:42:54.000000Z",
@@ -1783,7 +2677,10 @@
     "0004-where-stars-graze": "2026-10-05T00:42:54.000000Z",
     "0005-a-night-beneath-the-ice": "2026-10-05T04:04:04.000000Z",
     "0006-neon-tide": "2026-10-19T20:13:10.668531Z",
-    "0007-organic-resonance": "2026-10-23T17:55:44.450784Z"
+    "0007-organic-resonance": "2026-10-23T17:55:44.450784Z",
+    "0008-trick-or-pixel": "2026-10-28T16:05:18.896881Z",
+    "0009-tiny-impossibilities": "2026-10-28T16:05:19.540150Z",
+    "0010-midnight-bloom": "2026-10-28T16:05:20.192181Z"
   },
   "listing": {
     "collections": {
@@ -1793,7 +2690,10 @@
       "0004-where-stars-graze": false,
       "0005-a-night-beneath-the-ice": false,
       "0006-neon-tide": true,
-      "0007-organic-resonance": true
+      "0007-organic-resonance": false,
+      "0008-trick-or-pixel": true,
+      "0009-tiny-impossibilities": true,
+      "0010-midnight-bloom": true
     },
     "wallpapers": {
       "a-night-beneath-the-ice-1": true,
@@ -1816,6 +2716,16 @@
       "contours-of-silence-7": true,
       "contours-of-silence-8": true,
       "contours-of-silence-9": true,
+      "midnight-bloom-1": true,
+      "midnight-bloom-10": true,
+      "midnight-bloom-2": true,
+      "midnight-bloom-3": true,
+      "midnight-bloom-4": true,
+      "midnight-bloom-5": true,
+      "midnight-bloom-6": true,
+      "midnight-bloom-7": true,
+      "midnight-bloom-8": true,
+      "midnight-bloom-9": true,
       "neon-tide-1": true,
       "neon-tide-10": true,
       "neon-tide-2": true,
@@ -1836,6 +2746,22 @@
       "path-to-the-light-3": true,
       "path-to-the-light-4": true,
       "path-to-the-light-5": true,
+      "tiny-impossibilities-1": true,
+      "tiny-impossibilities-2": true,
+      "tiny-impossibilities-3": true,
+      "tiny-impossibilities-4": true,
+      "tiny-impossibilities-5": true,
+      "tiny-impossibilities-6": true,
+      "trick-or-pixel-1": true,
+      "trick-or-pixel-10": true,
+      "trick-or-pixel-2": true,
+      "trick-or-pixel-3": true,
+      "trick-or-pixel-4": true,
+      "trick-or-pixel-5": true,
+      "trick-or-pixel-6": true,
+      "trick-or-pixel-7": true,
+      "trick-or-pixel-8": true,
+      "trick-or-pixel-9": true,
       "where-stars-graze-1": true,
       "where-stars-graze-2": true,
       "where-stars-graze-3": true,

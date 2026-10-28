@@ -137,3 +137,23 @@ test('published packages expose five searchable designs and complete stories in 
     }
   }
 });
+
+
+test('collections 0008 through 0010 preserve every design and six localized searches', async () => {
+  const { collections, locales } = await import('../src/data/catalog');
+  const { collectionStories } = await import('../src/data/editorial');
+  for (const [id, count] of [['0008-trick-or-pixel', 10], ['0009-tiny-impossibilities', 6], ['0010-midnight-bloom', 10]] as const) {
+    const collection = collections.find(item => item.id === id)!;
+    const designs = wallpapers.filter(item => item.collectionId === id);
+    expect(collection.count).toBe(count);
+    expect(designs.map(item => item.number)).toEqual(Array.from({ length: count }, (_, index) => index + 1));
+    for (const locale of locales) {
+      expect(collectionStories[collection.slug]![locale].length).toBeGreaterThan(0);
+      const index = createSearchIndex(locale, designs.map(item => ({ id: item.id, text: [item.title[locale], item.description[locale], ...item.tags.map(key => tagLabels[key][locale])].join(' ') })));
+      for (const item of designs) {
+        expect(searchIds(index, locale, item.title[locale])).toContain(item.id);
+        expect(searchIds(index, locale, tagLabels[item.tags[0]!][locale])).toContain(item.id);
+      }
+    }
+  }
+});
