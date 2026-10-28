@@ -1,4 +1,5 @@
 import publications from '../../src/data/collection-publications.json';
+import { collectionStories } from '../../src/data/editorial';
 import { test, expect, type Page } from '../browser';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -22,7 +23,8 @@ async function dismissCookies(page: Page, locale: Locale) {
 }
 
 const publishedTemplates = (Object.values(publications) as { manifest: { collection: { slug: string }; wallpapers: { slug: string }[] } }[]).flatMap(item => [`/collections/${item.manifest.collection.slug}/`, `/wallpapers/${item.manifest.wallpapers[0]!.slug}/`]);
-const templates = [...publishedTemplates, '/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', '/collections/neon-tide/', '/wallpapers/neon-tide-4/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
+const releaseTemplates = ['trick-or-pixel', 'tiny-impossibilities', 'midnight-bloom'].flatMap(slug => [`/collections/${slug}/`, `/wallpapers/${slug}-1/`]);
+const templates = [...publishedTemplates, ...releaseTemplates, '/', '/collections/', '/collections/contours-of-silence/', '/collections/path-to-the-light/', '/collections/where-stars-graze/', '/wallpapers/where-stars-graze-4/', '/collections/a-night-beneath-the-ice/', '/wallpapers/a-night-beneath-the-ice-1/', '/collections/neon-tide/', '/wallpapers/neon-tide-4/', `/wallpapers/${wallpaper}/`, '/search/', '/feedback/', '/privacy/', '/terms/', '/cookies/', '/license/', '/contact/', '/404/'];
 for (const locale of ['ru', 'en', 'zh-cn', 'pt-br'] as Locale[]) {
   for (const width of [320, 375, 768, 1024, 1440] as const) {
     test(`layouts and accessibility: ${locale}, ${width}px`, async ({ page }, testInfo) => {
@@ -479,3 +481,30 @@ test('public pages share a cacheable hydration bootstrap under the existing CSP'
   expect(shared).toBe(`/_astro/island.${createHash('sha256').update(bytes).digest('hex')}.js`);
   expect(bytes.toString()).toContain('customElements.define("astro-island",');
 });
+
+
+for (const locale of locales) {
+  test(`collections 0008 through 0010: ${locale}`, async ({ page, request }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    for (const slug of ['trick-or-pixel', 'tiny-impossibilities', 'midnight-bloom']) {
+      const collection = collections.find(item => item.slug === slug)!;
+      for (const path of [`/collections/${slug}/`, `/wallpapers/${slug}-1/`]) {
+        expect((await page.goto(localPath(locale, path)))?.status()).toBe(200);
+        if (slug === 'trick-or-pixel' && path.startsWith('/collections/')) await dismissCookies(page, locale);
+        await expect(page.locator('h1')).toHaveCount(1);
+        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://wallpapers.want.foundation${localPath(locale, path)}`);
+        await expect(page.locator('link[rel="alternate"]')).toHaveCount(locales.length + 1);
+        await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+        await expect(page.locator('main')).toContainText(collectionStories[collection.slug]![locale][0]!);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      }
+      const wallpaper = wallpapers.find(item => item.id === `${slug}-1`)!;
+      for (const variant of ['desktop', 'mobile'] as const) {
+        const download = await request.get(downloadUrl(wallpaper, variant));
+        expect(download.status()).toBe(200);
+        expect(download.headers()['content-type']).toContain('image/png');
+        expect(createHash('sha256').update(await download.body()).digest('hex')).toBe(createHash('sha256').update(await readFile(new URL(`../../public${downloadUrl(wallpaper, variant)}`, import.meta.url))).digest('hex'));
+      }
+    }
+  });
+}
