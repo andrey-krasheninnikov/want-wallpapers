@@ -139,10 +139,10 @@ test('published packages expose five searchable designs and complete stories in 
 });
 
 
-test('collections 0008 through 0010 preserve every design and six localized searches', async () => {
+test('collections 0008 through 0013 preserve every design and six localized searches', async () => {
   const { collections, locales } = await import('../src/data/catalog');
   const { collectionStories } = await import('../src/data/editorial');
-  for (const [id, count] of [['0008-trick-or-pixel', 10], ['0009-tiny-impossibilities', 6], ['0010-midnight-bloom', 10]] as const) {
+  for (const [id, count] of [['0008-trick-or-pixel', 10], ['0009-tiny-impossibilities', 6], ['0010-midnight-bloom', 10], ['0011-open-circuit', 5], ['0012-weightless-feathers', 5], ['0013-observatory-of-tides', 5]] as const) {
     const collection = collections.find(item => item.id === id)!;
     const designs = wallpapers.filter(item => item.collectionId === id);
     expect(collection.count).toBe(count);
