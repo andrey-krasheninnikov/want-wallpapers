@@ -1,6 +1,69 @@
 {
   "collections": [
     {
+      "id": "0013-observatory-of-tides",
+      "slug": "observatory-of-tides",
+      "count": 5,
+      "title": {
+        "ar": "مرصد المدّ",
+        "en": "Observatory of Tides",
+        "ja": "潮の天文台",
+        "pt-br": "Observatório das marés",
+        "ru": "Обсерватория приливов",
+        "zh-cn": "潮汐天文台"
+      },
+      "description": {
+        "ar": "خمسة أزواج من الرسوم المجسمة بملمس ورق شفاف. تشكل قناديل البحر وقباب المراصد وحبات الرمان مباني عائمة وأروقة وسلالم وفوانيس وخريطة حلقية. تجمع الخلفيات الكحلية السماوي والأحمر الياقوتي والأبيض الحليبي وضوءًا كهرمانيًا، مع تكوين مستقل لكل اتجاه.",
+        "en": "Five pairs of dimensional illustrations with translucent paper textures. Jellyfish, observatory domes, and pomegranate seeds form floating buildings, inner galleries, staircases, lanterns, and a circular chart. Deep navy backgrounds connect cyan, ruby red, milk-white layers, and small amber lights. Landscape and portrait versions use separate compositions.",
+        "ja": "半透明の紙の質感を持つ立体的な壁紙5組。クラゲ、天文台のドーム、ザクロの種が、浮かぶ建物、回廊、階段、灯り、環状の図を形作る。深い青にシアン、ルビー色、乳白色、琥珀色の光を重ね、横長と縦長を別々に構成。",
+        "pt-br": "Cinco pares de ilustrações com volume e textura de papel translúcido. Águas-vivas, cúpulas de observatórios e sementes de romã formam edifícios flutuantes, galerias, escadarias, lanternas e um mapa circular. Azul profundo, ciano, vermelho-rubi, branco-leitoso e luz âmbar unem composições horizontais e verticais distintas.",
+        "ru": "Пять пар объёмных иллюстраций с фактурой полупрозрачной бумаги. Медузы, купола обсерваторий и гранатовые зёрна образуют парящие здания, внутренние галереи, лестницы, фонари и кольцевую карту. Глубокий синий фон объединяет циан, рубиновый красный, молочные перегородки и небольшие янтарные источники света. Горизонтальные и вертикальные версии имеют отдельные композиции.",
+        "zh-cn": "五组带半透明纸张质感的立体壁纸。水母、天文台穹顶和石榴籽构成漂浮建筑、内部廊道、阶梯、灯笼和环形图谱。深蓝背景上交织着青色、宝石红、乳白色与琥珀光。横竖版本分别构图。"
+      }
+    },
+    {
+      "id": "0012-weightless-feathers",
+      "slug": "weightless-feathers",
+      "count": 5,
+      "title": {
+        "ar": "ريش بلا وزن",
+        "en": "Weightless Feathers",
+        "ja": "無重力の羽",
+        "pt-br": "Penas sem peso",
+        "ru": "Перья невесомости",
+        "zh-cn": "失重羽毛"
+      },
+      "description": {
+        "ar": "خمسة أزواج من الرسوم المجسمة تتبع طائرًا أحمر في الفضاء: سباحة فوق الأرض، وانعكاس في زجاج الخوذة، وريشة عائمة، ومشهد من المحطة، وسديم على هيئة طائر.",
+        "en": "Five pairs of three-dimensional illustrations follow a red bird through space: a spacewalk above Earth, a visor reflection, a drifting feather, an orbital-station view, and a bird-shaped nebula.",
+        "ja": "赤い鳥と宇宙を描く立体的なイラスト5組。地球上空の遊泳、バイザーの反射、漂う羽、宇宙ステーションからの眺め、鳥の形をした星雲。",
+        "pt-br": "Cinco pares de ilustrações tridimensionais acompanham um pássaro vermelho no espaço: passeio sobre a Terra, reflexo no visor, pena flutuante, vista da estação e nebulosa em forma de ave.",
+        "ru": "Пять пар объёмных иллюстраций о красной птице и космосе: выход над Землёй, отражение в визоре, летящее перо, вид из станции и птица из туманности.",
+        "zh-cn": "五组立体插画围绕红鸟与太空展开：地球上空的舱外活动、面罩倒影、漂浮羽毛、空间站窗景和鸟形星云。"
+      }
+    },
+    {
+      "id": "0011-open-circuit",
+      "slug": "open-circuit",
+      "count": 5,
+      "title": {
+        "ar": "دائرة مفتوحة",
+        "en": "Open Circuit",
+        "ja": "閉じない回路",
+        "pt-br": "Circuito aberto",
+        "ru": "Незамкнутый контур",
+        "zh-cn": "未闭合的回路"
+      },
+      "description": {
+        "ar": "خمسة أزواج من خلفيات فن البكسل: مدينة نيون، ونسيج مضيء، وكروم سائل، وحلقة تتفتت، ووادي زجاج أسود.",
+        "en": "Five pixel-art wallpaper pairs: a neon city, luminous fabric, liquid chrome, a fragmenting ring, and a black-glass canyon.",
+        "ja": "ネオンの街、光る布、液体クロム、崩れる輪、黒いガラスの峡谷を描いた、ピクセルアートの壁紙5組。",
+        "pt-br": "Cinco pares de papéis de parede em pixel art: cidade neon, tecido luminoso, cromo líquido, um anel se desfazendo e um cânion de vidro negro.",
+        "ru": "Пять пар пиксельных обоев: неоновый город, светящаяся ткань, жидкий хром, распадающееся кольцо и каньон чёрного стекла.",
+        "zh-cn": "五组像素风壁纸描绘霓虹城市、发光织物、液态铬、碎裂圆环和黑玻璃峡谷。"
+      }
+    },
+    {
       "id": "0010-midnight-bloom",
       "slug": "midnight-bloom",
       "count": 10,
@@ -2590,6 +2653,474 @@
         "ru": "Небольшая голая светлая ветка соседствует с увеличенной фиолетовой тенью, на которой распустились три лиловых цветка на чёрном фоне.",
         "zh-cn": "小小的浅色裸枝旁是放大的紫色影子，影枝上开着三朵淡紫色花，背景为黑色。"
       }
+    },
+    {
+      "id": "open-circuit-1",
+      "slug": "open-circuit-1",
+      "collection": "open-circuit",
+      "collectionId": "0011-open-circuit",
+      "s3Folder": "0011-open-circuit",
+      "fileStem": "open-circuit",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "city",
+        "night",
+        "water",
+        "light"
+      ],
+      "title": {
+        "ar": "مدينة فوق الماء الأسود",
+        "en": "City over Black Water",
+        "ja": "黒い水の上の街",
+        "pt-br": "Cidade sobre águas negras",
+        "ru": "Город над чёрной водой",
+        "zh-cn": "黑水之城"
+      },
+      "description": {
+        "ar": "ترتفع أبراج داكنة بألواح نيون فوق قناة مائية. تنعكس أضواء سماوية ووردية وكهرمانية في الماء.",
+        "en": "Dark towers with neon panels rise above a canal. Cyan, pink, and amber lights reflect in the water.",
+        "ja": "ネオンのパネルが光る暗い塔が運河にそびえる。シアン、ピンク、琥珀色の光が水面に映る。",
+        "pt-br": "Torres escuras com painéis neon se erguem sobre um canal. Luzes ciano, rosa e âmbar se refletem na água.",
+        "ru": "Тёмные башни с неоновыми панелями возвышаются над каналом. Циановые, розовые и янтарные огни отражаются в воде.",
+        "zh-cn": "带有霓虹面板的暗色高楼立在水道两侧，青蓝、粉红与琥珀色灯光映在水中。"
+      }
+    },
+    {
+      "id": "open-circuit-2",
+      "slug": "open-circuit-2",
+      "collection": "open-circuit",
+      "collectionId": "0011-open-circuit",
+      "s3Folder": "0011-open-circuit",
+      "fileStem": "open-circuit",
+      "number": 2,
+      "category": "abstract",
+      "tags": [
+        "ribbon",
+        "blue",
+        "light",
+        "motion"
+      ],
+      "title": {
+        "ar": "حرير الجسيمات",
+        "en": "Particle Silk",
+        "ja": "粒子の絹",
+        "pt-br": "Seda de partículas",
+        "ru": "Шёлк из частиц",
+        "zh-cn": "粒子丝绸"
+      },
+      "description": {
+        "ar": "يطوي نسيج شفاف مضيء نفسه في موجات. تحيط طبقات زرقاء وليلكية بالتفافات كهرمانية ساطعة.",
+        "en": "Translucent luminous fabric folds into waves. Blue and lilac layers surround bright amber curls.",
+        "ja": "半透明の光る布が波を作る。青とライラックの層が、明るい琥珀色の渦を包む。",
+        "pt-br": "Um tecido translúcido e luminoso forma ondas. Camadas azuis e lilases envolvem curvas de âmbar intenso.",
+        "ru": "Полупрозрачная светящаяся ткань складывается в волны. Синие и лиловые слои окружают горячие янтарные завитки.",
+        "zh-cn": "半透明的发光织物折成波浪，蓝色与淡紫色层片环绕明亮的琥珀色旋涡。"
+      }
+    },
+    {
+      "id": "open-circuit-3",
+      "slug": "open-circuit-3",
+      "collection": "open-circuit",
+      "collectionId": "0011-open-circuit",
+      "s3Folder": "0011-open-circuit",
+      "fileStem": "open-circuit",
+      "number": 3,
+      "category": "abstract",
+      "tags": [
+        "blue",
+        "colour",
+        "light"
+      ],
+      "title": {
+        "ar": "كروم سائل",
+        "en": "Liquid Chrome",
+        "ja": "液体クロム",
+        "pt-br": "Cromo líquido",
+        "ru": "Жидкий хром",
+        "zh-cn": "液态铬"
+      },
+      "description": {
+        "ar": "تعكس طيات كبيرة من الكروم الأسود الأزرق الكهربائي والسماوي والفوشي. تتبع لمعات صفراء رفيعة انحناءاتها.",
+        "en": "Large folds of black chrome reflect electric blue, cyan, and fuchsia. Thin yellow highlights trace their curves.",
+        "ja": "黒いクロムの大きなひだが、鮮やかな青、シアン、フクシアを映す。細い黄色の光が曲線をなぞる。",
+        "pt-br": "Grandes dobras de cromo negro refletem azul elétrico, ciano e fúcsia. Reflexos amarelos finos acompanham as curvas.",
+        "ru": "Крупные складки чёрного хрома отражают электрический синий, циан и фуксию. Тонкие жёлтые блики подчёркивают изгибы.",
+        "zh-cn": "黑色铬金属的大幅褶皱映出电蓝、青色和紫红色，细黄色高光沿着曲面延伸。"
+      }
+    },
+    {
+      "id": "open-circuit-4",
+      "slug": "open-circuit-4",
+      "collection": "open-circuit",
+      "collectionId": "0011-open-circuit",
+      "s3Folder": "0011-open-circuit",
+      "fileStem": "open-circuit",
+      "number": 4,
+      "category": "abstract",
+      "tags": [
+        "portal",
+        "motion",
+        "light"
+      ],
+      "title": {
+        "ar": "مدار مفتوح",
+        "en": "Open Orbit",
+        "ja": "開いた軌道",
+        "pt-br": "Órbita aberta",
+        "ru": "Незамкнутая орбита",
+        "zh-cn": "开放轨道"
+      },
+      "description": {
+        "ar": "تتفكك حلقة معدنية عائمة عند فتحتها إلى جسيمات بكسل ملونة. يظهر تحتها انعكاس وتحيط بها خطوط ضوء عمودية رفيعة.",
+        "en": "A floating metal ring breaks into colored pixel particles at its opening. A reflection and slender vertical lights appear beneath and around it.",
+        "ja": "浮かぶ金属の輪が、切れ目から色とりどりのピクセルへとほどける。下には反射があり、周囲には細い光の柱が並ぶ。",
+        "pt-br": "Um anel metálico flutuante se desfaz em partículas coloridas de pixels junto à abertura. Há um reflexo abaixo e linhas verticais de luz ao redor.",
+        "ru": "Парящее металлическое кольцо распадается у разрыва на цветные пиксельные частицы. Под ним видны отражение и тонкие световые вертикали.",
+        "zh-cn": "悬浮金属圆环在缺口处散成彩色像素颗粒，下方与四周可见倒影和细长的竖向灯光。"
+      }
+    },
+    {
+      "id": "open-circuit-5",
+      "slug": "open-circuit-5",
+      "collection": "open-circuit",
+      "collectionId": "0011-open-circuit",
+      "s3Folder": "0011-open-circuit",
+      "fileStem": "open-circuit",
+      "number": 5,
+      "category": "landscape",
+      "tags": [
+        "glass",
+        "stone",
+        "light"
+      ],
+      "title": {
+        "ar": "وادي الضوء",
+        "en": "Luminous Canyon",
+        "ja": "光の峡谷",
+        "pt-br": "Cânion luminoso",
+        "ru": "Световой каньон",
+        "zh-cn": "发光峡谷"
+      },
+      "description": {
+        "ar": "يتعرج نهر كهرماني ضيق بين حواف عالية من الزجاج الأسود. تبرز الأوجه الزرقاء والبنفسجية عمق الشق.",
+        "en": "A narrow amber river winds between tall ledges of black glass. Blue and violet facets emphasize the depth of the fissure.",
+        "ja": "細い琥珀色の川が、高い黒ガラスの崖の間を蛇行する。青と紫の面が裂け目の深さを浮かび上がらせる。",
+        "pt-br": "Um rio estreito de âmbar serpenteia entre paredões de vidro negro. Facetas azuis e violetas mostram a profundidade da fenda.",
+        "ru": "Узкая янтарная река извивается между высокими уступами чёрного стекла. Синие и фиолетовые грани подчёркивают глубину расщелины.",
+        "zh-cn": "狭窄的琥珀色河流在高耸的黑玻璃岩壁之间蜿蜒，蓝紫色棱面显出裂谷的深度。"
+      }
+    },
+    {
+      "id": "weightless-feathers-1",
+      "slug": "weightless-feathers-1",
+      "collection": "weightless-feathers",
+      "collectionId": "0012-weightless-feathers",
+      "s3Folder": "0012-weightless-feathers",
+      "fileStem": "weightless-feathers",
+      "number": 1,
+      "category": "space",
+      "tags": [
+        "planet",
+        "blue",
+        "journey"
+      ],
+      "title": {
+        "ar": "أول سباحة فضائية",
+        "en": "First Spacewalk",
+        "ja": "初めての宇宙遊泳",
+        "pt-br": "Primeiro passeio espacial",
+        "ru": "Первый выход",
+        "zh-cn": "首次太空行走"
+      },
+      "description": {
+        "ar": "يطفو طائر أحمر ببدلة فضائية بيضاء فوق الأرض. تظهر عيناه المركّزتان عبر خوذة شفافة، ويرسم ضوء الشمس البارد حدوده.",
+        "en": "A red bird in an off-white spacesuit floats above Earth. Its focused eyes remain visible through a clear helmet, while cool sunlight outlines the figure.",
+        "ja": "白い宇宙服を着た赤い鳥が地球の上に浮かぶ。透明なヘルメットから集中した目が見え、冷たい太陽光が輪郭を照らす。",
+        "pt-br": "Um pássaro vermelho de traje espacial branco flutua sobre a Terra. O capacete transparente revela seu olhar atento, e a luz fria do Sol contorna a figura.",
+        "ru": "Красная птица в белом скафандре парит над Землёй. Прозрачный шлем открывает её сосредоточенный взгляд, а холодный солнечный свет подчёркивает силуэт.",
+        "zh-cn": "红鸟穿着乳白色宇航服漂浮在地球上空，透明头盔露出专注的眼神，冷色阳光勾勒着身形。"
+      }
+    },
+    {
+      "id": "weightless-feathers-2",
+      "slug": "weightless-feathers-2",
+      "collection": "weightless-feathers",
+      "collectionId": "0012-weightless-feathers",
+      "s3Folder": "0012-weightless-feathers",
+      "fileStem": "weightless-feathers",
+      "number": 2,
+      "category": "space",
+      "tags": [
+        "planet",
+        "glass",
+        "blue"
+      ],
+      "title": {
+        "ar": "الأرض في زجاج الخوذة",
+        "en": "Earth in the Visor",
+        "ja": "バイザーの中の地球",
+        "pt-br": "Terra no visor",
+        "ru": "Земля в визоре",
+        "zh-cn": "面罩中的地球"
+      },
+      "description": {
+        "ar": "لقطة قريبة للطائر الأحمر داخل خوذته. تنعكس الأرض والسحب على الزجاج المنحني مع بقاء العينين واضحتين.",
+        "en": "A close-up of the red bird inside its helmet. Earth and clouds reflect in the curved glass without hiding the eyes.",
+        "ja": "ヘルメットの中の赤い鳥のクローズアップ。曲面ガラスに地球と雲が映り、目もはっきり見える。",
+        "pt-br": "Um close do pássaro vermelho dentro do capacete. A Terra e as nuvens se refletem no vidro curvo sem esconder os olhos.",
+        "ru": "Крупный план красной птицы внутри шлема. В изогнутом стекле отражаются Земля и облака, сохраняя читаемость глаз.",
+        "zh-cn": "头盔内红鸟的特写，弧形面罩映出地球与云层，双眼依然清晰可见。"
+      }
+    },
+    {
+      "id": "weightless-feathers-3",
+      "slug": "weightless-feathers-3",
+      "collection": "weightless-feathers",
+      "collectionId": "0012-weightless-feathers",
+      "s3Folder": "0012-weightless-feathers",
+      "fileStem": "weightless-feathers",
+      "number": 3,
+      "category": "space",
+      "tags": [
+        "planet",
+        "night",
+        "motion"
+      ],
+      "title": {
+        "ar": "ريشة مذنّب",
+        "en": "Feather Comet",
+        "ja": "羽の彗星",
+        "pt-br": "Pena-cometa",
+        "ru": "Перо-комета",
+        "zh-cn": "羽毛彗星"
+      },
+      "description": {
+        "ar": "تنجرف ريشة حمراء فوق الجانب الليلي للأرض. يمتد خلفها أثر ضوء بارد رفيع، وتظهر تحتها أضواء مدن متناثرة.",
+        "en": "A red feather drifts above Earth's night side. A thin cool trail follows it, with scattered city lights below.",
+        "ja": "赤い羽が地球の夜側を漂う。細い冷色の光跡が続き、下にはまばらな街の明かりが見える。",
+        "pt-br": "Uma pena vermelha flutua sobre o lado noturno da Terra. Um rastro fino de luz fria a acompanha, com luzes esparsas de cidades abaixo.",
+        "ru": "Красное перо летит над ночной стороной Земли. За ним тянется тонкий холодный след, внизу видны редкие огни городов.",
+        "zh-cn": "红色羽毛漂过地球的夜面，身后拖着细细的冷色光迹，下方散布着城市灯光。"
+      }
+    },
+    {
+      "id": "weightless-feathers-4",
+      "slug": "weightless-feathers-4",
+      "collection": "weightless-feathers",
+      "collectionId": "0012-weightless-feathers",
+      "s3Folder": "0012-weightless-feathers",
+      "fileStem": "weightless-feathers",
+      "number": 4,
+      "category": "space",
+      "tags": [
+        "planet",
+        "glass",
+        "light"
+      ],
+      "title": {
+        "ar": "عند النافذة المستديرة",
+        "en": "At the Porthole",
+        "ja": "丸窓のそばで",
+        "pt-br": "Na escotilha",
+        "ru": "У иллюминатора",
+        "zh-cn": "舷窗旁"
+      },
+      "description": {
+        "ar": "يراقب طائر أحمر صغير الأرض من محطة مدارية معتمة. يضيء نور الكوكب النافذة المستديرة وحافة ظله.",
+        "en": "A small red bird watches Earth from a dark orbital station. Light from the planet illuminates the round porthole and the edge of the bird's silhouette.",
+        "ja": "小さな赤い鳥が、暗い宇宙ステーションから地球を眺める。惑星の光が丸窓と鳥の輪郭を照らす。",
+        "pt-br": "Um pequeno pássaro vermelho observa a Terra de uma estação orbital escura. A luz do planeta ilumina a escotilha redonda e a borda de sua silhueta.",
+        "ru": "Маленькая красная птица смотрит на Землю из затемнённой орбитальной станции. Свет планеты освещает круглый иллюминатор и край силуэта.",
+        "zh-cn": "小红鸟从昏暗的轨道空间站望向地球，行星的光照亮圆形舷窗和鸟的轮廓。"
+      }
+    },
+    {
+      "id": "weightless-feathers-5",
+      "slug": "weightless-feathers-5",
+      "collection": "weightless-feathers",
+      "collectionId": "0012-weightless-feathers",
+      "s3Folder": "0012-weightless-feathers",
+      "fileStem": "weightless-feathers",
+      "number": 5,
+      "category": "space",
+      "tags": [
+        "planet",
+        "light",
+        "motion"
+      ],
+      "title": {
+        "ar": "كوكبة الطائر",
+        "en": "Bird Constellation",
+        "ja": "鳥の星座",
+        "pt-br": "Constelação do pássaro",
+        "ru": "Созвездие птицы",
+        "zh-cn": "飞鸟星座"
+      },
+      "description": {
+        "ar": "يشكّل سديم أحمر طائرًا باسطًا جناحيه. تبرز خيوط الغاز المضيئة على خلفية الفضاء الداكن، وتظهر الأرض في الأسفل.",
+        "en": "A red nebula forms a bird with outstretched wings. Luminous strands of gas stand out against dark space, with Earth below.",
+        "ja": "赤い星雲が翼を広げた鳥の形を描く。光るガスの筋が暗い宇宙に浮かび、下には地球が見える。",
+        "pt-br": "Uma nebulosa vermelha forma um pássaro de asas abertas. Filamentos luminosos de gás se destacam no espaço escuro, com a Terra abaixo.",
+        "ru": "Красная туманность образует птицу с расправленными крыльями. Светящиеся газовые волокна выделяются на тёмном фоне, а внизу видна Земля.",
+        "zh-cn": "红色星云构成展翅飞鸟，发光气体丝缕映衬着深色太空，下方可见地球。"
+      }
+    },
+    {
+      "id": "observatory-of-tides-1",
+      "slug": "observatory-of-tides-1",
+      "collection": "observatory-of-tides",
+      "collectionId": "0013-observatory-of-tides",
+      "s3Folder": "0013-observatory-of-tides",
+      "fileStem": "observatory-of-tides",
+      "number": 1,
+      "category": "fantasy",
+      "tags": [
+        "water",
+        "night",
+        "blue",
+        "light"
+      ],
+      "title": {
+        "ar": "قبة المدّ",
+        "en": "Tidal Dome",
+        "ja": "潮のドーム",
+        "pt-br": "Cúpula da maré",
+        "ru": "Купол прилива",
+        "zh-cn": "潮汐穹顶"
+      },
+      "description": {
+        "ar": "يطفو مرصد بقبة قنديل بحر زرقاء شفافة فوق بحر داكن. يضيء نور كهرماني من فتحتها لوامس رفيعة وقطرات حمراء متدلية.",
+        "en": "An observatory with a translucent blue jellyfish dome floats above a dark sea. Amber light from its shutter illuminates fine tentacles and red pendants.",
+        "ja": "暗い海の上に、半透明の青いクラゲのドームを持つ天文台が浮かぶ。開口部の琥珀色の光が細い触手と赤い飾りを照らす。",
+        "pt-br": "Um observatório com cúpula translúcida de água-viva azul flutua sobre o mar escuro. A luz âmbar da abertura ilumina tentáculos finos e pingentes vermelhos.",
+        "ru": "Над тёмным морем парит обсерватория с полупрозрачным голубым куполом медузы. Янтарный свет из проёма освещает тонкие щупальца и красные подвески.",
+        "zh-cn": "天文台悬浮在暗海上，半透明蓝色水母穹顶的开口透出琥珀光，照亮细长触须与红色吊坠。"
+      }
+    },
+    {
+      "id": "observatory-of-tides-2",
+      "slug": "observatory-of-tides-2",
+      "collection": "observatory-of-tides",
+      "collectionId": "0013-observatory-of-tides",
+      "s3Folder": "0013-observatory-of-tides",
+      "fileStem": "observatory-of-tides",
+      "number": 2,
+      "category": "fantasy",
+      "tags": [
+        "colour",
+        "blue",
+        "light"
+      ],
+      "title": {
+        "ar": "ثمرة القبة السماوية",
+        "en": "Planetarium Fruit",
+        "ja": "果実のプラネタリウム",
+        "pt-br": "Fruto planetário",
+        "ru": "Плод планетария",
+        "zh-cn": "石榴天象馆"
+      },
+      "description": {
+        "ar": "يحتوي مقطع رمانة على أروقة فاتحة ومرصد صغير وحوض أزرق بقناديل بحر. تملأ حبات ياقوتية الحجرات المحيطة.",
+        "en": "A cut pomegranate contains pale galleries, a small observatory, and a blue pool with jellyfish. Ruby seeds fill the surrounding chambers.",
+        "ja": "ザクロの断面に、淡い回廊、小さな天文台、クラゲのいる青い池が収まる。周囲の部屋はルビー色の種で満ちている。",
+        "pt-br": "Uma romã aberta contém galerias claras, um pequeno observatório e uma piscina azul com águas-vivas. Sementes rubras preenchem as câmaras ao redor.",
+        "ru": "В разрезе граната расположены светлые галереи, маленькая обсерватория и голубой водоём с медузами. Рубиновые зёрна заполняют ячейки вокруг них.",
+        "zh-cn": "石榴切面里有浅色廊道、小天文台和水母游动的蓝色水池，周围格室填满宝石红的籽粒。"
+      }
+    },
+    {
+      "id": "observatory-of-tides-3",
+      "slug": "observatory-of-tides-3",
+      "collection": "observatory-of-tides",
+      "collectionId": "0013-observatory-of-tides",
+      "s3Folder": "0013-observatory-of-tides",
+      "fileStem": "observatory-of-tides",
+      "number": 3,
+      "category": "fantasy",
+      "tags": [
+        "journey",
+        "blue",
+        "light"
+      ],
+      "title": {
+        "ar": "سلّم الأعماق",
+        "en": "Staircase into the Deep",
+        "ja": "深みへの階段",
+        "pt-br": "Escadaria para as profundezas",
+        "ru": "Лестница глубины",
+        "zh-cn": "深处的阶梯"
+      },
+      "description": {
+        "ar": "يصعد سلّم فاتح متعرج بدرجات حمراء نحو مرصد مضاء، تحت مظلة قنديل بحر زرقاء شفافة.",
+        "en": "A pale winding staircase with red steps rises toward an illuminated observatory beneath a translucent blue jellyfish canopy.",
+        "ja": "赤い踏み板の淡い階段が曲がりながら、明るい天文台へ続く。その上に半透明の青いクラゲの傘が広がる。",
+        "pt-br": "Uma escadaria clara e sinuosa, com degraus vermelhos, sobe até um observatório iluminado sob uma cobertura translúcida de água-viva azul.",
+        "ru": "Светлая извилистая лестница с красными ступенями поднимается к освещённой обсерватории. Над ней раскрывается полупрозрачный голубой купол медузы.",
+        "zh-cn": "浅色的曲折阶梯带着红色台阶，通向发光的天文台，半透明蓝色水母伞盖在上方展开。"
+      }
+    },
+    {
+      "id": "observatory-of-tides-4",
+      "slug": "observatory-of-tides-4",
+      "collection": "observatory-of-tides",
+      "collectionId": "0013-observatory-of-tides",
+      "s3Folder": "0013-observatory-of-tides",
+      "fileStem": "observatory-of-tides",
+      "number": 4,
+      "category": "fantasy",
+      "tags": [
+        "blue",
+        "motion",
+        "light"
+      ],
+      "title": {
+        "ar": "تفتّح ليلي",
+        "en": "Nocturnal Bloom",
+        "ja": "夜に咲く",
+        "pt-br": "Floração noturna",
+        "ru": "Ночное цветение",
+        "zh-cn": "夜间绽放"
+      },
+      "description": {
+        "ar": "ينفتح قنديل بحر مضيء كزهرة فوق مرصد صغير. تقع حبات حمراء بين طبقات سماوية وبيضاء حليبية.",
+        "en": "A luminous jellyfish opens like a flower above a small observatory. Red seeds sit between cyan and milk-white layers.",
+        "ja": "光るクラゲが、小さな天文台の上に花のように開く。シアンと乳白色の層の間に赤い種が並ぶ。",
+        "pt-br": "Uma água-viva luminosa se abre como uma flor acima de um pequeno observatório. Sementes vermelhas aparecem entre camadas ciano e branco-leitosas.",
+        "ru": "Светящаяся медуза раскрывается над маленькой обсерваторией как цветок. Между голубыми и молочными слоями расположены красные зёрна.",
+        "zh-cn": "发光水母像花朵一样在小天文台上方展开，青色与乳白色薄层之间点缀着红色籽粒。"
+      }
+    },
+    {
+      "id": "observatory-of-tides-5",
+      "slug": "observatory-of-tides-5",
+      "collection": "observatory-of-tides",
+      "collectionId": "0013-observatory-of-tides",
+      "s3Folder": "0013-observatory-of-tides",
+      "fileStem": "observatory-of-tides",
+      "number": 5,
+      "category": "abstract",
+      "tags": [
+        "colour",
+        "night",
+        "light"
+      ],
+      "title": {
+        "ar": "خريطة التيارات",
+        "en": "Chart of Currents",
+        "ja": "潮流図",
+        "pt-br": "Carta das correntes",
+        "ru": "Карта течений",
+        "zh-cn": "洋流图谱"
+      },
+      "description": {
+        "ar": "تحيط حلقات شفافة بحبات حمراء وقناديل بحر زرقاء بقبة مفتوحة. يكشف الضوء الدافئ عن التلسكوب في المركز.",
+        "en": "Translucent rings with red seeds and blue jellyfish surround an open dome. Warm light reveals the telescope at its center.",
+        "ja": "赤い種と青いクラゲを配した半透明の輪が、開いたドームを囲む。中央の望遠鏡を暖かな光が照らす。",
+        "pt-br": "Anéis translúcidos com sementes vermelhas e águas-vivas azuis cercam uma cúpula aberta. A luz quente revela o telescópio no centro.",
+        "ru": "Вокруг открытого купола собраны полупрозрачные кольца с красными зёрнами и голубыми медузами. Тёплый свет выделяет телескоп в центре.",
+        "zh-cn": "带有红色籽粒与蓝色水母的半透明圆环围住打开的穹顶，暖光照出中央的望远镜。"
+      }
     }
   ],
   "publicationDates": {
@@ -2633,6 +3164,16 @@
     "neon-tide-7": "2026-10-19T20:13:10.668531Z",
     "neon-tide-8": "2026-10-19T20:13:10.668531Z",
     "neon-tide-9": "2026-10-19T20:13:10.668531Z",
+    "observatory-of-tides-1": "2026-10-28T18:44:00.693546Z",
+    "observatory-of-tides-2": "2026-10-28T18:44:00.693546Z",
+    "observatory-of-tides-3": "2026-10-28T18:44:00.693546Z",
+    "observatory-of-tides-4": "2026-10-28T18:44:00.693546Z",
+    "observatory-of-tides-5": "2026-10-28T18:44:00.693546Z",
+    "open-circuit-1": "2026-10-28T18:43:58.090429Z",
+    "open-circuit-2": "2026-10-28T18:43:58.090429Z",
+    "open-circuit-3": "2026-10-28T18:43:58.090429Z",
+    "open-circuit-4": "2026-10-28T18:43:58.090429Z",
+    "open-circuit-5": "2026-10-28T18:43:58.090429Z",
     "organic-resonance-1": "2026-10-23T17:55:44.450784Z",
     "organic-resonance-2": "2026-10-23T17:55:44.450784Z",
     "organic-resonance-3": "2026-10-23T17:55:44.450784Z",
@@ -2659,6 +3200,11 @@
     "trick-or-pixel-7": "2026-10-28T16:05:18.896881Z",
     "trick-or-pixel-8": "2026-10-28T16:05:18.896881Z",
     "trick-or-pixel-9": "2026-10-28T16:05:18.896881Z",
+    "weightless-feathers-1": "2026-10-28T18:43:59.113990Z",
+    "weightless-feathers-2": "2026-10-28T18:43:59.113990Z",
+    "weightless-feathers-3": "2026-10-28T18:43:59.113990Z",
+    "weightless-feathers-4": "2026-10-28T18:43:59.113990Z",
+    "weightless-feathers-5": "2026-10-28T18:43:59.113990Z",
     "where-stars-graze-1": "2026-10-05T00:42:54.000000Z",
     "where-stars-graze-2": "2026-10-05T00:42:54.000000Z",
     "where-stars-graze-3": "2026-10-05T00:42:54.000000Z",
@@ -2680,7 +3226,10 @@
     "0007-organic-resonance": "2026-10-23T17:55:44.450784Z",
     "0008-trick-or-pixel": "2026-10-28T16:05:18.896881Z",
     "0009-tiny-impossibilities": "2026-10-28T16:05:19.540150Z",
-    "0010-midnight-bloom": "2026-10-28T16:05:20.192181Z"
+    "0010-midnight-bloom": "2026-10-28T16:05:20.192181Z",
+    "0011-open-circuit": "2026-10-28T18:43:58.090429Z",
+    "0012-weightless-feathers": "2026-10-28T18:43:59.113990Z",
+    "0013-observatory-of-tides": "2026-10-28T18:44:00.693546Z"
   },
   "listing": {
     "collections": {
@@ -2693,7 +3242,10 @@
       "0007-organic-resonance": false,
       "0008-trick-or-pixel": true,
       "0009-tiny-impossibilities": true,
-      "0010-midnight-bloom": true
+      "0010-midnight-bloom": true,
+      "0011-open-circuit": true,
+      "0012-weightless-feathers": true,
+      "0013-observatory-of-tides": true
     },
     "wallpapers": {
       "a-night-beneath-the-ice-1": true,
@@ -2736,6 +3288,16 @@
       "neon-tide-7": true,
       "neon-tide-8": true,
       "neon-tide-9": true,
+      "observatory-of-tides-1": true,
+      "observatory-of-tides-2": true,
+      "observatory-of-tides-3": true,
+      "observatory-of-tides-4": true,
+      "observatory-of-tides-5": true,
+      "open-circuit-1": true,
+      "open-circuit-2": true,
+      "open-circuit-3": true,
+      "open-circuit-4": true,
+      "open-circuit-5": true,
       "organic-resonance-1": true,
       "organic-resonance-2": true,
       "organic-resonance-3": true,
@@ -2762,6 +3324,11 @@
       "trick-or-pixel-7": true,
       "trick-or-pixel-8": true,
       "trick-or-pixel-9": true,
+      "weightless-feathers-1": true,
+      "weightless-feathers-2": true,
+      "weightless-feathers-3": true,
+      "weightless-feathers-4": true,
+      "weightless-feathers-5": true,
       "where-stars-graze-1": true,
       "where-stars-graze-2": true,
       "where-stars-graze-3": true,

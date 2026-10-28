@@ -347,6 +347,120 @@ const legacyCollectionStories: Record<string, Record<Locale, string[]>> = {
 
 export const collectionStories: Record<string, Record<Locale, string[]>> = {
   ...legacyCollectionStories,
+  "open-circuit": {
+    "en": [
+      "The keeper unfastened his boat beneath the last lit bridge. A spool of amber thread rested in a metal box beside his foot. Above the canal, blue panels climbed the towers, and their reflections broke against the bow. He pulled once on the rope, pushed away from the wall, and let the current carry him past the closed landing stages. One pink window remained open high above the water.",
+      "At the end of the canal, a luminous sheet hung between two posts. Its edge brushed the boat. The keeper caught a corner and drew it over the box, leaving his wet hand visible through the blue folds. Amber curls moved across the cloth as it settled. He tucked the loose edge beneath the lid and guided the boat into a passage lined with dark chrome.",
+      "The passage narrowed around a floating ring. A section was missing from its left side; small colored squares drifted through the gap and gathered briefly on the water. The keeper raised the box, unwound a length of thread, and held it beside the opening. The loose end lifted from his fingers. It joined the moving fragments, while the spool turned slowly inside its metal case. The boat turned sideways. He braced the oar against the wall and held the box steady until its reflection narrowed along the chrome. The bow scraped a low stone ledge.",
+      "Beyond the ring, black glass walls rose along an amber stream. The boat entered their shadow. The keeper fastened the box to a low mooring post and left the lid open, with the blue cloth folded beneath it. More thread slipped across the rim and followed the water around the first bend. He held the boat against the bank until the spool stopped knocking, then loosened the rope and reached for his oar."
+    ],
+    "ru": [
+      "Смотритель отвязал лодку под последним освещённым мостом. У его ноги стояла металлическая коробка с катушкой янтарной нити. По башням над каналом поднимались синие панели, их отражения ломались перед носом лодки. Он потянул верёвку, оттолкнулся от стены и позволил течению нести себя мимо закрытых причалов. Высоко над водой оставалось открытым одно розовое окно. На ближайшей лестнице темнела мокрая ступень, до которой только что доставала корма.",
+      "В конце канала между двумя стойками висело светящееся полотно. Его край коснулся борта. Смотритель поймал угол и накрыл коробку, оставив ладонь под синими складками: сквозь них были видны мокрые пальцы. Пока ткань оседала, по ней проходили янтарные завитки. Он подвернул свободный край под крышку и направил лодку в проход, облицованный тёмным хромом. На изгибах стен отражение коробки растягивалось и снова собиралось в узкую полосу.",
+      "Проход сузился возле парящего кольца. Слева в нём недоставало целого участка; через разрыв летели цветные квадраты и ненадолго собирались у воды. Смотритель поднял коробку, отмотал немного нити и поднёс её к отверстию. Свободный конец выскользнул из пальцев. Он потянулся за движущимися частицами, а катушка медленно повернулась внутри металлического футляра. Лодку развернуло, и смотрителю пришлось упереться веслом в стену.",
+      "За кольцом по берегам янтарного ручья поднялись стены чёрного стекла. Лодка вошла в их тень. Смотритель закрепил коробку на низком причальном столбе и оставил крышку открытой, сложив под неё синюю ткань. Нить скользила через край и уходила вместе с водой за первый поворот. Он придерживал лодку у берега, пока катушка не перестала постукивать. Потом ослабил верёвку и потянулся за веслом, лежавшим поперёк мокрой скамьи."
+    ],
+    "zh-cn": [
+      "守夜人解开小船，把缆绳从最后一座亮着灯的桥下拉回来。脚边放着一只金属盒，里面装着一卷琥珀色的细线。运河上方的高楼一层层亮着蓝色面板，倒影碰到船头，分成窄窄的碎片。他用手撑开岸墙，让水流带着小船经过已经关闭的码头。高处还有一扇粉红色的窗户开着，窗下的金属栏杆只露出一小段光。",
+      "运河尽头，两根立柱之间垂着一块发光的布，布边轻轻擦过船舷。他抓住一角，把它盖到金属盒上。蓝色褶皱下面，湿手指仍然看得清楚。布料慢慢落稳时，琥珀色的卷纹沿着表面移动。他将多余的布边塞到盒盖下面，划进一条包着深色铬金属的水道。盒子的倒影在弯曲的墙上拉长，又收成一道细线。",
+      "水道在一只悬浮圆环前变窄。圆环左侧缺了一段，彩色小方块从缺口穿过去，短暂地聚在水面上。他拿起盒子，放出一截细线，将线头靠近缺口。细线从指间抬起，跟着那些移动的碎片往前伸，盒里的线轴慢慢转动。小船随之转了方向，他把桨抵住墙面，等船身重新顺着水道摆正，才松开扶着盒盖的手。",
+      "越过圆环，黑玻璃高墙夹住一条琥珀色的溪流。船驶入阴影，他把盒子固定在低矮的系船柱上，盒盖敞着，蓝布折在下面。细线滑过金属边缘，跟着流水绕过第一个弯。他扶着船身，直到线轴不再敲击盒壁。随后他放松缆绳，伸手去拿横放在湿座板上的桨。盒边还挂着一滴水，照着对岸一小片蓝光。"
+    ],
+    "pt-br": [
+      "O vigia soltou o barco sob a última ponte iluminada. Uma caixa de metal com um carretel de fio âmbar estava junto ao seu pé. Acima do canal, painéis azuis subiam pelas torres, e seus reflexos se quebravam na proa. Ele recolheu a corda, empurrou a parede com a mão e deixou a corrente levá-lo pelos ancoradouros fechados. Uma janela rosa continuava aberta no alto.",
+      "No fim do canal, um tecido luminoso pendia entre dois postes. A borda roçou no barco. O vigia segurou uma ponta e cobriu a caixa, deixando a mão molhada visível através das dobras azuis. Curvas de âmbar atravessaram o tecido enquanto ele se acomodava. O homem prendeu a sobra sob a tampa e conduziu o barco a uma passagem revestida de cromo escuro.",
+      "A passagem se estreitava ao redor de um anel flutuante. Faltava um trecho do lado esquerdo; pequenos quadrados coloridos atravessavam a abertura e se juntavam por instantes sobre a água. O vigia ergueu a caixa, desenrolou um pedaço de fio e o aproximou do vão. A ponta se levantou de seus dedos e acompanhou os fragmentos. Dentro da caixa, o carretel começou a girar devagar.",
+      "Depois do anel, paredes de vidro negro acompanhavam um riacho âmbar. O barco entrou na sombra. O vigia prendeu a caixa a um poste baixo e deixou a tampa aberta, com o tecido azul dobrado embaixo. Mais fio deslizou pela borda e seguiu a água até a primeira curva. Ele segurou o barco junto à margem até o carretel parar de bater. Então afrouxou a corda e alcançou o remo."
+    ],
+    "ja": [
+      "夜番は、最後の明るい橋の下で小舟の綱をほどいた。足元の金属箱には、琥珀色の糸を巻いた糸巻きが入っている。運河の上では、塔の青いパネルが幾重にも光り、その反射が舳先に当たって細かく割れた。壁を手で押し、閉まった船着き場の前を流れに任せて進む。高い窓が一つだけ、桃色の光を残して開いていた。",
+      "運河の端には、二本の柱の間に光る布が掛かっていた。裾が船縁に触れる。夜番は角をつかんで箱にかぶせた。青いひだ越しに、濡れた指が透けて見えた。布が落ち着くにつれ、琥珀色の渦が表面を移動する。余った端を蓋の下へ挟み、小舟を黒いクロム張りの水路へ向けた。壁の曲面で箱の影が細長く伸びた。",
+      "水路は、宙に浮く輪のそばで狭くなった。輪の左側には切れ目があり、色のついた小さな四角がそこを通って水面に集まる。夜番は箱を持ち上げ、糸を少しほどいて切れ目に近づけた。糸の端が指から浮き、流れるかけらを追った。箱の中で糸巻きがゆっくり回る。小舟が横を向き、夜番は櫂を壁に当てて支えた。",
+      "輪の向こうでは、琥珀色の流れに沿って黒いガラスの崖が立っていた。小舟が影に入る。夜番は低い杭に箱を結び、青い布を畳んで蓋の下へ置いた。糸は箱の縁を越え、水と一緒に最初の曲がり角へ消えていく。糸巻きが箱を叩かなくなるまで舟を岸に押さえ、それから綱を緩めた。濡れた腰掛けの上へ手を伸ばし、櫂を引き寄せた。"
+    ],
+    "ar": [
+      "فكّ الحارس حبل قاربه تحت آخر جسر مضاء. كانت عند قدمه علبة معدنية تحتوي على بكرة خيط كهرماني. فوق القناة، صعدت ألواح زرقاء على واجهات الأبراج، وتكسرت انعكاساتها عند مقدمة القارب. سحب الحبل ودفع الجدار بيده، ثم ترك التيار يحمله أمام الأرصفة المغلقة. بقيت نافذة وردية واحدة مفتوحة في الأعلى، ولمع تحتها جزء صغير من درابزين معدني بعيد عن الماء.",
+      "عند نهاية القناة، تدلّى نسيج مضيء بين عمودين. لامس طرفه حافة القارب. أمسك الحارس بإحدى زواياه ومدّه فوق العلبة، وظلت أصابعه المبتلة ظاهرة عبر الطيات الزرقاء. تحركت التفافات كهرمانية على القماش وهو يستقر. دسّ الطرف الزائد تحت الغطاء ووجّه قاربه إلى ممر تغطيه صفائح كروم داكنة. على انحناءات الجدران، استطال انعكاس العلبة ثم انضمّ مجددًا في شريط ضيق.",
+      "ضاق الممر حول حلقة عائمة. كان جزء من جانبها الأيسر مفقودًا؛ عبرت الفتحة مربعات ملونة صغيرة، وتجَمّعت للحظات على سطح الماء. رفع الحارس العلبة، وفكّ طولًا من الخيط، ثم قرّب طرفه من الفتحة. ارتفع الخيط عن أصابعه ولحق بالشظايا المتحركة. بدأت البكرة تدور ببطء داخل صندوقها المعدني. انحرف القارب، فأسند الحارس مجدافه إلى الجدار وانتظر حتى عاد المقدّم موازيًا للممر.",
+      "وراء الحلقة، ارتفعت جدران من الزجاج الأسود على جانبي جدول كهرماني. دخل القارب ظلّها. ربط الحارس العلبة بعمود إرساء منخفض، وترك غطاءها مفتوحًا، مع النسيج الأزرق مطويًا تحته. انزلق مزيد من الخيط فوق الحافة وتبع الماء إلى أول منعطف. أبقى القارب ملاصقًا للضفة حتى توقفت البكرة عن الطرق داخل العلبة. ثم أرخى الحبل ومدّ يده إلى المجداف الموضوع على المقعد المبتل."
+    ]
+  },
+  "weightless-feathers": {
+    "en": [
+      "The red bird waited in the station airlock with both boots tucked into their loops. A pale band of Earth crossed the small window in the door. He tightened one glove, turned his head inside the clear helmet, and watched the reflection slide over his beak. When the outer hatch opened, the station lights made a short white stripe along the edge of his suit.",
+      "He moved away from the hatch and reached for the next handhold. Below him, clouds curved around a blue coast. A red feather floated beyond the rail, turning so slowly that its narrow edge almost disappeared against the dark. He stopped. The feather crossed the reflection of Earth in his visor, then drifted toward a patch of sunlight beside the station. A fine pale trail followed its tip.",
+      "The bird eased forward without taking his eyes off it. His glove passed beneath the feather, missed, and came around again. This time it settled against his palm. He closed his fingers gently and turned back toward the lit hatch. Along the glass of his helmet, the coast moved in the opposite direction. The station cast a long shadow across one leg of the white suit. At the doorway, he pinned the feather beneath his thumb, stretched his free fingers toward the handle, and watched a narrow blue reflection move along the small metal latch.",
+      "Later, beside the round porthole, he laid the feather on the window ledge and watched Earth pass below. Far beyond the glass, red filaments gathered into the outline of a bird with open wings. One wing slowly loosened into thin strands while the other crossed a small field of stars. He pressed the feather beneath his foot before the air from the ceiling vent could lift it."
+    ],
+    "ru": [
+      "Красная птица ждала в шлюзе станции, закрепив оба ботинка в петлях. Светлая полоса Земли пересекала маленькое окно в двери. Он подтянул одну перчатку, повернул голову внутри прозрачного шлема и проследил, как отражение скользнуло по клюву. Когда наружный люк открылся, лампы станции оставили короткую белую полосу на краю скафандра. У поручня висела свободная петля страховки, её тень медленно проходила по обшивке рядом с ботинком.",
+      "Он отодвинулся от люка и потянулся к следующему поручню. Внизу облака огибали синий берег. За ограждением летело красное перо, поворачиваясь так медленно, что его узкий край почти исчезал в темноте. Птица остановилась. Перо пересекло отражение Земли в визоре и двинулось к освещённому участку рядом со станцией. За кончиком тянулась тонкая холодная линия. Свет на стекле на мгновение закрыл её, затем линия появилась снова.",
+      "Птица осторожно подалась вперёд, не сводя с него глаз. Перчатка прошла под пером, промахнулась и вернулась с другой стороны. На этот раз перо легло на ладонь. Он мягко сомкнул пальцы и повернулся к освещённому люку. По стеклу шлема берег поплыл в обратную сторону. Станция отбросила длинную тень на одну штанину белого скафандра. У двери пришлось придержать перо большим пальцем, чтобы дотянуться до ручки.",
+      "Позже у круглого иллюминатора он положил перо на край окна и смотрел, как внизу проходит Земля. Далеко за стеклом красные волокна собрались в очертания птицы с раскрытыми крыльями. Одно крыло медленно распускалось на тонкие нити, другое пересекало небольшой участок звёзд. Он прижал перо лапой, прежде чем воздух из потолочной решётки успел поднять его. На оконном краю осталось светлое пятно от отражённого облака."
+    ],
+    "zh-cn": [
+      "红鸟在空间站气闸里等候，两只靴子固定在脚环中。门上的小窗被地球的一条浅色弧线横穿。他收紧一只手套，在透明头盔里转过头，看着倒影滑过鸟喙。外舱门打开时，站内灯光在白色宇航服边缘留下一道窄窄的亮线。扶手旁垂着一圈松开的安全带，它的影子正慢慢移过靴子附近的舱壁。",
+      "他离开舱门，伸手寻找下一个握点。下方的云沿着蓝色海岸弯曲。一根红羽毛漂在栏杆外，转得很慢，窄边几乎融入黑暗。他停下来。羽毛横过面罩里的地球倒影，朝空间站旁一片阳光移去。羽尖后面跟着一条细细的冷色光线，玻璃上的反光一度挡住它，过了一会儿，它又从明亮的弧线下面露出来。",
+      "红鸟轻轻向前挪，目光始终跟着羽毛。手套从羽毛下面滑过，落了空，又从另一侧绕回来。这次羽毛贴住了掌心。他慢慢合拢手指，转向亮着灯的舱门。头盔玻璃上的海岸向相反方向移动，空间站在白色宇航服的一条腿上投下长影。他来到舱门旁，用拇指轻轻压住羽毛，腾出手去够门边的把手。玻璃边缘的一线蓝光落在他的手套上，随着门扇移动，慢慢滑到指尖。",
+      "后来，他坐在圆形舷窗旁，把羽毛放在窗沿，看地球从下面经过。遥远的玻璃外，红色丝缕聚成一只展翅鸟的轮廓。一侧翅膀缓慢散成细线，另一侧掠过一小片星群。头顶通风口吹来气流，他用脚压住羽毛，没有让它飘起来。一块云的倒影滑过窗沿，羽毛的红色细枝在短暂的亮光里一根根显出来。"
+    ],
+    "pt-br": [
+      "O pássaro vermelho esperava na câmara de ar da estação, com as duas botas presas às alças. Uma faixa clara da Terra atravessava a pequena janela da porta. Ele ajustou uma luva, virou a cabeça dentro do capacete transparente e acompanhou o reflexo passando sobre o bico. Quando a escotilha externa se abriu, as luzes da estação desenharam uma faixa branca na borda do traje.",
+      "Ele se afastou da escotilha e procurou o próximo apoio. Lá embaixo, nuvens contornavam uma costa azul. Uma pena vermelha flutuava além do corrimão, girando tão devagar que sua borda estreita quase desaparecia na escuridão. Ele parou. A pena cruzou o reflexo da Terra no visor e seguiu para uma área de sol junto à estação. Um rastro fino e claro acompanhava sua ponta.",
+      "O pássaro avançou com cuidado, sem perder a pena de vista. A luva passou por baixo, errou e voltou pelo outro lado. Dessa vez, a pena pousou na palma. Ele fechou os dedos de leve e se virou para a escotilha iluminada. Na curva do capacete, a costa se deslocou na direção oposta. A estação projetou uma sombra comprida sobre uma das pernas do traje branco. Uma faixa azul avançou devagar até seus dedos.",
+      "Mais tarde, junto à janela redonda, ele deixou a pena no parapeito e observou a Terra passar abaixo. Muito além do vidro, filamentos vermelhos se juntaram no contorno de um pássaro de asas abertas. Uma asa se desfazia lentamente em fios; a outra cruzava um pequeno grupo de estrelas. Ele prendeu a pena sob o pé antes que o ar da saída no teto pudesse levantá-la."
+    ],
+    "ja": [
+      "赤い鳥は、両足のブーツを輪に留めてエアロックで待っていた。扉の小窓を、地球の淡い帯が横切る。片方の手袋を締め、透明なヘルメットの中で頭を動かした。反射がくちばしの上を滑っていく。外側のハッチが開くと、宇宙ステーションの照明が宇宙服の端に短い白い筋を作った。手すりには、安全帯の輪が一つぶら下がっていた。",
+      "ハッチを離れ、次の手すりへ手を伸ばす。下では雲が青い海岸線に沿って曲がっていた。柵の向こうに赤い羽が浮いている。回転は遅く、細い縁がときおり闇に溶けた。鳥は動きを止めた。羽はバイザーに映る地球を横切り、ステーション脇の日なたへ向かう。その先端から、冷たい色の細い光跡が続いていた。",
+      "羽から目を離さず、少しずつ近づいた。手袋は羽の下を通り過ぎ、一度空振りしてから反対側へ回った。今度は羽が手のひらに重なる。指をそっと閉じて、明るいハッチへ向き直った。ヘルメットの曲面に映る海岸が逆向きに動く。白い宇宙服の片脚を、ステーションの長い影が横切った。扉の前で羽を親指で押さえ、取っ手に手を掛けた。",
+      "あとで丸窓のそばに座り、鳥は羽を窓台に置いた。下を地球が通り過ぎる。ガラスのはるか向こうでは、赤い筋が翼を広げた鳥の輪郭に集まっていた。片方の翼は細い糸へゆっくりほどけ、もう片方は小さな星の群れに重なる。天井の通気口から風が来る前に、鳥は足で羽を押さえた。雲の反射が、窓台の上を明るく流れていった。"
+    ],
+    "ar": [
+      "انتظر الطائر الأحمر داخل غرفة معادلة الضغط في المحطة، وقد ثبّت حذاءيه في الحلقتين. مرّ شريط باهت من الأرض عبر نافذة صغيرة في الباب. شدّ أحد قفازيه، وأدار رأسه داخل الخوذة الشفافة، وراقب الانعكاس وهو ينزلق فوق منقاره. عندما انفتحت البوابة الخارجية، رسمت مصابيح المحطة خطًا أبيض قصيرًا على حافة بدلته. وبجانب الدرابزين، تدلت حلقة فضفاضة من حزام الأمان فوق ألواح الجدار.",
+      "ابتعد عن البوابة ومدّ يده نحو المقبض التالي. تحته، التفت سحب حول ساحل أزرق. طفت ريشة حمراء وراء الحاجز، تدور ببطء حتى تكاد حافتها الضيقة تختفي في الظلام. توقف الطائر. عبرت الريشة انعكاس الأرض على زجاج خوذته، ثم اتجهت إلى بقعة شمس قرب المحطة. تبع رأسها أثر رفيع بارد اللون، غطّاه وهج الزجاج لحظة قبل أن يظهر من جديد.",
+      "تقدم الطائر بحذر وعيناه على الريشة. مرّ قفازه تحتها وأخطأتها، ثم عادت من الجانب الآخر. هذه المرة استقرت الريشة على كفّه. أغلق أصابعه برفق واستدار نحو البوابة المضيئة. على زجاج خوذته، تحرك الساحل في الاتجاه المقابل. ألقت المحطة ظلًا طويلًا على إحدى ساقي البدلة البيضاء. وعند الباب، ضغط على الريشة بإبهامه كي يمدّ يده إلى المقبض القريب من الحافة.",
+      "لاحقًا، جلس بجوار النافذة المستديرة، ووضع الريشة على حافتها، وراقب الأرض وهي تمرّ في الأسفل. بعيدًا خلف الزجاج، تجمعت خيوط حمراء في هيئة طائر باسط جناحيه. انفكّ أحد الجناحين ببطء إلى شعيرات رفيعة، فيما عبر الآخر مجموعة صغيرة من النجوم. ثبّت الريشة تحت قدمه قبل أن يرفعها الهواء القادم من فتحة السقف. تحرك انعكاس سحابة على الحافة وأضاء خطوط الريشة الحمراء."
+    ]
+  },
+  "observatory-of-tides": {
+    "en": [
+      "At low tide, the observer opened the narrow shutter of the floating dome. Blue light passed through its thin walls and spread across the water below. A red seed tapped against the railing, caught on a translucent strand. She lifted it into her palm and held it beside the warm opening. Beneath the platform, the long jellyfish ribbons moved with the remaining current.",
+      "Inside the cut pomegranate, pale galleries curved around a blue pool. Small jellyfish passed beneath the lowest bridge. The observer carried the seed along the inner wall, where other red grains rested in shallow pockets. At the far end, a staircase rose through a folded blue canopy. She set the seed into an empty step. The step lit up, and a warm line reached toward the dome above.",
+      "She followed the staircase with one hand on its papery rail. From the top landing, a broad jellyfish lantern filled the sky over the distant observatory. Its milk-white layers slowly parted around a cluster of ruby seeds. A loose ribbon brushed the landing and lay across the observer's sleeve. She eased it free, leaving its thin edge hanging over the rail, where the blue light showed through. As the ribbon moved, a narrow shadow crossed the next step, slipped between the red grains, and vanished along the curved side of the stair.",
+      "On the round table beneath the telescope, translucent rings surrounded an open model dome. She turned the outer ring until two jellyfish inlays faced the shore. A red marker rolled toward the gap, and she stopped it with one finger. Outside, the lantern shifted over the water. She moved the marker to the next small hollow and watched the reflection slide past the platform's last support."
+    ],
+    "ru": [
+      "Во время отлива наблюдательница открыла узкую створку парящего купола. Голубой свет прошёл сквозь тонкие стенки и растёкся по воде внизу. О перила постукивало красное зерно, зацепившееся за полупрозрачную нить. Она подняла его на ладонь и поднесла к тёплому проёму. Под площадкой длинные ленты медузы двигались вслед за остаточным течением. На нижнем краю одной ленты задержалась светлая капля, которая дрожала при каждом повороте.",
+      "Внутри разрезанного граната светлые галереи огибали голубой водоём. Под самым низким мостиком проплывали маленькие медузы. Наблюдательница несла зерно вдоль внутренней стены, где в неглубоких ячейках лежали другие красные зёрна. В конце прохода лестница поднималась сквозь складчатый синий навес. Она положила зерно на пустую ступень. Ступень засветилась, и тёплая линия потянулась к верхнему куполу, постепенно обозначая края следующих площадок над тёмным провалом.",
+      "Она пошла по лестнице, придерживаясь за бумажные перила. С верхней площадки было видно, как над далёкой обсерваторией раскрывается большой фонарь-медуза. Его молочные слои медленно расходились вокруг рубиновых зёрен. Свободная лента коснулась площадки и легла поперёк рукава. Наблюдательница осторожно высвободила руку, оставив тонкий край свисать через перила. Сквозь него проходил голубой свет. При движении ленты на ступени появлялась узкая тень и сразу исчезала.",
+      "На круглом столе под телескопом полупрозрачные кольца окружали открытый макет купола. Она повернула внешнее кольцо, пока две вставки с медузами не оказались напротив берега. Красная метка покатилась к зазору, и наблюдательница остановила её пальцем. Снаружи фонарь сместился над водой. Она передвинула зерно в следующее маленькое углубление и проследила, как отражение прошло за последнюю опору площадки. Затем отняла руку от кольца, оставив его в новом положении."
+    ],
+    "zh-cn": [
+      "退潮时，观测员推开悬浮穹顶上的窄窗。蓝光穿过薄薄的墙壁，铺向下方海面。一颗红籽挂在半透明细丝上，轻轻敲着栏杆。她把它托在掌心，举到温暖的窗口旁。平台下面，水母的长带随着余下的水流摆动。带子末端留着一滴浅色水珠，每次转向时，水珠都跟着轻颤。",
+      "切开的石榴内部，浅色廊道绕着蓝色水池延伸，小水母从最低的桥下经过。她沿内墙带着红籽往前走，墙上的浅格里放着别的红籽。通道尽头，一道阶梯穿进折叠的蓝色伞盖。她把红籽放到空着的一级台阶上。台阶亮了，暖光沿着上方的踏板延伸，照出黑暗里下一处转弯。",
+      "她扶着纸质栏杆上楼。从最高的平台望去，一盏巨大的水母灯在远处天文台上方展开。乳白色薄层绕着红籽慢慢分开。一条松开的带子擦过平台，落在她的袖子上。她轻轻抽出手，让薄边垂在栏杆外。蓝光穿过带子，在台阶上投下一条窄影，又随下一次摆动移开。她用另一只手压住栏杆上的纸边，等带子从袖口滑开。细小的红籽在台阶里发亮，靠近指尖的一颗映出窗内的暖光。她顺着那个亮点向前挪了一步，脚下的薄纸轻轻抬起，又贴回原来的位置。她退开半步，等纸边重新静止。",
+      "望远镜下的圆桌上，半透明圆环围着一个打开的穹顶模型。她转动外环，让两个水母嵌片朝向海岸。一颗红色标记滚向缺口，她用手指挡住它。窗外，灯笼移过水面。她把标记移到下一个小凹槽，看着倒影滑过平台最后一根支柱，随后松开圆环。"
+    ],
+    "pt-br": [
+      "Na maré baixa, a observadora abriu a pequena janela da cúpula flutuante. A luz azul atravessou as paredes finas e se espalhou pela água. Uma semente vermelha batia no corrimão, presa a um fio translúcido. Ela a recolheu na palma e a ergueu junto à abertura iluminada. Sob a plataforma, as longas fitas da água-viva acompanhavam o resto da corrente.",
+      "Dentro da romã aberta, galerias claras contornavam uma piscina azul. Pequenas águas-vivas passavam sob a ponte mais baixa. A observadora levou a semente pela parede interna, onde outros grãos vermelhos ocupavam cavidades rasas. No fim, uma escadaria subia por uma cobertura azul dobrada. Ela colocou a semente em um degrau vazio. O degrau acendeu, e uma linha de luz quente avançou para a cúpula acima.",
+      "Ela subiu com uma mão no corrimão de papel. Do patamar, uma grande lanterna em forma de água-viva cobria o céu sobre o observatório distante. Camadas branco-leitosas se abriam em torno das sementes rubras. Uma fita solta roçou no patamar e caiu sobre sua manga. Ela a soltou com cuidado, deixando a borda pendurada no corrimão, atravessada pela luz azul.",
+      "Na mesa redonda sob o telescópio, anéis translúcidos cercavam uma pequena cúpula aberta. Ela girou o anel externo até duas figuras de águas-vivas apontarem para a costa. Um marcador vermelho rolou para uma abertura, e ela o deteve com o dedo. Lá fora, a lanterna se deslocou sobre a água. Ela levou o marcador à cavidade seguinte e viu o reflexo passar pelo último suporte da plataforma."
+    ],
+    "ja": [
+      "引き潮のころ、観測員は浮かぶドームの細い窓を開けた。青い光が薄い壁を透かして海面へ広がる。半透明の糸に絡まった赤い種が、欄干を叩いていた。彼女は種を手に取り、暖かな窓辺へかざした。足元では、クラゲの長い帯が残った流れに揺れていた。",
+      "割れたザクロの内側では、淡い回廊が青い池を囲んでいた。低い橋の下を小さなクラゲが通る。壁のくぼみには赤い種が並び、その先に青い傘を貫く階段があった。彼女は空いた段に種を置いた。踏み板が光り、上のドームへ暖かな線が伸びた。",
+      "紙の欄干に手を添えて階段を上る。踊り場から見ると、遠い天文台の上に大きなクラゲの灯りが開いていた。乳白色の層が赤い種の周りでほどける。垂れた帯が彼女の袖に触れた。そっと腕を抜き、帯の端を欄干の外へ垂らすと、青い光が透けた。",
+      "望遠鏡の下の丸い机では、半透明の輪が小さなドームを囲んでいた。外の輪を回し、二つのクラゲ模様を岸へ向けた。赤い印が隙間へ転がり、彼女は指で止めた。窓の外で灯りが水上を移動する。印を隣のくぼみへ置くと、反射が足場の最後の支柱を通り過ぎた。"
+    ],
+    "ar": [
+      "عند انحسار المدّ، فتحت الراصدة شق القبة العائمة الضيق. عبر الضوء الأزرق جدرانها الرقيقة وانتشر فوق الماء تحتها. طرقت حبة حمراء الدرابزين، عالقة بخيط شفاف. رفعتها في كفها وقرّبتها من الفتحة الدافئة. تحت المنصة، تحركت شرائط قنديل البحر الطويلة مع ما بقي من التيار. وعلى طرف أحد الشرائط، بقيت قطرة فاتحة ترتجف كلما تغيّر اتجاهه فوق سطح البحر الداكن.",
+      "داخل الرمانة المفتوحة، انحنت أروقة فاتحة حول حوض أزرق. مرّت قناديل بحر صغيرة تحت الجسر الأدنى. حملت الراصدة الحبة بمحاذاة الجدار الداخلي، حيث استقرت حبات حمراء أخرى في تجاويف ضحلة. عند نهاية الممر، ارتفع سلّم عبر مظلة زرقاء مطوية. وضعت الحبة في درجة فارغة، فأضاءت الدرجة وامتد خط دافئ نحو القبة العليا، كاشفًا حواف الدرجات التالية فوق الفراغ المعتم.",
+      "صعدت ويدها على درابزين الورق. من البسطة العليا، ملأ فانوس كبير بهيئة قنديل بحر السماء فوق المرصد البعيد. تباعدت طبقاته البيضاء الحليبية ببطء حول حبات ياقوتية. لامس شريط حر طرف البسطة واستقر على كمّها. أخرجت ذراعها برفق، وتركت حافته الرقيقة تتدلى وراء الدرابزين، حيث عبرها الضوء الأزرق. تحرك ظل ضيق على الدرجة تحتها، ثم انزاح مع التفافة الشريط التالية.",
+      "على الطاولة المستديرة تحت التلسكوب، أحاطت حلقات شفافة بنموذج قبة مفتوحة. أدارت الحلقة الخارجية حتى واجه شكلا قنديل بحر الساحل. تدحرجت علامة حمراء نحو فجوة، فأوقفتها بإصبعها. في الخارج، انتقل الفانوس فوق الماء. نقلت العلامة إلى التجويف الصغير التالي، وراقبت الانعكاس يعبر آخر دعامة للمنصة. ثم أبعدت يدها عن الحلقة وتركتها في موضعها الجديد، بينما ظل الضوء الكهرماني واقعًا على حافة الطاولة."
+    ]
+  },
   ...Object.fromEntries(Object.values(publications).map((value) => {
     const item = value as { manifest: { collection: { slug: string } }; stories: Record<Locale, string[]> };
     return [item.manifest.collection.slug, item.stories];
