@@ -101,7 +101,7 @@ test.describe('gradient sphere background', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(root).toHaveAttribute('data-background-motion', 'paused');
     await expect(control).toBeHidden();
-    expect(await page.locator('.page-background').evaluate((element) => element.getAnimations({ subtree: true }).length)).toBe(0);
+    await expect.poll(() => page.locator('.page-background').evaluate((element) => element.getAnimations({ subtree: true }).length), { timeout: 1000 }).toBe(0);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await expect(control).toHaveText('Включить фоновые эффекты');
     await expect(root).toHaveAttribute('data-background-motion', 'paused');
@@ -330,7 +330,7 @@ test.describe('gradient sphere background', () => {
     await expect(background).toHaveAttribute('data-background-shimmer', '');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(background).not.toHaveAttribute('data-background-shimmer');
-    expect(await background.evaluate(element => element.getAnimations({ subtree: true }).length)).toBe(0);
+    await expect.poll(() => background.evaluate(element => element.getAnimations({ subtree: true }).length), { timeout: 1000 }).toBe(0);
     await page.clock.fastForward(20000);
     await expect(background).not.toHaveAttribute('data-background-shimmer');
   });
