@@ -17,7 +17,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-for (const [width, locale, theme] of [[1440, 'en', 'dark'], [320, 'ar', 'light']] as const) test(`one hover replaces a tile without a layout jump: ${width} ${locale} ${theme}`, async ({ page }, testInfo) => {
+for (const [width, locale, theme] of [[1440, 'en', 'dark'], [320, 'ar', 'light']] as const) test(`hover preserves its tile while replacing every other image: ${width} ${locale} ${theme}`, async ({ page }, testInfo) => {
   await page.addInitScript(() => { Math.random = () => 0; });
   await page.setViewportSize({ width, height: 1000 });
   await page.emulateMedia({ reducedMotion: 'no-preference', colorScheme: theme });
@@ -28,16 +28,26 @@ for (const [width, locale, theme] of [[1440, 'en', 'dark'], [320, 'ar', 'light']
   await expect(page.locator('.mosaic-toggle')).toBeVisible();
   await expect.poll(() => section.locator('[data-mosaic-image]').evaluateAll(images => images.every(image => (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
   await page.mouse.move(0, 0);
+  await section.dispatchEvent('mouseenter');
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  const pinned = section.locator('article').nth(1);
+  const pinnedImage = await pinned.locator('[data-mosaic-image]').getAttribute('src');
+  const pinnedHref = await pinned.locator('a').getAttribute('href');
   const before = await section.locator('article').evaluateAll(elements => elements.map(element => element.getAttribute('data-wallpaper-card')));
   const height = (await section.boundingBox())!.height;
-  await page.clock.install();
-  await section.locator('article').nth(1).hover();
+  await pinned.hover();
+  const pinnedBox = await pinned.boundingBox();
   await page.clock.fastForward(249);
   expect(await section.locator('article').evaluateAll(elements => elements.map(element => element.getAttribute('data-wallpaper-card')))).toEqual(before);
   await page.clock.fastForward(1);
-  await expect(section.locator('article').nth(1)).not.toHaveAttribute('data-wallpaper-card', before[1]!);
+  await expect.poll(async () => (await section.locator('article').evaluateAll(elements => elements.map(element => element.getAttribute('data-wallpaper-card')))).filter((id, index) => id !== before[index]).length).toBe(5);
   const after = await section.locator('article').evaluateAll(elements => elements.map(element => element.getAttribute('data-wallpaper-card')));
-  expect(after.filter((id, index) => id !== before[index])).toHaveLength(1);
+  expect(after.filter((id, index) => id !== before[index])).toHaveLength(5);
+  expect(after[1]).toBe(before[1]);
+  expect(await pinned.boundingBox()).toEqual(pinnedBox);
+  expect(await pinned.locator('[data-mosaic-image]').getAttribute('src')).toBe(pinnedImage);
+  expect(await pinned.locator('a').getAttribute('href')).toBe(pinnedHref);
   expect(new Set(after).size).toBe(6);
   expect((await section.boundingBox())!.height).toBeCloseTo(height, 0);
   await page.clock.fastForward(9000);

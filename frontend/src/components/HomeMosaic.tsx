@@ -114,7 +114,7 @@ export default function HomeMosaic({ items: initialItems, locale, dataUrl }: { i
         if (!alive || request !== (repair ? repairVersion : version)) return;
         if (prepared.every((tile): tile is MosaicTile => !!tile)) {
           if (!repair && !allowed(!!hoverId)) return;
-          previousRects.current = repair || motion.matches ? [] : [...(grid.current?.children ?? [])].map(element => element.getBoundingClientRect());
+          previousRects.current = repair || motion.matches || hoverId ? [] : [...(grid.current?.children ?? [])].map(element => element.getBoundingClientRect());
           setOutgoing(repair || motion.matches ? null : current.current);
           current.current = { ...candidate, tiles: prepared };
           setFrame(current.current);
