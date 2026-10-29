@@ -36,6 +36,11 @@ async function next(page: Page, previous: string) {
 
 test('changes distinct works and composition only after 3 active seconds', async ({ page }) => {
   await start(page);
+  // Playwright's clock does not pause CSS animation time.
+  await page.addStyleTag({ content: '.mosaic-image-outgoing { animation-play-state: paused; }' });
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await page.locator(section).dispatchEvent('mouseenter');
+  await page.locator(section).dispatchEvent('mouseleave');
   const first = await snapshot(page);
   await page.clock.fastForward(2999); expect(await snapshot(page)).toBe(first);
   await page.clock.fastForward(1);
@@ -50,7 +55,7 @@ test('changes distinct works and composition only after 3 active seconds', async
   for (const link of await page.locator(`${grid} a`).all()) {
     expect(await link.getAttribute('aria-label')).toBeTruthy();
     const variant = await link.evaluate(element => element.closest('article')!.getAttribute('data-mosaic-variant'));
-    expect((await link.locator('img').getAttribute('src'))?.endsWith(`-${variant}.webp`)).toBe(true);
+    expect((await link.locator('[data-mosaic-image]').getAttribute('src'))?.endsWith(`-${variant}.webp`)).toBe(true);
     expect(new URL((await link.getAttribute('href'))!, page.url()).searchParams.get('variant') ?? 'desktop').toBe(variant);
   }
 });

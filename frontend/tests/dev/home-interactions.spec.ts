@@ -86,15 +86,23 @@ test('sphere clicks ignore foreground, text, drags and paused motion', async ({ 
   await page.mouse.click(200, 250);
   await expect(background).toHaveAttribute('data-background-shimmer', '');
   await finish(); await expect(background).not.toHaveAttribute('data-background-shimmer');
+  await page.locator('#sphere-hit-area').evaluate(element => {
+    const media = document.createElement('model-viewer'); media.id = 'foreground-media';
+    Object.assign(media.style, { display: 'block', width: '100%', height: '100%' });
+    const content = document.createElement('span'); Object.assign(content.style, { display: 'block', width: '100%', height: '100%' });
+    media.attachShadow({ mode: 'open' }).append(content); element.append(media);
+  });
+  await page.mouse.click(200, 250); expect(await background.getAttribute('data-background-shimmer')).toBeNull();
+  await page.locator('#foreground-media').evaluate(element => element.remove());
   await page.locator('#sphere-hit-area').evaluate(element => { (element as HTMLElement).style.backgroundColor = '#141414'; });
-  await page.mouse.click(200, 250); await expect(background).not.toHaveAttribute('data-background-shimmer');
+  await page.mouse.click(200, 250); expect(await background.getAttribute('data-background-shimmer')).toBeNull();
   await page.locator('#sphere-hit-area').evaluate(element => { (element as HTMLElement).style.backgroundColor = 'transparent'; element.textContent = 'Selectable text'; });
-  await page.mouse.click(200, 250); await expect(background).not.toHaveAttribute('data-background-shimmer');
+  await page.mouse.click(200, 250); expect(await background.getAttribute('data-background-shimmer')).toBeNull();
   await page.locator('#sphere-hit-area').evaluate(element => { element.textContent = ''; });
   await page.mouse.move(180, 250); await page.mouse.down(); await page.mouse.move(220, 250); await page.mouse.up();
-  await expect(background).not.toHaveAttribute('data-background-shimmer');
+  expect(await background.getAttribute('data-background-shimmer')).toBeNull();
   await page.locator('[data-background-toggle]').evaluate(element => (element as HTMLButtonElement).click());
-  await page.mouse.click(200, 250); await expect(background).not.toHaveAttribute('data-background-shimmer');
+  await page.mouse.click(200, 250); expect(await background.getAttribute('data-background-shimmer')).toBeNull();
 });
 
 test('manual rotation and automatic texture changes share complete scene cycles', async ({ page }) => {

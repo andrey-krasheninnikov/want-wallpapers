@@ -14,7 +14,7 @@ export function initPageMotion() {
     if (!start || start.id !== event.pointerId || event.button !== 0 || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
     const target = event.target;
     if (!(target instanceof Element) || document.documentElement.dataset.backgroundMotion !== 'running' || !window.getSelection()?.isCollapsed) return;
-    if (document.querySelector('[role="dialog"], dialog[open]') || target.closest('a,button,input,select,textarea,label,summary,[contenteditable],[role="button"],[role="link"],[inert],p,h1,h2,h3,h4,h5,h6,li,dt,dd,pre,code,blockquote,[data-long-copy]')) return;
+    if (document.querySelector('[role="dialog"], dialog[open]') || target.closest('model-viewer,img,video,audio,canvas,svg,iframe,object,embed,[role="img"],a,button,input,select,textarea,label,summary,[contenteditable],[role="button"],[role="link"],[inert],p,h1,h2,h3,h4,h5,h6,li,dt,dd,pre,code,blockquote,[data-long-copy]')) return;
     for (let element: Element | null = target; element && element !== document.body; element = element.parentElement) {
       const style = getComputedStyle(element);
       if (style.backgroundImage !== 'none' || !/^rgba?\(0, 0, 0, 0\)$/.test(style.backgroundColor)) return;
