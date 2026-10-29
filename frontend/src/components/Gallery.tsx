@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 import { MediaCard, Card, CardContent } from '@want-foundation/desyst-react';
 import { Badge } from '@want-foundation/desyst-react';
+import { CtaButton } from './CtaButton';
 import { Button } from '@want-foundation/desyst-react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@want-foundation/desyst-react';
 import { Fragment } from 'react';
@@ -59,5 +60,6 @@ export function Crumbs({ items, label }: { items: { href?: string; title: string
 }
 
 export function ActionLink({ href, label, variant = 'default' }: { href: string; label: string; variant?: 'default' | 'outline' | 'ghost' }) {
-  return <Button asChild variant={variant} size="lg"><a href={href}>{label}<ArrowUpRight aria-hidden="true" /></a></Button>;
+  const Control = variant === 'default' ? CtaButton : Button;
+  return <Control asChild variant={variant} size="lg"><a href={href}>{label}<ArrowUpRight aria-hidden="true" /></a></Control>;
 }

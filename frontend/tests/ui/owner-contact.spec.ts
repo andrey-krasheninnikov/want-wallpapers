@@ -1,6 +1,6 @@
 import { test, expect } from '../browser';
 import AxeBuilder from '@axe-core/playwright';
-import { copy, localPath } from '../../src/data/copy';
+import { localPath } from '../../src/data/copy';
 import { locales } from '../../src/data/catalog';
 
 const address = 'wallpapers@want.foundation';
@@ -15,6 +15,7 @@ const destinations = [
 ];
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('want-cookie-preferences-v2', JSON.stringify({ analytics: false, advertising: false })));
   await page.route('https://ipwho.is/**', route => route.fulfill({ json: { success: true, country_code: 'GE' } }));
 });
 
@@ -23,7 +24,6 @@ for (const locale of locales) for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     for (const path of paths) {
       await page.goto(localPath(locale, path));
-      if (path === paths[0]) await page.getByRole('button', { name: copy[locale].essentialOnly, exact: true }).click();
       await page.evaluate(() => document.fonts.ready);
       const owner = page.locator('[data-owner-contact]');
       const email = owner.getByRole('link', { name: `${labels[locale]} ${address}`, exact: true });

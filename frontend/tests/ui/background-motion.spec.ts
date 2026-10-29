@@ -63,12 +63,12 @@ test.describe('gradient sphere background', () => {
   test('localized controls preserve pause and resume across pages', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 900 });
     const labels = [
-      ['en', 'Pause background glow', 'Resume background glow'],
-      ['ru', 'Остановить свечение фона', 'Включить свечение фона'],
-      ['zh-cn', '暂停背景光效', '恢复背景光效'],
-      ['pt-br', 'Pausar brilho de fundo', 'Retomar brilho de fundo'],
-      ['ja', '背景の光を一時停止', '背景の光を再開'],
-      ['ar', 'إيقاف توهج الخلفية', 'استئناف توهج الخلفية'],
+      ['en', 'Pause background effects', 'Resume background effects'],
+      ['ru', 'Остановить фоновые эффекты', 'Включить фоновые эффекты'],
+      ['zh-cn', '暂停背景效果', '恢复背景效果'],
+      ['pt-br', 'Pausar efeitos de fundo', 'Retomar efeitos de fundo'],
+      ['ja', '背景エフェクトを一時停止', '背景エフェクトを再開'],
+      ['ar', 'إيقاف تأثيرات الخلفية', 'استئناف تأثيرات الخلفية'],
     ] as const;
     for (const [locale, pause, resume] of labels) {
       expect((await page.goto(localPath(locale, '/contact/')))?.status()).toBe(200);
@@ -101,9 +101,9 @@ test.describe('gradient sphere background', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(root).toHaveAttribute('data-background-motion', 'paused');
     await expect(control).toBeHidden();
-    expect(await page.locator('.page-background').evaluate((element) => element.getAnimations({ subtree: true }).length)).toBe(0);
+    await expect.poll(() => page.locator('.page-background').evaluate((element) => element.getAnimations({ subtree: true }).length), { timeout: 1000 }).toBe(0);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await expect(control).toHaveText('Включить свечение фона');
+    await expect(control).toHaveText('Включить фоновые эффекты');
     await expect(root).toHaveAttribute('data-background-motion', 'paused');
     await control.click();
     await expect(root).toHaveAttribute('data-background-motion', 'running');
@@ -123,7 +123,7 @@ test.describe('gradient sphere background', () => {
     await page.goto(localPath('ru', `/wallpapers/${wallpapers[0]!.slug}/`));
     const root = page.locator('html');
     await expect(root).toHaveAttribute('data-background-motion', 'running');
-    await page.clock.fastForward(8000);
+    await page.clock.fastForward(5000);
     await expect(page.locator('.page-background')).toHaveAttribute('data-background-shimmer', '');
     await page.locator('footer [data-background-toggle]').click();
     await expect(root).toHaveAttribute('data-background-motion', 'paused');
@@ -149,7 +149,7 @@ test.describe('gradient sphere background', () => {
     await expect(root).toHaveAttribute('data-background-motion', 'running');
     await page.locator('.page-background').evaluate(element => element.getAnimations({ subtree: true }).find(animation => (animation as CSSAnimation).animationName === 'want-gradient-shimmer')!.finish());
     await expect(page.locator('.page-background')).not.toHaveAttribute('data-background-shimmer');
-    await page.clock.fastForward(8000);
+    await page.clock.fastForward(5000);
     await expect(page.locator('.page-background')).toHaveAttribute('data-background-shimmer', '');
     await page.reload();
     await expect(root).toHaveAttribute('data-background-motion', 'running');
@@ -213,7 +213,7 @@ test.describe('gradient sphere background', () => {
     const control = page.locator('footer [data-background-toggle]');
     await control.click();
     await expect(page.locator('html')).toHaveAttribute('data-background-motion', 'paused');
-    await expect(control).toHaveText('Включить свечение фона');
+    await expect(control).toHaveText('Включить фоновые эффекты');
     await control.click();
     await expect(page.locator('html')).toHaveAttribute('data-background-motion', 'running');
     expect(errors).toEqual([]);
@@ -308,7 +308,7 @@ test.describe('gradient sphere background', () => {
     await page.clock.pauseAt(time);
     await page.goto('/ru/contact/');
     const background = page.locator('.page-background');
-    await page.clock.fastForward(7999);
+    await page.clock.fastForward(4999);
     await expect(background).not.toHaveAttribute('data-background-shimmer');
     await page.clock.fastForward(1);
     await expect(background).toHaveAttribute('data-background-shimmer', '');
@@ -324,13 +324,13 @@ test.describe('gradient sphere background', () => {
     await expectMotion(page, 'running');
     await wave.evaluate(animation => animation.finish());
     await expect(background).not.toHaveAttribute('data-background-shimmer');
-    await page.clock.fastForward(7999);
+    await page.clock.fastForward(4999);
     await expect(background).not.toHaveAttribute('data-background-shimmer');
     await page.clock.fastForward(1);
     await expect(background).toHaveAttribute('data-background-shimmer', '');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(background).not.toHaveAttribute('data-background-shimmer');
-    expect(await background.evaluate(element => element.getAnimations({ subtree: true }).length)).toBe(0);
+    await expect.poll(() => background.evaluate(element => element.getAnimations({ subtree: true }).length), { timeout: 1000 }).toBe(0);
     await page.clock.fastForward(20000);
     await expect(background).not.toHaveAttribute('data-background-shimmer');
   });
@@ -341,12 +341,12 @@ test.describe('gradient sphere background', () => {
     await page.clock.pauseAt(time);
     await page.goto('/ru/contact/');
     const background = page.locator('.page-background');
-    await page.clock.fastForward(7000);
+    await page.clock.fastForward(4000);
     await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
     await page.clock.fastForward(30000);
     await expect(background).not.toHaveAttribute('data-background-shimmer');
     await page.evaluate(() => { Reflect.deleteProperty(document, 'hidden'); document.dispatchEvent(new Event('visibilitychange')); });
-    await page.clock.fastForward(7999);
+    await page.clock.fastForward(4999);
     await expect(background).not.toHaveAttribute('data-background-shimmer');
     await page.clock.fastForward(1);
     await expect(background).toHaveAttribute('data-background-shimmer', '');

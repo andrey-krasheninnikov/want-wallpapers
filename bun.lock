@@ -13,8 +13,8 @@
         "@dailymotion/vast-client": "6.5.0",
         "@google/model-viewer": "4.4.0",
         "@tailwindcss/vite": "^4",
-        "@want-foundation/desyst-foundation": "0.1.1",
-        "@want-foundation/desyst-react": "0.1.1",
+        "@want-foundation/desyst-foundation": "0.3.0",
+        "@want-foundation/desyst-react": "0.3.0",
         "astro": "^5.16.0",
         "firebase": "^12.4.0",
         "lucide-react": "^1.50.0",
@@ -53,6 +53,7 @@
     "esbuild": "0.25.12",
     "fast-uri": "3.1.9",
     "http-cache-semantics": "4.3.0",
+    "re2js": "2.8.7",
     "sharp": "0.35.5",
     "undici": "8.12.2",
     "vite": "6.4.4",
@@ -678,9 +679,9 @@
 
     "@vscode/l10n": ["@vscode/l10n@0.0.18", "", {}, "sha512-KYSIHVmslkaCDyw013pphY+d7x1qV8IZupYfeIfzNA+nsaWHbn5uPuQRvdRFsa9zFzGeudPuoGoZ1Op4jrJXIQ=="],
 
-    "@want-foundation/desyst-foundation": ["@want-foundation/desyst-foundation@0.1.1", "", {}, "sha512-Ops7g2iqxcWojLmWJ0OWMxc9I1ufk3CyDFenahDJaB1C8bqgGdxlJ3C8fPt2VPWbL60iek731clfVeBFeGU13g=="],
+    "@want-foundation/desyst-foundation": ["@want-foundation/desyst-foundation@0.3.0", "", { "bin": { "want-design-install": "dist/install-skill.js" } }, "sha512-MZOgEL18ioQeCB3yx2vUQoqDD/k05E4lMAlWeocfLj208s54GnTPP3otrAGB4hlISsJVGhCcp70NONAr7oZJgg=="],
 
-    "@want-foundation/desyst-react": ["@want-foundation/desyst-react@0.1.1", "", { "dependencies": { "@want-foundation/desyst-foundation": "0.1.1", "class-variance-authority": "0.7.1", "clsx": "2.1.1", "lucide-react": "1.50.0", "radix-ui": "1.6.7", "tailwind-merge": "3.7.0" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-oy+EaFWsvWVzzc3IIvJxH8FSVP7MshFrtE09CNUF3rbnbnP1XaGvLrFPgnDyLIMP1qJyhuBKsOPxAUkF1l7KWg=="],
+    "@want-foundation/desyst-react": ["@want-foundation/desyst-react@0.3.0", "", { "dependencies": { "@want-foundation/desyst-foundation": "0.3.0", "class-variance-authority": "0.7.1", "clsx": "2.1.1", "lucide-react": "1.50.0", "radix-ui": "1.6.7", "tailwind-merge": "3.7.0" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-oGQqGpjFa7pxyZd4RL+FW+Tt0+Pw12cTwC2azd4zm3f1ZYbhij1Um2YqQYywFWYkfHEqf1TPYT1uVtNP62EQVw=="],
 
     "@want-wallpapers/frontend": ["@want-wallpapers/frontend@workspace:frontend"],
 
@@ -1152,7 +1153,7 @@
 
     "radix3": ["radix3@1.1.2", "", {}, "sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA=="],
 
-    "re2js": ["re2js@2.8.6", "", {}, "sha512-xLgQil4kIUCrAzVk9fRSkxkFNwmygLFjVxXrLc65aE1F0+Zsb8rxumFBy4XKyvgMCTL6kilDq3EZ0piE2dP/Dg=="],
+    "re2js": ["re2js@2.8.7", "", {}, "sha512-bRSL/vn3KAmlGfGNoVpcsBXLaVvl6AbuvMMWbz0m3vBj60nj+p2/biozfBUOSBP+5XTduF6mr6IO/ZVjmqqkVQ=="],
 
     "react": ["react@19.3.0", "", {}, "sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog=="],
 

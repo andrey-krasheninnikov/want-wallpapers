@@ -1,7 +1,7 @@
+import { CtaButton } from './CtaButton';
 import { trackProductEvent } from '@/lib/analytics';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
-import { Button } from '@want-foundation/desyst-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@want-foundation/desyst-react';
 import { Skeleton } from '@want-foundation/desyst-react';
 import { copy } from '@/data/copy';
@@ -50,7 +50,7 @@ export function WallpaperDownload({ locale, wallpaper, variant, href, enabled = 
     return () => { clearTimeout(timer); element.removeEventListener('playing', ready); pending.controller.abort(); };
   }, [pending, video, finish]);
   return <>
-    <Button asChild size="lg" className="w-full"><a ref={trigger} id="download-link" href={href} download={href.split('/').at(-1)} onClick={event => {
+    <CtaButton asChild size="lg" className="w-full"><a ref={trigger} id="download-link" href={href} download={href.split('/').at(-1)} onClick={event => {
       trackProductEvent('download_click', { item_id: wallpaper, variant });
       const download: DownloadRequest = { href, filename: href.split('/').at(-1)!, wallpaper, variant };
       if (active.current) { event.preventDefault(); return; }
@@ -61,7 +61,7 @@ export function WallpaperDownload({ locale, wallpaper, variant, href, enabled = 
       const request = { download, controller: new AbortController() };
       trackProductEvent('advertising_stage', { placement: 'video', stage: 'request' });
       active.current = request; setPlaying(false); setPending(request);
-    }}><Download data-icon="inline-start" aria-hidden="true" />{copy[locale].download} · {copy[locale][variant]}</a></Button>
+    }}><Download data-icon="inline-start" aria-hidden="true" />{copy[locale].download} · {copy[locale][variant]}</a></CtaButton>
     <Dialog open={pending !== null} onOpenChange={open => { if (!open && active.current) { trackProductEvent('advertising_stage', { placement: 'video', stage: 'dismiss' }); finish(active.current); } }}>
       <DialogContent className="w-[calc(100%_-_2rem)]" dir={localeDirection(locale)} closeLabel={text.close} onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }}>
         <DialogHeader><DialogTitle>{text.title}</DialogTitle><DialogDescription>{text.description}</DialogDescription></DialogHeader>
@@ -69,7 +69,7 @@ export function WallpaperDownload({ locale, wallpaper, variant, href, enabled = 
           {!playing && <Skeleton className="absolute inset-0 size-full animate-none" role="status" aria-label={text.loading} />}
           <video ref={setVideo} muted playsInline controls preload="none" className="size-full object-contain" aria-label={text.title} />
         </div>
-        {pending && <Button asChild><a href={pending.download.href} download={pending.download.filename} onClick={() => finish(pending, true)}>{text.download}</a></Button>}
+        {pending && <CtaButton asChild><a href={pending.download.href} download={pending.download.filename} onClick={() => finish(pending, true)}>{text.download}</a></CtaButton>}
       </DialogContent>
     </Dialog>
   </>;

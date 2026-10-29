@@ -2,6 +2,13 @@
 @import "@want-foundation/desyst-foundation/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* Keep the product's existing destructive colors when updating the shared theme. */
+:root, :root[data-theme="dark"] { --destructive: #FF738D; --destructive-text: #FF738D; --destructive-foreground: #141414; }
+:root[data-theme="light"] { --destructive: #B22B42; --destructive-text: #B22B42; --destructive-foreground: #F6F5F3; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) { --destructive: #B22B42; --destructive-text: #B22B42; --destructive-foreground: #F6F5F3; }
+}
 @media (max-width: 399px) { .site-header .header-bar { padding-inline: .5rem; gap: .5rem; } }
 
 
@@ -334,11 +341,11 @@ html[data-public-background] body { position: relative; min-height: 100svh; isol
   .home-mosaic > :nth-child(6) { grid-area: f; }
   .home-mosaic > article { min-width: 0; min-height: 0; }
   .home-mosaic .gallery-card { height: 100%; border-radius: clamp(24px, 3vw, 40px); }
-  .home-mosaic .gallery-card > a { display: block; height: 100%; }
+  .home-mosaic .gallery-card > a { position: relative; display: block; height: 100%; }
   .home-mosaic .gallery-card:has(> a:focus-visible) { outline: 2px solid var(--ring); outline-offset: 3px; box-shadow: 0 0 0 5px var(--media-ground); }
   @media (forced-colors: active) { .home-mosaic .gallery-card:has(> a:focus-visible) { outline-color: Highlight; } }
   .home-mosaic .gallery-image { width: 100%; height: 100%; object-fit: cover; }
-  .home-mosaic-outgoing { position: absolute; inset: 0; pointer-events: none; animation: mosaic-fade 180ms ease-out forwards; }
+  .mosaic-image-outgoing { position: absolute; inset: 0; pointer-events: none; animation: mosaic-fade 180ms ease-out forwards; }
   .mosaic-toggle { position: absolute; top: 16px; inset-inline-end: 16px; z-index: 1; }
   @keyframes mosaic-fade { to { opacity: 0; } }
   .feedback-dialog { width: min(640px, calc(100% - 2rem)); max-width: none; padding: 1.5rem; }
@@ -366,7 +373,7 @@ html[data-public-background] body { position: relative; min-height: 100svh; isol
   .home-mosaic[data-count]:not([data-count="6"])[data-layout="1"] { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
   .home-mosaic[data-count]:not([data-count="6"])[data-layout="2"] { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
   .home-mosaic[data-count="1"] > :last-child, .home-mosaic[data-count="3"] > :last-child, .home-mosaic[data-count="5"] > :last-child { grid-column: 1 / -1; }
-  @media (prefers-reduced-motion: reduce) { .home-mosaic-outgoing { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .mosaic-image-outgoing { display: none; } }
 }
 
 @layer components {

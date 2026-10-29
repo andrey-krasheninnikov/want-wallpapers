@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '../browser';
 import { copy } from '../../src/data/copy';
 
-const grid = '.home-mosaic:not(.home-mosaic-outgoing)';
+const grid = '.home-mosaic';
 const section = '.home-mosaic-section';
 
 test.use({ reducedMotion: 'no-preference' });
@@ -30,12 +30,17 @@ async function start(page: Page) {
 async function next(page: Page, previous: string) {
   await page.clock.fastForward(3000);
   await expect.poll(() => snapshot(page)).not.toBe(previous);
-  await page.locator('.home-mosaic-outgoing').evaluateAll(elements => elements.forEach(element => element.getAnimations().forEach(animation => animation.finish())));
-  await expect(page.locator('.home-mosaic-outgoing')).toHaveCount(0);
+  await page.locator('.home-mosaic > article, .mosaic-image-outgoing').evaluateAll(elements => elements.forEach(element => element.getAnimations().forEach(animation => animation.finish())));
+  await expect(page.locator('.mosaic-image-outgoing')).toHaveCount(0);
 }
 
 test('changes distinct works and composition only after 3 active seconds', async ({ page }) => {
   await start(page);
+  // Playwright's clock does not pause CSS animation time.
+  await page.addStyleTag({ content: '.mosaic-image-outgoing { animation-play-state: paused; }' });
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await page.locator(section).dispatchEvent('mouseenter');
+  await page.locator(section).dispatchEvent('mouseleave');
   const first = await snapshot(page);
   await page.clock.fastForward(2999); expect(await snapshot(page)).toBe(first);
   await page.clock.fastForward(1);
@@ -43,13 +48,14 @@ test('changes distinct works and composition only after 3 active seconds', async
   const ids = await page.locator(`${grid} > article`).evaluateAll(elements => elements.map(element => element.getAttribute('data-wallpaper-card')));
   expect(new Set(ids).size).toBe(6);
   await expect(page.locator(grid)).toHaveAttribute('data-layout', '1');
-  await expect(page.locator('.home-mosaic-outgoing')).toHaveAttribute('aria-hidden', 'true');
-  await expect(page.locator('.home-mosaic-outgoing')).toHaveCSS('pointer-events', 'none');
-  await expect(page.locator('.home-mosaic-outgoing a')).toHaveCount(0);
+  await expect(page.locator('.mosaic-image-outgoing')).toHaveCount(6);
+  await expect(page.locator('.mosaic-image-outgoing').first()).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.mosaic-image-outgoing').first()).toHaveCSS('pointer-events', 'none');
+  await expect(page.locator('.mosaic-image-outgoing:not(img)')).toHaveCount(0);
   for (const link of await page.locator(`${grid} a`).all()) {
     expect(await link.getAttribute('aria-label')).toBeTruthy();
     const variant = await link.evaluate(element => element.closest('article')!.getAttribute('data-mosaic-variant'));
-    expect((await link.locator('img').getAttribute('src'))?.endsWith(`-${variant}.webp`)).toBe(true);
+    expect((await link.locator('[data-mosaic-image]').getAttribute('src'))?.endsWith(`-${variant}.webp`)).toBe(true);
     expect(new URL((await link.getAttribute('href'))!, page.url()).searchParams.get('variant') ?? 'desktop').toBe(variant);
   }
 });
@@ -84,7 +90,7 @@ test('hover, focus, hidden tab, offscreen and explicit pause reset the interval'
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('.mosaic-toggle')).toBeHidden();
   await page.clock.fastForward(30000); expect(await snapshot(page)).toBe(before);
-  await expect(page.locator('.home-mosaic-outgoing')).toHaveCount(0);
+  await expect(page.locator('.mosaic-image-outgoing')).toHaveCount(0);
 });
 
 test('preloads replacements, cancels a pending switch on focus and survives image failures', async ({ page }) => {
@@ -128,9 +134,9 @@ for (const width of [320, 768, 1440]) test(`three filled compositions preserve t
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.locator(`${grid} a`).first().focus();
-    await expect(page.locator(`${grid} a`).first()).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+    await expect(page.locator(`${grid} a`).first()).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
     await expect(page.locator(`${grid} .gallery-card`).first()).toHaveCSS('outline-width', '2px');
-    await expect(page.locator(`${grid} .gallery-card`).first()).toHaveCSS('outline-color', 'rgb(91, 79, 255)');
+    await expect(page.locator(`${grid} .gallery-card`).first()).toHaveCSS('outline-color', 'rgb(89, 98, 240)');
     await page.locator(section).screenshot({ path: testInfo.outputPath(`mosaic-${width}-${layout}.png`) });
     await page.locator(`${grid} a`).first().evaluate(element => (element as HTMLElement).blur());
     if (layout < 2) await next(page, await snapshot(page));
