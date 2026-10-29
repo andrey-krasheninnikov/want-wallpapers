@@ -1,8 +1,8 @@
+import { CtaButton } from './CtaButton';
 import { trackProductEvent } from '@/lib/analytics';
 import React, { useRef, useState } from 'react';
 import { Carousel } from './CollectionCarousel';
 import { Dialog, DialogContent, DialogTitle } from '@want-foundation/desyst-react';
-import { Button } from '@want-foundation/desyst-react';
 import { copy } from '@/data/copy';
 import { interfaceCopy } from '@/data/interface-copy';
 import { storyCopy } from '@/data/story-copy';
@@ -38,7 +38,7 @@ export default function StoryCarousel({ locale, dataUrl, count, children }: {
           {story.image && <img src={story.image.src} width={story.image.width} height={story.image.height} alt="" className="story-dialog-cover" />}
           {story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
         </div> : <p role="status">{failed || data ? text.failed : text.loading}</p>}
-        <Button asChild className="w-fit"><a href={selected.href}>{copy[locale].viewCollection}</a></Button>
+        <CtaButton asChild className="w-fit"><a href={selected.href}>{copy[locale].viewCollection}</a></CtaButton>
       </DialogContent>}
     </Dialog>
   </div>;

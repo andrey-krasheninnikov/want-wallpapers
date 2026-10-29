@@ -202,14 +202,14 @@ $release-minor Выпусти origin/development и задеплой minor-ре�
 
 See [DESIGN.md](../DESIGN.md) for visual tokens, typography, component composition and responsive rules. The design philosophy and direction board live in [docs/design](../docs/design/).
 
-The public frontend and administration install @want-foundation/desyst-foundation and @want-foundation/desyst-react at the same exact version, currently 0.1.1. [Want Desyst](https://github.com/andrey-krasheninnikov/want-desyst) owns primitives, themes, local fonts, brand resources, liquid glass and common effects. Its [showcase](https://github.com/andrey-krasheninnikov/want-desyst/tree/v0.1.1/apps/showcase) provides the common component reference.
+The public frontend and administration install @want-foundation/desyst-foundation and @want-foundation/desyst-react at the same exact version, currently 0.3.0. [Want Desyst](https://github.com/andrey-krasheninnikov/want-desyst) owns primitives, themes, local fonts, brand resources, liquid glass and common effects. Its [showcase](https://github.com/andrey-krasheninnikov/want-desyst/tree/v0.3.0/apps/showcase) provides the common component reference.
 
 Layouts import @want-foundation/desyst-foundation/styles.css and @want-foundation/desyst-foundation/fonts.css. Product CSS imports @want-foundation/desyst-foundation/tailwind.css after Tailwind. React code imports public named exports from @want-foundation/desyst-react. Do not recreate local components/ui sources or alias another checkout.
 
 Upgrade both packages together after reading the upstream changelog:
 
 ```sh
-DESYST_VERSION=0.1.1
+DESYST_VERSION=0.3.0
 bun add --cwd frontend --exact "@want-foundation/desyst-foundation@$DESYST_VERSION" "@want-foundation/desyst-react@$DESYST_VERSION"
 ```
 
@@ -226,3 +226,5 @@ Run `bun run dev` and open `http://127.0.0.1:4321/ui-kit/` for installed-package
 ## Продуктовая аналитика
 
 Контракт событий, настройки согласия, ограничения и инструкция GA4 описаны в [product-analytics.md](product-analytics.md). `bun run test:analytics-ui` выполняет отдельные браузерные проверки с подменой внешних сервисов. Сценарий включён в `make test-ui` и локальный профиль full.
+
+The public CTA composition owns visibility and background-effects preference wiring for the shared Glow. Product sphere hit testing dispatches want:background-shimmer; the shared foundation owns wave timing, restart and cleanup. Home mosaic selection and device-scene cycles remain product behavior.

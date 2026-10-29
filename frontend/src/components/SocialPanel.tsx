@@ -1,3 +1,4 @@
+import { CtaButton } from './CtaButton';
 import { captureProductEvents, analyticsFailure } from '@/lib/analytics';
 import { useEffect, useState, type SubmitEvent } from 'react';
 import { Check, UserRound } from 'lucide-react';
@@ -122,7 +123,7 @@ export function WallpaperComments({ locale, social }: { locale: Locale; social: 
         <p id="comment-hint" className="text-sm leading-relaxed text-muted-foreground">{text.commentPublic}</p>
         <Textarea dir="auto" id="comment-text" name="comment" value={comment} onChange={(event) => social.setComment(event.target.value)} minLength={2} maxLength={1000} required placeholder={ui.commentPlaceholder} disabled={busy || !data} aria-describedby="comment-hint" />
       </Field></FieldGroup>
-      <div className="comment-compose-footer"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><Button type="submit" disabled={busy || !data}>{busy ? ui.loading : ui.commentSubmit}</Button></div>
+      <div className="comment-compose-footer"><span className="text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{comment.length}/1000</span><CtaButton type="submit" disabled={busy || !data}>{busy ? ui.loading : ui.commentSubmit}</CtaButton></div>
     </form>
     <div aria-busy={loading}>{loading && !data ? <div role="status" aria-label={ui.loading} className="grid gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /></div> : <CommentFeed locale={locale} comments={data?.comments ?? []} ownUid={data?.ownUid ?? null} reported={reported} busy={busy} onAction={(item) => void social.action(item)} />}</div>
     <RecaptchaNotice locale={locale} />

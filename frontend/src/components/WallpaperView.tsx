@@ -16,7 +16,7 @@ type Neighbor = { href: string; title: string } | null;
 
 export default function WallpaperView({ locale, id, description, variants, tags, navigation, children, advertisement }: {
   locale: Locale; id: string; description: string; children?: React.ReactNode; advertisement?: React.ReactNode;
-  variants: Record<'desktop' | 'mobile', WallpaperVariant>; tags: { title: string; href: string }[];
+  variants: Record<'desktop' | 'mobile', Pick<WallpaperVariant, 'src' | 'width' | 'height' | 'download'>>; tags: { title: string; href: string }[];
   navigation: { previous: Neighbor; next: Neighbor; position: number | null; total: number };
 }) {
   const ui = copy[locale];

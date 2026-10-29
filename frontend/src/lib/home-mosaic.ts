@@ -23,3 +23,15 @@ export function nextMosaic(items: MosaicWallpaper[], current: MosaicFrame, rando
   const layout = randomWallpaperIndex(3, current.layout, random());
   return { layout, tiles: chosen.map((item, index) => ({ ...item, variant: index === [1, 3, 0][layout] ? 'mobile' : 'desktop' })) };
 }
+
+export function hoverMosaic(items: MosaicWallpaper[], current: MosaicFrame, id: string, random = Math.random): MosaicFrame | undefined {
+  const index = current.tiles.findIndex(tile => tile.id === id);
+  const shown = new Set(current.tiles.map(tile => tile.id));
+  const available = items.filter(item => !shown.has(item.id));
+  if (index < 0 || !available.length) return;
+  const replacement = available[Math.floor(random() * available.length)];
+  return {
+    layout: randomWallpaperIndex(3, current.layout, random()),
+    tiles: current.tiles.map((tile, position) => position === index ? { ...replacement, variant: tile.variant } : tile),
+  };
+}

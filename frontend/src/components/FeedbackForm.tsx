@@ -1,7 +1,7 @@
+import { CtaButton } from './CtaButton';
 import { trackProductEvent, captureProductEvents, analyticsFailure } from '@/lib/analytics';
 import React, { useEffect, useState, type SubmitEvent } from 'react';
 import { Check, LockKeyhole, Send } from 'lucide-react';
-import { Button } from '@want-foundation/desyst-react';
 import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@want-foundation/desyst-react';
 import { Input } from '@want-foundation/desyst-react';
 import { Textarea } from '@want-foundation/desyst-react';
@@ -58,7 +58,7 @@ export function FeedbackFields({ locale, state }: { locale: Locale; state: Retur
         <Field data-disabled={disabled} className="gap-2"><FieldLabel htmlFor={`${prefix}-email`}>{ui.emailOptional}</FieldLabel><Input id={`${prefix}-email`} name="email" type="email" dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} autoComplete="email" spellCheck={false} disabled={disabled} aria-describedby={`${prefix}-email-hint`} /><FieldDescription id={`${prefix}-email-hint`}>{text.feedbackEmailHint}</FieldDescription></Field>
         <Field data-disabled={disabled} data-invalid={invalid === 'message'} className="gap-2"><FieldLabel htmlFor={`${prefix}-message`}>{ui.message}</FieldLabel><Textarea ref={messageInput} id={`${prefix}-message`} name="message" dir="auto" value={message} onChange={(event) => { setMessage(event.target.value); if (invalid === 'message') setInvalid(null); }} minLength={5} maxLength={2000} required disabled={disabled} aria-invalid={invalid === 'message'} aria-describedby={invalid === 'message' ? `${prefix}-message-error` : `${prefix}-message-hint`} className="feedback-message" /><div className="flex items-start justify-between gap-4"><FieldDescription id={`${prefix}-message-hint`} className="min-w-0">{text.feedbackMessageHint}</FieldDescription><span className="shrink-0 text-sm text-muted-foreground tabular-nums"><span className="sr-only">{text.characters}: </span>{message.length}/2000</span></div>{invalid === 'message' && <FieldError id={`${prefix}-message-error`}>{ui.required}</FieldError>}</Field>
       </FieldGroup>
-      <div className="feedback-footer"><div className="feedback-submit-row"><Button type="submit" size="lg" disabled={disabled}><Send data-icon="inline-start" aria-hidden="true" />{busy ? ui.loading : ui.feedbackSubmit}</Button><p className="feedback-private"><LockKeyhole aria-hidden="true" />{text.feedbackPrivate}</p></div><RecaptchaNotice locale={locale} />{error && <FieldError>{error}</FieldError>}<p className="feedback-status" role="status">{sent && <span className="flex items-center gap-3"><Check aria-hidden="true" />{ui.feedbackThanks}</span>}</p></div>
+      <div className="feedback-footer"><div className="feedback-submit-row"><CtaButton type="submit" size="lg" disabled={disabled}><Send data-icon="inline-start" aria-hidden="true" />{busy ? ui.loading : ui.feedbackSubmit}</CtaButton><p className="feedback-private"><LockKeyhole aria-hidden="true" />{text.feedbackPrivate}</p></div><RecaptchaNotice locale={locale} />{error && <FieldError>{error}</FieldError>}<p className="feedback-status" role="status">{sent && <span className="flex items-center gap-3"><Check aria-hidden="true" />{ui.feedbackThanks}</span>}</p></div>
     </form>
   </div>;
 }
