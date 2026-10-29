@@ -6,7 +6,7 @@ import { Button } from '@want-foundation/desyst-react';
 import { designCopy } from '@/data/design-copy';
 import type { Locale } from '@/data/catalog';
 import { useGalleryData } from '@/lib/use-gallery-data';
-import { deviceModelSrc, randomWallpaperIndex } from '@/lib/device-wallpaper';
+import { deviceModelSrc, createWallpaperCycle } from '@/lib/device-wallpaper';
 import type { Preview } from '@/data/previews';
 
 const initialOrbit = '12deg 83deg auto';
@@ -25,6 +25,7 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
   const [index, setIndex] = useState(Math.max(0, items.findIndex((item) => item.id === initialId)));
   const current = useRef(index);
   const changing = useRef(false);
+  const cycle = useRef(createWallpaperCycle(initialId));
   const screenTextures = useRef<ReturnType<ModelViewerElement['createCanvasTexture']>[]>([]);
   const [textureError, setTextureError] = useState('');
   const { desktop, mobile, title, description, href } = items[index];
@@ -76,8 +77,10 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
   async function changeWallpaper(selected?: number, automatic = false) {
     const viewer = model.current;
     if (!viewer?.model || (selected === undefined && items.length < 2) || changing.current) return false;
+    const nextId = selected === undefined ? cycle.current.next(items.map(item => item.id), items[current.current].id) : items[selected]?.id;
+    const next = items.findIndex(item => item.id === nextId);
+    if (next < 0) return false;
     changing.current = true;
-    const next = selected ?? randomWallpaperIndex(items.length, current.current);
     try {
       const urls = [items[next].desktop.src, items[next].mobile.src];
       const images = await Promise.all(urls.map(async (src) => {
@@ -110,9 +113,10 @@ export default function DeviceScene({ locale, items: initialItems, initialId, da
       desktopMaterial.pbrMetallicRoughness.baseColorTexture.setTexture(textures[0]);
       mobileMaterial.pbrMetallicRoughness.baseColorTexture.setTexture(textures[1]);
       screenTextures.current = textures;
+      cycle.current.commit(items[next].id);
       current.current = next; setIndex(next); setTextureError('');
       return true;
-    } catch { if (model.current === viewer) { trackProductEvent('media_error', { media: 'image' }); setTextureError(text.textureFailed); } return false; }
+    } catch { if (model.current === viewer) { cycle.current.reject(items[next].id); trackProductEvent('media_error', { media: 'image' }); setTextureError(text.textureFailed); } return false; }
     finally { if (model.current === viewer) changing.current = false; }
   }
 
