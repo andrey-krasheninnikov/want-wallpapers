@@ -70,3 +70,5 @@ Build проверяет canonical/hreflang/OG, robots/sitemap, JSON-LD и CSP h
 24 октября 2026 transitive fast-uri закреплён на 3.1.9 в пределах поддерживаемого AJV диапазона ^3.0.1. Patch устраняет URI scheme spoofing GHSA-w74x-v6f9-j3xg и связанные исправления нормализации. Advisory не добавляется в исключения. Источник: https://github.com/fastify/fast-uri/releases/tag/v3.1.9.
 
 Transitive undici закреплён на совместимом patch 8.12.2: устранены GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 и GHSA-xjj6-f33q-929c. Новые исключения не добавлены. Источник: https://github.com/nodejs/undici/releases/tag/v8.12.2.
+
+29 октября 2026 транзитивная зависимость re2js закреплена на совместимом patch 2.8.7 в пределах диапазона ^2.8.3 зависимости @firebase/firestore. Версия исправляет квадратичное время поиска с LOOKBEHINDS (GHSA-gg6h-894w-4m9c); новое исключение audit не добавлено. Источник: https://github.com/le0pard/re2js/security/advisories/GHSA-gg6h-894w-4m9c.

@@ -94,7 +94,7 @@ Translations, accessibility, docs and code are welcome. Discuss large changes fi
 
 ## 📝 Changelog and latest update
 
-[Full changelog](CHANGELOG.md) · [Latest release: v1.13.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.13.0), October 28, 2026: Open Circuit, Weightless Feathers and Observatory of Tides add 15 desktop and mobile wallpaper pairs in six languages. Shared interface components now come from Want Desyst.
+[Full changelog](CHANGELOG.md) · [Latest release: v1.14.0](https://github.com/andrey-krasheninnikov/want-wallpapers/releases/tag/v1.14.0), October 29, 2026: the home mosaic keeps the hovered image while the other tiles change. The 3D scene cycles through works without repeats, and primary actions use shared Glow from Want Desyst 0.3.0.
 
 ## 💡 Development ideas
 
