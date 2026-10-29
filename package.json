@@ -30,7 +30,8 @@
     "esbuild": "0.25.12",
     "vite": "6.4.4",
     "fast-uri": "3.1.9",
-    "undici": "8.12.2"
+    "undici": "8.12.2",
+    "re2js": "2.8.7"
   },
   "patchedDependencies": {
     "lunr-languages@1.22.0": "patches/lunr-languages@1.22.0.patch"
